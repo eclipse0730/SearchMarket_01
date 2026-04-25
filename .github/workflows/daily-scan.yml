@@ -1,0 +1,44 @@
+name: Daily Stock Scan
+
+on:
+  schedule:
+    - cron: '5 23 * * *'   # UTC 23:05 = KST 08:05 (다음날)
+  workflow_dispatch:         # 수동 실행 버튼
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas lxml deep-translator requests
+
+      - name: Run scanner
+        run: python Search60.py
+
+      - name: Commit results
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+          git add Data_*.csv Analysis_*.md Report_*.html
+          git diff --staged --quiet || git commit -m "scan: $(date +'%Y-%m-%d')"
+
+      - name: Push
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
