@@ -698,7 +698,7 @@ def stage2_analysis(df: pd.DataFrame, today: str) -> str:
     add()
     add("*본 리포트는 Yahoo Finance 공개 데이터 기반 자동 생성 문서입니다. 투자 권유가 아닙니다.*")
 
-    md_path = f"Result_{today}.md"
+    md_path = f"Analysis_{today}.md"
     with open(md_path, "w", encoding="utf-8") as f:
         f.write("\n".join(md))
 
