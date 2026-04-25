@@ -7,6 +7,9 @@ Search_Kospi.py — 코스피 이동평균선 근접 종목 스캐너
 import os, sys, time, io, argparse
 from datetime import datetime
 
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf-8-sig"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 import pandas as pd
 import yfinance as yf
 
@@ -57,7 +60,7 @@ TICKER_INFO: dict[str, tuple[str, str, str, str]] = {
     "096770.KS": ("SK Innovation",                "SK이노베이션",   "에너지·화학",      "정유·화학·배터리 소재"),
     "034730.KS": ("SK Inc.",                       "SK",             "지주사",           "SK그룹 지주, ICT·에너지·바이오"),
     "017670.KS": ("SK Telecom",                   "SK텔레콤",       "통신",             "국내 1위 이동통신"),
-    "003600.KS": ("SK Chemicals",                 "SK케미칼",       "화학·제약",        "친환경 화학·백신"),
+    # "003600.KS": SK케미칼 — yfinance 데이터 없음 (상장폐지/재편)
 
     # ── LG 계열 ────────────────────────────────────────────
     "051910.KS": ("LG Chem",                      "LG화학",         "화학·배터리",      "배터리 분사 후 석유화학·첨단소재"),
@@ -195,7 +198,7 @@ def load_krx_kospi200() -> list[str]:
             print(f"  KRX 코스피200 로드: {len(tickers)}개 종목")
             return tickers
     except Exception as e:
-        print(f"  KRX 로드 실패 ({e}) — 정적 리스트 사용")
+        print(f"  KRX 로드 실패 ({type(e).__name__}) - 정적 리스트 사용")
     return []
 
 
@@ -299,6 +302,19 @@ def fetch_ticker_data(ticker: str) -> dict | None:
             row[f"MA{p}차이(%)"] = ma_diff.get(p)
             row[f"MA{p}근접"]   = ma_close.get(p, "")
 
+        # 추세 판단 (0–5점)
+        ts = 0
+        if price > ma_vals.get(60, price):               ts += 1
+        if ma_vals.get(60, 0) > ma_vals.get(120, 0) > 0: ts += 1
+        if ma_vals.get(120, 0) > ma_vals.get(240, 0) > 0: ts += 1
+        for win in [60, 120]:
+            ma_s = close.rolling(win).mean().dropna()
+            if len(ma_s) >= 21 and float(ma_s.iloc[-1]) > float(ma_s.iloc[-21]):
+                ts += 1
+        trend_map = {5: "강상승", 4: "상승", 3: "중립", 2: "하락", 1: "강하락", 0: "강하락"}
+        row["추세"]    = trend_map[min(ts, 5)]
+        row["추세점수"] = ts
+
         return row
 
     except Exception:
@@ -369,19 +385,22 @@ def _rsi_label(rsi) -> str:
 
 def _table_header() -> tuple[str, str]:
     return (
-        "| 티커 | 종목명 | 현재가(₩) | RSI | 52주고점% | 업사이드% | PER | MA 위치 |",
-        "|---|---|---:|---:|---:|---:|---:|---|",
+        "| 티커 | 종목명 | 추세 | 현재가(₩) | RSI | 52주고점% | 업사이드% | PER | MA 위치 |",
+        "|---|---|:---:|---:|---:|---:|---:|---:|---|",
     )
 
 
 def _table_row(r: pd.Series) -> str:
     ticker  = r.get("티커", "")
     name    = r.get("한국명", "")[:14]
+    trend   = r.get("추세", "-")
     price   = r.get("현재가(₩)")
     rsi     = r.get("RSI(14)")
     fhigh   = r.get("52주고점대비(%)")
     upside  = r.get("업사이드(%)")
     per     = r.get("PER(후행)")
+
+    trend_icon = {"강상승": "↑↑", "상승": "↑", "중립": "→", "하락": "↓", "강하락": "↓↓"}.get(str(trend), "-")
 
     def fmt_i(v, suffix=""):
         return f"{int(v):,}{suffix}" if v is not None else "-"
@@ -391,7 +410,8 @@ def _table_row(r: pd.Series) -> str:
         return f"{v:.1f}" if v is not None else "-"
 
     return (
-        f"| {ticker:<6} | {name:<14} | ₩{fmt_i(price)} "
+        f"| {ticker:<6} | {name:<14} | {trend_icon} {trend} "
+        f"| ₩{fmt_i(price)} "
         f"| {int(rsi) if rsi is not None else '-':>4} "
         f"| {fmt_f(fhigh, '%'):>7} "
         f"| {fmt_f(upside, '%'):>8} "
@@ -406,7 +426,7 @@ def _table_row(r: pd.Series) -> str:
 
 def stage1_scan(today: str) -> tuple[list[dict], pd.DataFrame, str]:
     csv_path = f"Data_{PREFIX}_{today}.csv"
-    print(f"\n  [1단계] 코스피 종목 스캔 시작 — {today}")
+    print(f"\n  [1단계] 코스피 종목 스캔 시작: {today}")
     print("=" * 90)
 
     tickers = build_all_tickers()
@@ -633,9 +653,11 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
             "diff60":   safe(r.get("MA60차이(%)")),
             "diff120":  safe(r.get("MA120차이(%)")),
             "diff240":  safe(r.get("MA240차이(%)")),
-            "near60":   str(safe(r.get("MA60근접"),  "")) == "O",
-            "near120":  str(safe(r.get("MA120근접"), "")) == "O",
-            "near240":  str(safe(r.get("MA240근접"), "")) == "O",
+            "near60":     str(safe(r.get("MA60근접"),  "")) == "O",
+            "near120":    str(safe(r.get("MA120근접"), "")) == "O",
+            "near240":    str(safe(r.get("MA240근접"), "")) == "O",
+            "trend":      str(safe(r.get("추세"),   "")),
+            "trendScore": safe(r.get("추세점수")),
         })
 
     data_json    = json.dumps(records, ensure_ascii=False)
@@ -747,6 +769,14 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '    <option value="high">RSI &gt; 65 (과매열)</option>\n'
         '    <option value="mid">35 ≤ RSI ≤ 65 (중립)</option>\n'
         '  </select>\n'
+        '  <select id="trendFilter" onchange="applyFilter()">\n'
+        '    <option value="">전체 추세</option>\n'
+        '    <option value="강상승">↑↑ 강상승</option>\n'
+        '    <option value="상승">↑ 상승</option>\n'
+        '    <option value="중립">→ 중립</option>\n'
+        '    <option value="하락">↓ 하락</option>\n'
+        '    <option value="강하락">↓↓ 강하락</option>\n'
+        '  </select>\n'
         '  <span class="text-secondary small ms-auto" id="rowCount"></span>\n'
         '</div>\n'
         '<ul class="nav nav-tabs mb-0" id="mainTabs">\n'
@@ -765,6 +795,7 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '        <th data-col="ticker">티커</th>\n'
         '        <th data-col="kr_name">종목명</th>\n'
         '        <th data-col="sector">섹터</th>\n'
+        '        <th data-col="trendScore">추세</th>\n'
         '        <th data-col="price">현재가(₩)</th>\n'
         '        <th data-col="rsi">RSI</th>\n'
         '        <th data-col="fromHigh">52주고점대비</th>\n'
@@ -843,6 +874,12 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '  th.classList.add("th-sorted");renderFilter();\n'
         '});\n'
         'function fmt(v,dec=0,suf=""){if(v==null)return"-";return Number(v).toFixed(dec).replace(/\\B(?=(\\d{3})+(?!\\d))/g,",")+suf;}\n'
+        'function trendCell(t){\n'
+        '  const icons={"강상승":"↑↑","상승":"↑","중립":"→","하락":"↓","강하락":"↓↓"};\n'
+        '  const colors={"강상승":"#3fb950","상승":"#7ee787","중립":"#e3b341","하락":"#ffa198","강하락":"#f85149"};\n'
+        '  if(!t)return"-";\n'
+        '  return `<span style="color:${colors[t]||"#c9d1d9"};font-weight:700">${icons[t]||""} ${t}</span>`;\n'
+        '}\n'
         'function rsiCell(v){if(v==null)return"-";const n=+v,c=n<35?"rsi-green":n>65?"rsi-red":"";return `<span class="${c}">${n.toFixed(1)}</span>`;}\n'
         'function upCell(v){if(v==null)return"-";const n=+v,c=n>=20?"up-green":n<0?"up-red":"";return `<span class="${c}">${n.toFixed(1)}%</span>`;}\n'
         'function perCell(v){if(v==null)return"-";const n=+v,c=n<15?"per-green":n>40?"per-red":"";return `<span class="${c}">${n.toFixed(1)}</span>`;}\n'
@@ -863,6 +900,8 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '    if(rsiF==="low"&&!(d.rsi!=null&&d.rsi<35))return false;\n'
         '    if(rsiF==="high"&&!(d.rsi!=null&&d.rsi>65))return false;\n'
         '    if(rsiF==="mid"&&!(d.rsi!=null&&d.rsi>=35&&d.rsi<=65))return false;\n'
+        '    const tf=document.getElementById("trendFilter").value;\n'
+        '    if(tf&&d.trend!==tf)return false;\n'
         '    return true;\n'
         '  });\n'
         '  rows.sort((a,b)=>{\n'
@@ -877,6 +916,7 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '      <td><a href="https://finance.naver.com/item/main.naver?code=${d.ticker}" target="_blank" class="ticker-link">${d.ticker}</a></td>\n'
         '      <td title="${d.en_name}&#10;${d.desc}">${d.kr_name}</td>\n'
         '      <td>${d.sector||"-"}</td>\n'
+        '      <td>${trendCell(d.trend)}</td>\n'
         '      <td>₩${fmt(d.price,0)}</td>\n'
         '      <td>${rsiCell(d.rsi)}</td>\n'
         '      <td>${fmt(d.fromHigh,1,"%")}</td>\n'

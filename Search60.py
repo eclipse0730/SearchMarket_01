@@ -269,15 +269,36 @@ def fetch_ticker_data(ticker: str) -> dict | None:
             "upside_pct":    upside_pct,
         }
 
+        ma_series: dict = {}
         for period in MA_PERIODS:
             if len(close) < period:
                 result[f"ma{period}"]   = None
                 result[f"diff{period}"] = None
             else:
-                ma_val = float(close.rolling(window=period).mean().iloc[-1])
+                s      = close.rolling(window=period).mean()
+                ma_val = float(s.iloc[-1])
                 diff   = (current_price - ma_val) / ma_val * 100
                 result[f"ma{period}"]   = round(ma_val, 2)
                 result[f"diff{period}"] = round(diff, 2)
+                ma_series[period]       = s
+
+        # 추세 판단 (0–5점)
+        ts = 0
+        ma60  = result.get("ma60")
+        ma120 = result.get("ma120")
+        ma240 = result.get("ma240")
+        if ma60  and current_price > ma60:  ts += 1
+        if ma60  and ma120 and ma60 > ma120: ts += 1
+        if ma120 and ma240 and ma120 > ma240: ts += 1
+        for win in [60, 120]:
+            s = ma_series.get(win)
+            if s is not None:
+                s_clean = s.dropna()
+                if len(s_clean) >= 21 and float(s_clean.iloc[-1]) > float(s_clean.iloc[-21]):
+                    ts += 1
+        trend_map = {5: "강상승", 4: "상승", 3: "중립", 2: "하락", 1: "강하락", 0: "강하락"}
+        result["trend"]       = trend_map[min(ts, 5)]
+        result["trend_score"] = ts
 
         return result
 
@@ -346,6 +367,8 @@ def _to_csv_row(r: dict) -> dict:
         row[f"MA{p}($)"]     = r[f"ma{p}"]
         row[f"MA{p}차이(%)"] = r[f"diff{p}"]
         row[f"MA{p}근접"]    = "O" if r[f"diff{p}"] is not None and abs(r[f"diff{p}"]) <= THRESHOLD_PCT else ""
+    row["추세"]    = r.get("trend", "중립")
+    row["추세점수"] = r.get("trend_score", 0)
     return row
 
 
@@ -799,9 +822,11 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
             "diff60":   safe(r.get("MA60차이(%)")),
             "diff120":  safe(r.get("MA120차이(%)")),
             "diff240":  safe(r.get("MA240차이(%)")),
-            "near60":   str(safe(r.get("MA60근접"),  "")) == "O",
-            "near120":  str(safe(r.get("MA120근접"), "")) == "O",
-            "near240":  str(safe(r.get("MA240근접"), "")) == "O",
+            "near60":     str(safe(r.get("MA60근접"),  "")) == "O",
+            "near120":    str(safe(r.get("MA120근접"), "")) == "O",
+            "near240":    str(safe(r.get("MA240근접"), "")) == "O",
+            "trend":      str(safe(r.get("추세"),   "")),
+            "trendScore": safe(r.get("추세점수")),
         })
 
     data_json = json.dumps(records, ensure_ascii=False)
@@ -927,6 +952,14 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '    <option value="high">RSI &gt; 65 (과매열)</option>\n'
         '    <option value="mid">35 ≤ RSI ≤ 65 (중립)</option>\n'
         '  </select>\n'
+        '  <select id="trendFilter" onchange="applyFilter()">\n'
+        '    <option value="">전체 추세</option>\n'
+        '    <option value="강상승">↑↑ 강상승</option>\n'
+        '    <option value="상승">↑ 상승</option>\n'
+        '    <option value="중립">→ 중립</option>\n'
+        '    <option value="하락">↓ 하락</option>\n'
+        '    <option value="강하락">↓↓ 강하락</option>\n'
+        '  </select>\n'
         '  <span class="text-secondary small ms-auto" id="rowCount"></span>\n'
         '</div>\n'
         '\n'
@@ -949,7 +982,8 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '        <th data-col="ticker">티커</th>\n'
         '        <th data-col="kr_name">종목명</th>\n'
         '        <th data-col="sector">섹터</th>\n'
-        '        <th data-col="price">현재ga($)</th>\n'
+        '        <th data-col="trendScore">추세</th>\n'
+        '        <th data-col="price">현재가($)</th>\n'
         '        <th data-col="rsi">RSI</th>\n'
         '        <th data-col="fromHigh">52주고점대비</th>\n'
         '        <th data-col="volRatio">거래량비율</th>\n'
@@ -1060,6 +1094,12 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '});\n'
         '\n'
         'function fmt(v,dec=2,suf=""){if(v==null)return"-";return Number(v).toFixed(dec)+suf;}\n'
+        'function trendCell(t){\n'
+        '  const icons={"강상승":"↑↑","상승":"↑","중립":"→","하락":"↓","강하락":"↓↓"};\n'
+        '  const colors={"강상승":"#3fb950","상승":"#7ee787","중립":"#e3b341","하락":"#ffa198","강하락":"#f85149"};\n'
+        '  if(!t)return"-";\n'
+        '  return `<span style="color:${colors[t]||"#c9d1d9"};font-weight:700">${icons[t]||""} ${t}</span>`;\n'
+        '}\n'
         'function rsiCell(v){if(v==null)return"-";const n=+v,c=n<35?"rsi-green":n>65?"rsi-red":"";return `<span class="${c}">${n.toFixed(1)}</span>`;}\n'
         'function upCell(v){if(v==null)return"-";const n=+v,c=n>=20?"up-green":n<0?"up-red":"";return `<span class="${c}">${n.toFixed(1)}%</span>`;}\n'
         'function perCell(v){if(v==null)return"-";const n=+v,c=n<15?"per-green":n>40?"per-red":"";return `<span class="${c}">${n.toFixed(1)}</span>`;}\n'
@@ -1081,6 +1121,8 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '    if(rsiF==="low"&&!(d.rsi!=null&&d.rsi<35))return false;\n'
         '    if(rsiF==="high"&&!(d.rsi!=null&&d.rsi>65))return false;\n'
         '    if(rsiF==="mid"&&!(d.rsi!=null&&d.rsi>=35&&d.rsi<=65))return false;\n'
+        '    const tf=document.getElementById("trendFilter").value;\n'
+        '    if(tf&&d.trend!==tf)return false;\n'
         '    return true;\n'
         '  });\n'
         '  rows.sort((a,b)=>{\n'
@@ -1096,6 +1138,7 @@ def stage4_html(df: pd.DataFrame, today: str) -> str:
         '      <td><a href="https://finance.yahoo.com/quote/${d.ticker}" target="_blank" class="ticker-link">${d.ticker}</a></td>\n'
         '      <td title="${d.en_name}\\n${d.desc}">${d.kr_name||d.en_name}</td>\n'
         '      <td>${d.sector||"-"}</td>\n'
+        '      <td>${trendCell(d.trend)}</td>\n'
         '      <td>$${fmt(d.price)}</td>\n'
         '      <td>${rsiCell(d.rsi)}</td>\n'
         '      <td>${fmt(d.fromHigh,1,"%")}</td>\n'
