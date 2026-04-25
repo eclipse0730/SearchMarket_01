@@ -30,11 +30,29 @@ jobs:
       - name: Run scanner
         run: python Search_Kospi.py
 
+      - name: Generate index_kospi.html
+        run: |
+          TODAY=$(date +'%Y%m%d')
+          cat > index_kospi.html << EOF
+          <!DOCTYPE html>
+          <html lang="ko">
+          <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="0; url=Report_Kospi_${TODAY}.html">
+            <title>KOSPI Report</title>
+          </head>
+          <body style="background:#0d1117;color:#c9d1d9;font-family:sans-serif;text-align:center;padding:60px">
+            <h2>KOSPI Report (${TODAY})</h2>
+            <p>리다이렉트 중... <a href="Report_Kospi_${TODAY}.html" style="color:#58a6ff">클릭하여 이동</a></p>
+          </body>
+          </html>
+          EOF
+
       - name: Commit results
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name  "github-actions[bot]"
-          git add Data_Kospi_*.csv Analysis_Kospi_*.md Report_Kospi_*.html
+          git add Data_Kospi_*.csv Analysis_Kospi_*.md Report_Kospi_*.html index_kospi.html
           git diff --staged --quiet || git commit -m "scan(Kospi): $(date +'%Y-%m-%d')"
 
       - name: Push

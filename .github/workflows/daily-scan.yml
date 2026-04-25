@@ -30,11 +30,29 @@ jobs:
       - name: Run scanner
         run: python Search60.py
 
+      - name: Generate index.html
+        run: |
+          TODAY=$(date +'%Y%m%d')
+          cat > index.html << EOF
+          <!DOCTYPE html>
+          <html lang="ko">
+          <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="0; url=Report_${TODAY}.html">
+            <title>US Market Report</title>
+          </head>
+          <body style="background:#0d1117;color:#c9d1d9;font-family:sans-serif;text-align:center;padding:60px">
+            <h2>US Market Report (${TODAY})</h2>
+            <p>리다이렉트 중... <a href="Report_${TODAY}.html" style="color:#58a6ff">클릭하여 이동</a></p>
+          </body>
+          </html>
+          EOF
+
       - name: Commit results
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name  "github-actions[bot]"
-          git add Data_*.csv Analysis_*.md Report_*.html
+          git add Data_*.csv Analysis_*.md Report_*.html index.html
           git diff --staged --quiet || git commit -m "scan(US): $(date +'%Y-%m-%d')"
 
       - name: Push
