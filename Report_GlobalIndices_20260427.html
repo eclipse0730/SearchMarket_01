@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Indices Report 20260427</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+  <style>body{background:#0d1117;color:#c9d1d9;font-family:"Segoe UI","Noto Sans KR",sans-serif}
+.card{background:#161b22;border:1px solid #30363d}
+.card-header,.card-footer{background:#21262d;border-color:#30363d}
+.nav-tabs .nav-link{color:#8b949e;border-color:transparent}
+.nav-tabs .nav-link.active{background:#21262d;color:#58a6ff;border-color:#30363d #30363d #21262d}
+table{border-collapse:collapse;width:100%}
+td,th{border:1px solid #30363d;padding:5px 8px;font-size:.8rem;white-space:nowrap}
+tbody td{color:#ffffff}
+thead th{background:#21262d;color:#8b949e;cursor:pointer;user-select:none}
+thead th:hover{color:#58a6ff}
+tbody tr:hover{background:#1c2128}
+.rsi-green{color:#3fb950;font-weight:700}
+.rsi-red{color:#f85149;font-weight:700}
+.up-green{color:#3fb950}
+.up-red{color:#f85149}
+.per-green{color:#3fb950}
+.per-red{color:#f85149}
+.ma-warn{color:#e3b341}
+.ticker-link{color:#58a6ff;text-decoration:none;font-weight:700}
+.ticker-link:hover{text-decoration:underline}
+.stat-card h2{font-size:2rem;font-weight:700;margin:0}
+.th-sorted{color:#58a6ff}
+input[type=text],select{background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:5px 10px;border-radius:4px}
+input[type=text]:focus,select:focus{outline:none;border-color:#58a6ff}
+.md-content{color:#c9d1d9}
+.md-content h1{color:#e6edf3;font-size:1.3rem;border-bottom:1px solid #30363d;padding-bottom:.4rem;margin:1.4rem 0 .8rem}
+.md-content h2{color:#58a6ff;font-size:1.1rem;border-bottom:1px solid #30363d;padding-bottom:.3rem;margin:1.8rem 0 .7rem;scroll-margin-top:10px}
+.md-content h3{color:#e3b341;font-size:.95rem;margin:1.2rem 0 .5rem}
+.md-content table{width:100%;border-collapse:collapse;margin:.6rem 0;font-size:.8rem}
+.md-content table th{background:#21262d;color:#8b949e;padding:5px 8px;border:1px solid #30363d;text-align:left}
+.md-content table td{padding:5px 8px;border:1px solid #30363d;color:#ffffff}
+.md-content table tr:hover{background:#1c2128}
+.md-content blockquote{border-left:3px solid #58a6ff;background:#1c2128;margin:.6rem 0;padding:.5rem 1rem;border-radius:0 4px 4px 0}
+.md-content blockquote p{margin:0;color:#8b949e;font-size:.85rem}
+.md-content hr{border-color:#30363d;margin:1.2rem 0}
+.md-content p{margin:.4rem 0}
+.md-content li{margin:.2rem 0;color:#c9d1d9}
+.md-content strong{color:#e6edf3}
+.md-content code{background:#21262d;border-radius:3px;padding:1px 5px;font-size:.85em;color:#79c0ff}
+.report-nav-btn{display:inline-block;padding:4px 12px;margin:0 4px 6px 0;border:1px solid #30363d;border-radius:4px;font-size:.8rem;cursor:pointer;text-decoration:none}
+.report-nav-btn:hover{border-color:#58a6ff;color:#58a6ff}
+.report-nav-btn.top{color:#58a6ff;border-color:#58a6ff}
+.report-nav-btn.theme{color:#e3b341;border-color:#e3b341}
+.report-nav-btn.sector{color:#3fb950;border-color:#3fb950}
+.report-nav-btn.warn{color:#f85149;border-color:#f85149}
+</style>
+</head>
+<body>
+<div class="container-fluid py-3">
+
+<div class="d-flex align-items-baseline mb-3 gap-3">
+  <h4 class="mb-0 text-white">Global Indices MA Scanner</h4>
+  <small class="text-secondary">2026-04-27 | Global Indices | 10 rows</small>
+</div>
+
+<div class="row g-2 mb-3">
+  <div class='col-6 col-md-3'><div class='card text-center p-3 stat-card'><div class='text-secondary small'>MA60 근접</div><h2 class='text-info'>5</h2><div class='text-secondary small'>+/- 2% 이내</div></div></div><div class='col-6 col-md-3'><div class='card text-center p-3 stat-card'><div class='text-secondary small'>MA120 근접</div><h2 class='text-warning'>4</h2><div class='text-secondary small'>+/- 2% 이내</div></div></div><div class='col-6 col-md-3'><div class='card text-center p-3 stat-card'><div class='text-secondary small'>MA240 근접</div><h2 class='text-danger'>2</h2><div class='text-secondary small'>+/- 2% 이내</div></div></div><div class='col-6 col-md-3'><div class='card text-center p-3 stat-card'><div class='text-secondary small'>복수 MA 수렴</div><h2 class='text-primary'>4</h2><div class='text-secondary small'>2개 이상</div></div></div>
+</div>
+
+<div class="row g-2 mb-3">
+  <div class="col-md-7"><div class="card p-3" style="height:260px">
+    <div class="text-secondary small mb-1">섹터별 강세·약세 <span style="font-size:.7em;opacity:.6">(클릭 시 필터)</span></div>
+    <canvas id="sectorChart"></canvas>
+  </div></div>
+  <div class="col-md-5"><div class="card p-3" style="height:260px">
+    <div class="text-secondary small mb-1">RSI 분포</div>
+    <canvas id="rsiChart"></canvas>
+  </div></div>
+</div>
+
+<div id="filterBar" class="d-flex gap-2 mb-2 flex-wrap align-items-center">
+  <input type="text" id="searchBox" placeholder="Search ticker or name..." style="width:220px" oninput="applyFilter()">
+  <select id="sectorFilter" onchange="applyFilter()"><option value="">All sectors</option></select>
+  <select id="rsiFilter" onchange="applyFilter()">
+    <option value="">All RSI</option>
+    <option value="low">RSI &lt; 35</option>
+    <option value="high">RSI &gt; 65</option>
+    <option value="mid">35 to 65</option>
+  </select>
+  <select id="trendFilter" onchange="applyFilter()"><option value="">All trends</option></select>
+  <span class="text-secondary small ms-auto" id="rowCount"></span>
+</div>
+
+<ul class="nav nav-tabs mb-0" id="mainTabs">
+  <li class="nav-item"><a class="nav-link active" href="#" data-tab="all">전체</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="ma60">MA60</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="ma120">MA120</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="ma240">MA240</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="multi">복수MA</a></li><li class="nav-item ms-auto"><a class="nav-link" href="#" data-tab="report" style="color:#e3b341">분석 리포트</a></li>
+</ul>
+
+<div id="tableSection">
+  <div class="card" style="border-top-left-radius:0">
+    <div class="p-0" style="overflow-x:auto">
+      <table id="mainTable">
+        <thead><tr><th data-col="ticker">티커</th><th data-col="kr_name">종목명</th><th data-col="sector">섹터</th><th data-col="trend">추세</th><th data-col="price">현재가()</th><th data-col="rsi">RSI</th><th data-col="fromHigh">52주고점%</th><th data-col="volRatio">거래량비율</th><th data-col="per">PER</th><th data-col="upside">업사이드</th><th data-col="diff_60">MA60차이%</th><th data-col="diff_120">MA120차이%</th><th data-col="diff_240">MA240차이%</th><th>근접</th></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="card-footer text-secondary small py-1" id="rowCount2"></div>
+  </div>
+</div>
+
+<div id="reportSection" style="display:none">
+  <div class="mb-3">
+    <a class="report-nav-btn top" href="#sec-top">Top picks</a>
+    <a class="report-nav-btn theme" href="#sec-theme">Themes</a>
+    <a class="report-nav-btn sector" href="#sec-sector">Sectors</a>
+    <a class="report-nav-btn warn" href="#sec-warn">Warnings</a>
+  </div>
+  <div id="mdContent" class="md-content"></div>
+</div>
+
+</div>
+<script>
+const CURRENCY = "";
+const PERIODS = [60, 120, 240];
+const DATA = [{"ticker": "^KS11", "displayTicker": "KS11", "quoteUrl": "https://www.investing.com/search?q=KOSPI", "en_name": "KOSPI Composite", "kr_name": "코스피", "sector": "KR Index", "desc": "Broad Korean stock market index.", "price": 6475.63, "rsi": 68.2, "fromHigh": -0.0, "volRatio": 0.91, "per": null, "upside": null, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 14.85, "near_60": false, "diff_120": 31.08, "near_120": false, "diff_240": 59.91, "near_240": false}, {"ticker": "^HSI", "displayTicker": "HSI", "quoteUrl": "https://www.investing.com/search?q=Hang+Seng+Index", "en_name": "Hang Seng Index", "kr_name": "항셍 지수", "sector": "HK Index", "desc": "Hong Kong large-cap benchmark.", "price": 25978.07, "rsi": 51.8, "fromHigh": -7.1, "volRatio": 0.88, "per": null, "upside": null, "trend": "Downtrend", "trendScore": 2, "nearCount": 3, "diff_60": -0.56, "near_60": true, "diff_120": -0.55, "near_120": true, "diff_240": 1.84, "near_240": true}, {"ticker": "^N225", "displayTicker": "N225", "quoteUrl": "https://www.investing.com/search?q=Nikkei+225", "en_name": "Nikkei 225", "kr_name": "닛케이 225", "sector": "JP Index", "desc": "Japanese large-cap benchmark.", "price": 59716.18, "rsi": 64.5, "fromHigh": 0.0, "volRatio": 0.95, "per": null, "upside": null, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 7.52, "near_60": false, "diff_120": 12.11, "near_120": false, "diff_240": 25.84, "near_240": false}, {"ticker": "^FTSE", "displayTicker": "FTSE", "quoteUrl": "https://www.investing.com/search?q=FTSE+100", "en_name": "FTSE 100", "kr_name": "FTSE 100", "sector": "UK Index", "desc": "United Kingdom large-cap benchmark.", "price": 10379.1, "rsi": 47.1, "fromHigh": -4.9, "volRatio": 0.69, "per": null, "upside": null, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -0.34, "near_60": true, "diff_120": 2.41, "near_120": false, "diff_240": 7.86, "near_240": false}, {"ticker": "^DJI", "displayTicker": "DJI", "quoteUrl": "https://www.investing.com/search?q=Dow+Jones+Industrial+Average", "en_name": "Dow Jones Industrial Average", "kr_name": "다우 존스", "sector": "US Index", "desc": "30-stock US blue-chip index.", "price": 49230.71, "rsi": 63.3, "fromHigh": -1.9, "volRatio": 1.09, "per": null, "upside": null, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 2.22, "near_60": false, "diff_120": 2.31, "near_120": false, "diff_240": 6.15, "near_240": false}, {"ticker": "^GSPC", "displayTicker": "GSPC", "quoteUrl": "https://www.investing.com/search?q=S%26P+500", "en_name": "S&P 500 Index", "kr_name": "S&P 500", "sector": "US Index", "desc": "Large-cap US equities benchmark.", "price": 7165.08, "rsi": 70.1, "fromHigh": 0.0, "volRatio": 0.9, "per": null, "upside": null, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": 5.18, "near_60": false, "diff_120": 4.97, "near_120": false, "diff_240": 8.72, "near_240": false}, {"ticker": "^GDAXI", "displayTicker": "GDAXI", "quoteUrl": "https://www.investing.com/search?q=DAX+Index", "en_name": "DAX Index", "kr_name": "독일 DAX", "sector": "DE Index", "desc": "German large-cap benchmark.", "price": 24128.98, "rsi": 54.7, "fromHigh": -5.1, "volRatio": 1.03, "per": null, "upside": null, "trend": "Downtrend", "trendScore": 2, "nearCount": 3, "diff_60": 0.3, "near_60": true, "diff_120": -0.11, "near_120": true, "diff_240": 0.23, "near_240": true}, {"ticker": "^IXIC", "displayTicker": "IXIC", "quoteUrl": "https://www.investing.com/search?q=NASDAQ+Composite", "en_name": "NASDAQ Composite", "kr_name": "나스닥 종합", "sector": "US Index", "desc": "Broad technology-heavy US index.", "price": 24836.6, "rsi": 72.5, "fromHigh": 0.0, "volRatio": 1.13, "per": null, "upside": null, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": 9.01, "near_60": false, "diff_120": 7.76, "near_120": false, "diff_240": 12.39, "near_240": false}, {"ticker": "^FCHI", "displayTicker": "FCHI", "quoteUrl": "https://www.investing.com/search?q=CAC+40", "en_name": "CAC 40", "kr_name": "프랑스 CAC40", "sector": "FR Index", "desc": "French large-cap benchmark.", "price": 8157.82, "rsi": 50.8, "fromHigh": -5.4, "volRatio": 0.88, "per": null, "upside": null, "trend": "Neutral", "trendScore": 3, "nearCount": 2, "diff_60": 0.02, "near_60": true, "diff_120": 0.21, "near_120": true, "diff_240": 2.11, "near_240": false}, {"ticker": "000001.SS", "displayTicker": "SSE", "quoteUrl": "https://www.investing.com/search?q=SSE+Composite+Index", "en_name": "SSE Composite Index", "kr_name": "상하이 종합", "sector": "CN Index", "desc": "Shanghai Stock Exchange composite index.", "price": 4079.9, "rsi": 58.0, "fromHigh": -2.5, "volRatio": 1.06, "per": null, "upside": null, "trend": "Uptrend", "trendScore": 4, "nearCount": 2, "diff_60": 0.64, "near_60": true, "diff_120": 1.7, "near_120": true, "diff_240": 7.09, "near_240": false}];
+const SECTOR_LABELS = ["US Index"];
+const SECTOR_BULL  = [1];
+const SECTOR_NEU   = [2];
+const SECTOR_BEAR  = [0];
+const RSI_LABELS = ["<25", "25-30", "30-35", "35-40", "40-45", "45-50", "50-55", "55-60", "60-65", "65-70", "70-75", "75+"];
+const RSI_VALUES = [0, 0, 0, 0, 0, 1, 3, 1, 2, 1, 2, 0];
+const ANALYSIS_MD = "# Global Indices 이동평균선 근접 종목 분석 리포트\n\n**기준일:** 20260427  \n**유니버스:** Global Indices (10개 종목)  \n**기준:** MA60, MA120, MA240 기준 ±2.0% 이내\n\n---\n\n## 요약\n\n| 구분 | 종목 수 |\n|---|---:|\n| MA60 근접 | **5개** |\n| MA120 근접 | **4개** |\n| MA240 근접 | **2개** |\n| 2개 이상 동시 근접 | **4개** |\n\n---\n\n## 시장 메모\n\n- 근접 종목은 전체 10개 중 5개로, 스캔 유니버스의 **50.0%** 입니다.\n- 복수 이동평균선이 동시에 겹친 종목은 4개로, 근접 종목 내부 비중은 **80.0%** 입니다.\n- 평균 RSI는 **52**, 과매도 후보는 **0개**, 과열 경고 구간은 **0개** 입니다.\n- 평균 업사이드는 **-**, 52주 고점 대비 평균 괴리는 **-5.0%** 입니다.\n- 추세 분포상 가장 많은 그룹은 **Downtrend** 이며, 이번 스캔은 추세 확인형 접근이 유효한 구간으로 보입니다.\n\n---\n\n## 1. 상단 추천 종목\n\n> 복수 이동평균선 근접, RSI, 업사이드, PER까지 반영한 종합 점수 기준입니다.\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| SSE | 상하이 종합 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | 4,079.90 | 58 | -2.5% | - | - | MA60 +0.6% / MA120 +1.7% |\n| FTSE | FTSE 100 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | 10,379.10 | 47 | -4.9% | - | - | MA60 -0.3% |\n| FCHI | 프랑스 CAC40 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | 8,157.82 | 51 | -5.4% | - | - | MA60 +0.0% / MA120 +0.2% |\n| HSI | 항셍 지수 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 25,978.07 | 52 | -7.1% | - | - | MA60 -0.6% / MA120 -0.6% / MA240 +1.8% |\n| GDAXI | 독일 DAX | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 24,128.98 | 55 | -5.1% | - | - | MA60 +0.3% / MA120 -0.1% / MA240 +0.2% |\n\n- **SSE 상하이 종합**: 추세 양호(Uptrend), MA 배열·기울기 확인 / 2개 MA 수렴, MA60 +0.6% / MA120 +1.7% 지지·저항 겹침 / RSI 58 부담 없는 진입 구간.\n- **FTSE FTSE 100**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -0.3% 단일 기준선 테스트 / RSI 47 부담 없는 진입 구간.\n- **FCHI 프랑스 CAC40**: 추세 중립(Neutral), 방향성 선택 대기 구간 / 2개 MA 수렴, MA60 +0.0% / MA120 +0.2% 지지·저항 겹침 / RSI 51 부담 없는 진입 구간.\n- **HSI 항셍 지수**: 추세 약세(Downtrend), 반등 여부 확인 필요 / 3개 MA 수렴, MA60 -0.6% / MA120 -0.6% / MA240 +1.8% 압축 구간 / RSI 52 부담 없는 진입 구간.\n- **GDAXI 독일 DAX**: 추세 약세(Downtrend), 반등 여부 확인 필요 / 3개 MA 수렴, MA60 +0.3% / MA120 -0.1% / MA240 +0.2% 압축 구간 / RSI 55 부담 없는 진입 구간.\n\n---\n\n## 2. 테마별 분석\n\n### A. 과매도 반등 후보\n\n> RSI 40 미만이면서 이동평균선에 근접해 있는 종목입니다. Strong Downtrend 종목은 제외(낙도끼 위험).\n\n_해당 종목 없음_\n\n### B. 복수 MA 수렴 구간\n\n> 단기, 중기, 장기 평균선이 가격 근처로 모인 종목입니다.\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| HSI | 항셍 지수 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 25,978.07 | 52 | -7.1% | - | - | MA60 -0.6% / MA120 -0.6% / MA240 +1.8% |\n| GDAXI | 독일 DAX | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 24,128.98 | 55 | -5.1% | - | - | MA60 +0.3% / MA120 -0.1% / MA240 +0.2% |\n| SSE | 상하이 종합 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | 4,079.90 | 58 | -2.5% | - | - | MA60 +0.6% / MA120 +1.7% |\n| FCHI | 프랑스 CAC40 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | 8,157.82 | 51 | -5.4% | - | - | MA60 +0.0% / MA120 +0.2% |\n\n- 복수 MA 수렴의 중심 후보는 **HSI** 이며, MA60 -0.6% / MA120 -0.6% / MA240 +1.8% 구간에서 방향성 선택을 앞둔 모습입니다.\n\n### C. 성장 기대 구간\n\n> 업사이드 20% 이상 + RSI 65 미만 종목입니다. 과열 상태에서의 고업사이드는 제외.\n\n_해당 종목 없음_\n\n### D. 밸류 후보\n\n> PER가 낮고 이동평균선 부근에 위치한 종목입니다.\n\n_해당 종목 없음_\n\n---\n\n## 3. 섹터 분포\n\n| 섹터 | 근접 종목 수 | 비중 |\n|---|---:|---:|\n| HK Index | 1 | 20.0% |\n| UK Index | 1 | 20.0% |\n| DE Index | 1 | 20.0% |\n| FR Index | 1 | 20.0% |\n| CN Index | 1 | 20.0% |\n\n- **HK Index**: 근접 종목 1개(20.0%), 평균 RSI 52, 평균 업사이드 -, 상위 후보는 HSI.\n- **UK Index**: 근접 종목 1개(20.0%), 평균 RSI 47, 평균 업사이드 -, 상위 후보는 FTSE.\n- **DE Index**: 근접 종목 1개(20.0%), 평균 RSI 55, 평균 업사이드 -, 상위 후보는 GDAXI.\n- 상위 섹터 비중이 20.0% 수준이라 섹터 쏠림은 과도하지 않은 편입니다.\n\n---\n\n## 4. 주의 종목\n\n> RSI 70 이상인데 이동평균선 근처에 있는 경우 단기 과열일 수 있습니다.\n\n_해당 종목 없음_\n\n---\n\n## 5. 전체 근접 종목 목록\n\n### MA60 근접 (5개)\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| FCHI | 프랑스 CAC40 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | 8,157.82 | 51 | -5.4% | - | - | MA60 +0.0% / MA120 +0.2% |\n| GDAXI | 독일 DAX | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 24,128.98 | 55 | -5.1% | - | - | MA60 +0.3% / MA120 -0.1% / MA240 +0.2% |\n| FTSE | FTSE 100 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | 10,379.10 | 47 | -4.9% | - | - | MA60 -0.3% |\n| HSI | 항셍 지수 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 25,978.07 | 52 | -7.1% | - | - | MA60 -0.6% / MA120 -0.6% / MA240 +1.8% |\n| SSE | 상하이 종합 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | 4,079.90 | 58 | -2.5% | - | - | MA60 +0.6% / MA120 +1.7% |\n\n### MA120 근접 (4개)\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| GDAXI | 독일 DAX | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 24,128.98 | 55 | -5.1% | - | - | MA60 +0.3% / MA120 -0.1% / MA240 +0.2% |\n| FCHI | 프랑스 CAC40 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | 8,157.82 | 51 | -5.4% | - | - | MA60 +0.0% / MA120 +0.2% |\n| HSI | 항셍 지수 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 25,978.07 | 52 | -7.1% | - | - | MA60 -0.6% / MA120 -0.6% / MA240 +1.8% |\n| SSE | 상하이 종합 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | 4,079.90 | 58 | -2.5% | - | - | MA60 +0.6% / MA120 +1.7% |\n\n### MA240 근접 (2개)\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| GDAXI | 독일 DAX | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 24,128.98 | 55 | -5.1% | - | - | MA60 +0.3% / MA120 -0.1% / MA240 +0.2% |\n| HSI | 항셍 지수 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | 25,978.07 | 52 | -7.1% | - | - | MA60 -0.6% / MA120 -0.6% / MA240 +1.8% |\n\n*이 리포트는 공통 리팩터링 파이프라인에서 생성되었습니다.*";
+
+let currentTab = "all";
+let sortCol = "ticker";
+let sortAsc = true;
+let reportRendered = false;
+
+const sectorSet = [...new Set(DATA.map(d => d.sector).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "ko"));
+const trendSet = [...new Set(DATA.map(d => d.trend).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "en"));
+const sectorFilter = document.getElementById("sectorFilter");
+const trendFilter = document.getElementById("trendFilter");
+
+sectorSet.forEach(value => {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = value;
+  sectorFilter.appendChild(option);
+});
+
+trendSet.forEach(value => {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = value;
+  trendFilter.appendChild(option);
+});
+
+function chartLabels(labels) {
+  return labels.length ? labels : ["No data"];
+}
+
+function chartValues(values) {
+  return values.length ? values : [0];
+}
+
+const sectorChartInst = new Chart(document.getElementById("sectorChart"), {
+  type: "bar",
+  data: {
+    labels: SECTOR_LABELS.length ? SECTOR_LABELS : ["No data"],
+    datasets: [
+      { label: "강세", data: SECTOR_BULL,  backgroundColor: "#4ade8099", borderColor: "#4ade80", borderWidth: 1 },
+      { label: "중립", data: SECTOR_NEU,   backgroundColor: "#94a3b855", borderColor: "#94a3b8", borderWidth: 1 },
+      { label: "약세", data: SECTOR_BEAR,  backgroundColor: "#f8717199", borderColor: "#f87171", borderWidth: 1 },
+    ]
+  },
+  options: {
+    indexAxis: "y",
+    plugins: {
+      legend: { display: true, position: "top", labels: { color: "#c9d1d9", font: { size: 11 }, boxWidth: 12, padding: 10 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}개` } }
+    },
+    scales: {
+      x: { stacked: true, ticks: { color: "#8b949e" }, grid: { color: "#30363d" } },
+      y: { stacked: true, ticks: { color: "#c9d1d9", font: { size: 10 } }, grid: { color: "#30363d" } }
+    },
+    onClick(_, elements) {
+      if (!elements.length) return;
+      const label = SECTOR_LABELS[elements[0].index];
+      const sel = document.getElementById("sectorFilter");
+      if (sel.value === label) { sel.value = ""; } else { sel.value = label; }
+      applyFilter();
+    },
+    maintainAspectRatio: false
+  }
+});
+
+const rsiColors = chartLabels(RSI_LABELS).map((_, i) => i <= 2 ? "#3fb95066" : i >= 9 ? "#f8514966" : "#58a6ff66");
+new Chart(document.getElementById("rsiChart"), {
+  type: "bar",
+  data: {
+    labels: chartLabels(RSI_LABELS),
+    datasets: [{ data: chartValues(RSI_VALUES), backgroundColor: rsiColors, borderColor: rsiColors.map(c => c.replace("66", "ff")), borderWidth: 1 }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: "#8b949e", font: { size: 9 } }, grid: { color: "#30363d" } },
+      y: { ticks: { color: "#8b949e" }, grid: { color: "#30363d" } }
+    },
+    maintainAspectRatio: false
+  }
+});
+
+document.getElementById("mainTabs").addEventListener("click", event => {
+  const link = event.target.closest("a[data-tab]");
+  if (!link) return;
+  event.preventDefault();
+  document.querySelectorAll("#mainTabs .nav-link").forEach(node => node.classList.remove("active"));
+  link.classList.add("active");
+  currentTab = link.dataset.tab;
+  const isReport = currentTab === "report";
+  document.getElementById("filterBar").style.display = isReport ? "none" : "";
+  document.getElementById("tableSection").style.display = isReport ? "none" : "";
+  document.getElementById("reportSection").style.display = isReport ? "" : "none";
+  if (isReport) renderReport();
+  else applyFilter();
+});
+
+function renderReport() {
+  if (reportRendered) return;
+  reportRendered = true;
+  const el = document.getElementById("mdContent");
+  if (!ANALYSIS_MD) {
+    el.innerHTML = '<p class="text-secondary py-3">No analysis markdown was found. Run the analyze stage or the full pipeline first.</p>';
+    return;
+  }
+  el.innerHTML = marked.parse(ANALYSIS_MD);
+  const ids = ["sec-top", "sec-theme", "sec-sector", "sec-warn"];
+  el.querySelectorAll("h2").forEach((heading, index) => {
+    heading.id = ids[index] || `sec-${index + 1}`;
+  });
+  el.querySelectorAll("a").forEach(link => {
+    if (link.href && link.href.startsWith("http")) link.target = "_blank";
+  });
+}
+
+document.getElementById("mainTable").querySelector("thead").addEventListener("click", event => {
+  const th = event.target.closest("th[data-col]");
+  if (!th) return;
+  const col = th.dataset.col;
+  if (sortCol === col) sortAsc = !sortAsc;
+  else {
+    sortCol = col;
+    sortAsc = true;
+  }
+  document.querySelectorAll("thead th").forEach(node => node.classList.remove("th-sorted"));
+  th.classList.add("th-sorted");
+  renderFilter();
+});
+
+function esc(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function fmt(value, digits = 2, suffix = "") {
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  return Number(value).toFixed(digits) + suffix;
+}
+
+function fmtPrice(value) {
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  return `${CURRENCY}${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function trendCell(value) {
+  const icons = {
+    "Strong Uptrend": "++",
+    "Uptrend": "+",
+    "Neutral": "=",
+    "Downtrend": "-",
+    "Strong Downtrend": "--"
+  };
+  const colors = {
+    "Strong Uptrend": "#3fb950",
+    "Uptrend": "#7ee787",
+    "Neutral": "#e3b341",
+    "Downtrend": "#ffa198",
+    "Strong Downtrend": "#f85149"
+  };
+  if (!value) return "-";
+  return `<span style="color:${colors[value] || "#c9d1d9"};font-weight:700">${icons[value] || ""} ${esc(value)}</span>`;
+}
+
+function rsiCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n < 35 ? "rsi-green" : n > 65 ? "rsi-red" : "";
+  return `<span class="${klass}">${n.toFixed(1)}</span>`;
+}
+
+function upCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n >= 20 ? "up-green" : n < 0 ? "up-red" : "";
+  return `<span class="${klass}">${n.toFixed(1)}%</span>`;
+}
+
+function perCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n < 15 ? "per-green" : n > 40 ? "per-red" : "";
+  return `<span class="${klass}">${n.toFixed(1)}</span>`;
+}
+
+function diffCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = Math.abs(n) <= 2 ? "ma-warn" : "";
+  return `<span class="${klass}">${n >= 0 ? "+" : ""}${n.toFixed(2)}%</span>`;
+}
+
+function badges(row) {
+  const classes = ["info text-dark", "warning text-dark", "danger", "primary", "success", "secondary"];
+  let html = "";
+  PERIODS.forEach((period, index) => {
+    if (row[`near_${period}`]) {
+      html += `<span class="badge bg-${classes[index % classes.length]} me-1" style="font-size:.65rem">${period}</span>`;
+    }
+  });
+  return html || "-";
+}
+
+function tabMatch(row) {
+  if (currentTab === "all") return true;
+  if (currentTab === "multi") return (row.nearCount || 0) >= 2;
+  if (currentTab.startsWith("ma")) {
+    const period = currentTab.slice(2);
+    return !!row[`near_${period}`];
+  }
+  return true;
+}
+
+function applyFilter() {
+  renderFilter();
+}
+
+function renderFilter() {
+  const search = document.getElementById("searchBox").value.toLowerCase();
+  const sector = document.getElementById("sectorFilter").value;
+  const rsiValue = document.getElementById("rsiFilter").value;
+  const trend = document.getElementById("trendFilter").value;
+
+  let rows = DATA.filter(row => {
+    if (!tabMatch(row)) return false;
+    if (search) {
+      const haystack = [row.ticker, row.displayTicker, row.kr_name, row.en_name].filter(Boolean).join(" ").toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    if (sector && row.sector !== sector) return false;
+    if (trend && row.trend !== trend) return false;
+    if (rsiValue === "low" && !(row.rsi != null && row.rsi < 35)) return false;
+    if (rsiValue === "high" && !(row.rsi != null && row.rsi > 65)) return false;
+    if (rsiValue === "mid" && !(row.rsi != null && row.rsi >= 35 && row.rsi <= 65)) return false;
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    let va = a[sortCol];
+    let vb = b[sortCol];
+    if (va == null) va = sortAsc ? Infinity : -Infinity;
+    if (vb == null) vb = sortAsc ? Infinity : -Infinity;
+    if (typeof va === "string" || typeof vb === "string") {
+      return sortAsc ? String(va).localeCompare(String(vb), "ko") : String(vb).localeCompare(String(va), "ko");
+    }
+    return sortAsc ? va - vb : vb - va;
+  });
+
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = rows.map(row => {
+    const diffCells = PERIODS.map(period => `<td>${diffCell(row[`diff_${period}`])}</td>`).join("");
+    const title = esc([row.en_name || "", row.desc || ""].filter(Boolean).join("\n"));
+    const name = esc(row.kr_name || row.en_name || row.displayTicker || row.ticker);
+    const ticker = esc(row.displayTicker || row.ticker);
+    const sectorName = esc(row.sector || "-");
+    return `
+    <tr>
+      <td><a href="${esc(row.quoteUrl || "#")}" target="_blank" class="ticker-link">${ticker}</a></td>
+      <td title="${title}">${name}</td>
+      <td>${sectorName}</td>
+      <td>${trendCell(row.trend)}</td>
+      <td>${fmtPrice(row.price)}</td>
+      <td>${rsiCell(row.rsi)}</td>
+      <td>${fmt(row.fromHigh, 1, "%")}</td>
+      <td>${fmt(row.volRatio, 2, "x")}</td>
+      <td>${perCell(row.per)}</td>
+      <td>${upCell(row.upside)}</td>
+      ${diffCells}
+      <td>${badges(row)}</td>
+    </tr>`;
+  }).join("");
+
+  const message = `${rows.length} shown / total ${DATA.length}`;
+  document.getElementById("rowCount").textContent = message;
+  document.getElementById("rowCount2").textContent = message;
+}
+
+renderFilter();
+</script>
+</body>
+</html>
