@@ -1,0 +1,50 @@
+{
+  "GC=F": {
+    "name_en": "Gold Futures",
+    "name_local": "금 선물",
+    "sector": "Commodity",
+    "description": "Precious metals proxy."
+  },
+  "SI=F": {
+    "name_en": "Silver Futures",
+    "name_local": "은 선물",
+    "sector": "Commodity",
+    "description": "Precious metals proxy."
+  },
+  "CL=F": {
+    "name_en": "Crude Oil Futures",
+    "name_local": "WTI 원유",
+    "sector": "Commodity",
+    "description": "Energy benchmark."
+  },
+  "NG=F": {
+    "name_en": "Natural Gas Futures",
+    "name_local": "천연가스",
+    "sector": "Commodity",
+    "description": "Gas benchmark."
+  },
+  "HG=F": {
+    "name_en": "Copper Futures",
+    "name_local": "구리 선물",
+    "sector": "Commodity",
+    "description": "Industrial metals proxy."
+  },
+  "ZC=F": {
+    "name_en": "Corn Futures",
+    "name_local": "옥수수 선물",
+    "sector": "Commodity",
+    "description": "Agriculture proxy."
+  },
+  "ZW=F": {
+    "name_en": "Wheat Futures",
+    "name_local": "밀 선물",
+    "sector": "Commodity",
+    "description": "Agriculture proxy."
+  },
+  "SB=F": {
+    "name_en": "Sugar Futures",
+    "name_local": "설탕 선물",
+    "sector": "Commodity",
+    "description": "Soft commodities proxy."
+  }
+}

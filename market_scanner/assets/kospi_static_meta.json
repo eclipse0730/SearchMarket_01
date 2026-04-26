@@ -1,0 +1,440 @@
+{
+  "005930.KS": {
+    "name_en": "Samsung Electronics",
+    "name_local": "삼성전자",
+    "sector": "반도체·전자",
+    "description": "메모리·시스템반도체·스마트폰·가전"
+  },
+  "006400.KS": {
+    "name_en": "Samsung SDI",
+    "name_local": "삼성SDI",
+    "sector": "배터리",
+    "description": "전기차 배터리·ESS"
+  },
+  "009150.KS": {
+    "name_en": "Samsung Electro-Mechanics",
+    "name_local": "삼성전기",
+    "sector": "전자부품",
+    "description": "MLCC·카메라모듈·반도체 패키지기판"
+  },
+  "018260.KS": {
+    "name_en": "Samsung SDS",
+    "name_local": "삼성SDS",
+    "sector": "IT서비스",
+    "description": "삼성그룹 IT서비스·물류 BPO"
+  },
+  "028260.KS": {
+    "name_en": "Samsung C&T",
+    "name_local": "삼성물산",
+    "sector": "지주·건설",
+    "description": "삼성그룹 지주 역할, 건설·상사"
+  },
+  "032830.KS": {
+    "name_en": "Samsung Life Insurance",
+    "name_local": "삼성생명",
+    "sector": "보험",
+    "description": "국내 1위 생명보험"
+  },
+  "000810.KS": {
+    "name_en": "Samsung Fire & Marine",
+    "name_local": "삼성화재",
+    "sector": "보험",
+    "description": "국내 1위 손해보험"
+  },
+  "010140.KS": {
+    "name_en": "Samsung Heavy Industries",
+    "name_local": "삼성중공업",
+    "sector": "조선",
+    "description": "삼성 계열 조선사"
+  },
+  "000660.KS": {
+    "name_en": "SK Hynix",
+    "name_local": "SK하이닉스",
+    "sector": "반도체",
+    "description": "D램·낸드플래시 메모리 세계 2위"
+  },
+  "096770.KS": {
+    "name_en": "SK Innovation",
+    "name_local": "SK이노베이션",
+    "sector": "에너지·화학",
+    "description": "정유·화학·배터리 소재"
+  },
+  "034730.KS": {
+    "name_en": "SK Inc.",
+    "name_local": "SK",
+    "sector": "지주사",
+    "description": "SK그룹 지주, ICT·에너지·바이오"
+  },
+  "017670.KS": {
+    "name_en": "SK Telecom",
+    "name_local": "SK텔레콤",
+    "sector": "통신",
+    "description": "국내 1위 이동통신"
+  },
+  "051910.KS": {
+    "name_en": "LG Chem",
+    "name_local": "LG화학",
+    "sector": "화학·배터리",
+    "description": "배터리 분사 후 석유화학·첨단소재"
+  },
+  "373220.KS": {
+    "name_en": "LG Energy Solution",
+    "name_local": "LG에너지솔루션",
+    "sector": "배터리",
+    "description": "전기차 배터리 세계 2위"
+  },
+  "066570.KS": {
+    "name_en": "LG Electronics",
+    "name_local": "LG전자",
+    "sector": "전자·가전",
+    "description": "가전·TV·차량부품·B2B"
+  },
+  "003550.KS": {
+    "name_en": "LG Corporation",
+    "name_local": "LG",
+    "sector": "지주사",
+    "description": "LG그룹 지주회사"
+  },
+  "032640.KS": {
+    "name_en": "LG Uplus",
+    "name_local": "LG유플러스",
+    "sector": "통신",
+    "description": "이동통신·초고속인터넷·IPTV"
+  },
+  "005380.KS": {
+    "name_en": "Hyundai Motor",
+    "name_local": "현대자동차",
+    "sector": "자동차",
+    "description": "국내 1위 완성차, 전기차 전환 중"
+  },
+  "000270.KS": {
+    "name_en": "Kia Corporation",
+    "name_local": "기아",
+    "sector": "자동차",
+    "description": "현대차 계열 완성차, 글로벌 디자인"
+  },
+  "012330.KS": {
+    "name_en": "Hyundai Mobis",
+    "name_local": "현대모비스",
+    "sector": "자동차부품",
+    "description": "현대·기아 핵심 부품 계열사"
+  },
+  "001450.KS": {
+    "name_en": "Hyundai Marine & Fire",
+    "name_local": "현대해상",
+    "sector": "보험",
+    "description": "현대차 계열 손해보험"
+  },
+  "068270.KS": {
+    "name_en": "Celltrion",
+    "name_local": "셀트리온",
+    "sector": "바이오",
+    "description": "항체 바이오시밀러 세계 1위"
+  },
+  "207940.KS": {
+    "name_en": "Samsung Biologics",
+    "name_local": "삼성바이오로직스",
+    "sector": "바이오·CMO",
+    "description": "글로벌 바이오 CDMO"
+  },
+  "000100.KS": {
+    "name_en": "Yuhan Corporation",
+    "name_local": "유한양행",
+    "sector": "제약",
+    "description": "국내 대형 제약사, 레이저티닙 개발"
+  },
+  "128940.KS": {
+    "name_en": "Hanmi Pharmaceutical",
+    "name_local": "한미약품",
+    "sector": "제약",
+    "description": "국내 제약 R&D 선도, 신약 수출"
+  },
+  "006280.KS": {
+    "name_en": "Green Cross Holdings",
+    "name_local": "GC녹십자",
+    "sector": "제약·혈액제제",
+    "description": "혈액제제 1위, 백신"
+  },
+  "035420.KS": {
+    "name_en": "NAVER Corporation",
+    "name_local": "NAVER",
+    "sector": "인터넷·플랫폼",
+    "description": "국내 1위 검색 포털·클라우드"
+  },
+  "035720.KS": {
+    "name_en": "Kakao Corp.",
+    "name_local": "카카오",
+    "sector": "인터넷·플랫폼",
+    "description": "카카오톡 기반 플랫폼·핀테크"
+  },
+  "036570.KS": {
+    "name_en": "NCsoft Corporation",
+    "name_local": "엔씨소프트",
+    "sector": "게임",
+    "description": "리니지·블레이드&소울 MMORPG"
+  },
+  "251270.KS": {
+    "name_en": "Netmarble",
+    "name_local": "넷마블",
+    "sector": "게임",
+    "description": "모바일 게임 글로벌 퍼블리셔"
+  },
+  "293490.KS": {
+    "name_en": "Krafton",
+    "name_local": "크래프톤",
+    "sector": "게임",
+    "description": "배틀그라운드(PUBG) 개발사"
+  },
+  "352820.KS": {
+    "name_en": "HYBE Co.",
+    "name_local": "하이브",
+    "sector": "엔터테인먼트",
+    "description": "BTS 소속 K-POP 최대 기획사"
+  },
+  "041510.KS": {
+    "name_en": "SM Entertainment",
+    "name_local": "SM엔터테인먼트",
+    "sector": "엔터테인먼트",
+    "description": "EXO·aespa K-POP 기획사"
+  },
+  "035900.KS": {
+    "name_en": "JYP Entertainment",
+    "name_local": "JYP엔터테인먼트",
+    "sector": "엔터테인먼트",
+    "description": "TWICE·Stray Kids K-POP 기획사"
+  },
+  "122870.KS": {
+    "name_en": "YG Entertainment",
+    "name_local": "YG엔터테인먼트",
+    "sector": "엔터테인먼트",
+    "description": "BLACKPINK·BIGBANG K-POP 기획사"
+  },
+  "055550.KS": {
+    "name_en": "Shinhan Financial Group",
+    "name_local": "신한지주",
+    "sector": "금융지주",
+    "description": "신한은행 계열 종합금융그룹"
+  },
+  "105560.KS": {
+    "name_en": "KB Financial Group",
+    "name_local": "KB금융",
+    "sector": "금융지주",
+    "description": "국민은행 계열 종합금융그룹"
+  },
+  "086790.KS": {
+    "name_en": "Hana Financial Group",
+    "name_local": "하나금융지주",
+    "sector": "금융지주",
+    "description": "하나은행 계열 종합금융그룹"
+  },
+  "316140.KS": {
+    "name_en": "Woori Financial Group",
+    "name_local": "우리금융지주",
+    "sector": "금융지주",
+    "description": "우리은행 계열 종합금융그룹"
+  },
+  "024110.KS": {
+    "name_en": "Industrial Bank of Korea",
+    "name_local": "기업은행",
+    "sector": "은행",
+    "description": "중소기업 전문 국책은행"
+  },
+  "016360.KS": {
+    "name_en": "Samsung Securities",
+    "name_local": "삼성증권",
+    "sector": "증권",
+    "description": "삼성그룹 계열 대형 증권사"
+  },
+  "006800.KS": {
+    "name_en": "Mirae Asset Securities",
+    "name_local": "미래에셋증권",
+    "sector": "증권",
+    "description": "국내 1위 증권사, 해외 진출"
+  },
+  "047050.KS": {
+    "name_en": "Korea Investment Holdings",
+    "name_local": "한국금융지주",
+    "sector": "금융지주",
+    "description": "한국투자증권 계열 금융지주"
+  },
+  "005490.KS": {
+    "name_en": "POSCO Holdings",
+    "name_local": "POSCO홀딩스",
+    "sector": "철강·소재",
+    "description": "국내 1위 철강, 이차전지 소재"
+  },
+  "004020.KS": {
+    "name_en": "Hyundai Steel",
+    "name_local": "현대제철",
+    "sector": "철강",
+    "description": "현대차 계열 철강, 전기로·고로"
+  },
+  "010130.KS": {
+    "name_en": "Korea Zinc",
+    "name_local": "고려아연",
+    "sector": "비철금속",
+    "description": "아연 세계 1위 제련·이차전지 소재"
+  },
+  "011170.KS": {
+    "name_en": "Lotte Chemical",
+    "name_local": "롯데케미칼",
+    "sector": "화학",
+    "description": "기초화학·첨단소재"
+  },
+  "011780.KS": {
+    "name_en": "Kumho Petrochem",
+    "name_local": "금호석유",
+    "sector": "화학",
+    "description": "합성고무·합성수지 전문"
+  },
+  "042660.KS": {
+    "name_en": "Hanwha Ocean",
+    "name_local": "한화오션",
+    "sector": "조선",
+    "description": "전 대우조선해양, 잠수함·LNG선"
+  },
+  "009540.KS": {
+    "name_en": "HD Hyundai Heavy Industries",
+    "name_local": "HD현대중공업",
+    "sector": "조선",
+    "description": "세계 1위 조선사 계열"
+  },
+  "000720.KS": {
+    "name_en": "Hyundai E&C",
+    "name_local": "현대건설",
+    "sector": "건설",
+    "description": "국내 1위 건설사"
+  },
+  "006360.KS": {
+    "name_en": "GS Engineering & Construction",
+    "name_local": "GS건설",
+    "sector": "건설",
+    "description": "GS그룹 건설 계열사"
+  },
+  "047810.KS": {
+    "name_en": "Korea Aerospace Industries",
+    "name_local": "한국항공우주",
+    "sector": "항공우주·방산",
+    "description": "국산 전투기(KF-21)·헬기 제조"
+  },
+  "079550.KS": {
+    "name_en": "LIG Nex1",
+    "name_local": "LIG넥스원",
+    "sector": "방산",
+    "description": "미사일·레이더 방산 전문"
+  },
+  "272210.KS": {
+    "name_en": "Hanwha Systems",
+    "name_local": "한화시스템",
+    "sector": "방산·IT",
+    "description": "방산 전자·ICT 서비스"
+  },
+  "000150.KS": {
+    "name_en": "Doosan Corporation",
+    "name_local": "두산",
+    "sector": "지주·방산",
+    "description": "두산그룹 지주, 로봇·방산"
+  },
+  "034020.KS": {
+    "name_en": "Doosan Enerbility",
+    "name_local": "두산에너빌리티",
+    "sector": "에너지기계",
+    "description": "원자력·가스터빈 발전설비"
+  },
+  "030200.KS": {
+    "name_en": "KT Corporation",
+    "name_local": "KT",
+    "sector": "통신",
+    "description": "유선·무선통신, IPTV, 클라우드"
+  },
+  "010950.KS": {
+    "name_en": "S-Oil",
+    "name_local": "S-Oil",
+    "sector": "정유",
+    "description": "국내 3위 정유, 아람코 계열"
+  },
+  "015760.KS": {
+    "name_en": "Korea Electric Power (KEPCO)",
+    "name_local": "한국전력",
+    "sector": "유틸리티",
+    "description": "국내 전력 공급 독점 공기업"
+  },
+  "139480.KS": {
+    "name_en": "E-MART",
+    "name_local": "이마트",
+    "sector": "유통",
+    "description": "국내 1위 할인마트"
+  },
+  "001040.KS": {
+    "name_en": "CJ Corporation",
+    "name_local": "CJ",
+    "sector": "지주사",
+    "description": "식품·물류·바이오·엔터 지주"
+  },
+  "097950.KS": {
+    "name_en": "CJ CheilJedang",
+    "name_local": "CJ제일제당",
+    "sector": "식품·바이오",
+    "description": "식품 1위·바이오 아미노산 세계 1위"
+  },
+  "000080.KS": {
+    "name_en": "Hite Jinro",
+    "name_local": "하이트진로",
+    "sector": "식품·음료",
+    "description": "소주 1위(참이슬)·맥주(테라)"
+  },
+  "021240.KS": {
+    "name_en": "Coway",
+    "name_local": "코웨이",
+    "sector": "가전·렌탈",
+    "description": "정수기·공기청정기 렌탈 1위"
+  },
+  "033780.KS": {
+    "name_en": "KT&G",
+    "name_local": "KT&G",
+    "sector": "담배·건강기능식품",
+    "description": "국내 1위 담배, 인삼공사 계열"
+  },
+  "007070.KS": {
+    "name_en": "GS Retail",
+    "name_local": "GS리테일",
+    "sector": "유통",
+    "description": "GS25 편의점·홈쇼핑"
+  },
+  "282330.KS": {
+    "name_en": "BGF Retail",
+    "name_local": "BGF리테일",
+    "sector": "유통",
+    "description": "CU 편의점 운영"
+  },
+  "003490.KS": {
+    "name_en": "Korean Air Lines",
+    "name_local": "대한항공",
+    "sector": "항공",
+    "description": "국내 1위 항공사, 아시아나 합병"
+  },
+  "011200.KS": {
+    "name_en": "HMM",
+    "name_local": "HMM",
+    "sector": "해운",
+    "description": "국내 1위 컨테이너 해운"
+  },
+  "011040.KS": {
+    "name_en": "CJ Logistics",
+    "name_local": "CJ대한통운",
+    "sector": "물류",
+    "description": "국내 1위 택배·물류"
+  },
+  "161390.KS": {
+    "name_en": "Hankook Tire & Tech",
+    "name_local": "한국타이어앤테크놀로지",
+    "sector": "타이어",
+    "description": "국내 1위 타이어 제조"
+  },
+  "088350.KS": {
+    "name_en": "Hanwha Life Insurance",
+    "name_local": "한화생명",
+    "sector": "보험",
+    "description": "한화그룹 생명보험 계열사"
+  }
+}

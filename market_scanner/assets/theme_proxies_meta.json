@@ -1,0 +1,50 @@
+{
+  "SOXX": {
+    "name_en": "iShares Semiconductor ETF",
+    "name_local": "반도체 ETF",
+    "sector": "Theme Proxy",
+    "description": "Semiconductor cycle proxy."
+  },
+  "BOTZ": {
+    "name_en": "Global X Robotics & AI ETF",
+    "name_local": "로봇·AI ETF",
+    "sector": "Theme Proxy",
+    "description": "Robotics and AI proxy."
+  },
+  "IBB": {
+    "name_en": "iShares Biotechnology ETF",
+    "name_local": "바이오테크 ETF",
+    "sector": "Theme Proxy",
+    "description": "Biotechnology proxy."
+  },
+  "XLK": {
+    "name_en": "Technology Select Sector SPDR",
+    "name_local": "기술 ETF",
+    "sector": "Theme Proxy",
+    "description": "Large-cap technology proxy."
+  },
+  "XLE": {
+    "name_en": "Energy Select Sector SPDR",
+    "name_local": "에너지 ETF",
+    "sector": "Theme Proxy",
+    "description": "Energy sector proxy."
+  },
+  "XLF": {
+    "name_en": "Financial Select Sector SPDR",
+    "name_local": "금융 ETF",
+    "sector": "Theme Proxy",
+    "description": "Financial sector proxy."
+  },
+  "ICLN": {
+    "name_en": "iShares Global Clean Energy ETF",
+    "name_local": "클린에너지 ETF",
+    "sector": "Theme Proxy",
+    "description": "Clean energy proxy."
+  },
+  "ARKK": {
+    "name_en": "ARK Innovation ETF",
+    "name_local": "혁신성장 ETF",
+    "sector": "Theme Proxy",
+    "description": "High-beta innovation proxy."
+  }
+}

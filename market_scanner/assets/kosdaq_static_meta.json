@@ -1,0 +1,158 @@
+{
+  "247540.KQ": {
+    "name_en": "EcoPro BM Co.",
+    "name_local": "에코프로비엠",
+    "sector": "이차전지 소재",
+    "description": "NCM 양극재 제조, 전기차 배터리 핵심 소재"
+  },
+  "086520.KQ": {
+    "name_en": "EcoPro Co.",
+    "name_local": "에코프로",
+    "sector": "이차전지 소재",
+    "description": "에코프로비엠 지주, 이차전지 소재 그룹사"
+  },
+  "196170.KQ": {
+    "name_en": "Alteogen Inc.",
+    "name_local": "알테오젠",
+    "sector": "바이오",
+    "description": "피하주사 플랫폼 ALT-B4, ADC 항체-약물 접합체 개발"
+  },
+  "028300.KQ": {
+    "name_en": "HLB Inc.",
+    "name_local": "HLB",
+    "sector": "바이오",
+    "description": "리보세라닙 항암 신약 개발, HLB그룹 지주"
+  },
+  "058470.KQ": {
+    "name_en": "Leeno Industrial Inc.",
+    "name_local": "리노공업",
+    "sector": "반도체 부품",
+    "description": "반도체 검사용 소켓·핀 제조, 글로벌 점유율 1위"
+  },
+  "041510.KQ": {
+    "name_en": "SM Entertainment",
+    "name_local": "에스엠",
+    "sector": "엔터테인먼트",
+    "description": "SM엔터 K-팝 기획·제작, EXO·aespa·NCT"
+  },
+  "035900.KQ": {
+    "name_en": "JYP Entertainment",
+    "name_local": "JYP엔터테인먼트",
+    "sector": "엔터테인먼트",
+    "description": "K-팝 기획사, TWICE·Stray Kids·NMIXX"
+  },
+  "122870.KQ": {
+    "name_en": "YG Entertainment Inc.",
+    "name_local": "와이지엔터테인먼트",
+    "sector": "엔터테인먼트",
+    "description": "K-팝 기획사, BLACKPINK·BIGBANG·TREASURE"
+  },
+  "263750.KQ": {
+    "name_en": "Pearl Abyss Corp.",
+    "name_local": "펄어비스",
+    "sector": "게임",
+    "description": "검은사막 개발사, 자체 엔진 기반 MMORPG"
+  },
+  "293490.KQ": {
+    "name_en": "Kakao Games Corp.",
+    "name_local": "카카오게임즈",
+    "sector": "게임",
+    "description": "카카오 게임 퍼블리싱, 오딘·아키에이지 워"
+  },
+  "096530.KQ": {
+    "name_en": "Seegene Inc.",
+    "name_local": "씨젠",
+    "sector": "바이오 진단",
+    "description": "분자진단 시약·장비 제조, 다중 동시 검출 원천기술"
+  },
+  "357780.KQ": {
+    "name_en": "Solbrain Co.",
+    "name_local": "솔브레인",
+    "sector": "반도체 소재",
+    "description": "반도체·디스플레이용 화학 소재, 식각액·CMP슬러리"
+  },
+  "005290.KQ": {
+    "name_en": "Dongjin Semichem Co.",
+    "name_local": "동진쎄미켐",
+    "sector": "반도체 소재",
+    "description": "감광재(PR)·반도체 공정 화학재료 제조"
+  },
+  "240810.KQ": {
+    "name_en": "Wonik IPS Co.",
+    "name_local": "원익IPS",
+    "sector": "반도체 장비",
+    "description": "ALD·CVD 반도체 증착 장비 전문"
+  },
+  "022100.KQ": {
+    "name_en": "POSCO DX Co.",
+    "name_local": "포스코DX",
+    "sector": "IT 서비스",
+    "description": "포스코 그룹 IT·DX 전담, 스마트팩토리 솔루션"
+  },
+  "277810.KQ": {
+    "name_en": "Rainbow Robotics Inc.",
+    "name_local": "레인보우로보틱스",
+    "sector": "로봇",
+    "description": "협동로봇·이족보행로봇 개발, 삼성전자 지분 투자"
+  },
+  "030520.KQ": {
+    "name_en": "Hancom Inc.",
+    "name_local": "한글과컴퓨터",
+    "sector": "소프트웨어",
+    "description": "한컴오피스·한컴AI 오피스 솔루션, 공공 SW 1위"
+  },
+  "214150.KQ": {
+    "name_en": "Classys Inc.",
+    "name_local": "클래시스",
+    "sector": "의료기기",
+    "description": "비침습 미용 의료기기, 슈링크·볼뉴머 글로벌 판매"
+  },
+  "214450.KQ": {
+    "name_en": "PharmaResearch Co.",
+    "name_local": "파마리서치",
+    "sector": "의약품",
+    "description": "DNA 단편(PDRN) 기반 조직재생 의약품·화장품"
+  },
+  "064760.KQ": {
+    "name_en": "TCSemiconductor Co.",
+    "name_local": "티씨케이",
+    "sector": "반도체 부품",
+    "description": "식각 공정용 SiC 링·포커스링 제조, 고순도 세라믹"
+  },
+  "257720.KQ": {
+    "name_en": "Silicon2 Inc.",
+    "name_local": "실리콘투",
+    "sector": "화장품 유통",
+    "description": "K-뷰티 역직구 플랫폼, 글로벌 화장품 B2B 유통"
+  },
+  "067630.KQ": {
+    "name_en": "HLB Life Science Co.",
+    "name_local": "HLB생명과학",
+    "sector": "바이오",
+    "description": "HLB 계열 바이오, 항암 개량신약·천연물 의약품"
+  },
+  "450080.KQ": {
+    "name_en": "EcoPro Materials Co.",
+    "name_local": "에코프로머티리얼즈",
+    "sector": "이차전지 소재",
+    "description": "양극재 전구체(pCAM) 제조, 에코프로그룹 소재 계열"
+  },
+  "393890.KQ": {
+    "name_en": "W-Scope Chungju Plant",
+    "name_local": "더블유씨피",
+    "sector": "이차전지 소재",
+    "description": "리튬이온 배터리 분리막(LiBS) 전문 제조"
+  },
+  "041020.KQ": {
+    "name_en": "Isplus Corp.",
+    "name_local": "이스트소프트",
+    "sector": "소프트웨어",
+    "description": "AI 영상 솔루션·알약·알툴즈 개인용 소프트웨어"
+  },
+  "039200.KQ": {
+    "name_en": "Oscotec Inc.",
+    "name_local": "오스코텍",
+    "sector": "바이오",
+    "description": "키나제 억제제 계열 신약 개발, 세로토닌·JAK 표적"
+  }
+}

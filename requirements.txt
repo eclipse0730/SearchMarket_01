@@ -1,0 +1,6 @@
+yfinance
+pandas
+lxml
+requests
+deep-translator
+finance-datareader

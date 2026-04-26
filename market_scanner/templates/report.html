@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>###TITLE###</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+  <style>###STYLE###</style>
+</head>
+<body>
+<div class="container-fluid py-3">
+
+<div class="d-flex align-items-baseline mb-3 gap-3">
+  <h4 class="mb-0 text-white">###HEADING###</h4>
+  <small class="text-secondary">###META###</small>
+</div>
+
+<div class="row g-2 mb-3">
+  ###SUMMARY_CARDS###
+</div>
+
+<div class="row g-2 mb-3">
+  <div class="col-md-7"><div class="card p-3" style="height:260px">
+    <div class="text-secondary small mb-1">섹터별 강세·약세 <span style="font-size:.7em;opacity:.6">(클릭 시 필터)</span></div>
+    <canvas id="sectorChart"></canvas>
+  </div></div>
+  <div class="col-md-5"><div class="card p-3" style="height:260px">
+    <div class="text-secondary small mb-1">RSI 분포</div>
+    <canvas id="rsiChart"></canvas>
+  </div></div>
+</div>
+
+<div id="filterBar" class="d-flex gap-2 mb-2 flex-wrap align-items-center">
+  <input type="text" id="searchBox" placeholder="Search ticker or name..." style="width:220px" oninput="applyFilter()">
+  <select id="sectorFilter" onchange="applyFilter()"><option value="">All sectors</option></select>
+  <select id="rsiFilter" onchange="applyFilter()">
+    <option value="">All RSI</option>
+    <option value="low">RSI &lt; 35</option>
+    <option value="high">RSI &gt; 65</option>
+    <option value="mid">35 to 65</option>
+  </select>
+  <select id="trendFilter" onchange="applyFilter()"><option value="">All trends</option></select>
+  <span class="text-secondary small ms-auto" id="rowCount"></span>
+</div>
+
+<ul class="nav nav-tabs mb-0" id="mainTabs">
+  ###TAB_NAV###
+</ul>
+
+<div id="tableSection">
+  <div class="card" style="border-top-left-radius:0">
+    <div class="p-0" style="overflow-x:auto">
+      <table id="mainTable">
+        <thead><tr>###TABLE_HEADERS###</tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="card-footer text-secondary small py-1" id="rowCount2"></div>
+  </div>
+</div>
+
+<div id="reportSection" style="display:none">
+  <div class="mb-3">
+    <a class="report-nav-btn top" href="#sec-top">Top picks</a>
+    <a class="report-nav-btn theme" href="#sec-theme">Themes</a>
+    <a class="report-nav-btn sector" href="#sec-sector">Sectors</a>
+    <a class="report-nav-btn warn" href="#sec-warn">Warnings</a>
+  </div>
+  <div id="mdContent" class="md-content"></div>
+</div>
+
+</div>
+<script>
+const CURRENCY = ###CURRENCY_JSON###;
+const PERIODS = ###PERIODS_JSON###;
+const DATA = ###DATA_JSON###;
+const SECTOR_LABELS = ###SECTOR_LABELS_JSON###;
+const SECTOR_BULL  = ###SECTOR_BULL_JSON###;
+const SECTOR_NEU   = ###SECTOR_NEU_JSON###;
+const SECTOR_BEAR  = ###SECTOR_BEAR_JSON###;
+const RSI_LABELS = ###RSI_LABELS_JSON###;
+const RSI_VALUES = ###RSI_VALUES_JSON###;
+const ANALYSIS_MD = ###ANALYSIS_MD_JSON###;
+
+let currentTab = "all";
+let sortCol = "ticker";
+let sortAsc = true;
+let reportRendered = false;
+
+const sectorSet = [...new Set(DATA.map(d => d.sector).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "ko"));
+const trendSet = [...new Set(DATA.map(d => d.trend).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "en"));
+const sectorFilter = document.getElementById("sectorFilter");
+const trendFilter = document.getElementById("trendFilter");
+
+sectorSet.forEach(value => {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = value;
+  sectorFilter.appendChild(option);
+});
+
+trendSet.forEach(value => {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = value;
+  trendFilter.appendChild(option);
+});
+
+function chartLabels(labels) {
+  return labels.length ? labels : ["No data"];
+}
+
+function chartValues(values) {
+  return values.length ? values : [0];
+}
+
+const sectorChartInst = new Chart(document.getElementById("sectorChart"), {
+  type: "bar",
+  data: {
+    labels: SECTOR_LABELS.length ? SECTOR_LABELS : ["No data"],
+    datasets: [
+      { label: "강세", data: SECTOR_BULL,  backgroundColor: "#4ade8099", borderColor: "#4ade80", borderWidth: 1 },
+      { label: "중립", data: SECTOR_NEU,   backgroundColor: "#94a3b855", borderColor: "#94a3b8", borderWidth: 1 },
+      { label: "약세", data: SECTOR_BEAR,  backgroundColor: "#f8717199", borderColor: "#f87171", borderWidth: 1 },
+    ]
+  },
+  options: {
+    indexAxis: "y",
+    plugins: {
+      legend: { display: true, position: "top", labels: { color: "#c9d1d9", font: { size: 11 }, boxWidth: 12, padding: 10 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}개` } }
+    },
+    scales: {
+      x: { stacked: true, ticks: { color: "#8b949e" }, grid: { color: "#30363d" } },
+      y: { stacked: true, ticks: { color: "#c9d1d9", font: { size: 10 } }, grid: { color: "#30363d" } }
+    },
+    onClick(_, elements) {
+      if (!elements.length) return;
+      const label = SECTOR_LABELS[elements[0].index];
+      const sel = document.getElementById("sectorFilter");
+      if (sel.value === label) { sel.value = ""; } else { sel.value = label; }
+      applyFilter();
+    },
+    maintainAspectRatio: false
+  }
+});
+
+const rsiColors = chartLabels(RSI_LABELS).map((_, i) => i <= 2 ? "#3fb95066" : i >= 9 ? "#f8514966" : "#58a6ff66");
+new Chart(document.getElementById("rsiChart"), {
+  type: "bar",
+  data: {
+    labels: chartLabels(RSI_LABELS),
+    datasets: [{ data: chartValues(RSI_VALUES), backgroundColor: rsiColors, borderColor: rsiColors.map(c => c.replace("66", "ff")), borderWidth: 1 }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: "#8b949e", font: { size: 9 } }, grid: { color: "#30363d" } },
+      y: { ticks: { color: "#8b949e" }, grid: { color: "#30363d" } }
+    },
+    maintainAspectRatio: false
+  }
+});
+
+document.getElementById("mainTabs").addEventListener("click", event => {
+  const link = event.target.closest("a[data-tab]");
+  if (!link) return;
+  event.preventDefault();
+  document.querySelectorAll("#mainTabs .nav-link").forEach(node => node.classList.remove("active"));
+  link.classList.add("active");
+  currentTab = link.dataset.tab;
+  const isReport = currentTab === "report";
+  document.getElementById("filterBar").style.display = isReport ? "none" : "";
+  document.getElementById("tableSection").style.display = isReport ? "none" : "";
+  document.getElementById("reportSection").style.display = isReport ? "" : "none";
+  if (isReport) renderReport();
+  else applyFilter();
+});
+
+function renderReport() {
+  if (reportRendered) return;
+  reportRendered = true;
+  const el = document.getElementById("mdContent");
+  if (!ANALYSIS_MD) {
+    el.innerHTML = '<p class="text-secondary py-3">###REPORT_EMPTY_TEXT###</p>';
+    return;
+  }
+  el.innerHTML = marked.parse(ANALYSIS_MD);
+  const ids = ["sec-top", "sec-theme", "sec-sector", "sec-warn"];
+  el.querySelectorAll("h2").forEach((heading, index) => {
+    heading.id = ids[index] || `sec-${index + 1}`;
+  });
+  el.querySelectorAll("a").forEach(link => {
+    if (link.href && link.href.startsWith("http")) link.target = "_blank";
+  });
+}
+
+document.getElementById("mainTable").querySelector("thead").addEventListener("click", event => {
+  const th = event.target.closest("th[data-col]");
+  if (!th) return;
+  const col = th.dataset.col;
+  if (sortCol === col) sortAsc = !sortAsc;
+  else {
+    sortCol = col;
+    sortAsc = true;
+  }
+  document.querySelectorAll("thead th").forEach(node => node.classList.remove("th-sorted"));
+  th.classList.add("th-sorted");
+  renderFilter();
+});
+
+function esc(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function fmt(value, digits = 2, suffix = "") {
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  return Number(value).toFixed(digits) + suffix;
+}
+
+function fmtPrice(value) {
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  return `${CURRENCY}${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function trendCell(value) {
+  const icons = {
+    "Strong Uptrend": "++",
+    "Uptrend": "+",
+    "Neutral": "=",
+    "Downtrend": "-",
+    "Strong Downtrend": "--"
+  };
+  const colors = {
+    "Strong Uptrend": "#3fb950",
+    "Uptrend": "#7ee787",
+    "Neutral": "#e3b341",
+    "Downtrend": "#ffa198",
+    "Strong Downtrend": "#f85149"
+  };
+  if (!value) return "-";
+  return `<span style="color:${colors[value] || "#c9d1d9"};font-weight:700">${icons[value] || ""} ${esc(value)}</span>`;
+}
+
+function rsiCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n < 35 ? "rsi-green" : n > 65 ? "rsi-red" : "";
+  return `<span class="${klass}">${n.toFixed(1)}</span>`;
+}
+
+function upCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n >= 20 ? "up-green" : n < 0 ? "up-red" : "";
+  return `<span class="${klass}">${n.toFixed(1)}%</span>`;
+}
+
+function perCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n < 15 ? "per-green" : n > 40 ? "per-red" : "";
+  return `<span class="${klass}">${n.toFixed(1)}</span>`;
+}
+
+function diffCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = Math.abs(n) <= 2 ? "ma-warn" : "";
+  return `<span class="${klass}">${n >= 0 ? "+" : ""}${n.toFixed(2)}%</span>`;
+}
+
+function badges(row) {
+  const classes = ["info text-dark", "warning text-dark", "danger", "primary", "success", "secondary"];
+  let html = "";
+  PERIODS.forEach((period, index) => {
+    if (row[`near_${period}`]) {
+      html += `<span class="badge bg-${classes[index % classes.length]} me-1" style="font-size:.65rem">${period}</span>`;
+    }
+  });
+  return html || "-";
+}
+
+function tabMatch(row) {
+  if (currentTab === "all") return true;
+  if (currentTab === "multi") return (row.nearCount || 0) >= 2;
+  if (currentTab.startsWith("ma")) {
+    const period = currentTab.slice(2);
+    return !!row[`near_${period}`];
+  }
+  return true;
+}
+
+function applyFilter() {
+  renderFilter();
+}
+
+function renderFilter() {
+  const search = document.getElementById("searchBox").value.toLowerCase();
+  const sector = document.getElementById("sectorFilter").value;
+  const rsiValue = document.getElementById("rsiFilter").value;
+  const trend = document.getElementById("trendFilter").value;
+
+  let rows = DATA.filter(row => {
+    if (!tabMatch(row)) return false;
+    if (search) {
+      const haystack = [row.ticker, row.displayTicker, row.kr_name, row.en_name].filter(Boolean).join(" ").toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    if (sector && row.sector !== sector) return false;
+    if (trend && row.trend !== trend) return false;
+    if (rsiValue === "low" && !(row.rsi != null && row.rsi < 35)) return false;
+    if (rsiValue === "high" && !(row.rsi != null && row.rsi > 65)) return false;
+    if (rsiValue === "mid" && !(row.rsi != null && row.rsi >= 35 && row.rsi <= 65)) return false;
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    let va = a[sortCol];
+    let vb = b[sortCol];
+    if (va == null) va = sortAsc ? Infinity : -Infinity;
+    if (vb == null) vb = sortAsc ? Infinity : -Infinity;
+    if (typeof va === "string" || typeof vb === "string") {
+      return sortAsc ? String(va).localeCompare(String(vb), "ko") : String(vb).localeCompare(String(va), "ko");
+    }
+    return sortAsc ? va - vb : vb - va;
+  });
+
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = rows.map(row => {
+    const diffCells = PERIODS.map(period => `<td>${diffCell(row[`diff_${period}`])}</td>`).join("");
+    const title = esc([row.en_name || "", row.desc || ""].filter(Boolean).join("\n"));
+    const name = esc(row.kr_name || row.en_name || row.displayTicker || row.ticker);
+    const ticker = esc(row.displayTicker || row.ticker);
+    const sectorName = esc(row.sector || "-");
+    return `
+    <tr>
+      <td><a href="${esc(row.quoteUrl || "#")}" target="_blank" class="ticker-link">${ticker}</a></td>
+      <td title="${title}">${name}</td>
+      <td>${sectorName}</td>
+      <td>${trendCell(row.trend)}</td>
+      <td>${fmtPrice(row.price)}</td>
+      <td>${rsiCell(row.rsi)}</td>
+      <td>${fmt(row.fromHigh, 1, "%")}</td>
+      <td>${fmt(row.volRatio, 2, "x")}</td>
+      <td>${perCell(row.per)}</td>
+      <td>${upCell(row.upside)}</td>
+      ${diffCells}
+      <td>${badges(row)}</td>
+    </tr>`;
+  }).join("");
+
+  const message = `${rows.length} shown / total ${DATA.length}`;
+  document.getElementById("rowCount").textContent = message;
+  document.getElementById("rowCount2").textContent = message;
+}
+
+renderFilter();
+</script>
+</body>
+</html>

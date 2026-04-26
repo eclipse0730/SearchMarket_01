@@ -4,3 +4,6 @@ __pycache__/
 *.pyo
 .env
 .claude/
+refactor_outputs/
+site/
+archive/

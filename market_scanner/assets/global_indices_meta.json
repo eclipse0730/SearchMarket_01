@@ -1,0 +1,62 @@
+{
+  "^GSPC": {
+    "name_en": "S&P 500 Index",
+    "name_local": "S&P 500",
+    "sector": "US Index",
+    "description": "Large-cap US equities benchmark."
+  },
+  "^IXIC": {
+    "name_en": "NASDAQ Composite",
+    "name_local": "나스닥 종합",
+    "sector": "US Index",
+    "description": "Broad technology-heavy US index."
+  },
+  "^DJI": {
+    "name_en": "Dow Jones Industrial Average",
+    "name_local": "다우 존스",
+    "sector": "US Index",
+    "description": "30-stock US blue-chip index."
+  },
+  "^KS11": {
+    "name_en": "KOSPI Composite",
+    "name_local": "코스피",
+    "sector": "KR Index",
+    "description": "Broad Korean stock market index."
+  },
+  "^N225": {
+    "name_en": "Nikkei 225",
+    "name_local": "닛케이 225",
+    "sector": "JP Index",
+    "description": "Japanese large-cap benchmark."
+  },
+  "^HSI": {
+    "name_en": "Hang Seng Index",
+    "name_local": "항셍 지수",
+    "sector": "HK Index",
+    "description": "Hong Kong large-cap benchmark."
+  },
+  "^FTSE": {
+    "name_en": "FTSE 100",
+    "name_local": "FTSE 100",
+    "sector": "UK Index",
+    "description": "United Kingdom large-cap benchmark."
+  },
+  "^GDAXI": {
+    "name_en": "DAX Index",
+    "name_local": "독일 DAX",
+    "sector": "DE Index",
+    "description": "German large-cap benchmark."
+  },
+  "^FCHI": {
+    "name_en": "CAC 40",
+    "name_local": "프랑스 CAC40",
+    "sector": "FR Index",
+    "description": "French large-cap benchmark."
+  },
+  "000001.SS": {
+    "name_en": "SSE Composite Index",
+    "name_local": "상하이 종합",
+    "sector": "CN Index",
+    "description": "Shanghai Stock Exchange composite index."
+  }
+}

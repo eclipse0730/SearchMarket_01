@@ -1,8 +1,8 @@
-name: Daily Scan KOSPI (KST 16:05)
+name: Daily Scan KOSDAQ (KST 16:35)
 
 on:
   schedule:
-    - cron: "5 7 * * *"
+    - cron: "35 7 * * *"
   workflow_dispatch:
 
 permissions:
@@ -28,14 +28,14 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run scanner
-        run: python Search.py --market kospi
+        run: python Search.py --market kosdaq
 
       - name: Commit results
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          git add Data_Kospi_*.csv Analysis_Kospi_*.md Report_Kospi_*.html market_scanner/assets/investing_url_cache.json market_scanner/assets/sp500_members_cache.json
-          git diff --staged --quiet || git commit -m "scan(KOSPI): $(date +'%Y-%m-%d')"
+          git add Data_Kosdaq_*.csv Analysis_Kosdaq_*.md Report_Kosdaq_*.html market_scanner/assets/investing_url_cache.json market_scanner/assets/sp500_members_cache.json
+          git diff --staged --quiet || git commit -m "scan(KOSDAQ): $(date +'%Y-%m-%d')"
 
       - name: Push
         uses: ad-m/github-push-action@v0.8.0
