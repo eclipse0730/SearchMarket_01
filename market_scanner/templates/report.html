@@ -336,10 +336,21 @@ function badges(row) {
   let html = "";
   PERIODS.forEach(period => {
     if (row[`near_${period}`]) {
-      html += `<span class="ma-badge">${period}</span>`;
+      const diff = row[`diff_${period}`];
+      const sign = diff >= 0 ? "+" : "";
+      html += `<span class="ma-badge" title="MA${period} ${sign}${diff != null ? Number(diff).toFixed(1) : "?"}%">${period}</span>`;
     }
   });
-  return html || "-";
+  if (!html) {
+    const closest = closestMADiff(row);
+    if (closest != null) {
+      const sign = closest >= 0 ? "+" : "";
+      html = `<span class="ma-dist">${sign}${Number(closest).toFixed(1)}%</span>`;
+    } else {
+      html = "-";
+    }
+  }
+  return html;
 }
 
 function tabMatch(row) {
