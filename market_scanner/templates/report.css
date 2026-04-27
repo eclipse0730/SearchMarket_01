@@ -186,13 +186,6 @@ tbody tr:hover{background:rgba(98,199,255,.07)}
   font-size:10px;
   font-weight:900;
 }
-.ma-dist{
-  display:inline-flex;
-  align-items:center;
-  font-size:11px;
-  color:#6a7a8f;
-  letter-spacing:.02em;
-}
 .setup-tag{
   display:inline-flex;
   margin-left:4px;
