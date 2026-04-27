@@ -12,6 +12,8 @@ from market_scanner.models import MarketDefinition, ScanSettings
 from market_scanner.pipeline import scan_market, write_html, write_markdown
 from market_scanner.translator import translate_scan_csv
 
+DATA_DIR = Path("data")
+
 # Flat-file path conventions for known markets (backward compat).
 # New markets fall through to the generic pattern below.
 _COMPAT_PREFIXES: dict[str, tuple[str, str, str]] = {
@@ -28,10 +30,23 @@ def compat_paths(market_key: str, date_str: str) -> dict[str, Path]:
         label = market_key.title().replace("-", "")
         data_pfx, md_pfx, html_pfx = f"Data_{label}", f"Analysis_{label}", f"Report_{label}"
     return {
-        "csv":  Path(f"{data_pfx}_{date_str}.csv"),
+        "csv":  DATA_DIR / f"{data_pfx}_{date_str}.csv",
         "md":   Path(f"{md_pfx}_{date_str}.md"),
         "html": Path(f"{html_pfx}_{date_str}.html"),
     }
+
+
+def _legacy_csv_path(path: Path) -> Path:
+    return Path(path.name)
+
+
+def _existing_csv_path(path: Path) -> Path:
+    if path.exists():
+        return path
+    legacy_path = _legacy_csv_path(path)
+    if legacy_path.exists():
+        return legacy_path
+    return path
 
 
 def compat_market(market_key: str) -> MarketDefinition:
@@ -45,6 +60,7 @@ def run_scan_stage_with_settings(
 ) -> tuple[MarketDefinition, pd.DataFrame, dict[str, Path]]:
     market, _, frame = scan_market(market_key, settings)
     paths = compat_paths(market_key, date_str)
+    paths["csv"].parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(paths["csv"], index=False, encoding="utf-8-sig")
     return market, frame, paths
 
@@ -52,7 +68,7 @@ def run_scan_stage_with_settings(
 def load_frame(market_key: str, date_str: str) -> tuple[MarketDefinition, pd.DataFrame, dict[str, Path]]:
     market = compat_market(market_key)
     paths = compat_paths(market_key, date_str)
-    frame = pd.read_csv(paths["csv"], encoding="utf-8-sig")
+    frame = pd.read_csv(_existing_csv_path(paths["csv"]), encoding="utf-8-sig")
     return market, frame, paths
 
 
@@ -61,7 +77,7 @@ def run_analysis_stage(market_key: str, date_str: str, frame: pd.DataFrame | Non
     paths = compat_paths(market_key, date_str)
     settings = ScanSettings(output_dir=Path("."))
     if frame is None:
-        frame = pd.read_csv(paths["csv"], encoding="utf-8-sig")
+        frame = pd.read_csv(_existing_csv_path(paths["csv"]), encoding="utf-8-sig")
     markdown = write_markdown(frame, market, settings, date_str, paths["md"])
     return markdown, paths
 
@@ -76,7 +92,7 @@ def run_render_stage(
     paths = compat_paths(market_key, date_str)
     settings = ScanSettings(output_dir=Path("."))
     if frame is None:
-        frame = pd.read_csv(paths["csv"], encoding="utf-8-sig")
+        frame = pd.read_csv(_existing_csv_path(paths["csv"]), encoding="utf-8-sig")
     if markdown is None:
         markdown = paths["md"].read_text(encoding="utf-8") if paths["md"].exists() else ""
     write_html(frame, market, settings, date_str, markdown, paths["html"])
@@ -86,14 +102,15 @@ def run_render_stage(
 def run_translate_stage(market_key: str, date_str: str) -> bool:
     market = compat_market(market_key)
     paths = compat_paths(market_key, date_str)
-    return translate_scan_csv(paths["csv"], market.sector_aliases)
+    return translate_scan_csv(_existing_csv_path(paths["csv"]), market.sector_aliases)
 
 
 def ensure_csv_exists(market_key: str, date_str: str) -> Path:
     path = compat_paths(market_key, date_str)["csv"]
-    if not path.exists():
+    existing_path = _existing_csv_path(path)
+    if not existing_path.exists():
         raise FileNotFoundError(f"Missing scan output: {path}")
-    return path
+    return existing_path
 
 
 def setup_scheduler(script_name: str, task_name: str, run_time: str = "08:05") -> None:

@@ -76,8 +76,14 @@ def main() -> None:
     completed: list[str] = []
 
     if run_all or args.stage == "scan":
-        if paths["csv"].exists() and not args.force:
-            print(f"  scan skipped, reusing: {paths['csv']}  (--force to refetch)")
+        existing_csv = None
+        if not args.force:
+            try:
+                existing_csv = ensure_csv_exists(market_key, date_str)
+            except FileNotFoundError:
+                existing_csv = None
+        if existing_csv is not None:
+            print(f"  scan skipped, reusing: {existing_csv}  (--force to refetch)")
             _, frame, _ = load_frame(market_key, date_str)
         else:
             _, frame, _ = run_scan_stage_with_settings(

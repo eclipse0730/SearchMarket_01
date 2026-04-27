@@ -10,7 +10,7 @@ on:
       - "requirements.txt"
       - "market_scanner/**"
       - ".github/workflows/**"
-      - "Data*.csv"
+      - "data/Data*.csv"
       - "Analysis*.md"
       - "Report*.html"
   workflow_dispatch:

@@ -1,0 +1,6 @@
+﻿symbol,display_symbol,name_en,name_local,sector,description,price,change_pct,rsi,high_52w,low_52w,from_high_pct,volume_ratio,trailing_pe,target_price,upside_pct,trend,trend_score,ma_60,diff_60,near_60,ma_120,diff_120,near_120,ma_240,diff_240,near_240,composite_score,near_count
+293490.KS,293490,Krafton,크래프톤,게임,배틀그라운드(PUBG) 개발사,12350.0,-0.64,44.8,23500.0,11510.0,-47.4,0.58,,,,Strong Downtrend,0,13862.0,-10.91,False,14731.0,-16.16,False,15605.0,-20.86,False,4.0,0
+122870.KS,122870,YG Entertainment,YG엔터테인먼트,엔터테인먼트,BLACKPINK·BIGBANG K-POP 기획사,54600.0,1.3,47.4,106900.0,49900.0,-48.9,0.36,,,,Strong Downtrend,0,62548.0,-12.71,False,64770.0,-15.7,False,77126.0,-29.21,False,11.0,0
+041510.KS,041510,SM Entertainment,SM엔터테인먼트,엔터테인먼트,EXO·aespa K-POP 기획사,93200.0,0.54,51.0,148935.0,83000.0,-37.4,0.81,,,,Strong Downtrend,0,100717.0,-7.46,False,105365.0,-11.55,False,118369.0,-21.26,False,15.0,0
+035900.KS,035900,JYP Entertainment,JYP엔터테인먼트,엔터테인먼트,TWICE·Stray Kids K-POP 기획사,63500.0,0.79,53.7,83841.0,57308.0,-24.3,0.95,,,,Strong Downtrend,0,65068.0,-2.41,False,67271.0,-5.61,False,70490.0,-9.92,False,21.0,0
+011040.KS,011040,CJ Logistics,CJ대한통운,물류,국내 1위 택배·물류,5630.0,1.26,56.8,6030.0,5286.0,-6.6,0.66,,,,Strong Downtrend,1,5579.0,0.91,True,5619.0,0.2,True,5633.0,-0.05,True,33.0,3

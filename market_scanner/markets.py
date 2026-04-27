@@ -3,9 +3,10 @@ from __future__ import annotations
 import io
 import json
 import re
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
-from urllib.parse import quote_plus, urljoin
+from urllib.parse import quote_plus, urljoin, urlparse, urlunparse
 
 import requests
 
@@ -14,9 +15,13 @@ from market_scanner.models import MarketDefinition, StaticTickerMeta
 
 ASSET_DIR = Path(__file__).with_name("assets")
 _INVESTING_BASE_URL = "https://www.investing.com"
+_INVESTING_KR_BASE_URL = "https://kr.investing.com"
 _INVESTING_SEARCH_URL = f"{_INVESTING_BASE_URL}/search"
 _INVESTING_CACHE_PATH = ASSET_DIR / "investing_url_cache.json"
 _SP500_CACHE_PATH = ASSET_DIR / "sp500_members_cache.json"
+_SP500_MANUAL_PATH = ASSET_DIR / "sp500_members_manual.json"
+_SP500_SOURCE_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+_SP500_STALE_DAYS = 45
 _INVESTING_SEARCH_HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; stock-scanner/1.0)",
     "Accept-Language": "en-US,en;q=0.9",
@@ -103,18 +108,18 @@ def _commodity_meta() -> dict[str, StaticTickerMeta]:
 def _fetch_sp500_tickers() -> list[str]:
     try:
         import pandas as pd
-        url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
         headers = {"User-Agent": "Mozilla/5.0 (compatible; stock-scanner/1.0)"}
-        resp = requests.get(url, headers=headers, timeout=15)
+        resp = requests.get(_SP500_SOURCE_URL, headers=headers, timeout=15)
         resp.raise_for_status()
         table = pd.read_html(io.StringIO(resp.text))[0]
         tickers = table["Symbol"].str.replace(".", "-", regex=False).tolist()
-        _save_sp500_members_cache(tickers)
+        tickers = _apply_sp500_manual_overrides(tickers)
+        _save_sp500_members_cache(tickers, _SP500_SOURCE_URL)
         print(f"  S&P 500: loaded {len(tickers)} tickers")
         return tickers
     except Exception as exc:
         print(f"  S&P 500 load failed: {exc}")
-        return _load_sp500_members_cache()
+        return _apply_sp500_manual_overrides(_load_sp500_members_cache())
 
 
 def _fetch_fdr_market(market: str, suffix: str, top_n: int, label: str) -> list[str]:
@@ -147,19 +152,75 @@ def _load_sp500_members_cache() -> list[str]:
         payload = json.loads(_SP500_CACHE_PATH.read_text(encoding="utf-8"))
     except Exception:
         return []
-    if not isinstance(payload, list):
+    if isinstance(payload, list):
+        return [str(item) for item in payload if item]
+    if not isinstance(payload, dict):
         return []
-    return [str(item) for item in payload if item]
+
+    updated_at = str(payload.get("updated_at") or "")
+    if updated_at and _is_sp500_cache_stale(updated_at):
+        print(f"  S&P 500 cache is older than {_SP500_STALE_DAYS} days: {updated_at}")
+
+    tickers = payload.get("tickers")
+    if not isinstance(tickers, list):
+        return []
+    return [str(item) for item in tickers if item]
 
 
-def _save_sp500_members_cache(tickers: list[str]) -> None:
+def _is_sp500_cache_stale(updated_at: str) -> bool:
+    try:
+        cached_at = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    if cached_at.tzinfo is None:
+        cached_at = cached_at.replace(tzinfo=timezone.utc)
+    age = datetime.now(timezone.utc) - cached_at
+    return age.days > _SP500_STALE_DAYS
+
+
+def _save_sp500_members_cache(tickers: list[str], source_url: str) -> None:
     if not tickers:
         return
     unique = sorted({str(ticker) for ticker in tickers if ticker})
+    payload = {
+        "source": source_url,
+        "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "count": len(unique),
+        "tickers": unique,
+    }
     _SP500_CACHE_PATH.write_text(
-        json.dumps(unique, ensure_ascii=False, indent=2),
+        json.dumps(payload, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+
+
+def _load_sp500_manual_overrides() -> tuple[set[str], set[str]]:
+    if not _SP500_MANUAL_PATH.exists():
+        return set(), set()
+    try:
+        payload = json.loads(_SP500_MANUAL_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return set(), set()
+    if isinstance(payload, list):
+        return {str(item) for item in payload if item}, set()
+    if not isinstance(payload, dict):
+        return set(), set()
+    add = payload.get("add", [])
+    remove = payload.get("remove", [])
+    add_set = {str(item) for item in add if item} if isinstance(add, list) else set()
+    remove_set = {str(item) for item in remove if item} if isinstance(remove, list) else set()
+    return add_set, remove_set
+
+
+def _apply_sp500_manual_overrides(tickers: list[str]) -> list[str]:
+    add, remove = _load_sp500_manual_overrides()
+    if not add and not remove:
+        return tickers
+    merged = {str(ticker) for ticker in tickers if ticker}
+    merged.difference_update(remove)
+    merged.update(add)
+    print(f"  S&P 500 manual overrides: +{len(add)} / -{len(remove)}")
+    return sorted(merged)
 
 
 def _us_universe() -> list[str]:
@@ -349,11 +410,21 @@ def _resolve_investing_detail_url(symbol: str) -> str | None:
 
 def _quote_url_investing_search(symbol: str) -> str:
     query = _investing_query_for_symbol(symbol)
-    return f"https://www.investing.com/search?q={quote_plus(query)}"
+    return f"{_INVESTING_KR_BASE_URL}/search?q={quote_plus(query)}"
+
+
+def _localize_investing_url(url: str) -> str:
+    parsed = urlparse(url)
+    if parsed.netloc.endswith("investing.com"):
+        return urlunparse(parsed._replace(scheme="https", netloc="kr.investing.com"))
+    return url
 
 
 def _quote_url_investing_detail(symbol: str) -> str:
-    return _resolve_investing_detail_url(symbol) or _quote_url_investing_search(symbol)
+    resolved_url = _resolve_investing_detail_url(symbol)
+    if resolved_url:
+        return _localize_investing_url(resolved_url)
+    return _quote_url_investing_search(symbol)
 
 
 def _quote_url_naver(symbol: str) -> str:
@@ -396,7 +467,7 @@ MARKETS: dict[str, MarketDefinition] = {
         price_decimals=0,
         universe_loader=_kospi_universe,
         metadata_loader=_kospi_static_meta,
-        quote_url_builder=_quote_url_investing_detail,
+        quote_url_builder=_quote_url_investing_search,
         display_symbol_builder=_display_strip_kr,
         sector_aliases=_SECTOR_KO,
         notes="Static JSON + KOSPI200 (KRX API, live).",
@@ -409,7 +480,7 @@ MARKETS: dict[str, MarketDefinition] = {
         price_decimals=0,
         universe_loader=_kosdaq_universe,
         metadata_loader=_kosdaq_static_meta,
-        quote_url_builder=_quote_url_investing_detail,
+        quote_url_builder=_quote_url_investing_search,
         display_symbol_builder=_display_strip_kr,
         sector_aliases=_SECTOR_KO,
         notes="Static JSON + KOSDAQ150 (KRX API, live).",

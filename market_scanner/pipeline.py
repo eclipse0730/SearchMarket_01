@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import lru_cache
 from html import escape
 import json
 from pathlib import Path
@@ -13,6 +14,12 @@ from market_scanner.markets import MARKETS
 from market_scanner.models import MarketDefinition, ScanRecord, ScanSettings
 
 TEMPLATE_DIR = Path(__file__).with_name("templates")
+ASSET_DIR = Path(__file__).with_name("assets")
+NEWS_CACHE_PATH = ASSET_DIR / "news_cache.json"
+YFINANCE_CACHE_DIR = ASSET_DIR / ".yfinance_cache"
+
+YFINANCE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+yf.set_tz_cache_location(str(YFINANCE_CACHE_DIR))
 
 
 def _safe_number(value, digits: int | None = None) -> float | None:
@@ -57,6 +64,10 @@ def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) 
     current_price = _safe_number(close.iloc[-1], market.price_decimals)
     if current_price is None:
         return None
+    previous_close = _safe_number(close.iloc[-2], market.price_decimals) if len(close) >= 2 else None
+    change_pct = None
+    if previous_close:
+        change_pct = round((current_price - previous_close) / previous_close * 100, 2)
 
     info: dict = {}
     try:
@@ -116,6 +127,7 @@ def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) 
         sector=sector,
         description=description,
         price=current_price,
+        change_pct=change_pct,
         rsi=rsi,
         high_52w=high_52w,
         low_52w=low_52w,
@@ -210,6 +222,7 @@ def records_to_frame(records: list[ScanRecord], settings: ScanSettings) -> pd.Da
             "sector": record.sector,
             "description": record.description,
             "price": record.price,
+            "change_pct": record.change_pct,
             "rsi": record.rsi,
             "high_52w": record.high_52w,
             "low_52w": record.low_52w,
@@ -711,14 +724,14 @@ def _interactive_table_headers_html(settings: ScanSettings, market: MarketDefini
         '<th data-col="sector">섹터</th>',
         '<th data-col="trend">추세</th>',
         f'<th data-col="price">현재가({currency})</th>',
+        '<th data-col="changePct">등락률</th>',
         '<th data-col="rsi">RSI</th>',
         '<th data-col="fromHigh">52주고점%</th>',
         '<th data-col="volRatio">거래량비율</th>',
         '<th data-col="per">PER</th>',
         '<th data-col="upside">업사이드</th>',
     ]
-    for period in settings.ma_periods:
-        headers.append(f'<th data-col="diff_{period}">MA{period}차이%</th>')
+    # MA distance columns stay in DATA for charts/setup logic, but are hidden from the stock list for now.
     headers.append("<th>근접</th>")
     return "".join(headers)
 
@@ -765,6 +778,170 @@ def _rsi_chart_data(frame: pd.DataFrame) -> tuple[list[str], list[int]]:
     return labels, [int(counts.get(label, 0)) for label in labels]
 
 
+def _fear_label_and_note(level: float) -> tuple[str, str]:
+    if level < 15:
+        return "Calm", "변동성은 낮은 편입니다. 추세가 유지되면 눌림목 선별에 유리합니다."
+    if level < 20:
+        return "Normal", "변동성은 정상권입니다. 개별 종목 신호 품질을 우선 확인합니다."
+    if level < 30:
+        return "Elevated", "변동성이 높아진 구간입니다. 포지션 크기와 손절 기준이 중요합니다."
+    return "Stress", "시장 스트레스가 큰 구간입니다. 방어적 접근과 현금 비중 점검이 필요합니다."
+
+
+def _latest_global_indices_csv(date_str: str | None = None) -> Path | None:
+    data_dir = Path("data")
+    candidates: list[Path] = []
+    if date_str:
+        candidates.extend([data_dir / f"Data_GlobalIndices_{date_str}.csv", Path(f"Data_GlobalIndices_{date_str}.csv")])
+    candidates.extend(sorted(data_dir.glob("Data_GlobalIndices_*.csv"), reverse=True))
+    candidates.extend(sorted(Path(".").glob("Data_GlobalIndices_*.csv"), reverse=True))
+    return next((path for path in candidates if path.exists()), None)
+
+
+def _fear_from_scan_data(frame: pd.DataFrame | None, date_str: str | None) -> dict[str, object] | None:
+    sources: list[pd.DataFrame] = []
+    if frame is not None and not frame.empty:
+        sources.append(frame)
+    csv_path = _latest_global_indices_csv(date_str)
+    if csv_path:
+        try:
+            sources.append(pd.read_csv(csv_path, encoding="utf-8-sig"))
+        except Exception:
+            pass
+
+    for source in sources:
+        if "symbol" not in source.columns:
+            continue
+        vix_rows = source[source["symbol"].astype(str) == "^VIX"]
+        if vix_rows.empty:
+            continue
+        row = vix_rows.iloc[0]
+        level = _safe_number(row.get("price"), 2)
+        if level is None:
+            continue
+        change_pct = _safe_number(row.get("change_pct"), 1)
+        label, note = _fear_label_and_note(level)
+        return {
+            "available": True,
+            "symbol": "^VIX",
+            "label": label,
+            "level": level,
+            "avg20": None,
+            "avg60": None,
+            "vs20Pct": change_pct,
+            "vsLabel": "전일 대비",
+            "trend": "rising" if change_pct is not None and change_pct > 0 else ("falling" if change_pct is not None and change_pct < 0 else "unknown"),
+            "note": f"{note} VIX 값은 스캔 CSV fallback에서 읽었습니다.",
+        }
+    return None
+
+
+def _fear_panel_data(frame: pd.DataFrame | None = None, date_str: str | None = None) -> dict[str, object]:
+    fallback = {
+        "available": False,
+        "symbol": "^VIX",
+        "label": "Unavailable",
+        "level": None,
+        "avg20": None,
+        "avg60": None,
+        "vs20Pct": None,
+        "vsLabel": "20D 대비",
+        "trend": "unknown",
+        "note": "VIX data could not be loaded in this environment.",
+    }
+    try:
+        hist = yf.Ticker("^VIX").history(period="3mo")
+    except Exception:
+        return _fear_from_scan_data(frame, date_str) or fallback
+
+    if hist.empty or "Close" not in hist.columns:
+        return _fear_from_scan_data(frame, date_str) or fallback
+
+    close = pd.to_numeric(hist["Close"], errors="coerce").dropna()
+    if close.empty:
+        return _fear_from_scan_data(frame, date_str) or fallback
+
+    level = float(close.iloc[-1])
+    avg20 = float(close.tail(20).mean()) if len(close) >= 20 else float(close.mean())
+    avg60 = float(close.tail(60).mean()) if len(close) >= 60 else float(close.mean())
+    lookback = float(close.iloc[-6]) if len(close) >= 6 else float(close.iloc[0])
+    vs20 = ((level - avg20) / avg20 * 100) if avg20 else None
+
+    label, note = _fear_label_and_note(level)
+
+    return {
+        "available": True,
+        "symbol": "^VIX",
+        "label": label,
+        "level": round(level, 2),
+        "avg20": round(avg20, 2),
+        "avg60": round(avg60, 2),
+        "vs20Pct": round(vs20, 1) if vs20 is not None else None,
+        "vsLabel": "20D 대비",
+        "trend": "rising" if level > lookback else "falling",
+        "note": note,
+    }
+
+
+def _news_briefing_data(frame: pd.DataFrame, market: MarketDefinition, date_str: str) -> dict[str, object]:
+    base = {
+        "available": False,
+        "title": "뉴스 브리핑",
+        "subtitle": "US 밤새 뉴스 수집은 가능하지만, 현재는 뉴스 캐시가 없어서 표시할 항목이 없습니다.",
+        "note": "권장 구조: 별도 news 수집 단계에서 yfinance news/RSS/뉴스 API 결과를 캐시하고, 리포트는 캐시만 읽습니다.",
+        "items": [],
+    }
+    if not NEWS_CACHE_PATH.exists():
+        return base
+    try:
+        payload = json.loads(NEWS_CACHE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return base
+
+    raw_items: object = []
+    if isinstance(payload, dict):
+        dated = payload.get(date_str, payload)
+        if isinstance(dated, dict):
+            raw_items = dated.get(market.key, dated.get("items", []))
+        elif isinstance(dated, list):
+            raw_items = dated
+    elif isinstance(payload, list):
+        raw_items = payload
+
+    if not isinstance(raw_items, list):
+        return base
+
+    symbols = set(frame.get("symbol", pd.Series(dtype=str)).astype(str).tolist())
+    items: list[dict[str, object]] = []
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        ticker = str(item.get("ticker") or item.get("symbol") or "")
+        if ticker and symbols and ticker not in symbols:
+            continue
+        items.append(
+            {
+                "ticker": ticker,
+                "title": str(item.get("title") or ""),
+                "publisher": str(item.get("publisher") or item.get("source") or ""),
+                "summary": str(item.get("summary") or item.get("text") or ""),
+                "url": str(item.get("url") or item.get("link") or ""),
+                "sentiment": str(item.get("sentiment") or "neutral"),
+                "publishedAt": str(item.get("publishedAt") or item.get("published_at") or ""),
+            }
+        )
+
+    if not items:
+        return base
+    return {
+        "available": True,
+        "title": "뉴스 브리핑",
+        "subtitle": f"{date_str} 기준 캐시된 뉴스 {len(items)}건",
+        "note": "뉴스는 캐시 파일 기반으로 표시됩니다. 실시간 요청은 렌더링 안정성을 위해 피합니다.",
+        "items": items[:80],
+    }
+
+
 def _interactive_table_data(frame: pd.DataFrame, market: MarketDefinition, settings: ScanSettings) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for _, row in frame.iterrows():
@@ -778,6 +955,7 @@ def _interactive_table_data(frame: pd.DataFrame, market: MarketDefinition, setti
             "sector": row.get("sector"),
             "desc": row.get("description"),
             "price": _safe_number(row.get("price"), market.price_decimals),
+            "changePct": _safe_number(row.get("change_pct"), 2),
             "rsi": _safe_number(row.get("rsi"), 1),
             "fromHigh": _safe_number(row.get("from_high_pct"), 1),
             "volRatio": _safe_number(row.get("volume_ratio"), 2),
@@ -816,6 +994,8 @@ def write_html(frame: pd.DataFrame, market: MarketDefinition, settings: ScanSett
             "SECTOR_BEAR_JSON": _json_script(sector_bear),
             "RSI_LABELS_JSON": _json_script(rsi_labels),
             "RSI_VALUES_JSON": _json_script(rsi_values),
+            "FEAR_JSON": _json_script(_fear_panel_data(frame, date_str)),
+            "NEWS_JSON": _json_script(_news_briefing_data(frame, market, date_str)),
             "ANALYSIS_MD_JSON": _json_script(markdown_text or ""),
             "REPORT_EMPTY_TEXT": escape("No analysis markdown was found. Run the analyze stage or the full pipeline first."),
         }

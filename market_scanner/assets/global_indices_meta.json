@@ -17,6 +17,12 @@
     "sector": "US Index",
     "description": "30-stock US blue-chip index."
   },
+  "^VIX": {
+    "name_en": "CBOE Volatility Index",
+    "name_local": "VIX 공포지수",
+    "sector": "Risk Indicator",
+    "description": "Market-implied US equity volatility and fear gauge."
+  },
   "^KS11": {
     "name_en": "KOSPI Composite",
     "name_local": "코스피",

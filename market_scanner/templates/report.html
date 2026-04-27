@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,66 +10,125 @@
   <style>###STYLE###</style>
 </head>
 <body>
-<div class="container-fluid py-3">
+<div class="report-shell">
 
-<div class="d-flex align-items-baseline mb-3 gap-3">
-  <h4 class="mb-0 text-white">###HEADING###</h4>
-  <small class="text-secondary">###META###</small>
-</div>
+<header class="report-header">
+  <div>
+    <div class="eyebrow">MA Scanner Detail</div>
+    <h1>###HEADING###</h1>
+    <p>###META###</p>
+  </div>
+  <div class="header-actions">
+    <button class="ghost-btn active" type="button" data-tab-button="all">종목 리스트</button>
+    <button class="ghost-btn" type="button" data-tab-button="report">분석 리포트</button>
+    <button class="ghost-btn" type="button" data-tab-button="news">뉴스 브리핑</button>
+  </div>
+</header>
 
-<div class="row g-2 mb-3">
-  ###SUMMARY_CARDS###
-</div>
+<section class="signal-strip" id="signalStrip"></section>
 
-<div class="row g-2 mb-3">
-  <div class="col-md-7"><div class="card p-3" style="height:260px">
-    <div class="text-secondary small mb-1">섹터별 강세·약세 <span style="font-size:.7em;opacity:.6">(클릭 시 필터)</span></div>
-    <canvas id="sectorChart"></canvas>
-  </div></div>
-  <div class="col-md-5"><div class="card p-3" style="height:260px">
-    <div class="text-secondary small mb-1">RSI 분포</div>
-    <canvas id="rsiChart"></canvas>
-  </div></div>
-</div>
-
-<div id="filterBar" class="d-flex gap-2 mb-2 flex-wrap align-items-center">
-  <input type="text" id="searchBox" placeholder="Search ticker or name..." style="width:220px" oninput="applyFilter()">
-  <select id="sectorFilter" onchange="applyFilter()"><option value="">All sectors</option></select>
-  <select id="rsiFilter" onchange="applyFilter()">
-    <option value="">All RSI</option>
-    <option value="low">RSI &lt; 35</option>
-    <option value="high">RSI &gt; 65</option>
-    <option value="mid">35 to 65</option>
-  </select>
-  <select id="trendFilter" onchange="applyFilter()"><option value="">All trends</option></select>
-  <span class="text-secondary small ms-auto" id="rowCount"></span>
-</div>
-
-<ul class="nav nav-tabs mb-0" id="mainTabs">
-  ###TAB_NAV###
-</ul>
-
-<div id="tableSection">
-  <div class="card" style="border-top-left-radius:0">
-    <div class="p-0" style="overflow-x:auto">
-      <table id="mainTable">
-        <thead><tr>###TABLE_HEADERS###</tr></thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+<section class="detail-layout">
+  <main class="list-pane">
+    <div class="toolbar">
+      <div class="toolbar-title">
+        <h2>종목 리스트</h2>
+        <span id="rowCount"></span>
+      </div>
+      <div class="filters">
+        <input type="text" id="searchBox" placeholder="티커 또는 종목명 검색" oninput="applyFilter()">
+        <select id="sectorFilter" onchange="applyFilter()"><option value="">All sectors</option></select>
+        <select id="setupFilter" onchange="applyFilter()">
+          <option value="">All setups</option>
+          <option value="trend-pullback">추세 눌림목</option>
+          <option value="oversold-bounce">과매도 반등</option>
+          <option value="strong-momentum">강세 지속</option>
+          <option value="overheated">과열 주의</option>
+          <option value="bearish">약세 지속</option>
+        </select>
+        <select id="trendFilter" onchange="applyFilter()"><option value="">All trends</option></select>
+      </div>
     </div>
-    <div class="card-footer text-secondary small py-1" id="rowCount2"></div>
-  </div>
-</div>
 
-<div id="reportSection" style="display:none">
-  <div class="mb-3">
-    <a class="report-nav-btn top" href="#sec-top">Top picks</a>
-    <a class="report-nav-btn theme" href="#sec-theme">Themes</a>
-    <a class="report-nav-btn sector" href="#sec-sector">Sectors</a>
-    <a class="report-nav-btn warn" href="#sec-warn">Warnings</a>
-  </div>
-  <div id="mdContent" class="md-content"></div>
-</div>
+    <ul class="nav nav-tabs compact-tabs" id="mainTabs">
+      ###TAB_NAV###
+    </ul>
+
+    <div id="tableSection" class="table-card">
+      <div class="table-scroll">
+        <table id="mainTable">
+          <thead><tr>###TABLE_HEADERS###</tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="rowCount2"></div>
+    </div>
+
+    <div id="reportSection" class="report-card" style="display:none">
+      <div class="report-nav">
+        <a class="report-nav-btn top" href="#sec-top">Top picks</a>
+        <a class="report-nav-btn theme" href="#sec-theme">Themes</a>
+        <a class="report-nav-btn sector" href="#sec-sector">Sectors</a>
+        <a class="report-nav-btn warn" href="#sec-warn">Warnings</a>
+      </div>
+      <div id="mdContent" class="md-content"></div>
+    </div>
+
+    <div id="newsSection" class="report-card news-card" style="display:none">
+      <div class="news-head">
+        <div>
+          <span>Overnight Briefing</span>
+          <h2 id="newsTitle">뉴스 브리핑</h2>
+        </div>
+        <span id="newsCount" class="news-count"></span>
+      </div>
+      <p id="newsSubtitle" class="news-subtitle"></p>
+      <div id="newsContent" class="news-list"></div>
+      <p id="newsNote" class="panel-note"></p>
+    </div>
+  </main>
+
+  <aside class="insight-pane">
+    <section class="panel heatmap-panel">
+      <div class="panel-head">
+        <div>
+          <span>Sector Heatmap</span>
+          <h3>섹터별 상승률 강도</h3>
+        </div>
+        <button class="mini-btn" type="button" onclick="clearSectorFilter()">전체</button>
+      </div>
+      <div id="sectorHeatmap" class="sector-heatmap"></div>
+      <div class="legend-row">
+        <span class="legend bear">하락</span>
+        <span class="legend neutral">보합</span>
+        <span class="legend bull">상승</span>
+      </div>
+    </section>
+
+    <section class="panel fear-panel" id="fearPanel"></section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <span>Setup Buckets</span>
+          <h3>살 자리와 위험 구간</h3>
+        </div>
+      </div>
+      <div id="setupBuckets" class="setup-buckets"></div>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="panel-head">
+        <div>
+          <span>MA Distance vs RSI</span>
+          <h3>이격률과 온도</h3>
+        </div>
+      </div>
+      <p class="panel-note">이격률은 현재가가 가장 가까운 MA(60/120/240)에서 몇 % 떨어졌는지, 온도는 RSI 과열·과매도 수준을 뜻합니다.</p>
+      <div id="scatterCommentary" class="scatter-commentary"></div>
+      <canvas id="scatterChart"></canvas>
+    </section>
+  </aside>
+</section>
 
 </div>
 <script>
@@ -82,12 +141,37 @@ const SECTOR_NEU   = ###SECTOR_NEU_JSON###;
 const SECTOR_BEAR  = ###SECTOR_BEAR_JSON###;
 const RSI_LABELS = ###RSI_LABELS_JSON###;
 const RSI_VALUES = ###RSI_VALUES_JSON###;
+const FEAR = ###FEAR_JSON###;
+const NEWS = ###NEWS_JSON###;
 const ANALYSIS_MD = ###ANALYSIS_MD_JSON###;
 
 let currentTab = "all";
 let sortCol = "ticker";
 let sortAsc = true;
 let reportRendered = false;
+let newsRendered = false;
+
+const trendPoints = {
+  "Strong Uptrend": 2,
+  "Uptrend": 1,
+  "Neutral": 0,
+  "Downtrend": -1,
+  "Strong Downtrend": -2
+};
+const trendIcons = {
+  "Strong Uptrend": "↑↑",
+  "Uptrend": "↑",
+  "Neutral": "→",
+  "Downtrend": "↓",
+  "Strong Downtrend": "↓↓"
+};
+const trendColors = {
+  "Strong Uptrend": "#28d17c",
+  "Uptrend": "#7bdc94",
+  "Neutral": "#d8a94a",
+  "Downtrend": "#ff957d",
+  "Strong Downtrend": "#f45b69"
+};
 
 const sectorSet = [...new Set(DATA.map(d => d.sector).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "ko"));
 const trendSet = [...new Set(DATA.map(d => d.trend).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "en"));
@@ -108,94 +192,16 @@ trendSet.forEach(value => {
   trendFilter.appendChild(option);
 });
 
-function chartLabels(labels) {
-  return labels.length ? labels : ["No data"];
-}
-
-function chartValues(values) {
-  return values.length ? values : [0];
-}
-
-const sectorChartInst = new Chart(document.getElementById("sectorChart"), {
-  type: "bar",
-  data: {
-    labels: SECTOR_LABELS.length ? SECTOR_LABELS : ["No data"],
-    datasets: [
-      { label: "강세", data: SECTOR_BULL,  backgroundColor: "#4ade8099", borderColor: "#4ade80", borderWidth: 1 },
-      { label: "중립", data: SECTOR_NEU,   backgroundColor: "#94a3b855", borderColor: "#94a3b8", borderWidth: 1 },
-      { label: "약세", data: SECTOR_BEAR,  backgroundColor: "#f8717199", borderColor: "#f87171", borderWidth: 1 },
-    ]
-  },
-  options: {
-    indexAxis: "y",
-    plugins: {
-      legend: { display: true, position: "top", labels: { color: "#c9d1d9", font: { size: 11 }, boxWidth: 12, padding: 10 } },
-      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}개` } }
-    },
-    scales: {
-      x: { stacked: true, ticks: { color: "#8b949e" }, grid: { color: "#30363d" } },
-      y: { stacked: true, ticks: { color: "#c9d1d9", font: { size: 10 } }, grid: { color: "#30363d" } }
-    },
-    onClick(_, elements) {
-      if (!elements.length) return;
-      const label = SECTOR_LABELS[elements[0].index];
-      const sel = document.getElementById("sectorFilter");
-      if (sel.value === label) { sel.value = ""; } else { sel.value = label; }
-      applyFilter();
-    },
-    maintainAspectRatio: false
-  }
-});
-
-const rsiColors = chartLabels(RSI_LABELS).map((_, i) => i <= 2 ? "#3fb95066" : i >= 9 ? "#f8514966" : "#58a6ff66");
-new Chart(document.getElementById("rsiChart"), {
-  type: "bar",
-  data: {
-    labels: chartLabels(RSI_LABELS),
-    datasets: [{ data: chartValues(RSI_VALUES), backgroundColor: rsiColors, borderColor: rsiColors.map(c => c.replace("66", "ff")), borderWidth: 1 }]
-  },
-  options: {
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { ticks: { color: "#8b949e", font: { size: 9 } }, grid: { color: "#30363d" } },
-      y: { ticks: { color: "#8b949e" }, grid: { color: "#30363d" } }
-    },
-    maintainAspectRatio: false
-  }
+document.querySelectorAll("[data-tab-button]").forEach(button => {
+  button.addEventListener("click", () => activateTab(button.dataset.tabButton));
 });
 
 document.getElementById("mainTabs").addEventListener("click", event => {
   const link = event.target.closest("a[data-tab]");
   if (!link) return;
   event.preventDefault();
-  document.querySelectorAll("#mainTabs .nav-link").forEach(node => node.classList.remove("active"));
-  link.classList.add("active");
-  currentTab = link.dataset.tab;
-  const isReport = currentTab === "report";
-  document.getElementById("filterBar").style.display = isReport ? "none" : "";
-  document.getElementById("tableSection").style.display = isReport ? "none" : "";
-  document.getElementById("reportSection").style.display = isReport ? "" : "none";
-  if (isReport) renderReport();
-  else applyFilter();
+  activateTab(link.dataset.tab);
 });
-
-function renderReport() {
-  if (reportRendered) return;
-  reportRendered = true;
-  const el = document.getElementById("mdContent");
-  if (!ANALYSIS_MD) {
-    el.innerHTML = '<p class="text-secondary py-3">###REPORT_EMPTY_TEXT###</p>';
-    return;
-  }
-  el.innerHTML = marked.parse(ANALYSIS_MD);
-  const ids = ["sec-top", "sec-theme", "sec-sector", "sec-warn"];
-  el.querySelectorAll("h2").forEach((heading, index) => {
-    heading.id = ids[index] || `sec-${index + 1}`;
-  });
-  el.querySelectorAll("a").forEach(link => {
-    if (link.href && link.href.startsWith("http")) link.target = "_blank";
-  });
-}
 
 document.getElementById("mainTable").querySelector("thead").addEventListener("click", event => {
   const th = event.target.closest("th[data-col]");
@@ -204,12 +210,30 @@ document.getElementById("mainTable").querySelector("thead").addEventListener("cl
   if (sortCol === col) sortAsc = !sortAsc;
   else {
     sortCol = col;
-    sortAsc = true;
+    sortAsc = col !== "trend";
   }
   document.querySelectorAll("thead th").forEach(node => node.classList.remove("th-sorted"));
   th.classList.add("th-sorted");
   renderFilter();
 });
+
+function activateTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll("#mainTabs .nav-link").forEach(node => {
+    node.classList.toggle("active", node.dataset.tab === tab);
+  });
+  document.querySelectorAll("[data-tab-button]").forEach(node => {
+    node.classList.toggle("active", node.dataset.tabButton === tab);
+  });
+  const isReport = currentTab === "report";
+  const isNews = currentTab === "news";
+  document.getElementById("tableSection").style.display = isReport || isNews ? "none" : "";
+  document.getElementById("reportSection").style.display = isReport ? "" : "none";
+  document.getElementById("newsSection").style.display = isNews ? "" : "none";
+  if (isReport) renderReport();
+  else if (isNews) renderNews();
+  else renderFilter();
+}
 
 function esc(value) {
   return String(value ?? "")
@@ -229,23 +253,48 @@ function fmtPrice(value) {
   return `${CURRENCY}${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function trendPoint(row) {
+  return trendPoints[row.trend] ?? 0;
+}
+
+function closestMADiff(row) {
+  const diffs = PERIODS
+    .map(period => row[`diff_${period}`])
+    .filter(value => value != null && !Number.isNaN(Number(value)))
+    .map(Number);
+  if (!diffs.length) return null;
+  return diffs.reduce((best, value) => Math.abs(value) < Math.abs(best) ? value : best, diffs[0]);
+}
+
+function setupType(row) {
+  const rsi = Number(row.rsi);
+  const near = row.nearCount || 0;
+  const point = trendPoint(row);
+  const closest = closestMADiff(row);
+  if (point >= 1 && near >= 1 && rsi >= 40 && rsi <= 65) return "trend-pullback";
+  if (rsi < 40 && point > -2) return "oversold-bounce";
+  if (point >= 2 && rsi < 70) return "strong-momentum";
+  if (rsi >= 70) return "overheated";
+  if (point <= -1 && (closest == null || closest < 0)) return "bearish";
+  return "neutral";
+}
+
+function setupLabel(type) {
+  return {
+    "trend-pullback": "추세 눌림목",
+    "oversold-bounce": "과매도 반등",
+    "strong-momentum": "강세 지속",
+    "overheated": "과열 주의",
+    "bearish": "약세 지속",
+    "neutral": "중립 관찰"
+  }[type] || "중립 관찰";
+}
+
 function trendCell(value) {
-  const icons = {
-    "Strong Uptrend": "++",
-    "Uptrend": "+",
-    "Neutral": "=",
-    "Downtrend": "-",
-    "Strong Downtrend": "--"
-  };
-  const colors = {
-    "Strong Uptrend": "#3fb950",
-    "Uptrend": "#7ee787",
-    "Neutral": "#e3b341",
-    "Downtrend": "#ffa198",
-    "Strong Downtrend": "#f85149"
-  };
   if (!value) return "-";
-  return `<span style="color:${colors[value] || "#c9d1d9"};font-weight:700">${icons[value] || ""} ${esc(value)}</span>`;
+  const icon = trendIcons[value] || "→";
+  const color = trendColors[value] || "#c9d1d9";
+  return `<span class="trend-chip" title="${esc(value)}" style="color:${color}">${icon}</span>`;
 }
 
 function rsiCell(value) {
@@ -260,6 +309,13 @@ function upCell(value) {
   const n = +value;
   const klass = n >= 20 ? "up-green" : n < 0 ? "up-red" : "";
   return `<span class="${klass}">${n.toFixed(1)}%</span>`;
+}
+
+function changeCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n > 0 ? "up-green" : n < 0 ? "up-red" : "";
+  return `<span class="${klass}">${n >= 0 ? "+" : ""}${n.toFixed(2)}%</span>`;
 }
 
 function perCell(value) {
@@ -277,18 +333,17 @@ function diffCell(value) {
 }
 
 function badges(row) {
-  const classes = ["info text-dark", "warning text-dark", "danger", "primary", "success", "secondary"];
   let html = "";
-  PERIODS.forEach((period, index) => {
+  PERIODS.forEach(period => {
     if (row[`near_${period}`]) {
-      html += `<span class="badge bg-${classes[index % classes.length]} me-1" style="font-size:.65rem">${period}</span>`;
+      html += `<span class="ma-badge">${period}</span>`;
     }
   });
   return html || "-";
 }
 
 function tabMatch(row) {
-  if (currentTab === "all") return true;
+  if (currentTab === "all" || currentTab === "report" || currentTab === "news") return true;
   if (currentTab === "multi") return (row.nearCount || 0) >= 2;
   if (currentTab.startsWith("ma")) {
     const period = currentTab.slice(2);
@@ -297,33 +352,35 @@ function tabMatch(row) {
   return true;
 }
 
-function applyFilter() {
-  renderFilter();
-}
-
-function renderFilter() {
+function filteredRows() {
   const search = document.getElementById("searchBox").value.toLowerCase();
   const sector = document.getElementById("sectorFilter").value;
-  const rsiValue = document.getElementById("rsiFilter").value;
+  const setup = document.getElementById("setupFilter").value;
   const trend = document.getElementById("trendFilter").value;
 
-  let rows = DATA.filter(row => {
+  return DATA.filter(row => {
     if (!tabMatch(row)) return false;
     if (search) {
       const haystack = [row.ticker, row.displayTicker, row.kr_name, row.en_name].filter(Boolean).join(" ").toLowerCase();
       if (!haystack.includes(search)) return false;
     }
     if (sector && row.sector !== sector) return false;
+    if (setup && setupType(row) !== setup) return false;
     if (trend && row.trend !== trend) return false;
-    if (rsiValue === "low" && !(row.rsi != null && row.rsi < 35)) return false;
-    if (rsiValue === "high" && !(row.rsi != null && row.rsi > 65)) return false;
-    if (rsiValue === "mid" && !(row.rsi != null && row.rsi >= 35 && row.rsi <= 65)) return false;
     return true;
   });
+}
+
+function applyFilter() {
+  renderFilter();
+}
+
+function renderFilter() {
+  let rows = filteredRows();
 
   rows.sort((a, b) => {
-    let va = a[sortCol];
-    let vb = b[sortCol];
+    let va = sortValue(a, sortCol);
+    let vb = sortValue(b, sortCol);
     if (va == null) va = sortAsc ? Infinity : -Infinity;
     if (vb == null) vb = sortAsc ? Infinity : -Infinity;
     if (typeof va === "string" || typeof vb === "string") {
@@ -334,11 +391,11 @@ function renderFilter() {
 
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = rows.map(row => {
-    const diffCells = PERIODS.map(period => `<td>${diffCell(row[`diff_${period}`])}</td>`).join("");
     const title = esc([row.en_name || "", row.desc || ""].filter(Boolean).join("\n"));
     const name = esc(row.kr_name || row.en_name || row.displayTicker || row.ticker);
     const ticker = esc(row.displayTicker || row.ticker);
     const sectorName = esc(row.sector || "-");
+    const setup = setupType(row);
     return `
     <tr>
       <td><a href="${esc(row.quoteUrl || "#")}" target="_blank" class="ticker-link">${ticker}</a></td>
@@ -346,13 +403,13 @@ function renderFilter() {
       <td>${sectorName}</td>
       <td>${trendCell(row.trend)}</td>
       <td>${fmtPrice(row.price)}</td>
+      <td>${changeCell(row.changePct)}</td>
       <td>${rsiCell(row.rsi)}</td>
       <td>${fmt(row.fromHigh, 1, "%")}</td>
       <td>${fmt(row.volRatio, 2, "x")}</td>
       <td>${perCell(row.per)}</td>
       <td>${upCell(row.upside)}</td>
-      ${diffCells}
-      <td>${badges(row)}</td>
+      <td>${badges(row)} <span class="setup-tag ${setup}">${setupLabel(setup)}</span></td>
     </tr>`;
   }).join("");
 
@@ -361,6 +418,263 @@ function renderFilter() {
   document.getElementById("rowCount2").textContent = message;
 }
 
+function sortValue(row, col) {
+  if (col === "trend") return trendPoint(row);
+  if (col === "ticker") return row.displayTicker || row.ticker;
+  if (col === "kr_name") return row.kr_name || row.en_name || "";
+  return row[col];
+}
+
+function renderReport() {
+  if (reportRendered) return;
+  reportRendered = true;
+  const el = document.getElementById("mdContent");
+  if (!ANALYSIS_MD) {
+    el.innerHTML = '<p class="text-secondary py-3">###REPORT_EMPTY_TEXT###</p>';
+    return;
+  }
+  el.innerHTML = marked.parse(ANALYSIS_MD);
+  const ids = ["sec-top", "sec-theme", "sec-sector", "sec-warn"];
+  el.querySelectorAll("h2").forEach((heading, index) => {
+    heading.id = ids[index] || `sec-${index + 1}`;
+  });
+  el.querySelectorAll("a").forEach(link => {
+    if (link.href && link.href.startsWith("http")) link.target = "_blank";
+  });
+}
+
+function renderNews() {
+  if (newsRendered) return;
+  newsRendered = true;
+  document.getElementById("newsTitle").textContent = NEWS.title || "뉴스 브리핑";
+  document.getElementById("newsSubtitle").textContent = NEWS.subtitle || "";
+  document.getElementById("newsNote").textContent = NEWS.note || "";
+  const items = Array.isArray(NEWS.items) ? NEWS.items : [];
+  document.getElementById("newsCount").textContent = NEWS.available ? `${items.length} items` : "No cache";
+  if (!NEWS.available || !items.length) {
+    document.getElementById("newsContent").innerHTML = `
+      <div class="news-empty">
+        <strong>뉴스 데이터가 아직 없습니다.</strong>
+        <p>US 기준 밤새 뉴스 수집은 가능합니다. 다만 렌더링 안정성을 위해 별도 수집 단계에서 캐시를 만든 뒤 이 탭에서 읽는 방식으로 설계했습니다.</p>
+      </div>`;
+    return;
+  }
+  document.getElementById("newsContent").innerHTML = items.map(item => {
+    const tone = ["positive", "bullish"].includes(String(item.sentiment).toLowerCase())
+      ? "positive"
+      : ["negative", "bearish"].includes(String(item.sentiment).toLowerCase()) ? "negative" : "neutral";
+    const title = esc(item.title || "(제목 없음)");
+    const url = item.url ? esc(item.url) : "#";
+    const ticker = item.ticker ? `<b>${esc(item.ticker)}</b>` : "";
+    const meta = [item.publisher, item.publishedAt].filter(Boolean).map(esc).join(" · ");
+    return `
+      <article class="news-item ${tone}">
+        <div>${ticker}<span>${esc(item.sentiment || "neutral")}</span></div>
+        <a href="${url}" target="_blank">${title}</a>
+        <p>${esc(item.summary || "")}</p>
+        <em>${meta}</em>
+      </article>`;
+  }).join("");
+}
+
+function renderSignalStrip() {
+  const nearItems = PERIODS.map(period => {
+    const count = DATA.filter(row => row[`near_${period}`]).length;
+    return `<div><span>MA${period}</span><strong>${count}</strong></div>`;
+  }).join("");
+  const multi = DATA.filter(row => (row.nearCount || 0) >= 2).length;
+  const avgRsiValues = DATA.map(row => Number(row.rsi)).filter(value => !Number.isNaN(value));
+  const avgRsi = avgRsiValues.length ? avgRsiValues.reduce((a, b) => a + b, 0) / avgRsiValues.length : null;
+  const bulls = DATA.filter(row => trendPoint(row) > 0).length;
+  const bears = DATA.filter(row => trendPoint(row) < 0).length;
+  const breadth = bulls + bears ? bulls / (bulls + bears) * 100 : null;
+  const vixText = FEAR.available ? `${FEAR.label} ${fmt(FEAR.level, 1)}` : "VIX N/A";
+  document.getElementById("signalStrip").innerHTML = `
+    ${nearItems}
+    <div><span>Multi</span><strong>${multi}</strong></div>
+    <div><span>Avg RSI</span><strong>${avgRsi == null ? "-" : avgRsi.toFixed(1)}</strong></div>
+    <div><span>Bull Breadth</span><strong>${breadth == null ? "-" : breadth.toFixed(0) + "%"}</strong></div>
+    <div><span>Fear</span><strong>${esc(vixText)}</strong></div>
+  `;
+}
+
+function changeColor(changePct) {
+  const value = Math.max(-6, Math.min(6, Number(changePct) || 0));
+  if (value > 0) {
+    const alpha = 0.22 + Math.abs(value) / 6 * 0.68;
+    return `rgba(40, 209, 124, ${alpha})`;
+  }
+  if (value < 0) {
+    const alpha = 0.22 + Math.abs(value) / 6 * 0.68;
+    return `rgba(244, 91, 105, ${alpha})`;
+  }
+  return "rgba(216, 169, 74, .34)";
+}
+
+function renderSectorHeatmap() {
+  const sectorMap = new Map();
+  DATA.forEach(row => {
+    const sector = row.sector || "Unknown";
+    const change = Number(row.changePct);
+    if (!sectorMap.has(sector)) sectorMap.set(sector, []);
+    if (!Number.isNaN(change)) sectorMap.get(sector).push({ ...row, change });
+  });
+
+  const sectors = [...sectorMap.entries()].map(([sector, rows]) => {
+    const sorted = [...rows].sort((a, b) => a.change - b.change);
+    const count = sorted.length;
+    const avg = count ? sorted.reduce((sum, row) => sum + row.change, 0) / count : 0;
+    const median = count ? sorted[Math.floor(count / 2)].change : 0;
+    const upRatio = count ? sorted.filter(row => row.change > 0).length / count * 100 : 0;
+    const leader = count ? sorted[sorted.length - 1] : null;
+    const laggard = count ? sorted[0] : null;
+    return { sector, rows: sorted, count, avg, median, upRatio, leader, laggard };
+  }).filter(item => item.count > 0).sort((a, b) => b.avg - a.avg);
+
+  const heatRows = sectors.length ? sectors : [{ sector: "No data", count: 0, avg: 0, median: 0, upRatio: 0, leader: null, laggard: null }];
+  document.getElementById("sectorHeatmap").innerHTML = heatRows.map(item => {
+    const encodedSector = encodeURIComponent(item.sector);
+    const flex = Math.min(5, Math.max(1.2, Math.sqrt(Math.max(item.count, 1)) + Math.min(2, Math.abs(item.avg || 0) / 2)));
+    const leader = item.leader ? `${item.leader.displayTicker || item.leader.ticker} ${(item.leader.change >= 0 ? "+" : "") + item.leader.change.toFixed(2)}%` : "-";
+    const laggard = item.laggard ? `${item.laggard.displayTicker || item.laggard.ticker} ${(item.laggard.change >= 0 ? "+" : "") + item.laggard.change.toFixed(2)}%` : "-";
+    return `
+      <button class="heat-tile sector-tile" style="--tile-flex:${flex};background:${changeColor(item.avg)}" onclick="setSectorFilter(decodeURIComponent('${encodedSector}'))" title="${esc(item.sector)} · 평균 ${item.avg.toFixed(2)}% · 중앙값 ${item.median.toFixed(2)}% · 상승비율 ${item.upRatio.toFixed(0)}% · 강세 ${esc(leader)} · 약세 ${esc(laggard)}">
+        <strong>${esc(item.sector)}</strong>
+        <span>${item.avg >= 0 ? "+" : ""}${item.avg.toFixed(2)}%</span>
+        <em>${item.count}종목 · 상승 ${item.upRatio.toFixed(0)}% · 중앙 ${item.median >= 0 ? "+" : ""}${item.median.toFixed(2)}%</em>
+      </button>`;
+  }).join("");
+}
+
+function setSectorFilter(value) {
+  sectorFilter.value = value;
+  applyFilter();
+}
+
+function clearSectorFilter() {
+  sectorFilter.value = "";
+  applyFilter();
+}
+
+function renderFearPanel() {
+  const level = FEAR.available ? fmt(FEAR.level, 2) : "-";
+  const trend = FEAR.trend === "rising" ? "상승" : FEAR.trend === "falling" ? "하락" : "확인 불가";
+  const tone = FEAR.label === "Stress" || FEAR.label === "Elevated" ? "danger" : FEAR.label === "Calm" ? "calm" : "normal";
+  document.getElementById("fearPanel").innerHTML = `
+    <div class="panel-head">
+      <div><span>Fear & Volatility</span><h3>공포지수 해석</h3></div>
+      <b class="fear-badge ${tone}">${esc(FEAR.label || "N/A")}</b>
+    </div>
+    <div class="fear-grid">
+      <div><span>VIX</span><strong>${level}</strong></div>
+      <div><span>${esc(FEAR.vsLabel || "20D 대비")}</span><strong>${FEAR.vs20Pct == null ? "-" : fmt(FEAR.vs20Pct, 1, "%")}</strong></div>
+      <div><span>방향</span><strong>${trend}</strong></div>
+    </div>
+    <p>${esc(FEAR.note || "")}</p>
+  `;
+}
+
+function renderSetupBuckets() {
+  const bucketOrder = ["trend-pullback", "oversold-bounce", "strong-momentum", "overheated", "bearish"];
+  const grouped = Object.fromEntries(bucketOrder.map(key => [key, []]));
+  DATA.forEach(row => {
+    const type = setupType(row);
+    if (grouped[type]) grouped[type].push(row);
+  });
+  document.getElementById("setupBuckets").innerHTML = bucketOrder.map(key => {
+    const rows = grouped[key].sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0)).slice(0, 4);
+    return `
+      <button class="bucket ${key}" onclick="document.getElementById('setupFilter').value='${key}'; applyFilter();">
+        <span>${setupLabel(key)}</span>
+        <strong>${grouped[key].length}</strong>
+        <em>${rows.map(row => esc(row.displayTicker || row.ticker)).join(" · ") || "대상 없음"}</em>
+      </button>`;
+  }).join("");
+}
+
+function renderScatterChart() {
+  const groups = {
+    "강세": { color: "#28d17c", rows: [] },
+    "중립": { color: "#d8a94a", rows: [] },
+    "약세": { color: "#f45b69", rows: [] }
+  };
+  DATA.forEach(row => {
+    const x = closestMADiff(row);
+    const y = row.rsi;
+    if (x == null || y == null) return;
+    const point = trendPoint(row);
+    const key = point > 0 ? "강세" : point < 0 ? "약세" : "중립";
+    groups[key].rows.push({ x, y, ticker: row.displayTicker || row.ticker, name: row.kr_name || row.en_name || "", setup: setupLabel(setupType(row)) });
+  });
+  renderScatterCommentary(groups);
+  new Chart(document.getElementById("scatterChart"), {
+    type: "scatter",
+    data: {
+      datasets: Object.entries(groups).map(([label, item]) => ({
+        label,
+        data: item.rows,
+        backgroundColor: item.color + "bb",
+        borderColor: item.color,
+        pointRadius: 5,
+        pointHitRadius: 14,
+        pointHoverRadius: 7
+      }))
+    },
+    options: {
+      interaction: { mode: "nearest", intersect: false },
+      plugins: {
+        legend: { labels: { color: "#b8c6d7", boxWidth: 10, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const raw = ctx.raw;
+              return ` ${raw.ticker}: MA ${raw.x.toFixed(2)}%, RSI ${raw.y.toFixed(1)} · ${raw.setup}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "Closest MA Distance %", color: "#7f8ea3" },
+          ticks: { color: "#7f8ea3" },
+          grid: { color: "rgba(148,163,184,.12)" }
+        },
+        y: {
+          min: 10,
+          max: 90,
+          title: { display: true, text: "RSI", color: "#7f8ea3" },
+          ticks: { color: "#7f8ea3" },
+          grid: { color: "rgba(148,163,184,.12)" }
+        }
+      },
+      maintainAspectRatio: false
+    }
+  });
+}
+
+function renderScatterCommentary(groups) {
+  const all = Object.values(groups).flatMap(item => item.rows);
+  if (!all.length) {
+    document.getElementById("scatterCommentary").textContent = "이격률/RSI 데이터가 부족해 해석을 만들 수 없습니다.";
+    return;
+  }
+  const nearBalanced = all.filter(row => Math.abs(row.x) <= 2 && row.y >= 40 && row.y <= 65).length;
+  const overheated = all.filter(row => row.y >= 70).length;
+  const oversold = all.filter(row => row.y < 35).length;
+  const extended = all.filter(row => Math.abs(row.x) >= 8).length;
+  let text = `중립 진입 후보 ${nearBalanced}개, 과열 ${overheated}개, 과매도 ${oversold}개입니다.`;
+  if (overheated > nearBalanced) text = `과열 신호가 ${overheated}개로 많아 추격보다 눌림 확인이 유리합니다.`;
+  else if (nearBalanced >= overheated && nearBalanced >= oversold) text = `MA 근처의 정상 RSI 후보가 ${nearBalanced}개로, 선별 진입을 보기 좋은 분포입니다.`;
+  else if (oversold > overheated) text = `과매도 후보가 ${oversold}개로 반등 관찰 대상이 늘어난 상태입니다.`;
+  if (extended > all.length * 0.25) text += ` 다만 MA 이격이 큰 종목도 ${extended}개라 변동성 관리는 필요합니다.`;
+  document.getElementById("scatterCommentary").textContent = text;
+}
+
+renderSignalStrip();
+renderSectorHeatmap();
+renderFearPanel();
+renderSetupBuckets();
+renderScatterChart();
 renderFilter();
 </script>
 </body>

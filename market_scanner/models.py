@@ -53,6 +53,7 @@ class ScanRecord:
     sector: str
     description: str
     price: float | None
+    change_pct: float | None
     rsi: float | None
     high_52w: float | None
     low_52w: float | None
