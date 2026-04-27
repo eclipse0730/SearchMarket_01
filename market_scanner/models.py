@@ -25,7 +25,7 @@ class ScanSettings:
     threshold_pct: float = 2.0
     history_period: str = "2y"
     min_history_buffer: int = 10
-    max_workers: int = 8
+    max_workers: int = 3
     output_dir: Path = Path("refactor_outputs")
 
 

@@ -5,6 +5,7 @@ from functools import lru_cache
 from html import escape
 import json
 from pathlib import Path
+import time
 
 import pandas as pd
 import yfinance as yf
@@ -53,10 +54,18 @@ def _resolve_metadata(market: MarketDefinition, symbol: str, info: dict) -> tupl
 
 
 def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) -> ScanRecord | None:
-    ticker = yf.Ticker(symbol)
-    hist = ticker.history(period=settings.history_period)
     min_history = max(settings.ma_periods) + settings.min_history_buffer
-    if hist.empty or len(hist) < min_history:
+    hist = pd.DataFrame()
+    for attempt in range(3):
+        if attempt:
+            time.sleep(attempt * 2)
+        try:
+            hist = yf.Ticker(symbol).history(period=settings.history_period)
+        except Exception:
+            continue
+        if not hist.empty and len(hist) >= min_history:
+            break
+    else:
         return None
 
     close = hist["Close"]
