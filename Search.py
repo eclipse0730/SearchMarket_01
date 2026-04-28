@@ -9,6 +9,7 @@ from market_scanner.compat import (
     ensure_csv_exists,
     load_frame,
     run_analysis_stage,
+    run_news_stage,
     run_render_stage,
     run_scan_stage_with_settings,
     run_translate_stage,
@@ -31,6 +32,7 @@ def main() -> None:
             "  python Search.py --market kospi\n"
             "  python Search.py --market kosdaq\n"
             "  python Search.py --market us --stage scan --force\n"
+            "  python Search.py --market us --stage news\n"
             "  python Search.py --market us --stage render\n"
         ),
     )
@@ -43,9 +45,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--stage",
-        choices=["scan", "analyze", "translate", "render", "all"],
+        choices=["scan", "analyze", "translate", "news", "render", "all"],
         default="all",
-        help="Pipeline stage to run (default: all). 'translate' is a no-op for markets other than 'us'.",
+        help="Pipeline stage to run (default: all). 'news' is an opt-in cache collection stage.",
     )
     parser.add_argument(
         "--date",
@@ -54,6 +56,9 @@ def main() -> None:
     )
     parser.add_argument("--force", action="store_true", help="Rescan even if CSV already exists.")
     parser.add_argument("--workers", type=int, default=8, help="Parallel workers for scan stage (default: 8).")
+    parser.add_argument("--news-symbols", type=int, default=50, help="Max symbols for news collection (default: 50).")
+    parser.add_argument("--news-items", type=int, default=3, help="Max news items per symbol (default: 3).")
+    parser.add_argument("--news-workers", type=int, default=4, help="Parallel workers for news stage (default: 4).")
     parser.add_argument(
         "--setup-scheduler",
         action="store_true",
@@ -110,6 +115,18 @@ def main() -> None:
                 completed.append(str(paths["csv"]))
         else:
             print(f"  translate: not supported for '{market_key}', skipped.")
+
+    if args.stage == "news":
+        ensure_csv_exists(market_key, date_str)
+        news_count, news_path = run_news_stage(
+            market_key,
+            date_str,
+            max_symbols=max(0, args.news_symbols),
+            items_per_symbol=max(1, args.news_items),
+            max_workers=max(1, args.news_workers),
+        )
+        print(f"  news cached: {news_count} items -> {news_path}")
+        completed.append(str(news_path))
 
     if run_all or args.stage == "render":
         ensure_csv_exists(market_key, date_str)

@@ -24,7 +24,8 @@
 
 - `Search.py --stage scan`: yfinance, Wikipedia, FinanceDataReader, Investing 검색 요청을 사용할 수 있습니다.
 - `Search.py --stage translate`: deep-translator/GoogleTranslator 요청을 사용할 수 있습니다.
-- `python -m market_scanner.site_builder`: 로컬 파일 기반 사이트 빌드이지만, S&P 500 파생 페이지 생성 시 유니버스 로더가 네트워크/캐시를 사용할 수 있습니다.
+- `Search.py --stage news`: 최신 CSV 기반으로 yfinance `Ticker.news` 요청을 사용해 `market_scanner/assets/news_cache.json`을 갱신합니다. 실행 시간과 요청량 때문에 `all`에는 포함하지 않습니다.
+- `python -m market_scanner.site_builder`: 로컬 파일 기반 사이트 빌드입니다. 로컬 실행은 빌드 후 기본 브라우저로 `site/index.html`을 열며, `--no-open`으로 자동 열기를 끌 수 있습니다. S&P 500 파생 페이지 생성 시 유니버스 로더가 네트워크/캐시를 사용할 수 있습니다.
 
 ## Important Files
 
@@ -88,12 +89,15 @@
 - `.\.venv\Scripts\python.exe Search.py --help` 통과
 - 최신 CSV 샘플은 정상 로드됨
 - `site_builder.py`는 최신 CSV 기반 페이지 fallback을 지원함
+- 메인페이지 v2 샘플은 `site/preview-home/index.html`에 생성하며, 현재 메인 승격 전 검토용 임시 페이지임
 - 상세페이지 v2는 좌측 종목 리스트와 우측 Sector Heatmap/Fear/Setup/Scatter 패널 구조임
+- 상세페이지 헤더는 제목 아래 기준일/행 수와 KST 기준 갱신시간을 표시함
 - 모든 시장의 Investing 링크는 한국 사용자 UX를 위해 `kr.investing.com` 도메인으로 출력함
 - 상세페이지 종목 리스트의 추세 정렬은 표시 문자열이 아니라 숫자 추세 점수 기준으로 처리함
 - 상세페이지 Heatmap은 섹터별 `change_pct` 평균 상승률 강도 기준으로 표시함. 타일에는 평균, 중앙값, 상승 종목 비율, 종목 수를 함께 표시함
 - 상세페이지 종목 리스트에서는 MA60/120/240 차이율 컬럼을 숨기고, 해당 값은 Scatter/Setup 계산용 DATA에는 유지함
 - 뉴스 브리핑 탭은 `market_scanner/assets/news_cache.json`이 있으면 캐시 기반으로 표시하고, 렌더링 중 실시간 뉴스 요청은 피함
+- 뉴스 캐시는 `Search.py --stage news`에서 생성/갱신하며, 기본값은 종합점수 상위 50개 종목 × 종목당 최대 3건임
 - 공포지수는 `yfinance` VIX 조회를 우선 사용하되, 렌더링 환경 네트워크가 막힐 수 있으므로 글로벌 지수 CSV의 `^VIX` fallback을 지원함
 - Dow 30은 별도 CLI 시장이 아니라 US 스캔 결과에서 파생 생성되는 사이트 페이지임
 - S&P 500 캐시는 과거 list 형식과 새 metadata 형식을 모두 읽을 수 있음

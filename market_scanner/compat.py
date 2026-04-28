@@ -9,6 +9,7 @@ import pandas as pd
 
 from market_scanner.markets import MARKETS
 from market_scanner.models import MarketDefinition, ScanSettings
+from market_scanner.news import collect_news_cache
 from market_scanner.pipeline import scan_market, write_html, write_markdown
 from market_scanner.translator import translate_scan_csv
 
@@ -103,6 +104,25 @@ def run_translate_stage(market_key: str, date_str: str) -> bool:
     market = compat_market(market_key)
     paths = compat_paths(market_key, date_str)
     return translate_scan_csv(_existing_csv_path(paths["csv"]), market.sector_aliases)
+
+
+def run_news_stage(
+    market_key: str,
+    date_str: str,
+    *,
+    max_symbols: int = 50,
+    items_per_symbol: int = 3,
+    max_workers: int = 4,
+) -> tuple[int, Path]:
+    _, frame, _ = load_frame(market_key, date_str)
+    return collect_news_cache(
+        frame,
+        market_key,
+        date_str,
+        max_symbols=max_symbols,
+        items_per_symbol=items_per_symbol,
+        max_workers=max_workers,
+    )
 
 
 def ensure_csv_exists(market_key: str, date_str: str) -> Path:

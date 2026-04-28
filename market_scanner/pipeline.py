@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 from functools import lru_cache
 from html import escape
 import json
 from pathlib import Path
 import time
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import yfinance as yf
@@ -685,6 +687,10 @@ def _json_script(value) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
+def _updated_at_text() -> str:
+    return datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
+
+
 def _summary_cards_interactive_html(frame: pd.DataFrame, settings: ScanSettings) -> str:
     card_classes = ["text-info", "text-warning", "text-danger", "text-primary", "text-success", "text-secondary"]
     cards: list[str] = []
@@ -911,7 +917,11 @@ def _news_briefing_data(frame: pd.DataFrame, market: MarketDefinition, date_str:
     if isinstance(payload, dict):
         dated = payload.get(date_str, payload)
         if isinstance(dated, dict):
-            raw_items = dated.get(market.key, dated.get("items", []))
+            raw_items = dated.get(market.key)
+            if raw_items is None and market.key in {"nasdaq100", "sp500", "dow30"}:
+                raw_items = dated.get("us")
+            if raw_items is None:
+                raw_items = dated.get("items", [])
         elif isinstance(dated, list):
             raw_items = dated
     elif isinstance(payload, list):
@@ -990,6 +1000,7 @@ def write_html(frame: pd.DataFrame, market: MarketDefinition, settings: ScanSett
             "TITLE": escape(f"{market.label} Report {date_str}"),
             "HEADING": escape(f"{market.label} MA Scanner"),
             "META": escape(f"{display_date} | {market.label} | {len(frame)} rows"),
+            "UPDATED_AT": escape(_updated_at_text()),
             "STYLE": _read_template("report.css"),
             "SUMMARY_CARDS": _summary_cards_interactive_html(frame, settings),
             "TAB_NAV": _interactive_tab_nav_html(settings),

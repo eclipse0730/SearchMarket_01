@@ -1,0 +1,37 @@
+{
+  "20260428": {
+    "us": [
+      {
+        "ticker": "ALGN",
+        "title": "Align Technology's Q1 Earnings on Deck: Here's What to Expect",
+        "publisher": "Zacks",
+        "summary": "ALGN's Q1 report looms with revenues seen rising 4.3% and EPS up 6.1%, as Invisalign demand and iTero adoption drive growth trends.",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/align-technologys-q1-earnings-deck-153100243.html",
+        "sentiment": "neutral",
+        "publishedAt": "2026-04-21T15:31:00Z"
+      },
+      {
+        "ticker": "PSX",
+        "title": "Phillips 66 Set to Report Q1 Earnings: What's in the Offing?",
+        "publisher": "Zacks",
+        "summary": "PSX is projected to post a 55-cent loss in Q1 on $29.5B in revenues, with midstream revenues and product sales volumes expected to fall y/y.",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/phillips-66-set-report-q1-155900244.html",
+        "sentiment": "neutral",
+        "publishedAt": "2026-04-27T15:59:00Z"
+      },
+      {
+        "ticker": "TJX",
+        "title": "Will Cautious 2027 Guidance After Earnings Beats Change TJX Companies' (TJX) Narrative?",
+        "publisher": "Simply Wall St.",
+        "summary": "TJX Companies recently issued cautious guidance for fiscal 2027 following strong fiscal Q4 2026 results, even as it continued to outpace Wall Street’s earnings expectations over the past four quarters. This mix of consistent earnings outperformance and more guarded forward commentary has sharpened investor focus on how management frames the upcoming fiscal Q1 2027 results and outlook. With management’s cautious fiscal 2027 guidance in mind, we’ll now explore how the forthcoming earnings...",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/cautious-2027-guidance-earnings-beats-180322519.html",
+        "sentiment": "neutral",
+        "publishedAt": "2026-04-25T18:03:22Z"
+      }
+    ],
+    "_meta": {
+      "updatedAt": "2026-04-28 10:36:20 KST",
+      "source": "yfinance.Ticker.news"
+    }
+  }
+}

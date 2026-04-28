@@ -29,12 +29,14 @@ python Search.py --market commodities
 python Search.py --market us --stage scan      # 스캔 → data/Data_YYYYMMDD.csv
 python Search.py --market us --stage analyze   # 분석 → Analysis_YYYYMMDD.md
 python Search.py --market us --stage translate # 번역 (US 전용)
+python Search.py --market us --stage news      # 뉴스 캐시 → market_scanner/assets/news_cache.json
 python Search.py --market us --stage render    # HTML → Report_YYYYMMDD.html
 
 # 기타 옵션
 python Search.py --market us --workers 8       # 병렬 worker 수
 python Search.py --market us --date 20260425   # 대상 날짜 지정
 python Search.py --market us --force           # CSV 있어도 재스캔
+python Search.py --market us --stage news --news-symbols 80 --news-items 2
 python Search.py --market us --setup-scheduler # 윈도우 작업 스케줄러 등록
 python Search.py --market us --setup-scheduler --time 08:30
 ```
@@ -53,10 +55,18 @@ python Search.py --market us --setup-scheduler --time 08:30
 ## 사이트 대시보드
 
 ```bash
-python -m market_scanner.site_builder
+python3 -m market_scanner.site_builder
 ```
 
-`site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 메인 페이지는 최신 CSV/리포트 데이터를 기반으로 다음 통합 지표를 보여줍니다.
+`site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 로컬 실행 시 빌드 완료 후 `site/index.html`이 기본 브라우저로 자동 열립니다. 자동 열기를 건너뛰려면 `--no-open`을 붙입니다.
+
+```bash
+python3 -m market_scanner.site_builder --no-open
+```
+
+메인페이지 업그레이드 샘플은 `site/preview-home/index.html`에 함께 생성됩니다. 현재 메인페이지를 바꾸기 전에 이 preview 페이지에서 시장별 상태 카드와 Today Watchlist 구성을 확인할 수 있습니다.
+
+메인 페이지는 최신 CSV/리포트 데이터를 기반으로 다음 통합 지표를 보여줍니다.
 
 - Market Regime: 주식 breadth와 매크로 프록시를 결합한 Risk-On/Risk-Off 요약
 - Equity Breadth: 주요 주식 시장의 강세/약세 종목 비율
@@ -69,6 +79,7 @@ python -m market_scanner.site_builder
 
 상세 페이지는 좌측 종목 리스트와 우측 인사이트 패널로 구성됩니다.
 
+- 헤더 갱신시간: 상세페이지 제목 아래에 생성 시각을 `KST` 기준으로 표시
 - 압축형 Signal Strip
 - 섹터별 상승률 Heatmap: 섹터 평균 등락률, 중앙값, 상승 종목 비율, 종목 수 표시
 - Fear & Volatility 패널
@@ -78,6 +89,8 @@ python -m market_scanner.site_builder
 - 뉴스 브리핑 탭: 향후 뉴스 수집 캐시가 있으면 밤새 뉴스 요약 표시
 
 티커 링크는 한국 사용자 기준으로 동작하며, 모든 시장의 Investing 링크는 `kr.investing.com`으로 연결합니다.
+
+`news` 단계는 최신 스캔 CSV가 있어야 실행됩니다. 기본적으로 종합점수 상위 50개 종목에서 종목당 최대 3개 뉴스를 수집해 `market_scanner/assets/news_cache.json`에 날짜/시장별로 저장합니다. 실행 시간이 늘 수 있어 `all`에는 자동 포함하지 않습니다.
 
 ## 패키지 구조
 

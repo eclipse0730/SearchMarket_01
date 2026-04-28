@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import argparse
+import os
 import re
 import shutil
+import webbrowser
 from dataclasses import dataclass, replace
 from datetime import datetime
 from html import escape
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
@@ -156,7 +160,20 @@ def _site_nav(active_slug: str, depth: int) -> str:
     )
 
 
+def _updated_at_text() -> str:
+    return datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
+
+
+def _inject_report_updated_at(html: str) -> str:
+    if 'class="report-updated"' in html:
+        return html
+    updated = f'<p class="report-updated">갱신시간: {escape(_updated_at_text())}</p>'
+    pattern = re.compile(r"(<h1>.*?</h1>\s*<p[^>]*>.*?</p>)", re.DOTALL)
+    return pattern.sub(rf"\1\n    {updated}", html, count=1)
+
+
 def _inject_site_shell(html: str, active_slug: str, depth: int) -> str:
+    html = _inject_report_updated_at(html)
     nav = _site_nav(active_slug, depth)
     if "<body>" in html:
         return html.replace("<body>", f"<body>{nav}", 1)
@@ -408,6 +425,222 @@ def _sector_leadership_html(pages: list[BuiltPage], overview_frames: dict[str, p
         '<p class="panel-sub">주식/테마 ETF에서 추세 점수가 높은 섹터입니다.</p>'
         '<table class="ov-table"><thead><tr><th>섹터</th><th>수</th><th>추세</th><th>RSI</th></tr></thead>'
         '<tbody>' + "".join(rows) + '</tbody></table></div>'
+    )
+
+
+def _avg_change(frame: pd.DataFrame) -> float | None:
+    return _avg_number(frame, "change_pct")
+
+
+def _top_sector_text(frame: pd.DataFrame) -> str:
+    leading, _ = _sector_extremes(frame)
+    return leading
+
+
+def _sector_extremes(frame: pd.DataFrame) -> tuple[str, str]:
+    if frame.empty or "sector" not in frame.columns:
+        return "-", "-"
+    working = frame.copy()
+    working["trend_score"] = pd.to_numeric(working.get("trend_score", pd.Series(dtype=float)), errors="coerce")
+    working["change_pct"] = pd.to_numeric(working.get("change_pct", pd.Series(dtype=float)), errors="coerce")
+    grouped = (
+        working.dropna(subset=["sector"])
+        .groupby("sector")
+        .agg(count=("sector", "size"), avg_trend=("trend_score", "mean"), avg_change=("change_pct", "mean"))
+    )
+    grouped = grouped[grouped["count"] >= 2]
+    if grouped.empty:
+        return "-", "-"
+    leading = grouped.sort_values(["avg_trend", "avg_change", "count"], ascending=[False, False, False])
+    lagging = grouped.sort_values(["avg_trend", "avg_change", "count"], ascending=[True, True, False])
+    return str(leading.index[0])[:24], str(lagging.index[0])[:24]
+
+
+def _display_name(row: pd.Series) -> str:
+    return str(row.get("name_local") or row.get("name_en") or row.get("display_symbol") or row.get("symbol") or "-")
+
+
+def _preview_combined_frame(pages: list[BuiltPage], overview_frames: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+    built_keys = {page.key for page in pages}
+    title_by_key = {key: title for key, title, _, _ in _ROOT_PAGES}
+    slug_by_key = {key: slug for key, _, _, slug in _ROOT_PAGES}
+
+    for page in pages:
+        frame = page.frame.copy()
+        frame["_source_key"] = page.key
+        frame["_source_title"] = title_by_key.get(page.key, page.title)
+        frame["_source_slug"] = page.slug
+        frames.append(frame)
+
+    for key, frame in overview_frames.items():
+        if key in built_keys or frame.empty:
+            continue
+        working = frame.copy()
+        working["_source_key"] = key
+        working["_source_title"] = title_by_key.get(key, key)
+        working["_source_slug"] = slug_by_key.get(key, key)
+        frames.append(working)
+
+    return _combined_frame(frames)
+
+
+def _preview_market_cards_html(pages: list[BuiltPage], overview_frames: dict[str, pd.DataFrame]) -> str:
+    cards: list[str] = []
+    for key, title, description, slug in _ROOT_PAGES:
+        frame = _market_frame_for_slug(pages, overview_frames, key, slug)
+        if frame.empty:
+            cards.append(
+                '<article class="v2-market muted">'
+                f'<div><span>{escape(title)}</span><strong>대기</strong></div>'
+                f'<p>{escape(description)}</p>'
+                '</article>'
+            )
+            continue
+
+        stats = _market_stats(frame)
+        avg_rsi = stats["avg_rsi"]
+        avg_rsi_text = f"{float(avg_rsi):.1f}" if avg_rsi is not None else "-"
+        breadth = float(stats["breadth"]) if stats.get("breadth") is not None else 0.0
+        breadth_width = max(3, min(100, breadth)) if stats.get("breadth") is not None else 0
+        change = _avg_change(frame)
+        change_text = f"{change:+.2f}%" if change is not None else "-"
+        change_cls = "up" if change is not None and change >= 0 else "down" if change is not None else "neutral"
+        leading_sector, lagging_sector = _sector_extremes(frame)
+        cards.append(
+            f'<a class="v2-market" href="../{escape(slug)}/index.html">'
+            f'<div><span>{escape(title)}</span><strong>{int(stats["total"] or 0):,}</strong></div>'
+            f'<p>{escape(description)}</p>'
+            '<dl>'
+            f'<div class="wide"><dt>Breadth</dt><dd><b>{escape(_pct(stats["breadth"]))}</b><i class="breadth-mini"><em style="width:{breadth_width:.0f}%"></em></i></dd></div>'
+            f'<div><dt>RSI</dt><dd>{escape(avg_rsi_text)}</dd></div>'
+            f'<div><dt>평균 등락</dt><dd class="{change_cls}">{escape(change_text)}</dd></div>'
+            f'<div><dt>리딩 섹터</dt><dd>{escape(leading_sector)}</dd></div>'
+            f'<div><dt>하락 섹터</dt><dd>{escape(lagging_sector)}</dd></div>'
+            '</dl>'
+            '</a>'
+        )
+    return "".join(cards)
+
+
+def _format_price_value(value: object) -> str:
+    if value is None or pd.isna(value):
+        return "-"
+    try:
+        return f"{float(value):,.2f}"
+    except (TypeError, ValueError):
+        return "-"
+
+
+def _rsi_class(value: object) -> str:
+    if value is None or pd.isna(value):
+        return "neutral"
+    rsi = float(value)
+    if rsi >= 70:
+        return "rsi-hot"
+    if rsi <= 35:
+        return "rsi-cold"
+    return "neutral"
+
+
+def _closest_ma_label(row: pd.Series) -> str:
+    candidates: list[tuple[int, float]] = []
+    for period in (60, 120, 240):
+        value = row.get(f"diff_{period}")
+        if pd.notna(value):
+            candidates.append((period, float(value)))
+    if not candidates:
+        return "-"
+    period, diff = min(candidates, key=lambda item: abs(item[1]))
+    return f"MA{period} {diff:+.1f}%"
+
+
+def _trend_arrow_html(trend: object) -> str:
+    trend_text = str(trend or "")
+    color = _TREND_COLORS.get(trend_text, "#94a3b8")
+    arrow = _TREND_ARROWS.get(trend_text, "→")
+    return f'<span class="trend-arrow" title="{escape(trend_text or "-")}" style="color:{color}">{escape(arrow)}</span>'
+
+
+def _watchlist_rows(frame: pd.DataFrame, mode: str, limit: int = 8) -> str:
+    if frame.empty or "symbol" not in frame.columns:
+        return '<tr><td colspan="5" class="muted">데이터가 없습니다.</td></tr>'
+
+    working = frame.copy()
+    for column in (
+        "trend_score",
+        "rsi",
+        "near_count",
+        "from_high_pct",
+        "change_pct",
+        "diff_60",
+        "diff_120",
+        "diff_240",
+        "price",
+        "volume_ratio",
+    ):
+        working[column] = pd.to_numeric(working.get(column, pd.Series(dtype=float)), errors="coerce")
+
+    if mode == "momentum":
+        selected = working.sort_values(["trend_score", "change_pct"], ascending=[False, False], na_position="last")
+    elif mode == "pullback":
+        diff_cols = [column for column in ("diff_60", "diff_120", "diff_240") if column in working.columns]
+        working["_closest_ma"] = working[diff_cols].abs().min(axis=1) if diff_cols else pd.NA
+        selected = working[
+            working["trend_score"].fillna(0).ge(3) & working["_closest_ma"].notna()
+        ].sort_values(["_closest_ma", "trend_score"], ascending=[True, False], na_position="last")
+    elif mode == "oversold":
+        selected = working[working["rsi"].notna()].sort_values(["rsi", "trend_score"], ascending=[True, False])
+    elif mode == "heated":
+        selected = working[working["rsi"].notna()].sort_values(["rsi", "from_high_pct"], ascending=[False, False])
+    elif mode == "weak-spike":
+        selected = working[
+            working["change_pct"].notna() & working["trend_score"].fillna(0).le(3)
+        ].sort_values(["change_pct", "volume_ratio"], ascending=[False, False], na_position="last")
+    elif mode == "volume":
+        selected = working[
+            working["volume_ratio"].notna()
+        ].sort_values(["volume_ratio", "change_pct"], ascending=[False, False], na_position="last")
+    else:
+        selected = working
+
+    rows: list[str] = []
+    for _, row in selected.head(limit).iterrows():
+        symbol = str(row.get("display_symbol") or row.get("symbol") or "-")
+        slug = str(row.get("_source_slug") or "index")
+        market = str(row.get("_source_title") or "-")
+        change = row.get("change_pct")
+        change_text = f"{float(change):+.2f}%" if pd.notna(change) else "-"
+        change_cls = "up" if pd.notna(change) and float(change) >= 0 else "down" if pd.notna(change) else "neutral"
+        rsi = row.get("rsi")
+        rsi_text = f"{float(rsi):.1f}" if pd.notna(rsi) else "-"
+        volume = row.get("volume_ratio")
+        volume_text = f"{float(volume):.2f}x" if pd.notna(volume) else "-"
+        rows.append(
+            '<tr>'
+            f'<td><a href="../{escape(slug)}/index.html">{escape(symbol)}</a><small>{escape(_display_name(row)[:22])}</small></td>'
+            f'<td>{escape(market)}</td>'
+            f'<td>{escape(_format_price_value(row.get("price")))}</td>'
+            f'<td class="{change_cls}">{escape(change_text)}</td>'
+            f'<td class="{_rsi_class(rsi)}">{escape(rsi_text)}</td>'
+            f'<td>{_trend_arrow_html(row.get("trend"))}</td>'
+            f'<td>{escape(_closest_ma_label(row))}</td>'
+            f'<td>{escape(volume_text)}</td>'
+            '</tr>'
+        )
+    return "".join(rows) if rows else '<tr><td colspan="5" class="muted">조건에 맞는 데이터가 없습니다.</td></tr>'
+
+
+def _watchlist_panel(title: str, subtitle: str, rows: str) -> str:
+    return (
+        '<section class="v2-panel">'
+        '<div class="v2-panel-head">'
+        f'<h3>{escape(title)}</h3>'
+        f'<p>{escape(subtitle)}</p>'
+        '</div>'
+        '<table class="v2-watch"><thead><tr><th>종목</th><th>시장</th><th>종가</th><th>등락</th><th>RSI</th><th>추세</th><th>MA</th><th>거래량</th></tr></thead>'
+        f'<tbody>{rows}</tbody></table>'
+        '</section>'
     )
 
 
@@ -833,6 +1066,249 @@ def _build_home_page(pages: list[BuiltPage], overview_frames: dict[str, pd.DataF
     (SITE_DIR / "index.html").write_text(html, encoding="utf-8")
 
 
+def _build_home_preview_page(pages: list[BuiltPage], overview_frames: dict[str, pd.DataFrame]) -> None:
+    combined = _preview_combined_frame(pages, overview_frames)
+    stock_frames = [
+        _market_frame_for_slug(pages, overview_frames, "nasdaq100", "nasdaq100"),
+        _market_frame_for_slug(pages, overview_frames, "sp500", "sp500"),
+        _market_frame_for_slug(pages, overview_frames, "kospi", "kospi"),
+        _market_frame_for_slug(pages, overview_frames, "kosdaq", "kosdaq"),
+    ]
+    macro_frames = [
+        overview_frames.get("global-indices", pd.DataFrame()),
+        overview_frames.get("theme-proxies", pd.DataFrame()),
+        overview_frames.get("commodities", pd.DataFrame()),
+    ]
+    stock_stats = _market_stats(_combined_frame(stock_frames))
+    macro_stats = _market_stats(_combined_frame(macro_frames))
+    regime, regime_note = _regime_label(stock_stats, macro_stats)
+    stock_breadth = float(stock_stats["breadth"]) if stock_stats.get("breadth") is not None else 0.0
+    macro_breadth = float(macro_stats["breadth"]) if macro_stats.get("breadth") is not None else 0.0
+    avg_change = _avg_change(combined)
+    avg_change_text = f"{avg_change:+.2f}%" if avg_change is not None else "-"
+    market_cards = _preview_market_cards_html(pages, overview_frames)
+    watchlists = [
+        _watchlist_panel("Strong Momentum", "추세 점수와 당일 등락이 함께 강한 후보", _watchlist_rows(combined, "momentum")),
+        _watchlist_panel("MA Pullback", "강한 추세 안에서 이동평균선에 가까운 후보", _watchlist_rows(combined, "pullback")),
+        _watchlist_panel("Oversold Bounce", "RSI가 낮아 반등 관찰이 필요한 후보", _watchlist_rows(combined, "oversold")),
+        _watchlist_panel("Overheated Risk", "RSI 과열과 고점 근접을 함께 보는 위험 후보", _watchlist_rows(combined, "heated")),
+        _watchlist_panel("Weak Trend Spike", "약하거나 횡보 중인 추세에서 상승률이 튀는 후보", _watchlist_rows(combined, "weak-spike")),
+        _watchlist_panel("Volume Spike", "평균 대비 거래량이 크게 늘어난 후보", _watchlist_rows(combined, "volume")),
+    ]
+    generated_at = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
+
+    html = f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Scanner Preview</title>
+  <style>
+    :root {{
+      color-scheme: dark;
+      --bg: #060d17;
+      --panel: rgba(11, 23, 38, .88);
+      --panel-2: rgba(15, 31, 50, .76);
+      --line: rgba(148, 163, 184, .16);
+      --line-strong: rgba(148, 163, 184, .28);
+      --text: #e6edf3;
+      --muted: #92a4b8;
+      --accent: #7dd3fc;
+      --good: #4ade80;
+      --bad: #f87171;
+      --warn: #f7b267;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% -8%, rgba(125, 211, 252, .16), transparent 30%),
+        radial-gradient(circle at 92% 2%, rgba(247, 178, 103, .12), transparent 26%),
+        linear-gradient(180deg, #07111f, #040811 72%);
+      color: var(--text);
+      font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+    }}
+    .wrap {{ max-width: 1480px; margin: 0 auto; padding: 28px 18px 72px; }}
+    .preview-bar {{
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      padding: 10px 0 22px;
+      color: var(--muted);
+      font-size: 12px;
+    }}
+    .preview-bar a {{ color: var(--accent); text-decoration: none; font-weight: 800; }}
+    .hero-v2 {{
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }}
+    .hero-copy, .v2-panel, .v2-market {{
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .24);
+    }}
+    .hero-copy {{ padding: 28px; border-radius: 22px; }}
+    .eyebrow {{
+      display: inline-flex;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(125, 211, 252, .11);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }}
+    h1 {{ margin: 14px 0 12px; font-size: clamp(32px, 5vw, 58px); line-height: 1.05; }}
+    .lead {{ margin: 0; max-width: 760px; color: #b9c8d8; font-size: 16px; line-height: 1.7; }}
+    .regime {{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 24px;
+    }}
+    .regime div {{ padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(6, 14, 25, .56); }}
+    .regime span {{ display: block; color: var(--muted); font-size: 11px; font-weight: 900; text-transform: uppercase; }}
+    .regime strong {{ display: block; margin-top: 8px; font-size: 24px; }}
+    .pulse-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }}
+    .pulse-card {{
+      min-height: 150px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-2);
+    }}
+    .pulse-card span {{ color: var(--muted); font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }}
+    .pulse-card strong {{ display: block; margin: 14px 0 8px; font-size: 30px; line-height: 1; }}
+    .pulse-card p {{ margin: 0; color: #b9c8d8; font-size: 13px; line-height: 1.5; }}
+    .tone-green strong, .up {{ color: var(--good); }}
+    .tone-red strong, .down {{ color: var(--bad); }}
+    .neutral {{ color: var(--muted); }}
+    .tone-blue strong {{ color: var(--accent); }}
+    .tone-gold strong {{ color: var(--warn); }}
+    .section-head {{ display: flex; justify-content: space-between; align-items: end; gap: 16px; margin: 30px 0 14px; }}
+    .section-head h2 {{ margin: 0; font-size: 23px; }}
+    .section-head p {{ margin: 0; color: var(--muted); font-size: 13px; }}
+    .market-grid {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }}
+    .v2-market {{
+      display: block;
+      min-height: 214px;
+      padding: 18px;
+      border-radius: 18px;
+      color: inherit;
+      text-decoration: none;
+    }}
+    .v2-market:hover {{ border-color: rgba(125, 211, 252, .45); transform: translateY(-1px); }}
+    .v2-market.muted {{ opacity: .58; }}
+    .v2-market > div {{ display: flex; justify-content: space-between; gap: 12px; align-items: start; }}
+    .v2-market span {{ color: var(--accent); font-size: 12px; font-weight: 900; }}
+    .v2-market strong {{ font-size: 26px; line-height: 1; }}
+    .v2-market p {{ min-height: 38px; margin: 14px 0 14px; color: var(--muted); font-size: 13px; line-height: 1.45; }}
+    .v2-market dl {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 0; }}
+    .v2-market .wide {{ grid-column: 1 / -1; }}
+    .v2-market dt {{ color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }}
+    .v2-market dd {{ margin: 3px 0 0; font-weight: 900; font-size: 14px; }}
+    .v2-market dd b {{ display: inline-block; min-width: 46px; font: inherit; }}
+    .breadth-mini {{
+      display: inline-block;
+      width: calc(100% - 56px);
+      height: 8px;
+      margin-left: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, .16);
+      vertical-align: middle;
+    }}
+    .breadth-mini em {{
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #f87171, #f7b267 52%, #4ade80);
+    }}
+    .watch-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }}
+    .v2-panel {{ padding: 18px; border-radius: 18px; min-width: 0; }}
+    .v2-panel-head {{ display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 12px; }}
+    .v2-panel h3 {{ margin: 0; font-size: 17px; }}
+    .v2-panel p {{ margin: 2px 0 0; color: var(--muted); font-size: 12px; text-align: right; }}
+    .v2-watch {{ width: 100%; border-collapse: collapse; font-size: 12px; }}
+    .v2-watch th {{ color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); }}
+    .v2-watch td {{ padding: 9px 6px; border-bottom: 1px solid rgba(148, 163, 184, .08); vertical-align: top; }}
+    .v2-watch tr:last-child td {{ border-bottom: 0; }}
+    .v2-watch a {{ display: block; color: #e6edf3; font-weight: 900; text-decoration: none; }}
+    .v2-watch a:hover {{ color: var(--accent); }}
+    .v2-watch small {{ display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }}
+    .trend-arrow {{ font-weight: 900; font-size: 15px; white-space: nowrap; }}
+    .rsi-hot {{ color: var(--bad); font-weight: 900; }}
+    .rsi-cold {{ color: var(--accent); font-weight: 900; }}
+    .muted {{ color: var(--muted); }}
+    @media (max-width: 1120px) {{
+      .hero-v2, .watch-grid {{ grid-template-columns: 1fr; }}
+      .market-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+    }}
+    @media (max-width: 620px) {{
+      .pulse-grid, .market-grid, .regime {{ grid-template-columns: 1fr; }}
+      .section-head, .v2-panel-head, .preview-bar {{ align-items: flex-start; flex-direction: column; }}
+      .v2-panel p {{ text-align: left; }}
+    }}
+  </style>
+</head>
+<body>
+  {_site_nav("home", 1)}
+  <main class="wrap">
+    <div class="preview-bar">
+      <span>Preview Home v2 · 생성 {escape(generated_at)}</span>
+      <a href="../index.html">현재 메인으로 돌아가기</a>
+    </div>
+
+    <section class="hero-v2">
+      <div class="hero-copy">
+        <div class="eyebrow">Market Pulse Preview</div>
+        <h1>{escape(regime)}</h1>
+        <p class="lead">{escape(regime_note)} 주식 breadth는 {stock_breadth:.0f}%, 매크로 breadth는 {macro_breadth:.0f}%이며 전체 평균 등락률은 {escape(avg_change_text)}입니다.</p>
+        <div class="regime">
+          <div><span>Equity Breadth</span><strong>{escape(_pct(stock_stats["breadth"]))}</strong></div>
+          <div><span>Macro Breadth</span><strong>{escape(_pct(macro_stats["breadth"]))}</strong></div>
+          <div><span>Avg Change</span><strong>{escape(avg_change_text)}</strong></div>
+        </div>
+      </div>
+      <div class="pulse-grid">
+        {_market_pulse_html(pages, overview_frames)}
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>시장별 상태</h2>
+        <p>Breadth, RSI, MA 근접, 평균 등락률을 한 카드에서 확인합니다.</p>
+      </div>
+      <div class="market-grid">
+        {market_cards}
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Today Watchlist</h2>
+        <p>전체 시장 데이터를 네 가지 관찰 관점으로 재정렬한 샘플입니다.</p>
+      </div>
+      <div class="watch-grid">
+        {"".join(watchlists)}
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+"""
+    page_path = SITE_DIR / "preview-home" / "index.html"
+    page_path.parent.mkdir(parents=True, exist_ok=True)
+    page_path.write_text(html, encoding="utf-8")
+
+
 def _write_placeholder_page(slug: str, title: str, description: str) -> None:
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1039,6 +1515,7 @@ def build_site() -> list[BuiltPage]:
                 overview_frames[market_key] = _load_frame(csv_info[1])
 
     _build_home_page(built_pages, overview_frames)
+    _build_home_preview_page(built_pages, overview_frames)
     built_keys = {page.key for page in built_pages}
     built_slugs = {page.slug for page in built_pages}
     for key, title, description, slug in _ROOT_PAGES:
@@ -1047,11 +1524,47 @@ def build_site() -> list[BuiltPage]:
     return built_pages
 
 
+def _should_open_browser_by_default() -> bool:
+    ci_value = os.environ.get("CI", "").lower()
+    return ci_value not in {"1", "true", "yes"} and os.environ.get("GITHUB_ACTIONS") != "true"
+
+
+def _open_site_index() -> None:
+    index_path = (SITE_DIR / "index.html").resolve()
+    url = index_path.as_uri()
+    if webbrowser.open(url):
+        print(f"Opened {url}")
+    else:
+        print(f"Built site index: {index_path}")
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Build the static Market Scanner site.")
+    open_group = parser.add_mutually_exclusive_group()
+    open_group.add_argument(
+        "--open",
+        dest="open_browser",
+        action="store_true",
+        help="Open site/index.html in the default browser after building.",
+    )
+    open_group.add_argument(
+        "--no-open",
+        dest="open_browser",
+        action="store_false",
+        help="Build the site without opening a browser.",
+    )
+    parser.set_defaults(open_browser=None)
+    args = parser.parse_args()
+
     pages = build_site()
     if not pages:
         raise SystemExit("No reports were found. Generate at least one market report before building the site.")
     print(f"Built {len(pages)} site pages under {SITE_DIR}")
+    open_browser = args.open_browser
+    if open_browser is None:
+        open_browser = _should_open_browser_by_default()
+    if open_browser:
+        _open_site_index()
 
 
 if __name__ == "__main__":
