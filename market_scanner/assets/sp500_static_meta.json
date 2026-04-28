@@ -1,0 +1,3020 @@
+{
+  "MMM": {
+    "name_en": "3M Company",
+    "name_local": "MMM",
+    "sector": "산업재",
+    "description": "3M Company provides diversified technology services in the America, the Asia Pacific, Europe, the Middle East, Africa, a"
+  },
+  "AOS": {
+    "name_en": "A. O. Smith Corporation",
+    "name_local": "AOS",
+    "sector": "산업재",
+    "description": "A. O. Smith Corporation manufactures and markets residential and commercial gas and electric water heaters, boilers, hea"
+  },
+  "ABT": {
+    "name_en": "Abbott Laboratories",
+    "name_local": "ABT",
+    "sector": "헬스케어",
+    "description": "Abbott Laboratories, together with its subsidiaries, discovers, develops, manufactures, and sells health care products w"
+  },
+  "ABBV": {
+    "name_en": "AbbVie Inc.",
+    "name_local": "ABBV",
+    "sector": "헬스케어",
+    "description": "AbbVie Inc., a research-based biopharmaceutical company, engages in the research and development, manufacturing, commerc"
+  },
+  "ACN": {
+    "name_en": "Accenture plc",
+    "name_local": "ACN",
+    "sector": "기술",
+    "description": "Accenture plc provides strategy and consulting, industry X, song, and technology and operation services in the Americas,"
+  },
+  "ADBE": {
+    "name_en": "Adobe Inc.",
+    "name_local": "어도비",
+    "sector": "소프트웨어",
+    "description": "포토샵·Acrobat·Creative Cloud"
+  },
+  "AMD": {
+    "name_en": "Advanced Micro Devices",
+    "name_local": "AMD",
+    "sector": "반도체",
+    "description": "CPU·GPU·AI 가속기"
+  },
+  "AES": {
+    "name_en": "The AES Corporation",
+    "name_local": "AES",
+    "sector": "유틸리티",
+    "description": "The AES Corporation, together with its subsidiaries, operates as a power generation and utility company. It operates thr"
+  },
+  "AFL": {
+    "name_en": "Aflac Incorporated",
+    "name_local": "AFL",
+    "sector": "금융 서비스",
+    "description": "Aflac Incorporated, through its subsidiaries, provides supplemental health and life insurance products. It operates in t"
+  },
+  "A": {
+    "name_en": "Agilent Technologies, Inc.",
+    "name_local": "A",
+    "sector": "헬스케어",
+    "description": "Agilent Technologies, Inc. provides application focused solutions to the life sciences, diagnostics, and applied chemica"
+  },
+  "APD": {
+    "name_en": "Air Products and Chemicals, Inc.",
+    "name_local": "APD",
+    "sector": "원자재",
+    "description": "Air Products and Chemicals, Inc. provides atmospheric gases, process and specialty gases, equipment, and related service"
+  },
+  "ABNB": {
+    "name_en": "Airbnb Inc.",
+    "name_local": "에어비앤비",
+    "sector": "여행·숙박 플랫폼",
+    "description": "글로벌 숙박 공유 플랫폼"
+  },
+  "AKAM": {
+    "name_en": "Akamai Technologies, Inc.",
+    "name_local": "AKAM",
+    "sector": "기술",
+    "description": "Akamai Technologies, Inc. engages in the provision of security, delivery, and cloud computing solutions in the United St"
+  },
+  "ALB": {
+    "name_en": "Albemarle Corporation",
+    "name_local": "ALB",
+    "sector": "원자재",
+    "description": "Albemarle Corporation provides energy storage solutions worldwide. It operates through three segments: Energy Storage, S"
+  },
+  "ARE": {
+    "name_en": "Alexandria Real Estate Equities, Inc.",
+    "name_local": "ARE",
+    "sector": "부동산·리츠",
+    "description": "Alexandria Real Estate Equities, Inc. an S&P 500 company, is a best-in-class, mission-driven life science REIT making a"
+  },
+  "ALGN": {
+    "name_en": "Align Technology Inc.",
+    "name_local": "얼라인 테크놀로지",
+    "sector": "의료기기",
+    "description": "인비절라인 투명 치아교정기"
+  },
+  "ALLE": {
+    "name_en": "Allegion plc",
+    "name_local": "ALLE",
+    "sector": "산업재",
+    "description": "Allegion plc engages in the provision of security products and solutions worldwide. It is operating through two segments"
+  },
+  "LNT": {
+    "name_en": "Alliant Energy Corporation",
+    "name_local": "LNT",
+    "sector": "유틸리티",
+    "description": "Alliant Energy Corporation operates as a utility holding company that provides regulated electric and natural gas servic"
+  },
+  "ALL": {
+    "name_en": "The Allstate Corporation",
+    "name_local": "ALL",
+    "sector": "금융 서비스",
+    "description": "The Allstate Corporation, together with its subsidiaries, provides property and casualty, and other insurance products i"
+  },
+  "GOOGL": {
+    "name_en": "Alphabet Inc. (A)",
+    "name_local": "알파벳(구글) A",
+    "sector": "인터넷·광고",
+    "description": "구글 검색·YouTube·GCP"
+  },
+  "GOOG": {
+    "name_en": "Alphabet Inc. (C)",
+    "name_local": "알파벳(구글) C",
+    "sector": "인터넷·광고",
+    "description": "구글 검색·YouTube·GCP"
+  },
+  "MO": {
+    "name_en": "Altria Group, Inc.",
+    "name_local": "MO",
+    "sector": "필수 소비재",
+    "description": "Altria Group, Inc., through its subsidiaries, manufactures and sells smokeable and oral tobacco products in the United S"
+  },
+  "AMZN": {
+    "name_en": "Amazon.com Inc.",
+    "name_local": "아마존",
+    "sector": "이커머스·클라우드",
+    "description": "온라인 쇼핑·AWS 클라우드"
+  },
+  "AMCR": {
+    "name_en": "Amcor plc",
+    "name_local": "AMCR",
+    "sector": "경기 소비재",
+    "description": "Amcor plc, together with its subsidiaries, engages in the production and sale of packaging products in Europe, North Ame"
+  },
+  "AEE": {
+    "name_en": "Ameren Corporation",
+    "name_local": "AEE",
+    "sector": "유틸리티",
+    "description": "Ameren Corporation, together with its subsidiaries, operates as a public utility holding company in the United States. T"
+  },
+  "AEP": {
+    "name_en": "American Electric Power",
+    "name_local": "아메리칸 일렉트릭 파워",
+    "sector": "전력·유틸리티",
+    "description": "미국 중부·남부 전력 공급"
+  },
+  "AXP": {
+    "name_en": "American Express Company",
+    "name_local": "AXP",
+    "sector": "금융 서비스",
+    "description": "American Express Company, together with its subsidiaries, operates as an integrated payments company in the United State"
+  },
+  "AIG": {
+    "name_en": "American International Group, Inc.",
+    "name_local": "AIG",
+    "sector": "금융 서비스",
+    "description": "American International Group, Inc. provides insurance products for commercial, institutional, and individual customers i"
+  },
+  "AMT": {
+    "name_en": "American Tower Corporation",
+    "name_local": "AMT",
+    "sector": "부동산·리츠",
+    "description": "American Tower Corporation is one of the largest global real estate investment trusts. It is a leading independent owner"
+  },
+  "AWK": {
+    "name_en": "American Water Works Company, Inc.",
+    "name_local": "AWK",
+    "sector": "유틸리티",
+    "description": "American Water Works Company, Inc., through its subsidiaries, provides water and wastewater services in the United State"
+  },
+  "AMP": {
+    "name_en": "Ameriprise Financial, Inc.",
+    "name_local": "AMP",
+    "sector": "금융 서비스",
+    "description": "Ameriprise Financial, Inc., together with its subsidiaries, operates as a diversified financial services company in the"
+  },
+  "AME": {
+    "name_en": "AMETEK, Inc.",
+    "name_local": "AME",
+    "sector": "산업재",
+    "description": "AMETEK, Inc. manufactures and sells electronic instruments (EIG) and electromechanical (EMG) devices in the United State"
+  },
+  "AMGN": {
+    "name_en": "Amgen Inc.",
+    "name_local": "AMGN",
+    "sector": "헬스케어",
+    "description": "Amgen Inc. discovers, develops, manufactures, and delivers human therapeutics worldwide. The company's principal product"
+  },
+  "APH": {
+    "name_en": "Amphenol Corporation",
+    "name_local": "APH",
+    "sector": "기술",
+    "description": "Amphenol Corporation, together with its subsidiaries, designs, manufactures, and markets electrical, electronic, and fib"
+  },
+  "ADI": {
+    "name_en": "Analog Devices Inc.",
+    "name_local": "아날로그 디바이시스",
+    "sector": "반도체",
+    "description": "아날로그·혼성신호 반도체"
+  },
+  "AON": {
+    "name_en": "Aon plc",
+    "name_local": "AON",
+    "sector": "금융 서비스",
+    "description": "Aon plc operates as a professional services firm in the United States, rest of the Americas, the United Kingdom, Ireland"
+  },
+  "APA": {
+    "name_en": "APA Corporation",
+    "name_local": "APA",
+    "sector": "에너지",
+    "description": "APA Corporation, an independent energy company, explores for, develops, and produces natural gas, crude oil, and natural"
+  },
+  "APO": {
+    "name_en": "Apollo Global Management, Inc.",
+    "name_local": "APO",
+    "sector": "금융 서비스",
+    "description": "Apollo Global Management, Inc. is a private equity firm specializing in investments in credit, private equity, infrastru"
+  },
+  "AAPL": {
+    "name_en": "Apple Inc.",
+    "name_local": "애플",
+    "sector": "소비자 전자기기",
+    "description": "아이폰·맥·서비스 생태계"
+  },
+  "AMAT": {
+    "name_en": "Applied Materials Inc.",
+    "name_local": "어플라이드 머티리얼즈",
+    "sector": "반도체 장비",
+    "description": "반도체 식각·증착 장비"
+  },
+  "APP": {
+    "name_en": "Applovin Corporation",
+    "name_local": "앱러빈",
+    "sector": "모바일 광고·AI",
+    "description": "AI 기반 모바일 광고 플랫폼"
+  },
+  "APTV": {
+    "name_en": "Aptiv PLC",
+    "name_local": "APTV",
+    "sector": "경기 소비재",
+    "description": "Aptiv PLC, an industrial technology company, provides hardware and software solutions to support automotive and other in"
+  },
+  "ACGL": {
+    "name_en": "Arch Capital Group Ltd.",
+    "name_local": "ACGL",
+    "sector": "금융 서비스",
+    "description": "Arch Capital Group Ltd., together with its subsidiaries, provides insurance, reinsurance, and mortgage insurance product"
+  },
+  "ADM": {
+    "name_en": "Archer-Daniels-Midland Company",
+    "name_local": "ADM",
+    "sector": "필수 소비재",
+    "description": "Archer-Daniels-Midland Company provides human and animal nutrition ingredients and solutions in the United States, Switz"
+  },
+  "ARES": {
+    "name_en": "Ares Management Corporation",
+    "name_local": "ARES",
+    "sector": "금융 서비스",
+    "description": "Ares Management Corporation operates as an alternative asset manager. Its Direct Lending Group segment provides financin"
+  },
+  "ANET": {
+    "name_en": "Arista Networks, Inc.",
+    "name_local": "ANET",
+    "sector": "기술",
+    "description": "Arista Networks, Inc. engages in the development, marketing, and sale of data-driven, client to cloud networking solutio"
+  },
+  "AJG": {
+    "name_en": "Arthur J. Gallagher & Co.",
+    "name_local": "AJG",
+    "sector": "금융 서비스",
+    "description": "Arthur J. Gallagher & Co., together with its subsidiaries, provides insurance and reinsurance brokerage, consulting, and"
+  },
+  "AIZ": {
+    "name_en": "Assurant, Inc.",
+    "name_local": "AIZ",
+    "sector": "금융 서비스",
+    "description": "Assurant, Inc. provides protection services to connected devices, homes, and automobiles in North America, Latin America"
+  },
+  "T": {
+    "name_en": "AT&T Inc.",
+    "name_local": "T",
+    "sector": "커뮤니케이션 서비스",
+    "description": "AT&T Inc. provides telecommunications and technology services worldwide. It operates through two segments, Communication"
+  },
+  "ATO": {
+    "name_en": "Atmos Energy Corporation",
+    "name_local": "ATO",
+    "sector": "유틸리티",
+    "description": "Atmos Energy Corporation, together with its subsidiaries, engages in the regulated natural gas distribution, and pipelin"
+  },
+  "ADSK": {
+    "name_en": "Autodesk, Inc.",
+    "name_local": "ADSK",
+    "sector": "기술",
+    "description": "Autodesk, Inc. engages in the provision of 3D design, engineering, and entertainment technology solutions worldwide. The"
+  },
+  "ADP": {
+    "name_en": "Automatic Data Processing",
+    "name_local": "ADP",
+    "sector": "HR·급여 소프트웨어",
+    "description": "기업 급여·인사 아웃소싱"
+  },
+  "AZO": {
+    "name_en": "AutoZone, Inc.",
+    "name_local": "AZO",
+    "sector": "경기 소비재",
+    "description": "AutoZone, Inc. operates as a retailer and distributor of automotive replacement parts and accessories in the United Stat"
+  },
+  "AVB": {
+    "name_en": "AvalonBay Communities, Inc.",
+    "name_local": "AVB",
+    "sector": "부동산·리츠",
+    "description": "AvalonBay Communities, Inc., a member of the S&P 500, is an equity REIT. The firm develops, redevelops, acquires and man"
+  },
+  "AVY": {
+    "name_en": "Avery Dennison Corporation",
+    "name_local": "AVY",
+    "sector": "경기 소비재",
+    "description": "Avery Dennison Corporation operates as a materials science and digital identification solutions company in the North Ame"
+  },
+  "AXON": {
+    "name_en": "Axon Enterprise, Inc.",
+    "name_local": "AXON",
+    "sector": "산업재",
+    "description": "Axon Enterprise, Inc. provides public safety technology solutions in the United States and internationally. The company"
+  },
+  "BKR": {
+    "name_en": "Baker Hughes Company",
+    "name_local": "베이커 휴즈",
+    "sector": "에너지 서비스",
+    "description": "유전 굴착·서비스·LNG 설비"
+  },
+  "BALL": {
+    "name_en": "Ball Corporation",
+    "name_local": "BALL",
+    "sector": "경기 소비재",
+    "description": "Ball Corporation supplies aluminum packaging products for the beverage, personal care, and household products industries"
+  },
+  "BAC": {
+    "name_en": "Bank of America Corporation",
+    "name_local": "BAC",
+    "sector": "금융 서비스",
+    "description": "Bank of America Corporation, through its subsidiaries, provides various financial products and services for individual c"
+  },
+  "BAX": {
+    "name_en": "Baxter International Inc.",
+    "name_local": "BAX",
+    "sector": "헬스케어",
+    "description": "Baxter International Inc., through its subsidiaries, provides a portfolio of healthcare products in the United States. T"
+  },
+  "BDX": {
+    "name_en": "Becton, Dickinson and Company",
+    "name_local": "BDX",
+    "sector": "헬스케어",
+    "description": "Becton, Dickinson and Company develops, manufactures, and sells medical supplies, devices, laboratory equipment, and dia"
+  },
+  "BRK-B": {
+    "name_en": "Berkshire Hathaway Inc.",
+    "name_local": "BRK-B",
+    "sector": "금융 서비스",
+    "description": "Berkshire Hathaway Inc., together with its subsidiaries, engages in the insurance, freight rail transportation, and util"
+  },
+  "BBY": {
+    "name_en": "Best Buy Co., Inc.",
+    "name_local": "BBY",
+    "sector": "경기 소비재",
+    "description": "Best Buy Co., Inc. offers technology products and solutions in the United States, Canada, and internationally. The compa"
+  },
+  "TECH": {
+    "name_en": "Bio-Techne Corporation",
+    "name_local": "TECH",
+    "sector": "헬스케어",
+    "description": "Bio-Techne Corporation, together with its subsidiaries, develops, manufactures, and sells life science reagents, instrum"
+  },
+  "BIIB": {
+    "name_en": "Biogen Inc.",
+    "name_local": "바이오젠",
+    "sector": "바이오·제약",
+    "description": "알츠하이머·MS 신경계 치료제"
+  },
+  "BLK": {
+    "name_en": "BlackRock, Inc.",
+    "name_local": "BLK",
+    "sector": "금융 서비스",
+    "description": "BlackRock, Inc. is a publicly owned investment manager. The firm primarily provides its services to institutional, inter"
+  },
+  "BX": {
+    "name_en": "Blackstone Inc.",
+    "name_local": "BX",
+    "sector": "금융 서비스",
+    "description": "Blackstone Inc. is an alternative asset management firm specializing in private equity, venture capital, real estate, he"
+  },
+  "XYZ": {
+    "name_en": "Block, Inc.",
+    "name_local": "XYZ",
+    "sector": "기술",
+    "description": "Block, Inc., together with its subsidiaries, builds ecosystems focused on commerce and financial products and services i"
+  },
+  "BK": {
+    "name_en": "The Bank of New York Mellon Corporation",
+    "name_local": "BK",
+    "sector": "금융 서비스",
+    "description": "The Bank of New York Mellon Corporation provides a range of financial products and services in the United States and int"
+  },
+  "BA": {
+    "name_en": "The Boeing Company",
+    "name_local": "BA",
+    "sector": "산업재",
+    "description": "The Boeing Company, together with its subsidiaries, designs, develops, manufactures, sells, services, and supports comme"
+  },
+  "BKNG": {
+    "name_en": "Booking Holdings Inc.",
+    "name_local": "부킹 홀딩스",
+    "sector": "여행·OTA",
+    "description": "부킹닷컴·프라이스라인·카약"
+  },
+  "BSX": {
+    "name_en": "Boston Scientific Corporation",
+    "name_local": "BSX",
+    "sector": "헬스케어",
+    "description": "Boston Scientific Corporation develops, manufactures, and markets medical devices for use in various interventional medi"
+  },
+  "BMY": {
+    "name_en": "Bristol-Myers Squibb Company",
+    "name_local": "BMY",
+    "sector": "헬스케어",
+    "description": "Bristol-Myers Squibb Company discovers, develops, licenses, manufactures, markets, distributes, and sells biopharmaceuti"
+  },
+  "AVGO": {
+    "name_en": "Broadcom Inc.",
+    "name_local": "브로드컴",
+    "sector": "반도체",
+    "description": "네트워크·스토리지·AI 맞춤칩"
+  },
+  "BR": {
+    "name_en": "Broadridge Financial Solutions, Inc.",
+    "name_local": "BR",
+    "sector": "기술",
+    "description": "Broadridge Financial Solutions, Inc. provides investor communications and technology-driven solutions for the financial"
+  },
+  "BRO": {
+    "name_en": "Brown & Brown, Inc.",
+    "name_local": "BRO",
+    "sector": "금융 서비스",
+    "description": "Brown & Brown, Inc. markets and sells insurance products and services in the United States, the United Kingdom, and inte"
+  },
+  "BF-B": {
+    "name_en": "Brown-Forman Corporation",
+    "name_local": "BF-B",
+    "sector": "필수 소비재",
+    "description": "Brown-Forman Corporation, together with its subsidiaries, manufactures, distills, bottles, imports, exports, markets, an"
+  },
+  "BLDR": {
+    "name_en": "Builders FirstSource, Inc.",
+    "name_local": "BLDR",
+    "sector": "산업재",
+    "description": "Builders FirstSource, Inc., together with its subsidiaries, provides building materials for professional builders in new"
+  },
+  "BG": {
+    "name_en": "Bunge Global SA",
+    "name_local": "BG",
+    "sector": "필수 소비재",
+    "description": "Bunge Global SA operates as an agribusiness and food company worldwide. It operates through four segments: Soybean Proce"
+  },
+  "BXP": {
+    "name_en": "BXP, Inc.",
+    "name_local": "BXP",
+    "sector": "부동산·리츠",
+    "description": "BXP, Inc. is the largest publicly traded developer, owner, and manager of premier workplaces in the United States, conce"
+  },
+  "CHRW": {
+    "name_en": "C.H. Robinson Worldwide, Inc.",
+    "name_local": "CHRW",
+    "sector": "산업재",
+    "description": "C.H. Robinson Worldwide, Inc., together with its subsidiaries, provides freight transportation and related logistics and"
+  },
+  "CDNS": {
+    "name_en": "Cadence Design Systems",
+    "name_local": "캐던스 디자인",
+    "sector": "EDA 소프트웨어",
+    "description": "반도체 설계 자동화(EDA) 툴"
+  },
+  "CPT": {
+    "name_en": "Camden Property Trust",
+    "name_local": "CPT",
+    "sector": "부동산·리츠",
+    "description": "Camden Property Trust, an S&P 500 Company, is a real estate company. The firm is primarily engaged in the ownership, man"
+  },
+  "CPB": {
+    "name_en": "The Campbell's Company",
+    "name_local": "CPB",
+    "sector": "필수 소비재",
+    "description": "The Campbell's Company, together with its subsidiaries, manufactures and markets food and beverage products in the Unite"
+  },
+  "COF": {
+    "name_en": "Capital One Financial Corporation",
+    "name_local": "COF",
+    "sector": "금융 서비스",
+    "description": "Capital One Financial Corporation operates as the financial services holding company for the Capital One, National Assoc"
+  },
+  "CAH": {
+    "name_en": "Cardinal Health, Inc.",
+    "name_local": "CAH",
+    "sector": "헬스케어",
+    "description": "Cardinal Health, Inc. operates as a healthcare services and products company in the United States and internationally. I"
+  },
+  "CCL": {
+    "name_en": "Carnival Corporation & plc",
+    "name_local": "CCL",
+    "sector": "경기 소비재",
+    "description": "Carnival Corporation & plc, a cruise company, provides leisure travel services in North America, Australia, Europe, and"
+  },
+  "CARR": {
+    "name_en": "Carrier Global Corporation",
+    "name_local": "CARR",
+    "sector": "산업재",
+    "description": "Carrier Global Corporation provides intelligent climate and energy solutions in the United States, Europe, the Asia Paci"
+  },
+  "CVNA": {
+    "name_en": "Carvana Co.",
+    "name_local": "CVNA",
+    "sector": "경기 소비재",
+    "description": "Carvana Co., together with its subsidiaries, operates an e-commerce platform for buying and selling used cars. It provid"
+  },
+  "CASY": {
+    "name_en": "Casey's General Stores, Inc.",
+    "name_local": "CASY",
+    "sector": "경기 소비재",
+    "description": "Casey's General Stores, Inc., together with its subsidiaries, operates convenience stores under the Casey's and Casey's"
+  },
+  "CAT": {
+    "name_en": "Caterpillar Inc.",
+    "name_local": "CAT",
+    "sector": "산업재",
+    "description": "Caterpillar Inc. provides construction and mining equipment, off-highway diesel and natural gas engines, industrial gas"
+  },
+  "CBOE": {
+    "name_en": "Cboe Global Markets, Inc.",
+    "name_local": "CBOE",
+    "sector": "금융 서비스",
+    "description": "Cboe Global Markets, Inc., through its subsidiaries, operates as a derivatives and securities exchange network that deli"
+  },
+  "CBRE": {
+    "name_en": "CBRE Group, Inc.",
+    "name_local": "CBRE",
+    "sector": "부동산·리츠",
+    "description": "CBRE Group, Inc. operates as a commercial real estate services and investment company in the United States, the United K"
+  },
+  "CDW": {
+    "name_en": "CDW Corporation",
+    "name_local": "CDW",
+    "sector": "IT 유통·솔루션",
+    "description": "기업용 IT 제품·솔루션 유통"
+  },
+  "COR": {
+    "name_en": "Cencora, Inc.",
+    "name_local": "COR",
+    "sector": "헬스케어",
+    "description": "Cencora, Inc. sources and distributes pharmaceutical products in the United States and internationally. The company's U."
+  },
+  "CNC": {
+    "name_en": "Centene Corporation",
+    "name_local": "CNC",
+    "sector": "헬스케어",
+    "description": "Centene Corporation operates as a managed care company that provides programs and services to under-insured families, an"
+  },
+  "CNP": {
+    "name_en": "CenterPoint Energy, Inc.",
+    "name_local": "CNP",
+    "sector": "유틸리티",
+    "description": "CenterPoint Energy, Inc. operates as a public utility holding company in the United States. The company operates through"
+  },
+  "CF": {
+    "name_en": "CF Industries Holdings, Inc.",
+    "name_local": "CF",
+    "sector": "원자재",
+    "description": "CF Industries Holdings, Inc., together with its subsidiaries, engages in the production of ammonia in North America, Eur"
+  },
+  "CRL": {
+    "name_en": "Charles River Laboratories International, Inc.",
+    "name_local": "CRL",
+    "sector": "헬스케어",
+    "description": "Charles River Laboratories International, Inc. provides drug discovery, non-clinical development, and safety testing ser"
+  },
+  "SCHW": {
+    "name_en": "The Charles Schwab Corporation",
+    "name_local": "SCHW",
+    "sector": "금융 서비스",
+    "description": "The Charles Schwab Corporation, together with its subsidiaries, operates as a savings and loan holding company that prov"
+  },
+  "CHTR": {
+    "name_en": "Charter Communications",
+    "name_local": "차터 커뮤니케이션스",
+    "sector": "통신·케이블",
+    "description": "케이블 TV·인터넷 서비스"
+  },
+  "CVX": {
+    "name_en": "Chevron Corporation",
+    "name_local": "CVX",
+    "sector": "에너지",
+    "description": "Chevron Corporation, through its subsidiaries, engages in the integrated energy and chemicals operations in the United S"
+  },
+  "CMG": {
+    "name_en": "Chipotle Mexican Grill, Inc.",
+    "name_local": "CMG",
+    "sector": "경기 소비재",
+    "description": "Chipotle Mexican Grill, Inc., together with its subsidiaries, owns and operates Chipotle Mexican Grill restaurants. It s"
+  },
+  "CB": {
+    "name_en": "Chubb Limited",
+    "name_local": "CB",
+    "sector": "금융 서비스",
+    "description": "Chubb Limited provides insurance and reinsurance products worldwide. It operates in six segments: North America Commerci"
+  },
+  "CHD": {
+    "name_en": "Church & Dwight Co., Inc.",
+    "name_local": "CHD",
+    "sector": "필수 소비재",
+    "description": "Church & Dwight Co., Inc. develops, manufactures, and markets household, personal care, and specialty products. It opera"
+  },
+  "CIEN": {
+    "name_en": "Ciena Corporation",
+    "name_local": "CIEN",
+    "sector": "기술",
+    "description": "Ciena Corporation, a network technology company, provides hardware, software, and services for various network operators"
+  },
+  "CI": {
+    "name_en": "The Cigna Group",
+    "name_local": "CI",
+    "sector": "헬스케어",
+    "description": "The Cigna Group, together with its subsidiaries, provides insurance and related products and services in the United Stat"
+  },
+  "CINF": {
+    "name_en": "Cincinnati Financial Corporation",
+    "name_local": "CINF",
+    "sector": "금융 서비스",
+    "description": "Cincinnati Financial Corporation provides property casualty insurance products in the United States. The company operate"
+  },
+  "CTAS": {
+    "name_en": "Cintas Corporation",
+    "name_local": "신타스",
+    "sector": "기업 서비스",
+    "description": "유니폼 렌탈·시설 관리"
+  },
+  "CSCO": {
+    "name_en": "Cisco Systems, Inc.",
+    "name_local": "CSCO",
+    "sector": "기술",
+    "description": "Cisco Systems, Inc. designs, develops, and sells technologies that help to power, secure, and draw insights from the int"
+  },
+  "C": {
+    "name_en": "Citigroup Inc.",
+    "name_local": "C",
+    "sector": "금융 서비스",
+    "description": "Citigroup Inc., a diversified financial service holding company, provides various financial products and services to con"
+  },
+  "CFG": {
+    "name_en": "Citizens Financial Group, Inc.",
+    "name_local": "CFG",
+    "sector": "금융 서비스",
+    "description": "Citizens Financial Group, Inc. operates as the bank holding company that provides retail and commercial banking products"
+  },
+  "CLX": {
+    "name_en": "The Clorox Company",
+    "name_local": "CLX",
+    "sector": "필수 소비재",
+    "description": "The Clorox Company manufactures and markets consumer and professional products worldwide. The company operates through f"
+  },
+  "CME": {
+    "name_en": "CME Group Inc.",
+    "name_local": "CME",
+    "sector": "금융 서비스",
+    "description": "CME Group Inc., together with its subsidiaries, operates contract markets for the trading of futures and options on futu"
+  },
+  "CMS": {
+    "name_en": "CMS Energy Corporation",
+    "name_local": "CMS",
+    "sector": "유틸리티",
+    "description": "CMS Energy Corporation operates as an energy company primarily in Michigan. The company operates through three segments:"
+  },
+  "KO": {
+    "name_en": "The Coca-Cola Company",
+    "name_local": "KO",
+    "sector": "필수 소비재",
+    "description": "The Coca-Cola Company, a beverage company, manufactures and sells various nonalcoholic beverages in the United States an"
+  },
+  "CTSH": {
+    "name_en": "Cognizant Technology Solutions Corporation",
+    "name_local": "CTSH",
+    "sector": "기술",
+    "description": "Cognizant Technology Solutions Corporation, a professional services company, provides consulting and technology, and out"
+  },
+  "COHR": {
+    "name_en": "Coherent Corp.",
+    "name_local": "COHR",
+    "sector": "기술",
+    "description": "Coherent Corp. develops, manufactures, and markets engineered materials, optoelectronic components and devices, and lase"
+  },
+  "COIN": {
+    "name_en": "Coinbase Global, Inc.",
+    "name_local": "COIN",
+    "sector": "금융 서비스",
+    "description": "Coinbase Global, Inc. operates platform for crypto assets in the United States and internationally. It provides the prim"
+  },
+  "CL": {
+    "name_en": "Colgate-Palmolive Company",
+    "name_local": "CL",
+    "sector": "필수 소비재",
+    "description": "Colgate-Palmolive Company, together with its subsidiaries, manufactures and sells consumer products in the United States"
+  },
+  "CMCSA": {
+    "name_en": "Comcast Corporation",
+    "name_local": "CMCSA",
+    "sector": "커뮤니케이션 서비스",
+    "description": "Comcast Corporation operates as a media and technology company worldwide. The company operates through Residential Conne"
+  },
+  "FIX": {
+    "name_en": "Comfort Systems USA, Inc.",
+    "name_local": "FIX",
+    "sector": "산업재",
+    "description": "Comfort Systems USA, Inc., together with its subsidiaries, provides mechanical and electrical installation, renovation,"
+  },
+  "CAG": {
+    "name_en": "Conagra Brands, Inc.",
+    "name_local": "CAG",
+    "sector": "필수 소비재",
+    "description": "Conagra Brands, Inc., together with its subsidiaries, operates as a consumer packaged goods food company primarily in th"
+  },
+  "COP": {
+    "name_en": "ConocoPhillips",
+    "name_local": "COP",
+    "sector": "에너지",
+    "description": "ConocoPhillips explores for, produces, transports, and markets crude oil, bitumen, natural gas, liquefied natural gas (L"
+  },
+  "ED": {
+    "name_en": "Consolidated Edison, Inc.",
+    "name_local": "ED",
+    "sector": "유틸리티",
+    "description": "Consolidated Edison, Inc., through its subsidiaries, engages in the regulated electric, gas, and steam delivery business"
+  },
+  "STZ": {
+    "name_en": "Constellation Brands, Inc.",
+    "name_local": "STZ",
+    "sector": "필수 소비재",
+    "description": "Constellation Brands, Inc., together with its subsidiaries, produces, imports, markets, and sells beer, wine, and spirit"
+  },
+  "CEG": {
+    "name_en": "Constellation Energy Corp.",
+    "name_local": "컨스텔레이션 에너지",
+    "sector": "원자력·전력",
+    "description": "미국 최대 원자력 발전 운영"
+  },
+  "COO": {
+    "name_en": "The Cooper Companies, Inc.",
+    "name_local": "COO",
+    "sector": "헬스케어",
+    "description": "The Cooper Companies, Inc., together with its subsidiaries, develops, manufactures, and markets contact lens wearers. Th"
+  },
+  "CPRT": {
+    "name_en": "Copart Inc.",
+    "name_local": "코파트",
+    "sector": "자동차 경매",
+    "description": "폐차·중고차 온라인 경매 플랫폼"
+  },
+  "GLW": {
+    "name_en": "Corning Incorporated",
+    "name_local": "GLW",
+    "sector": "기술",
+    "description": "Corning Incorporated operates in optical communications, display, specialty materials, automotive, and life sciences bus"
+  },
+  "CPAY": {
+    "name_en": "Corpay, Inc.",
+    "name_local": "CPAY",
+    "sector": "기술",
+    "description": "Corpay, Inc. operates as a payments company that helps businesses and consumers to manage and pay their expenses.\r\nIt ope"
+  },
+  "CTVA": {
+    "name_en": "Corteva, Inc.",
+    "name_local": "CTVA",
+    "sector": "원자재",
+    "description": "Corteva, Inc. operates in the agriculture business. The company operates through two segments, Seed and Crop Protection."
+  },
+  "CSGP": {
+    "name_en": "CoStar Group, Inc.",
+    "name_local": "CSGP",
+    "sector": "부동산·리츠",
+    "description": "CoStar Group, Inc. provides information, analytics, and online marketplace services to real estate and related business"
+  },
+  "COST": {
+    "name_en": "Costco Wholesale Corp.",
+    "name_local": "코스트코",
+    "sector": "유통·소매",
+    "description": "창고형 멤버십 할인마트"
+  },
+  "CTRA": {
+    "name_en": "Coterra Energy Inc.",
+    "name_local": "CTRA",
+    "sector": "에너지",
+    "description": "Coterra Energy Inc., an independent oil and gas company, engages in the exploration, development, and production of oil,"
+  },
+  "CRH": {
+    "name_en": "CRH plc",
+    "name_local": "CRH",
+    "sector": "원자재",
+    "description": "CRH plc, together with its subsidiaries, provides building materials solutions in Ireland, the United States, the United"
+  },
+  "CRWD": {
+    "name_en": "CrowdStrike Holdings Inc.",
+    "name_local": "크라우드스트라이크",
+    "sector": "사이버보안",
+    "description": "클라우드 기반 엔드포인트 보안"
+  },
+  "CCI": {
+    "name_en": "Crown Castle Inc.",
+    "name_local": "CCI",
+    "sector": "부동산·리츠",
+    "description": "Crown Castle Inc. owns, operates and leases approximately 40,000 cell towers and approximately 90,000 route miles of fib"
+  },
+  "CSX": {
+    "name_en": "CSX Corporation",
+    "name_local": "CSX",
+    "sector": "철도·물류",
+    "description": "미국 동부 화물 철도 운영"
+  },
+  "CMI": {
+    "name_en": "Cummins Inc.",
+    "name_local": "CMI",
+    "sector": "산업재",
+    "description": "Cummins Inc. offers various power solutions worldwide. The company operates through five segments: Engine, Distribution,"
+  },
+  "CVS": {
+    "name_en": "CVS Health Corporation",
+    "name_local": "CVS",
+    "sector": "헬스케어",
+    "description": "CVS Health Corporation provides health solutions in the United States. The company operates through Health Care Benefits"
+  },
+  "DHR": {
+    "name_en": "Danaher Corporation",
+    "name_local": "DHR",
+    "sector": "헬스케어",
+    "description": "Danaher Corporation designs, manufactures, and markets professional, medical, research, and industrial products and serv"
+  },
+  "DRI": {
+    "name_en": "Darden Restaurants, Inc.",
+    "name_local": "DRI",
+    "sector": "경기 소비재",
+    "description": "Darden Restaurants, Inc., together with its subsidiaries, owns and operates full-service restaurants in the United State"
+  },
+  "DDOG": {
+    "name_en": "Datadog Inc.",
+    "name_local": "데이터독",
+    "sector": "클라우드 모니터링",
+    "description": "클라우드 인프라·앱 모니터링"
+  },
+  "DVA": {
+    "name_en": "DaVita Inc.",
+    "name_local": "DVA",
+    "sector": "헬스케어",
+    "description": "DaVita Inc. provides kidney dialysis services for patients suffering from chronic kidney failure in the United States. T"
+  },
+  "DECK": {
+    "name_en": "Deckers Outdoor Corporation",
+    "name_local": "DECK",
+    "sector": "경기 소비재",
+    "description": "Deckers Outdoor Corporation, together with its subsidiaries, designs, markets, and distributes footwear, apparel, and ac"
+  },
+  "DE": {
+    "name_en": "Deere & Company",
+    "name_local": "DE",
+    "sector": "산업재",
+    "description": "Deere & Company engages in the manufacture and distribution of various equipment worldwide. The company operates through"
+  },
+  "DELL": {
+    "name_en": "Dell Technologies Inc.",
+    "name_local": "DELL",
+    "sector": "기술",
+    "description": "Dell Technologies Inc. designs, develops, manufactures, markets, sells, and supports various comprehensive and integrate"
+  },
+  "DAL": {
+    "name_en": "Delta Air Lines, Inc.",
+    "name_local": "DAL",
+    "sector": "산업재",
+    "description": "Delta Air Lines, Inc. provides scheduled air transportation for passengers and cargo in the United States and internatio"
+  },
+  "DVN": {
+    "name_en": "Devon Energy Corporation",
+    "name_local": "DVN",
+    "sector": "에너지",
+    "description": "Devon Energy Corporation, an independent energy company, engages in the exploration, development, and production of oil,"
+  },
+  "DXCM": {
+    "name_en": "DexCom Inc.",
+    "name_local": "덱스컴",
+    "sector": "의료기기",
+    "description": "연속혈당측정기(CGM) 시스템"
+  },
+  "FANG": {
+    "name_en": "Diamondback Energy Inc.",
+    "name_local": "다이아몬드백 에너지",
+    "sector": "에너지·석유",
+    "description": "퍼미안 분지 원유 개발·생산"
+  },
+  "DLR": {
+    "name_en": "Digital Realty Trust, Inc.",
+    "name_local": "DLR",
+    "sector": "부동산·리츠",
+    "description": "Digital Realty Trust, Inc. owns, acquires, develops, and operates data centers through its operating partnership subsidi"
+  },
+  "DG": {
+    "name_en": "Dollar General Corporation",
+    "name_local": "DG",
+    "sector": "필수 소비재",
+    "description": "Dollar General Corporation, a discount retailer, provides various merchandise products in the southern, southwestern, mi"
+  },
+  "DLTR": {
+    "name_en": "Dollar Tree Inc.",
+    "name_local": "달러 트리",
+    "sector": "유통·소매",
+    "description": "균일가 소매점 체인"
+  },
+  "D": {
+    "name_en": "Dominion Energy, Inc.",
+    "name_local": "D",
+    "sector": "유틸리티",
+    "description": "Dominion Energy, Inc. provides regulated electricity and natural gas services in the United States. It operates through"
+  },
+  "DPZ": {
+    "name_en": "Domino's Pizza, Inc.",
+    "name_local": "DPZ",
+    "sector": "경기 소비재",
+    "description": "Domino's Pizza, Inc. operates as a pizza company worldwide. The company operates through three segments: U.S. Stores, In"
+  },
+  "DASH": {
+    "name_en": "DoorDash, Inc.",
+    "name_local": "DASH",
+    "sector": "경기 소비재",
+    "description": "DoorDash, Inc., together with its subsidiaries, operates a commerce platform that connects merchants, consumers, and das"
+  },
+  "DOV": {
+    "name_en": "Dover Corporation",
+    "name_local": "DOV",
+    "sector": "산업재",
+    "description": "Dover Corporation provides equipment and components, consumable supplies, aftermarket parts, software and digital soluti"
+  },
+  "DOW": {
+    "name_en": "Dow Inc.",
+    "name_local": "DOW",
+    "sector": "원자재",
+    "description": "Dow Inc., through its subsidiaries, provides various materials science solutions for packaging, infrastructure, mobility"
+  },
+  "DHI": {
+    "name_en": "D.R. Horton, Inc.",
+    "name_local": "DHI",
+    "sector": "경기 소비재",
+    "description": "D.R. Horton, Inc. operates as a homebuilding company in East, North, Southeast, South Central, Southwest, and Northwest"
+  },
+  "DTE": {
+    "name_en": "DTE Energy Company",
+    "name_local": "DTE",
+    "sector": "유틸리티",
+    "description": "DTE Energy Company engages in energy-related businesses and services. The company operates through four segments: Electr"
+  },
+  "DUK": {
+    "name_en": "Duke Energy Corporation",
+    "name_local": "DUK",
+    "sector": "유틸리티",
+    "description": "Duke Energy Corporation, through its subsidiaries, operates as an energy company in the United States. The company opera"
+  },
+  "DD": {
+    "name_en": "DuPont de Nemours, Inc.",
+    "name_local": "DD",
+    "sector": "원자재",
+    "description": "DuPont de Nemours, Inc. provides technology-based materials and solutions in the United States, Canada, the Asia Pacific"
+  },
+  "ETN": {
+    "name_en": "Eaton Corporation plc",
+    "name_local": "ETN",
+    "sector": "산업재",
+    "description": "Eaton Corporation plc operates as a power management company in the United States, Canada, Latin America, Europe, and th"
+  },
+  "EBAY": {
+    "name_en": "eBay Inc.",
+    "name_local": "EBAY",
+    "sector": "경기 소비재",
+    "description": "eBay Inc., together with its subsidiaries, operates marketplace platforms that connect buyers and sellers in the United"
+  },
+  "SATS": {
+    "name_en": "EchoStar Corporation",
+    "name_local": "SATS",
+    "sector": "커뮤니케이션 서비스",
+    "description": "EchoStar Corporation provides pay-tv services in the United States, Mexico, Canada, South and Central America, Asia, Afr"
+  },
+  "ECL": {
+    "name_en": "Ecolab Inc.",
+    "name_local": "ECL",
+    "sector": "원자재",
+    "description": "Ecolab Inc. provides water, hygiene, and infection prevention solutions and services in the United States and internatio"
+  },
+  "EIX": {
+    "name_en": "Edison International",
+    "name_local": "EIX",
+    "sector": "유틸리티",
+    "description": "Edison International, through its subsidiaries, engages in the generation and distribution of electric power. The compan"
+  },
+  "EW": {
+    "name_en": "Edwards Lifesciences Corporation",
+    "name_local": "EW",
+    "sector": "헬스케어",
+    "description": "Edwards Lifesciences Corporation provides products and technologies to treat advanced cardiovascular diseases in the Uni"
+  },
+  "EA": {
+    "name_en": "Electronic Arts Inc.",
+    "name_local": "일렉트로닉 아츠",
+    "sector": "게임",
+    "description": "EA Sports·FIFA·Madden"
+  },
+  "ELV": {
+    "name_en": "Elevance Health, Inc.",
+    "name_local": "ELV",
+    "sector": "헬스케어",
+    "description": "Elevance Health, Inc., together with its subsidiaries, operates as a health benefits company in the United States. The c"
+  },
+  "EME": {
+    "name_en": "EMCOR Group, Inc.",
+    "name_local": "EME",
+    "sector": "산업재",
+    "description": "EMCOR Group, Inc. provides electrical and mechanical construction and facilities, building, and industrial services in t"
+  },
+  "EMR": {
+    "name_en": "Emerson Electric Co.",
+    "name_local": "EMR",
+    "sector": "산업재",
+    "description": "Emerson Electric Co., a technology and software company, provides various solutions in the Americas, Asia, the Middle Ea"
+  },
+  "ETR": {
+    "name_en": "Entergy Corporation",
+    "name_local": "ETR",
+    "sector": "유틸리티",
+    "description": "Entergy Corporation, together with its subsidiaries, engages in the production and retail distribution of electricity in"
+  },
+  "EOG": {
+    "name_en": "EOG Resources, Inc.",
+    "name_local": "EOG",
+    "sector": "에너지",
+    "description": "EOG Resources, Inc., together with its subsidiaries, explores for, develops, produces, and markets crude oil, natural ga"
+  },
+  "EPAM": {
+    "name_en": "EPAM Systems, Inc.",
+    "name_local": "EPAM",
+    "sector": "기술",
+    "description": "EPAM Systems, Inc. provides digital platform engineering and software development services worldwide. The company offers"
+  },
+  "EQT": {
+    "name_en": "EQT Corporation",
+    "name_local": "EQT",
+    "sector": "에너지",
+    "description": "EQT Corporation engages in the exploration, production, gathering, and transmission of hydrocarbons and natural gas. The"
+  },
+  "EFX": {
+    "name_en": "Equifax Inc.",
+    "name_local": "EFX",
+    "sector": "산업재",
+    "description": "Equifax Inc. operates as a data, analytics, and technology company. The company operates through three segments: Workfor"
+  },
+  "EQIX": {
+    "name_en": "Equinix, Inc.",
+    "name_local": "EQIX",
+    "sector": "부동산·리츠",
+    "description": "Equinix, Inc. shortens the path to boundless connectivity anywhere in the world. Its digital infrastructure, data center"
+  },
+  "EQR": {
+    "name_en": "Equity Residential",
+    "name_local": "EQR",
+    "sector": "부동산·리츠",
+    "description": "Equity Residential is committed to creating communities where people thrive. The Company, a member of the S&P 500, owns"
+  },
+  "ERIE": {
+    "name_en": "Erie Indemnity Company",
+    "name_local": "ERIE",
+    "sector": "금융 서비스",
+    "description": "Erie Indemnity Company operates as a managing attorney-in-fact for the subscribers at the Erie Insurance Exchange in the"
+  },
+  "ESS": {
+    "name_en": "Essex Property Trust, Inc.",
+    "name_local": "ESS",
+    "sector": "부동산·리츠",
+    "description": "Essex Property Trust, Inc., an S&P 500 company, is a fully integrated real estate investment trust. The firm acquires, d"
+  },
+  "EL": {
+    "name_en": "The Estée Lauder Companies Inc.",
+    "name_local": "EL",
+    "sector": "필수 소비재",
+    "description": "The Estée Lauder Companies Inc. manufactures, markets, and sells skin care, makeup, fragrance, and hair care products wo"
+  },
+  "EG": {
+    "name_en": "Everest Group, Ltd.",
+    "name_local": "EG",
+    "sector": "금융 서비스",
+    "description": "Everest Group, Ltd., together with subsidiaries, provides reinsurance and insurance products in the United States, Europ"
+  },
+  "EVRG": {
+    "name_en": "Evergy, Inc.",
+    "name_local": "EVRG",
+    "sector": "유틸리티",
+    "description": "Evergy, Inc., together with its subsidiaries, engages in the generation, transmission, distribution, and sale of electri"
+  },
+  "ES": {
+    "name_en": "Eversource Energy",
+    "name_local": "ES",
+    "sector": "유틸리티",
+    "description": "Eversource Energy, a public utility holding company, engages in the energy delivery business. The company operates throu"
+  },
+  "EXC": {
+    "name_en": "Exelon Corporation",
+    "name_local": "엑셀론",
+    "sector": "전력·유틸리티",
+    "description": "미국 북동부·중서부 전력 공급"
+  },
+  "EXE": {
+    "name_en": "Expand Energy Corporation",
+    "name_local": "EXE",
+    "sector": "에너지",
+    "description": "Expand Energy Corporation operates as an independent natural gas production company in the United States. The company en"
+  },
+  "EXPE": {
+    "name_en": "Expedia Group Inc.",
+    "name_local": "익스피디아",
+    "sector": "여행·OTA",
+    "description": "온라인 여행 예약 플랫폼"
+  },
+  "EXPD": {
+    "name_en": "Expeditors International of Washington, Inc.",
+    "name_local": "EXPD",
+    "sector": "산업재",
+    "description": "Expeditors International of Washington, Inc., together with its subsidiaries, provides logistics services in the America"
+  },
+  "EXR": {
+    "name_en": "Extra Space Storage Inc.",
+    "name_local": "EXR",
+    "sector": "부동산·리츠",
+    "description": "Extra Space Storage Inc., headquartered in Salt Lake City, Utah, is a self-administered and self-managed REIT and a memb"
+  },
+  "XOM": {
+    "name_en": "Exxon Mobil Corporation",
+    "name_local": "XOM",
+    "sector": "에너지",
+    "description": "Exxon Mobil Corporation engages in the exploration and production of crude oil and natural gas in the United States, Can"
+  },
+  "FFIV": {
+    "name_en": "F5, Inc.",
+    "name_local": "FFIV",
+    "sector": "기술",
+    "description": "F5, Inc. provides multicloud application security and delivery solutions in the United States, Europe, the Middle East,"
+  },
+  "FDS": {
+    "name_en": "FactSet Research Systems Inc.",
+    "name_local": "FDS",
+    "sector": "금융 서비스",
+    "description": "FactSet Research Systems Inc., together with its subsidiaries, operates as a financial digital platform and enterprise s"
+  },
+  "FICO": {
+    "name_en": "Fair Isaac Corporation",
+    "name_local": "FICO",
+    "sector": "기술",
+    "description": "Fair Isaac Corporation provides analytics software in the Americas, Europe, the Middle East, Africa, and the Asia Pacifi"
+  },
+  "FAST": {
+    "name_en": "Fastenal Company",
+    "name_local": "패스트널",
+    "sector": "산업 유통",
+    "description": "볼트·너트 등 산업 소모품 유통"
+  },
+  "FRT": {
+    "name_en": "Federal Realty Investment Trust",
+    "name_local": "FRT",
+    "sector": "부동산·리츠",
+    "description": "Federal Realty Investment Trust is a recognized leader in the ownership, operation and redevelopment of high-quality ret"
+  },
+  "FDX": {
+    "name_en": "FedEx Corporation",
+    "name_local": "FDX",
+    "sector": "산업재",
+    "description": "FedEx Corporation, together with its subsidiaries, provides transportation, e-commerce, and business services in the Uni"
+  },
+  "FIS": {
+    "name_en": "Fidelity National Information Services, Inc.",
+    "name_local": "FIS",
+    "sector": "기술",
+    "description": "Fidelity National Information Services, Inc. provides solutions to financial institutions, businesses, and developers wo"
+  },
+  "FITB": {
+    "name_en": "Fifth Third Bancorp",
+    "name_local": "FITB",
+    "sector": "금융 서비스",
+    "description": "Fifth Third Bancorp operates as the bank holding company for Fifth Third Bank, National Association that provides a rang"
+  },
+  "FSLR": {
+    "name_en": "First Solar, Inc.",
+    "name_local": "FSLR",
+    "sector": "기술",
+    "description": "First Solar, Inc., a solar technology company, provides photovoltaic (PV) solar energy solutions in the United States, F"
+  },
+  "FE": {
+    "name_en": "FirstEnergy Corp.",
+    "name_local": "FE",
+    "sector": "유틸리티",
+    "description": "FirstEnergy Corp., together with its subsidiaries, engages in the generation, distribution, and transmission of electric"
+  },
+  "FISV": {
+    "name_en": "Fiserv, Inc.",
+    "name_local": "FISV",
+    "sector": "결제·핀테크",
+    "description": "Fiserv / S&P 500 / Financials / Transaction & Payment Processing Services"
+  },
+  "F": {
+    "name_en": "Ford Motor Company",
+    "name_local": "F",
+    "sector": "경기 소비재",
+    "description": "Ford Motor Company develops, delivers, and services Ford trucks, sport utility vehicles, commercial vans and cars, and L"
+  },
+  "FTNT": {
+    "name_en": "Fortinet Inc.",
+    "name_local": "포티넷",
+    "sector": "사이버보안",
+    "description": "FortiGate 네트워크 보안"
+  },
+  "FTV": {
+    "name_en": "Fortive Corporation",
+    "name_local": "FTV",
+    "sector": "기술",
+    "description": "Fortive Corporation designs, develops, manufactures, and markets products, software, and services in the United States,"
+  },
+  "FOXA": {
+    "name_en": "Fox Corporation",
+    "name_local": "FOXA",
+    "sector": "커뮤니케이션 서비스",
+    "description": "Fox Corporation operates as a news, sports, and entertainment company in the United States. It operates in four segments"
+  },
+  "FOX": {
+    "name_en": "Fox Corporation",
+    "name_local": "FOX",
+    "sector": "커뮤니케이션 서비스",
+    "description": "Fox Corporation operates as a news, sports, and entertainment company in the United States. It operates in four segments"
+  },
+  "BEN": {
+    "name_en": "Franklin Resources, Inc.",
+    "name_local": "BEN",
+    "sector": "금융 서비스",
+    "description": "Franklin Resources, Inc. is a publicly owned asset investment manager. Through its subsidiaries, the firm provides its s"
+  },
+  "FCX": {
+    "name_en": "Freeport-McMoRan Inc.",
+    "name_local": "FCX",
+    "sector": "원자재",
+    "description": "Freeport-McMoRan Inc. engages in the mining of mineral properties in North America, South America, and Indonesia. It pri"
+  },
+  "GRMN": {
+    "name_en": "Garmin Ltd.",
+    "name_local": "GRMN",
+    "sector": "기술",
+    "description": "Garmin Ltd. designs, develops, manufactures, markets, and distributes a diverse range of GPS-enabled products and naviga"
+  },
+  "IT": {
+    "name_en": "Gartner, Inc.",
+    "name_local": "IT",
+    "sector": "기술",
+    "description": "Gartner, Inc. provides business and technology insights for decisions and performance on an organization's mission-criti"
+  },
+  "GE": {
+    "name_en": "GE Aerospace",
+    "name_local": "GE",
+    "sector": "산업재",
+    "description": "General Electric Company, doing business as GE Aerospace, designs and produces commercial and defense aircraft engines,"
+  },
+  "GEHC": {
+    "name_en": "GE HealthCare Technologies",
+    "name_local": "GE 헬스케어",
+    "sector": "의료기기",
+    "description": "MRI·CT 등 의료 영상 장비"
+  },
+  "GEV": {
+    "name_en": "GE Vernova Inc.",
+    "name_local": "GEV",
+    "sector": "산업재",
+    "description": "GE Vernova Inc., an energy company, engages in the provision of various products and services that generate, transfer, o"
+  },
+  "GEN": {
+    "name_en": "Gen Digital Inc.",
+    "name_local": "GEN",
+    "sector": "기술",
+    "description": "Gen Digital Inc. engages in the provision of cyber safety solutions for individuals, families, and small businesses. It"
+  },
+  "GNRC": {
+    "name_en": "Generac Holdings Inc.",
+    "name_local": "GNRC",
+    "sector": "산업재",
+    "description": "Generac Holdings Inc. designs, manufactures, and distributes energy technology products and solutions worldwide. The com"
+  },
+  "GD": {
+    "name_en": "General Dynamics Corporation",
+    "name_local": "GD",
+    "sector": "산업재",
+    "description": "General Dynamics Corporation operates as an aerospace and defense company worldwide. It operates through four segments:"
+  },
+  "GIS": {
+    "name_en": "General Mills, Inc.",
+    "name_local": "GIS",
+    "sector": "필수 소비재",
+    "description": "General Mills, Inc. manufactures and markets branded consumer foods in the United States and internationally. The compan"
+  },
+  "GM": {
+    "name_en": "General Motors Company",
+    "name_local": "GM",
+    "sector": "경기 소비재",
+    "description": "General Motors Company designs, builds, and sells trucks, crossovers, cars, and automobile parts worldwide. It operates"
+  },
+  "GPC": {
+    "name_en": "Genuine Parts Company",
+    "name_local": "GPC",
+    "sector": "경기 소비재",
+    "description": "Genuine Parts Company distributes automotive and industrial replacement parts. The company operates in three segments: N"
+  },
+  "GILD": {
+    "name_en": "Gilead Sciences Inc.",
+    "name_local": "길리어드 사이언시스",
+    "sector": "바이오·제약",
+    "description": "HIV·간염·항암제"
+  },
+  "GPN": {
+    "name_en": "Global Payments Inc.",
+    "name_local": "GPN",
+    "sector": "산업재",
+    "description": "Global Payments Inc. provides payment technology and software solutions for card, check, and digital-based payments in t"
+  },
+  "GL": {
+    "name_en": "Globe Life Inc.",
+    "name_local": "GL",
+    "sector": "금융 서비스",
+    "description": "Globe Life Inc., through its subsidiaries, provides various life and supplemental health insurance products to lower mid"
+  },
+  "GDDY": {
+    "name_en": "GoDaddy Inc.",
+    "name_local": "GDDY",
+    "sector": "기술",
+    "description": "GoDaddy Inc. engages in the design and development of cloud-based products in the United States and internationally. It"
+  },
+  "GS": {
+    "name_en": "The Goldman Sachs Group, Inc.",
+    "name_local": "GS",
+    "sector": "금융 서비스",
+    "description": "The Goldman Sachs Group, Inc., a financial institution, provides a range of financial services for corporations, financi"
+  },
+  "HAL": {
+    "name_en": "Halliburton Company",
+    "name_local": "HAL",
+    "sector": "에너지",
+    "description": "Halliburton Company provides products and services to the energy industry worldwide. It operates in two segments, Comple"
+  },
+  "HIG": {
+    "name_en": "The Hartford Insurance Group, Inc.",
+    "name_local": "HIG",
+    "sector": "금융 서비스",
+    "description": "The Hartford Insurance Group, Inc., together with its subsidiaries, provides insurance and financial services to individ"
+  },
+  "HAS": {
+    "name_en": "Hasbro, Inc.",
+    "name_local": "HAS",
+    "sector": "경기 소비재",
+    "description": "Hasbro, Inc. operates as a toy and game company in the United States, Europe, Canada, Mexico, Latin America, Australia,"
+  },
+  "HCA": {
+    "name_en": "HCA Healthcare, Inc.",
+    "name_local": "HCA",
+    "sector": "헬스케어",
+    "description": "HCA Healthcare, Inc., through its subsidiaries, provides health care services in the United States. The company owns, ma"
+  },
+  "DOC": {
+    "name_en": "Healthpeak Properties, Inc.",
+    "name_local": "DOC",
+    "sector": "부동산·리츠",
+    "description": "Healthpeak Properties, Inc. is a Standard & Poor's 500 company that owns, operates, and develops high-quality real estat"
+  },
+  "HSIC": {
+    "name_en": "Henry Schein, Inc.",
+    "name_local": "HSIC",
+    "sector": "헬스케어",
+    "description": "Henry Schein, Inc. provides health care products and services to office-based dental and medical practitioners worldwide"
+  },
+  "HSY": {
+    "name_en": "The Hershey Company",
+    "name_local": "HSY",
+    "sector": "필수 소비재",
+    "description": "The Hershey Company, together with its subsidiaries, engages in the manufacture and sale of confectionery products and p"
+  },
+  "HPE": {
+    "name_en": "Hewlett Packard Enterprise Company",
+    "name_local": "HPE",
+    "sector": "기술",
+    "description": "Hewlett Packard Enterprise Company, together with its subsidiaries, develops intelligent solutions in the United States,"
+  },
+  "HLT": {
+    "name_en": "Hilton Worldwide Holdings Inc.",
+    "name_local": "HLT",
+    "sector": "경기 소비재",
+    "description": "Hilton Worldwide Holdings Inc., a hospitality company, engages in managing, franchising, and leasing hotels and resorts."
+  },
+  "HD": {
+    "name_en": "The Home Depot, Inc.",
+    "name_local": "HD",
+    "sector": "경기 소비재",
+    "description": "The Home Depot, Inc. operates as a home improvement retailer in the United States and internationally. It sells various"
+  },
+  "HON": {
+    "name_en": "Honeywell International Inc.",
+    "name_local": "HON",
+    "sector": "산업재",
+    "description": "Honeywell International Inc. engages in the aerospace technologies, industrial automation, building automation, and ener"
+  },
+  "HRL": {
+    "name_en": "Hormel Foods Corporation",
+    "name_local": "HRL",
+    "sector": "필수 소비재",
+    "description": "Hormel Foods Corporation develops, processes, and distributes various meat, nuts, and other food products to foodservice"
+  },
+  "HST": {
+    "name_en": "Host Hotels & Resorts, Inc.",
+    "name_local": "HST",
+    "sector": "부동산·리츠",
+    "description": "Host Hotels & Resorts, Inc., herein referred to as we, Host Inc., or the Company, is a self-managed and self-administere"
+  },
+  "HWM": {
+    "name_en": "Howmet Aerospace Inc.",
+    "name_local": "HWM",
+    "sector": "산업재",
+    "description": "Howmet Aerospace Inc. provides advanced engineered solutions for the aerospace and transportation industries in the Unit"
+  },
+  "HPQ": {
+    "name_en": "HP Inc.",
+    "name_local": "HPQ",
+    "sector": "기술",
+    "description": "HP Inc. provides personal computing, printing, 3D printing, hybrid work, gaming, and other related technologies in the U"
+  },
+  "HUBB": {
+    "name_en": "Hubbell Incorporated",
+    "name_local": "HUBB",
+    "sector": "산업재",
+    "description": "Hubbell Incorporated, together with its subsidiaries, manufactures and sells electrical and utility solutions in the Uni"
+  },
+  "HUM": {
+    "name_en": "Humana Inc.",
+    "name_local": "HUM",
+    "sector": "헬스케어",
+    "description": "Humana Inc. provides medical and specialty insurance products in the United States. It operates in two segments, Insuran"
+  },
+  "HBAN": {
+    "name_en": "Huntington Bancshares Incorporated",
+    "name_local": "HBAN",
+    "sector": "금융 서비스",
+    "description": "Huntington Bancshares Incorporated operates as the bank holding company for The Huntington National Bank that provides c"
+  },
+  "HII": {
+    "name_en": "Huntington Ingalls Industries, Inc.",
+    "name_local": "HII",
+    "sector": "산업재",
+    "description": "Huntington Ingalls Industries, Inc. designs, builds, overhauls, and repairs military ships in the United States. It oper"
+  },
+  "IBM": {
+    "name_en": "International Business Machines Corporation",
+    "name_local": "IBM",
+    "sector": "기술",
+    "description": "International Business Machines Corporation, together with its subsidiaries, provides integrated solutions and services"
+  },
+  "IEX": {
+    "name_en": "IDEX Corporation",
+    "name_local": "IEX",
+    "sector": "산업재",
+    "description": "IDEX Corporation, together with its subsidiaries, provides applied solutions in the United States, North America, Europe"
+  },
+  "IDXX": {
+    "name_en": "IDEXX Laboratories Inc.",
+    "name_local": "IDEXX 래버러토리즈",
+    "sector": "동물 진단",
+    "description": "반려동물 진단·검사 장비"
+  },
+  "ITW": {
+    "name_en": "Illinois Tool Works Inc.",
+    "name_local": "ITW",
+    "sector": "산업재",
+    "description": "Illinois Tool Works Inc. provides industrial products and equipment in North America, Europe, the Middle East, Africa, t"
+  },
+  "INCY": {
+    "name_en": "Incyte Corporation",
+    "name_local": "INCY",
+    "sector": "헬스케어",
+    "description": "Incyte Corporation, a biopharmaceutical company, engages in the discovery, development, and commercialization of therape"
+  },
+  "IR": {
+    "name_en": "Ingersoll Rand Inc.",
+    "name_local": "IR",
+    "sector": "산업재",
+    "description": "Ingersoll Rand Inc. provides various mission-critical air, fluid, clean energy, and medical technologies services and so"
+  },
+  "PODD": {
+    "name_en": "Insulet Corporation",
+    "name_local": "PODD",
+    "sector": "헬스케어",
+    "description": "Insulet Corporation develops, manufactures, and sells insulin delivery systems for people with insulin-dependent diabete"
+  },
+  "INTC": {
+    "name_en": "Intel Corporation",
+    "name_local": "INTC",
+    "sector": "기술",
+    "description": "Intel Corporation designs, develops, manufactures, markets, sells, and services computing and related end products and s"
+  },
+  "IBKR": {
+    "name_en": "Interactive Brokers Group, Inc.",
+    "name_local": "IBKR",
+    "sector": "금융 서비스",
+    "description": "Interactive Brokers Group, Inc. operates as an automated electronic broker in the United States and internationally. The"
+  },
+  "ICE": {
+    "name_en": "Intercontinental Exchange, Inc.",
+    "name_local": "ICE",
+    "sector": "금융 서비스",
+    "description": "Intercontinental Exchange, Inc., together with its subsidiaries, provides technology and data to financial institutions,"
+  },
+  "IFF": {
+    "name_en": "International Flavors & Fragrances Inc.",
+    "name_local": "IFF",
+    "sector": "원자재",
+    "description": "International Flavors & Fragrances Inc., together with its subsidiaries, manufactures and markets food, beverage, health"
+  },
+  "IP": {
+    "name_en": "International Paper Company",
+    "name_local": "IP",
+    "sector": "경기 소비재",
+    "description": "International Paper Company produces and sells renewable fiber-based packaging in North America, Latin America, Europe,"
+  },
+  "INTU": {
+    "name_en": "Intuit Inc.",
+    "name_local": "인튜이트",
+    "sector": "금융 소프트웨어",
+    "description": "TurboTax·QuickBooks·Mint"
+  },
+  "ISRG": {
+    "name_en": "Intuitive Surgical Inc.",
+    "name_local": "인튜이티브 서지컬",
+    "sector": "의료기기",
+    "description": "다빈치 수술 로봇 시스템"
+  },
+  "IVZ": {
+    "name_en": "Invesco Ltd.",
+    "name_local": "IVZ",
+    "sector": "금융 서비스",
+    "description": "Invesco Ltd. is a publicly owned investment manager. The firm provides its services to retail clients, institutional cli"
+  },
+  "INVH": {
+    "name_en": "Invitation Homes Inc.",
+    "name_local": "INVH",
+    "sector": "부동산·리츠",
+    "description": "Invitation Homes is a leading owner and operator of single-family homes for lease, offering residents high quality homes"
+  },
+  "IQV": {
+    "name_en": "IQVIA Holdings Inc.",
+    "name_local": "IQV",
+    "sector": "헬스케어",
+    "description": "IQVIA Holdings Inc. provides clinical research services, commercial insights, and healthcare intelligence to the life sc"
+  },
+  "IRM": {
+    "name_en": "Iron Mountain Incorporated",
+    "name_local": "IRM",
+    "sector": "부동산·리츠",
+    "description": "Iron Mountain Incorporated is a global leader in information management services, and is trusted by more than 240,000 cu"
+  },
+  "JBHT": {
+    "name_en": "J.B. Hunt Transport Services, Inc.",
+    "name_local": "JBHT",
+    "sector": "산업재",
+    "description": "J.B. Hunt Transport Services, Inc. provides surface transportation, delivery, and logistic services in the United States"
+  },
+  "JBL": {
+    "name_en": "Jabil Inc.",
+    "name_local": "JBL",
+    "sector": "기술",
+    "description": "Jabil Inc. provides engineering, manufacturing, and supply chain solutions worldwide. It operates in three segments: Reg"
+  },
+  "JKHY": {
+    "name_en": "Jack Henry & Associates, Inc.",
+    "name_local": "JKHY",
+    "sector": "기술",
+    "description": "Jack Henry & Associates, Inc. operates as a financial technology company that connects people and financial institutions"
+  },
+  "J": {
+    "name_en": "Jacobs Solutions Inc.",
+    "name_local": "J",
+    "sector": "산업재",
+    "description": "Jacobs Solutions Inc. engages in the infrastructure and advanced facilities, and consulting businesses in the United Sta"
+  },
+  "JNJ": {
+    "name_en": "Johnson & Johnson",
+    "name_local": "JNJ",
+    "sector": "헬스케어",
+    "description": "Johnson & Johnson, together with its subsidiaries, engages in the research and development, manufacture, and sale of a r"
+  },
+  "JCI": {
+    "name_en": "Johnson Controls International plc",
+    "name_local": "JCI",
+    "sector": "산업재",
+    "description": "Johnson Controls International plc, together with its subsidiaries, engages in engineering, manufacturing, commissioning"
+  },
+  "JPM": {
+    "name_en": "JPMorgan Chase & Co.",
+    "name_local": "JPM",
+    "sector": "금융 서비스",
+    "description": "JPMorgan Chase & Co. operates as a bank and financial holding company in the United States, rest of North America, Europ"
+  },
+  "KVUE": {
+    "name_en": "Kenvue Inc.",
+    "name_local": "KVUE",
+    "sector": "필수 소비재",
+    "description": "Kenvue Inc. operates as a consumer health company in the United States, rest of North America, Europe, the Middle East,"
+  },
+  "KDP": {
+    "name_en": "Keurig Dr Pepper Inc.",
+    "name_local": "큐리그 닥터페퍼",
+    "sector": "음료",
+    "description": "커피 캡슐·닥터페퍼 음료"
+  },
+  "KEY": {
+    "name_en": "KeyCorp",
+    "name_local": "KEY",
+    "sector": "금융 서비스",
+    "description": "KeyCorp operates as the holding company for KeyBank National Association that provides various retail and commercial ban"
+  },
+  "KEYS": {
+    "name_en": "Keysight Technologies, Inc.",
+    "name_local": "KEYS",
+    "sector": "기술",
+    "description": "Keysight Technologies, Inc. provides electronic design and test solutions worldwide. The company operates through Commun"
+  },
+  "KMB": {
+    "name_en": "Kimberly-Clark Corporation",
+    "name_local": "KMB",
+    "sector": "필수 소비재",
+    "description": "Kimberly-Clark Corporation, together with its subsidiaries, manufactures and markets personal care products in the Unite"
+  },
+  "KIM": {
+    "name_en": "Kimco Realty Corporation",
+    "name_local": "KIM",
+    "sector": "부동산·리츠",
+    "description": "Kimco Realty Corporation is a real estate investment trust and leading owner and operator of high-quality, open-air, gro"
+  },
+  "KMI": {
+    "name_en": "Kinder Morgan, Inc.",
+    "name_local": "KMI",
+    "sector": "에너지",
+    "description": "Kinder Morgan, Inc. operates as an energy infrastructure company primarily in North America. It operates through Natural"
+  },
+  "KKR": {
+    "name_en": "KKR & Co. Inc.",
+    "name_local": "KKR",
+    "sector": "금융 서비스",
+    "description": "KKR & Co. Inc. is a private equity and real estate investment firm specializing in direct and fund of fund investments."
+  },
+  "KLAC": {
+    "name_en": "KLA Corporation",
+    "name_local": "KLA",
+    "sector": "반도체 장비",
+    "description": "반도체 공정 검사·계측 장비"
+  },
+  "KHC": {
+    "name_en": "Kraft Heinz Company",
+    "name_local": "크래프트 하인즈",
+    "sector": "식품",
+    "description": "케첩·마카로니치즈 등 포장 식품"
+  },
+  "KR": {
+    "name_en": "The Kroger Co.",
+    "name_local": "KR",
+    "sector": "필수 소비재",
+    "description": "The Kroger Co. operates as a food and drug retailer in the United States. The company operates combination food and drug"
+  },
+  "LHX": {
+    "name_en": "L3Harris Technologies, Inc.",
+    "name_local": "LHX",
+    "sector": "산업재",
+    "description": "L3Harris Technologies, Inc. provides mission-critical solutions for government and commercial customers worldwide. It op"
+  },
+  "LH": {
+    "name_en": "Labcorp Holdings Inc.",
+    "name_local": "LH",
+    "sector": "헬스케어",
+    "description": "Labcorp Holdings Inc. provides laboratory services. It operates through two segments, Diagnostics Laboratories and Bioph"
+  },
+  "LRCX": {
+    "name_en": "Lam Research Corp.",
+    "name_local": "램 리서치",
+    "sector": "반도체 장비",
+    "description": "반도체 식각·증착 장비"
+  },
+  "LVS": {
+    "name_en": "Las Vegas Sands Corp.",
+    "name_local": "LVS",
+    "sector": "경기 소비재",
+    "description": "Las Vegas Sands Corp., together with its subsidiaries, owns, develops, and operates integrated resorts in Macao and Sing"
+  },
+  "LDOS": {
+    "name_en": "Leidos Holdings, Inc.",
+    "name_local": "LDOS",
+    "sector": "기술",
+    "description": "Leidos Holdings, Inc., together with its subsidiaries, provides services and solutions for government and commercial cus"
+  },
+  "LEN": {
+    "name_en": "Lennar Corporation",
+    "name_local": "LEN",
+    "sector": "경기 소비재",
+    "description": "Lennar Corporation, together with its subsidiaries, operates as a homebuilder primarily under the Lennar brand in the Un"
+  },
+  "LII": {
+    "name_en": "Lennox International Inc.",
+    "name_local": "LII",
+    "sector": "산업재",
+    "description": "Lennox International Inc., together with its subsidiaries, designs, manufactures, and markets products for the heating,"
+  },
+  "LLY": {
+    "name_en": "Eli Lilly and Company",
+    "name_local": "LLY",
+    "sector": "헬스케어",
+    "description": "Eli Lilly and Company discovers, develops, manufactures, and markets human pharmaceutical products in the United States,"
+  },
+  "LIN": {
+    "name_en": "Linde plc",
+    "name_local": "린데",
+    "sector": "산업용 가스",
+    "description": "산소·질소·수소 등 산업 가스"
+  },
+  "LYV": {
+    "name_en": "Live Nation Entertainment, Inc.",
+    "name_local": "LYV",
+    "sector": "커뮤니케이션 서비스",
+    "description": "Live Nation Entertainment, Inc. operates as a live entertainment company worldwide. The company operates through Concert"
+  },
+  "LMT": {
+    "name_en": "Lockheed Martin Corporation",
+    "name_local": "LMT",
+    "sector": "산업재",
+    "description": "Lockheed Martin Corporation, an aerospace and defense company, engages in the research, design, development, manufacture"
+  },
+  "L": {
+    "name_en": "Loews Corporation",
+    "name_local": "L",
+    "sector": "금융 서비스",
+    "description": "Loews Corporation, through its subsidiaries, provides commercial property and casualty insurance in the United States an"
+  },
+  "LOW": {
+    "name_en": "Lowe's Companies, Inc.",
+    "name_local": "LOW",
+    "sector": "경기 소비재",
+    "description": "Lowe's Companies, Inc., together with its subsidiaries, operates as a home improvement retailer in the United States and"
+  },
+  "LULU": {
+    "name_en": "Lululemon Athletica Inc.",
+    "name_local": "룰루레몬",
+    "sector": "의류·스포츠웨어",
+    "description": "프리미엄 요가·운동복 브랜드"
+  },
+  "LITE": {
+    "name_en": "Lumentum Holdings Inc.",
+    "name_local": "LITE",
+    "sector": "기술",
+    "description": "Lumentum Holdings Inc. manufactures and sells optical and photonic products in the Americas, the Asia-Pacific, Europe, t"
+  },
+  "LYB": {
+    "name_en": "LyondellBasell Industries N.V.",
+    "name_local": "LYB",
+    "sector": "원자재",
+    "description": "LyondellBasell Industries N.V. operates as a chemical company in the United States, Germany, China, Mexico, Italy, Japan"
+  },
+  "MTB": {
+    "name_en": "M&T Bank Corporation",
+    "name_local": "MTB",
+    "sector": "금융 서비스",
+    "description": "M&T Bank Corporation operates as a bank holding company for Manufacturers and Traders Trust Company and Wilmington Trust"
+  },
+  "MPC": {
+    "name_en": "Marathon Petroleum Corporation",
+    "name_local": "MPC",
+    "sector": "에너지",
+    "description": "Marathon Petroleum Corporation, together with its subsidiaries, operates as an integrated downstream energy company in t"
+  },
+  "MAR": {
+    "name_en": "Marriott International",
+    "name_local": "매리어트 인터내셔널",
+    "sector": "호텔·숙박",
+    "description": "글로벌 호텔 체인"
+  },
+  "MRSH": {
+    "name_en": "Marsh & McLennan Companies, Inc.",
+    "name_local": "MRSH",
+    "sector": "금융 서비스",
+    "description": "Marsh & McLennan Companies, Inc., a professional services company, provides advisory services and insurance solutions to"
+  },
+  "MLM": {
+    "name_en": "Martin Marietta Materials, Inc.",
+    "name_local": "MLM",
+    "sector": "원자재",
+    "description": "Martin Marietta Materials, Inc., a natural resource-based building materials company, supplies aggregates and heavy-side"
+  },
+  "MAS": {
+    "name_en": "Masco Corporation",
+    "name_local": "MAS",
+    "sector": "산업재",
+    "description": "Masco Corporation provides home improvement and building products in North America, Europe, and internationally. The com"
+  },
+  "MA": {
+    "name_en": "Mastercard Incorporated",
+    "name_local": "MA",
+    "sector": "금융 서비스",
+    "description": "Mastercard Incorporated, a technology company, provides transaction processing and other payment-related products and se"
+  },
+  "MKC": {
+    "name_en": "McCormick & Company, Incorporated",
+    "name_local": "MKC",
+    "sector": "필수 소비재",
+    "description": "McCormick & Company, Incorporated manufactures, markets, and distributes herbs, spices, seasoning mixes, condiments, and"
+  },
+  "MCD": {
+    "name_en": "McDonald's Corporation",
+    "name_local": "MCD",
+    "sector": "경기 소비재",
+    "description": "McDonald's Corporation owns, operates, and franchises restaurants under the McDonald's brand in the United States and in"
+  },
+  "MCK": {
+    "name_en": "McKesson Corporation",
+    "name_local": "MCK",
+    "sector": "헬스케어",
+    "description": "McKesson Corporation provides healthcare services in the United States and internationally. It operates through four seg"
+  },
+  "MDT": {
+    "name_en": "Medtronic plc",
+    "name_local": "MDT",
+    "sector": "헬스케어",
+    "description": "Medtronic plc develops, manufactures, and sells device-based medical therapies to healthcare systems, physicians, clinic"
+  },
+  "MRK": {
+    "name_en": "Merck & Co., Inc.",
+    "name_local": "MRK",
+    "sector": "헬스케어",
+    "description": "Merck & Co., Inc. operates as a healthcare company worldwide. It offers human health pharmaceutical for various areas un"
+  },
+  "META": {
+    "name_en": "Meta Platforms Inc.",
+    "name_local": "메타 플랫폼스",
+    "sector": "소셜 미디어",
+    "description": "페이스북·인스타그램·왓츠앱"
+  },
+  "MET": {
+    "name_en": "MetLife, Inc.",
+    "name_local": "MET",
+    "sector": "금융 서비스",
+    "description": "MetLife, Inc., a financial services company, provides insurance, annuities, employee benefits, and asset management serv"
+  },
+  "MTD": {
+    "name_en": "Mettler-Toledo International Inc.",
+    "name_local": "MTD",
+    "sector": "헬스케어",
+    "description": "Mettler-Toledo International Inc. manufactures and supplies precision instruments and services in the Americas, Europe,"
+  },
+  "MGM": {
+    "name_en": "MGM Resorts International",
+    "name_local": "MGM",
+    "sector": "경기 소비재",
+    "description": "MGM Resorts International, through its subsidiaries, operates as a gaming and entertainment company in the United States"
+  },
+  "MCHP": {
+    "name_en": "Microchip Technology Incorporated",
+    "name_local": "MCHP",
+    "sector": "기술",
+    "description": "Microchip Technology Incorporated develops, manufactures, and sells smart, connected, and secure embedded control soluti"
+  },
+  "MU": {
+    "name_en": "Micron Technology Inc.",
+    "name_local": "마이크론 테크놀로지",
+    "sector": "반도체·메모리",
+    "description": "DRAM·NAND 플래시 메모리"
+  },
+  "MSFT": {
+    "name_en": "Microsoft Corp.",
+    "name_local": "마이크로소프트",
+    "sector": "소프트웨어·클라우드",
+    "description": "윈도우·Azure·Office 365"
+  },
+  "MAA": {
+    "name_en": "Mid-America Apartment Communities, Inc.",
+    "name_local": "MAA",
+    "sector": "부동산·리츠",
+    "description": "Mid-America Apartment Communities, Inc.is a S&P 500 company. It is a real estate investment trust (REIT) focused on deli"
+  },
+  "MRNA": {
+    "name_en": "Moderna Inc.",
+    "name_local": "모더나",
+    "sector": "바이오·제약",
+    "description": "mRNA 기반 백신·치료제"
+  },
+  "TAP": {
+    "name_en": "Molson Coors Beverage Company",
+    "name_local": "TAP",
+    "sector": "필수 소비재",
+    "description": "Molson Coors Beverage Company manufactures, markets, distributes, and sells beer and other malt beverage products in the"
+  },
+  "MDLZ": {
+    "name_en": "Mondelez International",
+    "name_local": "몬델리즈",
+    "sector": "식품",
+    "description": "오레오·리츠·토블레로네"
+  },
+  "MPWR": {
+    "name_en": "Monolithic Power Systems, Inc.",
+    "name_local": "MPWR",
+    "sector": "기술",
+    "description": "Monolithic Power Systems, Inc. provides semiconductor-based power electronics solutions in China, Taiwan, South Korea, S"
+  },
+  "MNST": {
+    "name_en": "Monster Beverage Corp.",
+    "name_local": "몬스터 비버리지",
+    "sector": "음료",
+    "description": "에너지 음료 브랜드"
+  },
+  "MCO": {
+    "name_en": "Moody's Corporation",
+    "name_local": "MCO",
+    "sector": "금융 서비스",
+    "description": "Moody's Corporation, together with its subsidiaries, operates as an integrated risk assessment firm in the United States"
+  },
+  "MS": {
+    "name_en": "Morgan Stanley",
+    "name_local": "MS",
+    "sector": "금융 서비스",
+    "description": "Morgan Stanley, a financial holding company, provides various financial products and services to corporations, governmen"
+  },
+  "MOS": {
+    "name_en": "The Mosaic Company",
+    "name_local": "MOS",
+    "sector": "원자재",
+    "description": "The Mosaic Company, through its subsidiaries, produces and markets concentrated phosphate and potash crop nutrients. It"
+  },
+  "MSI": {
+    "name_en": "Motorola Solutions, Inc.",
+    "name_local": "MSI",
+    "sector": "기술",
+    "description": "Motorola Solutions, Inc. provides public safety, government, defense, and enterprise security solutions in the United States, the United Kingdom, Canada, and in"
+  },
+  "MSCI": {
+    "name_en": "MSCI Inc.",
+    "name_local": "MSCI",
+    "sector": "금융 서비스",
+    "description": "MSCI Inc., together with its subsidiaries, provides research-based data, analytics, and indexes, supported by advanced technology worldwide. The Index segment p"
+  },
+  "NDAQ": {
+    "name_en": "Nasdaq, Inc.",
+    "name_local": "NDAQ",
+    "sector": "금융 서비스",
+    "description": "Nasdaq, Inc. operates as a technology company that serves capital markets and other industries in the United States and internationally. It operates through thr"
+  },
+  "NTAP": {
+    "name_en": "NetApp, Inc.",
+    "name_local": "NTAP",
+    "sector": "기술",
+    "description": "NetApp, Inc. provides a range of enterprise software, systems, and services that customers use to transform their data infrastructures in the United States, Can"
+  },
+  "NFLX": {
+    "name_en": "Netflix Inc.",
+    "name_local": "넷플릭스",
+    "sector": "스트리밍·미디어",
+    "description": "글로벌 OTT 동영상 스트리밍"
+  },
+  "NEM": {
+    "name_en": "Newmont Corporation",
+    "name_local": "NEM",
+    "sector": "원자재",
+    "description": "Newmont Corporation operates as a gold producer. It also explores for copper, silver, lead, zinc, and other metals. It has operations and/or assets in the Unite"
+  },
+  "NWSA": {
+    "name_en": "News Corporation",
+    "name_local": "NWSA",
+    "sector": "커뮤니케이션 서비스",
+    "description": "News Corporation, a media and information services company, creates and distributes authoritative and engaging content, and other products and services for cons"
+  },
+  "NWS": {
+    "name_en": "News Corporation",
+    "name_local": "NWS",
+    "sector": "커뮤니케이션 서비스",
+    "description": "News Corporation, a media and information services company, creates and distributes authoritative and engaging content, and other products and services for cons"
+  },
+  "NEE": {
+    "name_en": "NextEra Energy, Inc.",
+    "name_local": "NEE",
+    "sector": "유틸리티",
+    "description": "NextEra Energy, Inc., through its subsidiaries, generates, stores, transmits, distributes, and sells electric power to retail and wholesale customers in North A"
+  },
+  "NKE": {
+    "name_en": "NIKE, Inc.",
+    "name_local": "NKE",
+    "sector": "경기 소비재",
+    "description": "NIKE, Inc., together with its subsidiaries, designs, develops, markets, and sells athletic and casual footwear, apparel, equipment, accessories, and services fo"
+  },
+  "NI": {
+    "name_en": "NiSource Inc.",
+    "name_local": "NI",
+    "sector": "유틸리티",
+    "description": "NiSource Inc., an energy holding company, operates as a regulated natural gas and electric utility company in the United States. It operates in two segments, Co"
+  },
+  "NDSN": {
+    "name_en": "Nordson Corporation",
+    "name_local": "NDSN",
+    "sector": "산업재",
+    "description": "Nordson Corporation engineers, manufactures, and markets products and systems to dispense, apply, and control adhesives, coatings, polymers, sealants, biomateri"
+  },
+  "NSC": {
+    "name_en": "Norfolk Southern Corporation",
+    "name_local": "NSC",
+    "sector": "산업재",
+    "description": "Norfolk Southern Corporation, together with its subsidiaries, engages in the rail transportation of raw materials, intermediate products, and finished goods in "
+  },
+  "NTRS": {
+    "name_en": "Northern Trust Corporation",
+    "name_local": "NTRS",
+    "sector": "금융 서비스",
+    "description": "Northern Trust Corporation, a financial holding company, provides wealth management, asset servicing, asset management, and banking solutions for corporations, "
+  },
+  "NOC": {
+    "name_en": "Northrop Grumman Corporation",
+    "name_local": "NOC",
+    "sector": "산업재",
+    "description": "Northrop Grumman Corporation operates as an aerospace and defense technology company in the United States, Asia/Pacific, Europe, and internationally. It operate"
+  },
+  "NCLH": {
+    "name_en": "Norwegian Cruise Line",
+    "name_local": "노르웨이지안 크루즈",
+    "sector": "여행·크루즈",
+    "description": "크루즈 여행 운항"
+  },
+  "NRG": {
+    "name_en": "NRG Energy, Inc.",
+    "name_local": "NRG",
+    "sector": "유틸리티",
+    "description": "NRG Energy, Inc., together with its subsidiaries, operates as an energy and home services company in the United States and Canada. It operates through the Texas"
+  },
+  "NUE": {
+    "name_en": "Nucor Corporation",
+    "name_local": "NUE",
+    "sector": "원자재",
+    "description": "Nucor Corporation engages in the manufacture and sale of steel and steel products. The company operates in three segments: Steel Mills, Steel Products, and Raw "
+  },
+  "NVDA": {
+    "name_en": "NVIDIA Corp.",
+    "name_local": "엔비디아",
+    "sector": "반도체·AI",
+    "description": "GPU·데이터센터·AI 가속기"
+  },
+  "NVR": {
+    "name_en": "NVR, Inc.",
+    "name_local": "NVR",
+    "sector": "경기 소비재",
+    "description": "NVR, Inc. operates as a homebuilder in the United States. The company operates through Homebuilding and Mortgage Banking segments. It engages in the constructio"
+  },
+  "NXPI": {
+    "name_en": "NXP Semiconductors NV",
+    "name_local": "NXP 세미컨덕터즈",
+    "sector": "반도체",
+    "description": "자동차·IoT 반도체"
+  },
+  "ORLY": {
+    "name_en": "O'Reilly Automotive Inc.",
+    "name_local": "오라일리 오토모티브",
+    "sector": "자동차 부품 소매",
+    "description": "자동차 부품·액세서리 소매"
+  },
+  "OXY": {
+    "name_en": "Occidental Petroleum Corporation",
+    "name_local": "OXY",
+    "sector": "에너지",
+    "description": "Occidental Petroleum Corporation, together with its subsidiaries, engages in the acquisition, exploration, and development of oil and gas properties in the Unit"
+  },
+  "ODFL": {
+    "name_en": "Old Dominion Freight Line",
+    "name_local": "올드 도미니언 프레이트",
+    "sector": "물류·운송",
+    "description": "미국 LTL 화물 운송"
+  },
+  "OMC": {
+    "name_en": "Omnicom Group Inc.",
+    "name_local": "OMC",
+    "sector": "커뮤니케이션 서비스",
+    "description": "Omnicom Group Inc., together with its subsidiaries, offers advertising, marketing, and corporate communications services. It provides a range of services in the"
+  },
+  "ON": {
+    "name_en": "ON Semiconductor Corp.",
+    "name_local": "ON 세미컨덕터",
+    "sector": "반도체",
+    "description": "전력·전기차용 SiC 반도체"
+  },
+  "OKE": {
+    "name_en": "ONEOK, Inc.",
+    "name_local": "OKE",
+    "sector": "에너지",
+    "description": "ONEOK, Inc. operates as a midstream service provider of gathering, processing, fractionation, transportation, storage, and marine export services in the United "
+  },
+  "ORCL": {
+    "name_en": "Oracle Corporation",
+    "name_local": "ORCL",
+    "sector": "기술",
+    "description": "Oracle Corporation offers products and services that address enterprise information technology environments worldwide. Its Oracle cloud software as a service of"
+  },
+  "OTIS": {
+    "name_en": "Otis Worldwide Corporation",
+    "name_local": "OTIS",
+    "sector": "산업재",
+    "description": "Otis Worldwide Corporation engages in manufacturing, installation, and servicing of elevators and escalators in the United States, China, and internationally. T"
+  },
+  "PCAR": {
+    "name_en": "PACCAR Inc.",
+    "name_local": "PACCAR",
+    "sector": "상용차·트럭",
+    "description": "Kenworth·Peterbilt 트럭"
+  },
+  "PKG": {
+    "name_en": "Packaging Corporation of America",
+    "name_local": "PKG",
+    "sector": "경기 소비재",
+    "description": "Packaging Corporation of America manufactures and sells containerboard and uncoated freesheet (UFS) paper products in North America. The company operates throug"
+  },
+  "PLTR": {
+    "name_en": "Palantir Technologies Inc.",
+    "name_local": "PLTR",
+    "sector": "기술",
+    "description": "Palantir Technologies Inc. builds and deploys software platforms for the intelligence community to assist in counterterrorism investigations and operations in t"
+  },
+  "PANW": {
+    "name_en": "Palo Alto Networks Inc.",
+    "name_local": "팔로 알토 네트웍스",
+    "sector": "사이버보안",
+    "description": "차세대 방화벽·클라우드 보안"
+  },
+  "PSKY": {
+    "name_en": "Paramount Skydance Corporation",
+    "name_local": "PSKY",
+    "sector": "커뮤니케이션 서비스",
+    "description": "Paramount Skydance Corporation operates as a media and entertainment company worldwide. It operates in three segments: Studios, Direct-to-Consumer, and TV Media"
+  },
+  "PH": {
+    "name_en": "Parker-Hannifin Corporation",
+    "name_local": "PH",
+    "sector": "산업재",
+    "description": "Parker-Hannifin Corporation manufactures and sells motion and control technologies and systems for aerospace and defense, in-plant and industrial equipment, tra"
+  },
+  "PAYX": {
+    "name_en": "Paychex Inc.",
+    "name_local": "페이첵스",
+    "sector": "HR·급여 소프트웨어",
+    "description": "중소기업 HR·급여 서비스"
+  },
+  "PYPL": {
+    "name_en": "PayPal Holdings Inc.",
+    "name_local": "페이팔",
+    "sector": "핀테크·결제",
+    "description": "온라인 결제·Venmo"
+  },
+  "PNR": {
+    "name_en": "Pentair plc",
+    "name_local": "PNR",
+    "sector": "산업재",
+    "description": "Pentair plc provides various water solutions in the United States, Western Europe, China, Latin America, the Middle East, Southeast Asia, Australia, and Canada."
+  },
+  "PEP": {
+    "name_en": "PepsiCo Inc.",
+    "name_local": "펩시코",
+    "sector": "식음료",
+    "description": "펩시·게토레이·프리토레이 스낵"
+  },
+  "PFE": {
+    "name_en": "Pfizer Inc.",
+    "name_local": "PFE",
+    "sector": "헬스케어",
+    "description": "Pfizer Inc. discovers, develops, manufactures, markets, distributes, and sells biopharmaceutical products in the United States and internationally. It operates "
+  },
+  "PCG": {
+    "name_en": "PG&E Corporation",
+    "name_local": "PCG",
+    "sector": "유틸리티",
+    "description": "PG&E Corporation, through its subsidiary, Pacific Gas and Electric Company, engages in the sale and delivery of electricity and natural gas to customers in nort"
+  },
+  "PM": {
+    "name_en": "Philip Morris International Inc.",
+    "name_local": "PM",
+    "sector": "필수 소비재",
+    "description": "Philip Morris International Inc. operates as a tobacco company. The company offers cigarettes and smoke-free products, including heat-not-burn, e-vapor, and ora"
+  },
+  "PSX": {
+    "name_en": "Phillips 66",
+    "name_local": "PSX",
+    "sector": "에너지",
+    "description": "Phillips 66 operates as an integrated downstream energy provider in the United States, the United Kingdom, Germany, and internationally. It operates through fiv"
+  },
+  "PNW": {
+    "name_en": "Pinnacle West Capital Corporation",
+    "name_local": "PNW",
+    "sector": "유틸리티",
+    "description": "Pinnacle West Capital Corporation, through its subsidiary, provides retail and wholesale electric services in the state of Arizona. The company engages in the g"
+  },
+  "PNC": {
+    "name_en": "The PNC Financial Services Group, Inc.",
+    "name_local": "PNC",
+    "sector": "금융 서비스",
+    "description": "The PNC Financial Services Group, Inc. operates as a diversified financial services company in the United States. It operates through three segments: Retail Ban"
+  },
+  "POOL": {
+    "name_en": "Pool Corporation",
+    "name_local": "POOL",
+    "sector": "산업재",
+    "description": "Pool Corporation distributes swimming pool supplies, equipment, related leisure, irrigation, and landscape maintenance products in the United States and interna"
+  },
+  "PPG": {
+    "name_en": "PPG Industries, Inc.",
+    "name_local": "PPG",
+    "sector": "원자재",
+    "description": "PPG Industries, Inc. manufactures and distributes paints, coatings, and specialty materials in the United States, Canada, the Asia Pacific, Latin America, Europ"
+  },
+  "PPL": {
+    "name_en": "PPL Corporation",
+    "name_local": "PPL",
+    "sector": "유틸리티",
+    "description": "PPL Corporation provides electricity and natural gas to approximately 3.6 million customers in the United States. It operates in three segments: Kentucky Regula"
+  },
+  "PFG": {
+    "name_en": "Principal Financial Group, Inc.",
+    "name_local": "PFG",
+    "sector": "금융 서비스",
+    "description": "Principal Financial Group, Inc. provides retirement, asset management, and insurance products and services to businesses, individuals, and institutional clients"
+  },
+  "PG": {
+    "name_en": "The Procter & Gamble Company",
+    "name_local": "PG",
+    "sector": "필수 소비재",
+    "description": "The Procter & Gamble Company provides branded consumer packaged goods worldwide. It operates through Beauty; Grooming; Health Care; Fabric & Home Care; and Baby"
+  },
+  "PGR": {
+    "name_en": "The Progressive Corporation",
+    "name_local": "PGR",
+    "sector": "금융 서비스",
+    "description": "The Progressive Corporation operates as an insurance company in the United States. It writes insurance for personal autos and special lines products, including "
+  },
+  "PLD": {
+    "name_en": "Prologis, Inc.",
+    "name_local": "PLD",
+    "sector": "부동산·리츠",
+    "description": "Prologis, Inc. is a self-administered and self-managed REIT and is the sole general partner of Prologis, L.P. through which it holds substantially all of its as"
+  },
+  "PRU": {
+    "name_en": "Prudential Financial, Inc.",
+    "name_local": "PRU",
+    "sector": "금융 서비스",
+    "description": "Prudential Financial, Inc., together with its subsidiaries, provides financial products and services in the United States, Japan and internationally. It operate"
+  },
+  "PEG": {
+    "name_en": "Public Service Enterprise Group Incorporated",
+    "name_local": "PEG",
+    "sector": "유틸리티",
+    "description": "Public Service Enterprise Group Incorporated, through its subsidiaries, operates in electric and gas utility, and nuclear generation businesses in the United St"
+  },
+  "PTC": {
+    "name_en": "PTC Inc.",
+    "name_local": "PTC",
+    "sector": "기술",
+    "description": "PTC Inc. operates as software company in the Americas, Europe, and the Asia Pacific. The company provides Windchill, a suite that manages all aspects of the pro"
+  },
+  "PSA": {
+    "name_en": "Public Storage",
+    "name_local": "PSA",
+    "sector": "부동산·리츠",
+    "description": "Public Storage, a member of the S&P 500, is a REIT that primarily acquires, develops, owns, and operates self-storage facilities. At December 31, 2025, we: (i) "
+  },
+  "PHM": {
+    "name_en": "PulteGroup, Inc.",
+    "name_local": "PHM",
+    "sector": "경기 소비재",
+    "description": "PulteGroup, Inc., through its subsidiaries, engages in the homebuilding business in the United States. The company is involved in the acquisition and developmen"
+  },
+  "PWR": {
+    "name_en": "Quanta Services, Inc.",
+    "name_local": "PWR",
+    "sector": "산업재",
+    "description": "Quanta Services, Inc. offers infrastructure solutions for the electric and gas utility, power generation, load center, manufacturing, communications, pipeline, "
+  },
+  "QCOM": {
+    "name_en": "Qualcomm Inc.",
+    "name_local": "퀄컴",
+    "sector": "반도체·통신",
+    "description": "모바일 AP·5G 모뎀 칩"
+  },
+  "DGX": {
+    "name_en": "Quest Diagnostics Incorporated",
+    "name_local": "DGX",
+    "sector": "헬스케어",
+    "description": "Quest Diagnostics Incorporated provides diagnostic testing and services in the United States. The company develops and delivers diagnostic information services,"
+  },
+  "Q": {
+    "name_en": "Qnity Electronics",
+    "name_local": "Q",
+    "sector": "반도체 장비",
+    "description": "Qnity Electronics / S&P 500 / Information Technology / Semiconductor Materials & Equipment"
+  },
+  "RL": {
+    "name_en": "Ralph Lauren Corporation",
+    "name_local": "RL",
+    "sector": "경기 소비재",
+    "description": "Ralph Lauren Corporation designs, markets, and distributes lifestyle products in North America, Europe, Asia, and internationally. It offers apparel, including "
+  },
+  "RJF": {
+    "name_en": "Raymond James Financial, Inc.",
+    "name_local": "RJF",
+    "sector": "금융 서비스",
+    "description": "Raymond James Financial, Inc., a diversified financial services company, provides private client group, capital markets, asset management, banking, and other se"
+  },
+  "RTX": {
+    "name_en": "RTX Corporation",
+    "name_local": "RTX",
+    "sector": "산업재",
+    "description": "RTX Corporation, an aerospace and defense company, provides systems and services for commercial, military, and government customers worldwide. It operates throu"
+  },
+  "O": {
+    "name_en": "Realty Income Corporation",
+    "name_local": "O",
+    "sector": "부동산·리츠",
+    "description": "Realty Income Corporation, an S&P 500 company, is real estate partner to the world's leading companies. We serve our clients as a full-service real estate capit"
+  },
+  "REG": {
+    "name_en": "Regency Centers Corporation",
+    "name_local": "REG",
+    "sector": "부동산·리츠",
+    "description": "Regency Centers Corporation is a fully integrated real estate company and self-administered and self-managed real estate investment trust that began its operati"
+  },
+  "REGN": {
+    "name_en": "Regeneron Pharmaceuticals",
+    "name_local": "리제네론",
+    "sector": "바이오·제약",
+    "description": "아일리아·두필루맙 항체 치료제"
+  },
+  "RF": {
+    "name_en": "Regions Financial Corporation",
+    "name_local": "RF",
+    "sector": "금융 서비스",
+    "description": "Regions Financial Corporation, a financial holding company, provides various banking and related products and services to individual and corporate customers. It"
+  },
+  "RSG": {
+    "name_en": "Republic Services, Inc.",
+    "name_local": "RSG",
+    "sector": "산업재",
+    "description": "Republic Services, Inc., together with its subsidiaries, offers environmental services in the United States and Canada. It is involved in the collection and pro"
+  },
+  "RMD": {
+    "name_en": "ResMed Inc.",
+    "name_local": "RMD",
+    "sector": "헬스케어",
+    "description": "ResMed Inc. develops, manufactures, distributes, and markets medical devices and cloud-based software applications to diagnose, treat, and manage respiratory di"
+  },
+  "RVTY": {
+    "name_en": "Revvity, Inc.",
+    "name_local": "RVTY",
+    "sector": "헬스케어",
+    "description": "Revvity, Inc. provides health sciences solutions, technologies, and services. The company offers instruments, reagents, software, subscriptions, detection and i"
+  },
+  "HOOD": {
+    "name_en": "Robinhood Markets, Inc.",
+    "name_local": "HOOD",
+    "sector": "금융 서비스",
+    "description": "Robinhood Markets, Inc. operates financial services platform in the United States. The company's platform allows users to invest in stocks, exchange-traded fund"
+  },
+  "ROK": {
+    "name_en": "Rockwell Automation, Inc.",
+    "name_local": "ROK",
+    "sector": "산업재",
+    "description": "Rockwell Automation, Inc., together with its subsidiaries, provides industrial automation and digital transformation solutions in North America, Europe, the Mid"
+  },
+  "ROL": {
+    "name_en": "Rollins, Inc.",
+    "name_local": "ROL",
+    "sector": "경기 소비재",
+    "description": "Rollins, Inc., through its subsidiaries, provides pest and wildlife control services and protection to residential and commercial customers in the United States"
+  },
+  "ROP": {
+    "name_en": "Roper Technologies, Inc.",
+    "name_local": "ROP",
+    "sector": "기술",
+    "description": "Roper Technologies, Inc. designs and develops vertical software and technology enabled products in the United States, Canada, Europe, Asia, and internationally."
+  },
+  "ROST": {
+    "name_en": "Ross Stores Inc.",
+    "name_local": "로스 스토어스",
+    "sector": "유통·소매",
+    "description": "오프프라이스 의류·생활용품"
+  },
+  "RCL": {
+    "name_en": "Royal Caribbean Cruises Ltd.",
+    "name_local": "RCL",
+    "sector": "경기 소비재",
+    "description": "Royal Caribbean Cruises Ltd. operates as a cruise company worldwide. The company operates cruises under the Royal Caribbean International, Celebrity Cruises, an"
+  },
+  "SPGI": {
+    "name_en": "S&P Global Inc.",
+    "name_local": "SPGI",
+    "sector": "금융 서비스",
+    "description": "S&P Global Inc., together with its subsidiaries, provides benchmarks, data, analytics, and workflow solutions in the global capital, energy and commodity, and a"
+  },
+  "CRM": {
+    "name_en": "Salesforce, Inc.",
+    "name_local": "CRM",
+    "sector": "기술",
+    "description": "Salesforce, Inc. provides customer relationship management technology services that connect companies and customers together in the United States, Europe, and t"
+  },
+  "SNDK": {
+    "name_en": "Sandisk Corporation",
+    "name_local": "SNDK",
+    "sector": "기술",
+    "description": "Sandisk Corporation develops, manufactures, and sells data storage devices and solutions using NAND flash technology in the United States, Europe, the Middle Ea"
+  },
+  "SBAC": {
+    "name_en": "SBA Communications Corporation",
+    "name_local": "SBAC",
+    "sector": "부동산·리츠",
+    "description": "SBA Communications Corporation is a leading independent owner and operator of wireless communications infrastructure. It includes towers, buildings, rooftops, d"
+  },
+  "SLB": {
+    "name_en": "SLB N.V.",
+    "name_local": "SLB",
+    "sector": "에너지",
+    "description": "SLB N.V. engages in the provision of technology for the energy industry worldwide. The company operates through four divisions: Digital & Integration, Reservoir"
+  },
+  "STX": {
+    "name_en": "Seagate Technology Holdings plc",
+    "name_local": "STX",
+    "sector": "기술",
+    "description": "Seagate Technology Holdings plc engages in the provision of data storage technology and infrastructure solutions in Singapore, the United States, the Netherland"
+  },
+  "SRE": {
+    "name_en": "Sempra",
+    "name_local": "SRE",
+    "sector": "유틸리티",
+    "description": "Sempra engages in the regulated utilities business in the United States and Mexico. It operates through three segments: Sempra California, Sempra Texas Utilitie"
+  },
+  "NOW": {
+    "name_en": "ServiceNow, Inc.",
+    "name_local": "NOW",
+    "sector": "기술",
+    "description": "ServiceNow, Inc. provides cloud-based solution for digital workflows in the North America, Europe, the Middle East and Africa, Asia Pacific, and internationally"
+  },
+  "SHW": {
+    "name_en": "The Sherwin-Williams Company",
+    "name_local": "SHW",
+    "sector": "원자재",
+    "description": "The Sherwin-Williams Company engages in the development, manufacture, distribution, and sale of paint, coatings, and related products to professional, industria"
+  },
+  "SPG": {
+    "name_en": "Simon Property Group, Inc.",
+    "name_local": "SPG",
+    "sector": "부동산·리츠",
+    "description": "Simon Property Group, Inc. (NYSE:SPG) is a self-administered and self-managed real estate investment trust (REIT). Simon Property Group, L.P., or the Operatin"
+  },
+  "SWKS": {
+    "name_en": "Skyworks Solutions, Inc.",
+    "name_local": "SWKS",
+    "sector": "기술",
+    "description": "Skyworks Solutions, Inc., together with its subsidiaries, develops, manufactures, and markets analog and mixed-signal semiconductor products and solutions in th"
+  },
+  "SJM": {
+    "name_en": "The J. M. Smucker Company",
+    "name_local": "SJM",
+    "sector": "필수 소비재",
+    "description": "The J. M. Smucker Company manufactures and markets branded food and beverage products worldwide. The company operates through four segments: U.S. Retail Coffee,"
+  },
+  "SW": {
+    "name_en": "Smurfit Westrock Plc",
+    "name_local": "SW",
+    "sector": "경기 소비재",
+    "description": "Smurfit Westrock Plc, together with its subsidiaries, manufactures, distributes, and sells containerboard, corrugated containers, and other paper-based packagin"
+  },
+  "SNA": {
+    "name_en": "Snap-on Incorporated",
+    "name_local": "SNA",
+    "sector": "산업재",
+    "description": "Snap-on Incorporated manufactures and markets tools, equipment, diagnostics, and repair information and systems solutions for professional users worldwide. It o"
+  },
+  "SOLV": {
+    "name_en": "Solventum Corporation",
+    "name_local": "SOLV",
+    "sector": "헬스케어",
+    "description": "Solventum Corporation, a healthcare company, develops, manufactures, and commercializes a portfolio of solutions to address critical customer and patient needs "
+  },
+  "SO": {
+    "name_en": "The Southern Company",
+    "name_local": "SO",
+    "sector": "유틸리티",
+    "description": "The Southern Company, through its subsidiaries, engages in the sale of electricity. The company offers electric service to retail customers and wholesale custom"
+  },
+  "LUV": {
+    "name_en": "Southwest Airlines Co.",
+    "name_local": "LUV",
+    "sector": "산업재",
+    "description": "Southwest Airlines Co. operates as a passenger airline company that provides scheduled air transportation services in the United States and internationally. It "
+  },
+  "SWK": {
+    "name_en": "Stanley Black & Decker, Inc.",
+    "name_local": "SWK",
+    "sector": "산업재",
+    "description": "Stanley Black & Decker, Inc. provides hand tools, power tools, outdoor products, and related accessories in the United States, Canada, Other Americas, Europe, a"
+  },
+  "SBUX": {
+    "name_en": "Starbucks Corp.",
+    "name_local": "스타벅스",
+    "sector": "외식·음료",
+    "description": "글로벌 커피 프랜차이즈"
+  },
+  "STT": {
+    "name_en": "State Street Corporation",
+    "name_local": "STT",
+    "sector": "금융 서비스",
+    "description": "State Street Corporation provides various financial products and services to institutional investors. It offers custody, accounting, and fund administration ser"
+  },
+  "STLD": {
+    "name_en": "Steel Dynamics, Inc.",
+    "name_local": "STLD",
+    "sector": "원자재",
+    "description": "Steel Dynamics, Inc., together with its subsidiaries, operates as a steel producer and metal recycler in the United States. It operates through four segments: S"
+  },
+  "STE": {
+    "name_en": "STERIS plc",
+    "name_local": "STE",
+    "sector": "헬스케어",
+    "description": "STERIS plc provides infection prevention products and services worldwide. It operates in three segments: Healthcare, Applied Sterilization Technologies (AST), a"
+  },
+  "SYK": {
+    "name_en": "Stryker Corporation",
+    "name_local": "SYK",
+    "sector": "헬스케어",
+    "description": "Stryker Corporation operates as a medical technology company in the United States and internationally. It operates through two segments, MedSurg and Neurotechno"
+  },
+  "SMCI": {
+    "name_en": "Super Micro Computer Inc.",
+    "name_local": "슈퍼마이크로",
+    "sector": "AI 서버",
+    "description": "AI·데이터센터용 고성능 서버"
+  },
+  "SYF": {
+    "name_en": "Synchrony Financial",
+    "name_local": "SYF",
+    "sector": "금융 서비스",
+    "description": "Synchrony Financial, together with its subsidiaries, operates as a consumer financial services company in the United States. The company provides credit product"
+  },
+  "SNPS": {
+    "name_en": "Synopsys Inc.",
+    "name_local": "시놉시스",
+    "sector": "EDA 소프트웨어",
+    "description": "반도체 설계 자동화(EDA) 툴"
+  },
+  "SYY": {
+    "name_en": "Sysco Corporation",
+    "name_local": "SYY",
+    "sector": "필수 소비재",
+    "description": "Sysco Corporation, through its subsidiaries, engages in the marketing and distribution of various food and related products to the foodservice or food-away-from"
+  },
+  "TMUS": {
+    "name_en": "T-Mobile US, Inc.",
+    "name_local": "TMUS",
+    "sector": "커뮤니케이션 서비스",
+    "description": "T-Mobile US, Inc., together with its subsidiaries, provides wireless communications services in the United States, Puerto Rico, and the United States Virgin Isl"
+  },
+  "TROW": {
+    "name_en": "T. Rowe Price Group, Inc.",
+    "name_local": "TROW",
+    "sector": "금융 서비스",
+    "description": "T. Rowe Price Group, Inc. is a publicly owned investment manager. The firm provides its services to individuals, institutional investors, retirement plans, fina"
+  },
+  "TTWO": {
+    "name_en": "Take-Two Interactive",
+    "name_local": "테이크-투 인터랙티브",
+    "sector": "게임",
+    "description": "GTA·NBA 2K 등 게임 퍼블리셔"
+  },
+  "TPR": {
+    "name_en": "Tapestry, Inc.",
+    "name_local": "TPR",
+    "sector": "경기 소비재",
+    "description": "Tapestry, Inc. provides accessories and lifestyle brand products in North America, Greater China, rest of Asia, and internationally. The company operates in thr"
+  },
+  "TRGP": {
+    "name_en": "Targa Resources Corp.",
+    "name_local": "TRGP",
+    "sector": "에너지",
+    "description": "Targa Resources Corp., together with its subsidiaries, owns, operates, acquires, and develops a portfolio of complementary domestic infrastructure assets in Nor"
+  },
+  "TGT": {
+    "name_en": "Target Corporation",
+    "name_local": "TGT",
+    "sector": "필수 소비재",
+    "description": "Target Corporation operates as a general merchandise retailer in the United States. It offers apparel for women, men, young adults, kids, toddlers, and babies, "
+  },
+  "TEL": {
+    "name_en": "TE Connectivity plc",
+    "name_local": "TEL",
+    "sector": "기술",
+    "description": "TE Connectivity plc, together with its subsidiaries, manufactures and sells connectivity and sensor solutions in Europe, the Middle East, Africa, the AsiaPacif"
+  },
+  "TDY": {
+    "name_en": "Teledyne Technologies Incorporated",
+    "name_local": "TDY",
+    "sector": "기술",
+    "description": "Teledyne Technologies Incorporated provides enabling technologies for industrial growth markets in the United States, Europe, Asia, and internationally. The Dig"
+  },
+  "TER": {
+    "name_en": "Teradyne, Inc.",
+    "name_local": "TER",
+    "sector": "기술",
+    "description": "Teradyne, Inc. engages in the design, development, manufacture, and sale of automated test systems and robotics products in the United States, Asia Pacific, Eur"
+  },
+  "TSLA": {
+    "name_en": "Tesla Inc.",
+    "name_local": "테슬라",
+    "sector": "전기차·에너지",
+    "description": "전기차·에너지 저장·자율주행"
+  },
+  "TXN": {
+    "name_en": "Texas Instruments Inc.",
+    "name_local": "텍사스 인스트루먼츠",
+    "sector": "반도체",
+    "description": "아날로그·임베디드 반도체"
+  },
+  "TPL": {
+    "name_en": "Texas Pacific Land Corporation",
+    "name_local": "TPL",
+    "sector": "에너지",
+    "description": "Texas Pacific Land Corporation engages in the land and resource management, and water services and operations businesses. The Land and Resource Management segme"
+  },
+  "TXT": {
+    "name_en": "Textron Inc.",
+    "name_local": "TXT",
+    "sector": "산업재",
+    "description": "Textron Inc. operates in the aircraft, defense, industrial, and finance businesses worldwide. It operates in six segments: Textron Aviation, Bell, Textron Syste"
+  },
+  "TMO": {
+    "name_en": "Thermo Fisher Scientific Inc.",
+    "name_local": "TMO",
+    "sector": "헬스케어",
+    "description": "Thermo Fisher Scientific Inc. provides life sciences solutions, analytical instruments, specialty diagnostics, and laboratory products and biopharma services in"
+  },
+  "TJX": {
+    "name_en": "The TJX Companies, Inc.",
+    "name_local": "TJX",
+    "sector": "경기 소비재",
+    "description": "The TJX Companies, Inc., together with its subsidiaries, operates as an off-price apparel and home fashions retailer worldwide. It operates through four segment"
+  },
+  "TKO": {
+    "name_en": "TKO Group Holdings, Inc.",
+    "name_local": "TKO",
+    "sector": "커뮤니케이션 서비스",
+    "description": "TKO Group Holdings, Inc. operates as a sports and entertainment company. The company operates through three segments: UFC, WWE and IMG. The UFC segment distribu"
+  },
+  "TTD": {
+    "name_en": "The Trade Desk, Inc.",
+    "name_local": "TTD",
+    "sector": "커뮤니케이션 서비스",
+    "description": "The Trade Desk, Inc. operates as a technology company in the United States and internationally. The company creates, manages, and optimizes digital advertising "
+  },
+  "TSCO": {
+    "name_en": "Tractor Supply Company",
+    "name_local": "TSCO",
+    "sector": "경기 소비재",
+    "description": "Tractor Supply Company operates as a rural lifestyle retailer in the United States. The company provides various merchandise, including livestock and equine fee"
+  },
+  "TT": {
+    "name_en": "Trane Technologies plc",
+    "name_local": "TT",
+    "sector": "산업재",
+    "description": "Trane Technologies plc designs, manufactures, sells, and services of solutions for heating, ventilation, air conditioning, and custom and transport refrigeratio"
+  },
+  "TDG": {
+    "name_en": "TransDigm Group Incorporated",
+    "name_local": "TDG",
+    "sector": "산업재",
+    "description": "TransDigm Group Incorporated designs, produces, and supplies aircraft components in the United States and internationally. The Power & Control segment offers me"
+  },
+  "TRV": {
+    "name_en": "The Travelers Companies, Inc.",
+    "name_local": "TRV",
+    "sector": "금융 서비스",
+    "description": "The Travelers Companies, Inc., through its subsidiaries, provides a range of commercial and personal property, and casualty insurance products and services to b"
+  },
+  "TRMB": {
+    "name_en": "Trimble Inc.",
+    "name_local": "TRMB",
+    "sector": "기술",
+    "description": "Trimble Inc. offers technology solutions and platform that enable office professionals and field workers to connect workflows and industry lifecycles in North A"
+  },
+  "TFC": {
+    "name_en": "Truist Financial Corporation",
+    "name_local": "TFC",
+    "sector": "금융 서비스",
+    "description": "Truist Financial Corporation, a financial services company, provides banking and trust services in the Southeastern and Mid-Atlantic United States. The company "
+  },
+  "TYL": {
+    "name_en": "Tyler Technologies, Inc.",
+    "name_local": "TYL",
+    "sector": "기술",
+    "description": "Tyler Technologies, Inc. provides integrated software and technology management solutions for the public sector in the United States. It operates in two segment"
+  },
+  "TSN": {
+    "name_en": "Tyson Foods, Inc.",
+    "name_local": "TSN",
+    "sector": "필수 소비재",
+    "description": "Tyson Foods, Inc., together with its subsidiaries, operates as a food company worldwide. It operates through four segments: Beef, Pork, Chicken, and Prepared Fo"
+  },
+  "USB": {
+    "name_en": "U.S. Bancorp",
+    "name_local": "USB",
+    "sector": "금융 서비스",
+    "description": "U.S. Bancorp, a financial services holding company, provides various financial services to individuals, businesses, institutional organizations, governmental en"
+  },
+  "UBER": {
+    "name_en": "Uber Technologies, Inc.",
+    "name_local": "UBER",
+    "sector": "기술",
+    "description": "Uber Technologies, Inc. develops and operates proprietary technology applications in the United States, Canada, Latin America, Europe, the Middle East, Africa, "
+  },
+  "UDR": {
+    "name_en": "UDR, Inc.",
+    "name_local": "UDR",
+    "sector": "부동산·리츠",
+    "description": "UDR, Inc. is a S&P 500 company, is a leading multifamily real estate investment trust with a demonstrated performance history of delivering superior and dependa"
+  },
+  "ULTA": {
+    "name_en": "Ulta Beauty, Inc.",
+    "name_local": "ULTA",
+    "sector": "경기 소비재",
+    "description": "Ulta Beauty, Inc. operates as a specialty beauty retailer in the United States, Mexico, and Kuwait. The company offers branded and private label beauty products"
+  },
+  "UNP": {
+    "name_en": "Union Pacific Corporation",
+    "name_local": "UNP",
+    "sector": "산업재",
+    "description": "Union Pacific Corporation, through its subsidiary, Union Pacific Railroad Company, operates in the railroad business in the United States. It offers transportat"
+  },
+  "UAL": {
+    "name_en": "United Airlines Holdings, Inc.",
+    "name_local": "UAL",
+    "sector": "산업재",
+    "description": "United Airlines Holdings, Inc., through its subsidiaries, provides air transportation services in the United States, Canada, Atlantic, the Pacific, and Latin Am"
+  },
+  "UPS": {
+    "name_en": "United Parcel Service, Inc.",
+    "name_local": "UPS",
+    "sector": "산업재",
+    "description": "United Parcel Service, Inc., a package delivery and logistics provider, offers transportation and delivery services. It operates through two segments, U.S. Dome"
+  },
+  "URI": {
+    "name_en": "United Rentals, Inc.",
+    "name_local": "URI",
+    "sector": "산업재",
+    "description": "United Rentals, Inc., through its subsidiaries, operates as an equipment rental company in the United States, Canada, Europe, Australia, and New Zealand. It ope"
+  },
+  "UNH": {
+    "name_en": "UnitedHealth Group Incorporated",
+    "name_local": "UNH",
+    "sector": "헬스케어",
+    "description": "UnitedHealth Group Incorporated operates as a health care company in the United States and internationally. It operates through four segments: Optum Health, Opt"
+  },
+  "UHS": {
+    "name_en": "Universal Health Services, Inc.",
+    "name_local": "UHS",
+    "sector": "헬스케어",
+    "description": "Universal Health Services, Inc., through its subsidiaries, owns and operates acute care hospitals, and outpatient and behavioral health care facilities in the U"
+  },
+  "VLO": {
+    "name_en": "Valero Energy Corporation",
+    "name_local": "VLO",
+    "sector": "에너지",
+    "description": "Valero Energy Corporation manufactures, markets, and sells petroleum-based and low-carbon liquid transportation fuels and petrochemical products in the United S"
+  },
+  "VTR": {
+    "name_en": "Ventas, Inc.",
+    "name_local": "VTR",
+    "sector": "부동산·리츠",
+    "description": "Ventas, Inc. is a leading S&P 500 real estate investment trust enabling exceptional environments that benefit a large and growing aging population. With approxi"
+  },
+  "VLTO": {
+    "name_en": "Veralto Corporation",
+    "name_local": "VLTO",
+    "sector": "산업재",
+    "description": "Veralto Corporation provides water analytics, water treatment, marking and coding, and packaging and color solutions worldwide. It operates through two segments"
+  },
+  "VRSN": {
+    "name_en": "VeriSign, Inc.",
+    "name_local": "VRSN",
+    "sector": "기술",
+    "description": "VeriSign, Inc., together with its subsidiaries, provides internet infrastructure and domain name registry services that enables internet navigation for various "
+  },
+  "VRSK": {
+    "name_en": "Verisk Analytics Inc.",
+    "name_local": "버리스크 애널리틱스",
+    "sector": "데이터·분석",
+    "description": "보험·에너지 산업 데이터 분석"
+  },
+  "VZ": {
+    "name_en": "Verizon Communications Inc.",
+    "name_local": "VZ",
+    "sector": "커뮤니케이션 서비스",
+    "description": "Verizon Communications Inc., through its subsidiaries, engages in the provision of communications, technology, information, and streaming products and services "
+  },
+  "VRTX": {
+    "name_en": "Vertex Pharmaceuticals",
+    "name_local": "버텍스 파마슈티컬스",
+    "sector": "바이오·제약",
+    "description": "낭성섬유증 치료제"
+  },
+  "VRT": {
+    "name_en": "Vertiv Holdings Co",
+    "name_local": "VRT",
+    "sector": "산업재",
+    "description": "Vertiv Holdings Co designs, manufactures, and services critical digital infrastructure technologies and life cycle services for data centers, communication netw"
+  },
+  "VTRS": {
+    "name_en": "Viatris Inc.",
+    "name_local": "VTRS",
+    "sector": "헬스케어",
+    "description": "Viatris Inc., together with its subsidiaries, operates as a healthcare company in North America, Europe, China, Taiwan, Hong Kong, Japan, Australia, New Zealand"
+  },
+  "VICI": {
+    "name_en": "VICI Properties Inc.",
+    "name_local": "VICI",
+    "sector": "부동산·리츠",
+    "description": "VICI Properties Inc. is an S&P 500 experiential real estate investment trust that owns one of the largest portfolios of market-leading gaming, hospitality, well"
+  },
+  "V": {
+    "name_en": "Visa Inc.",
+    "name_local": "V",
+    "sector": "금융 서비스",
+    "description": "Visa Inc. operates as a payment technology company in the United States and internationally. The company operates VisaNet, a transaction processing network that"
+  },
+  "VST": {
+    "name_en": "Vistra Corp.",
+    "name_local": "VST",
+    "sector": "유틸리티",
+    "description": "Vistra Corp., together with its subsidiaries, operates as an integrated retail electricity and power generation company in the United States. The company operat"
+  },
+  "VMC": {
+    "name_en": "Vulcan Materials Company",
+    "name_local": "VMC",
+    "sector": "원자재",
+    "description": "Vulcan Materials Company produces and supplies construction aggregates in the United States. It operates through three segments: Aggregates, Asphalt, and Concre"
+  },
+  "WRB": {
+    "name_en": "W. R. Berkley Corporation",
+    "name_local": "WRB",
+    "sector": "금융 서비스",
+    "description": "W. R. Berkley Corporation, an insurance holding company, operates as a commercial line writer worldwide. The company operates through Insurance and Reinsurance "
+  },
+  "GWW": {
+    "name_en": "W.W. Grainger, Inc.",
+    "name_local": "GWW",
+    "sector": "산업재",
+    "description": "W.W. Grainger, Inc., together with its subsidiaries, distributes maintenance, repair, and operating products and services primarily in North America, Japan, and"
+  },
+  "WAB": {
+    "name_en": "Westinghouse Air Brake Technologies Corporation",
+    "name_local": "WAB",
+    "sector": "산업재",
+    "description": "Westinghouse Air Brake Technologies Corporation provides locomotives, equipment, systems, and services for the freight rail and passenger transit industries wor"
+  },
+  "WMT": {
+    "name_en": "Walmart Inc.",
+    "name_local": "WMT",
+    "sector": "필수 소비재",
+    "description": "Walmart Inc. engages in the operation of retail and wholesale stores and clubs, ecommerce websites, and mobile applications worldwide. The company operates thro"
+  },
+  "DIS": {
+    "name_en": "The Walt Disney Company",
+    "name_local": "DIS",
+    "sector": "커뮤니케이션 서비스",
+    "description": "The Walt Disney Company operates as an entertainment company in Americas, Europe, and the Asia Pacific. It operates in three segments: Entertainment, Sports, an"
+  },
+  "WBD": {
+    "name_en": "Warner Bros. Discovery Inc.",
+    "name_local": "워너브라더스 디스커버리",
+    "sector": "미디어·엔터테인먼트",
+    "description": "HBO·CNN·Warner Bros."
+  },
+  "WM": {
+    "name_en": "Waste Management, Inc.",
+    "name_local": "WM",
+    "sector": "산업재",
+    "description": "Waste Management, Inc., through its subsidiaries, provides environmental solutions to residential, commercial, industrial, and municipal customers in the United"
+  },
+  "WAT": {
+    "name_en": "Waters Corporation",
+    "name_local": "WAT",
+    "sector": "헬스케어",
+    "description": "Waters Corporation provides analytical workflow solutions in Asia, the Americas, and Europe. The company operates through two segments, Waters and TA. The compa"
+  },
+  "WEC": {
+    "name_en": "WEC Energy Group, Inc.",
+    "name_local": "WEC",
+    "sector": "유틸리티",
+    "description": "WEC Energy Group, Inc., through its subsidiaries, provides regulated natural gas and electricity, and renewable and nonregulated renewable energy services in th"
+  },
+  "WFC": {
+    "name_en": "Wells Fargo & Company",
+    "name_local": "WFC",
+    "sector": "금융 서비스",
+    "description": "Wells Fargo & Company, a financial services company, provides diversified banking, investment, mortgage, and consumer and commercial finance products and servic"
+  },
+  "WELL": {
+    "name_en": "Welltower Inc.",
+    "name_local": "WELL",
+    "sector": "부동산·리츠",
+    "description": "Welltower Inc. is a S&P 500 company, is positioned at the center of the silver economy, focusing on rental housing for aging seniors across the United States, U"
+  },
+  "WST": {
+    "name_en": "West Pharmaceutical Services, Inc.",
+    "name_local": "WST",
+    "sector": "헬스케어",
+    "description": "West Pharmaceutical Services, Inc. designs, manufactures, and sells containment and delivery systems for injectable drugs and healthcare products in the America"
+  },
+  "WDC": {
+    "name_en": "Western Digital Corporation",
+    "name_local": "WDC",
+    "sector": "기술",
+    "description": "Western Digital Corporation develops, manufactures, and sells data storage devices and solutions based on hard disk drive (HDD) technology in the United States,"
+  },
+  "WY": {
+    "name_en": "Weyerhaeuser Company",
+    "name_local": "WY",
+    "sector": "부동산·리츠",
+    "description": "Weyerhaeuser Company, one of the world's largest private owners of timberlands, began operations in 1900. Today the firm owns or controls more than 10 million a"
+  },
+  "WSM": {
+    "name_en": "Williams-Sonoma, Inc.",
+    "name_local": "WSM",
+    "sector": "경기 소비재",
+    "description": "Williams-Sonoma, Inc. operates as an omni-channel specialty retailer of various products for home the United States and internationally. The company provides co"
+  },
+  "WMB": {
+    "name_en": "The Williams Companies, Inc.",
+    "name_local": "WMB",
+    "sector": "에너지",
+    "description": "The Williams Companies, Inc., together with its subsidiaries, operates as an energy infrastructure company primarily in the United States. It operates through T"
+  },
+  "WTW": {
+    "name_en": "Willis Towers Watson Public Limited Company",
+    "name_local": "WTW",
+    "sector": "금융 서비스",
+    "description": "Willis Towers Watson Public Limited Company operates as an advisory, broking, and solutions company worldwide. The company operates through two segments: Health"
+  },
+  "WDAY": {
+    "name_en": "Workday Inc.",
+    "name_local": "워크데이",
+    "sector": "기업용 소프트웨어",
+    "description": "클라우드 HR·재무 관리"
+  },
+  "WYNN": {
+    "name_en": "Wynn Resorts, Limited",
+    "name_local": "WYNN",
+    "sector": "경기 소비재",
+    "description": "Wynn Resorts, Limited designs, develops, and operates integrated resorts. It operates in four segments: Wynn Palace, Wynn Macau, Las Vegas Operations, and Encor"
+  },
+  "XEL": {
+    "name_en": "Xcel Energy Inc.",
+    "name_local": "엑셀 에너지",
+    "sector": "전력·유틸리티",
+    "description": "미국 중부 전력·가스 공급"
+  },
+  "XYL": {
+    "name_en": "Xylem Inc.",
+    "name_local": "XYL",
+    "sector": "산업재",
+    "description": "Xylem Inc., together with its subsidiaries, engages in the design, manufacture, and servicing of engineered products and solutions for utility, industrial, and "
+  },
+  "YUM": {
+    "name_en": "Yum! Brands, Inc.",
+    "name_local": "YUM",
+    "sector": "경기 소비재",
+    "description": "Yum! Brands, Inc., together with its subsidiaries, develops, operates, and franchises traditional and non-traditional quick service restaurants in the United St"
+  },
+  "ZBRA": {
+    "name_en": "Zebra Technologies Corporation",
+    "name_local": "ZBRA",
+    "sector": "기술",
+    "description": "Zebra Technologies Corporation, together with its subsidiaries, operates in the automatic identification and data capture solutions industry worldwide. It opera"
+  },
+  "ZBH": {
+    "name_en": "Zimmer Biomet Holdings, Inc.",
+    "name_local": "ZBH",
+    "sector": "헬스케어",
+    "description": "Zimmer Biomet Holdings, Inc., together with its subsidiaries, operates as a medical technology company worldwide. The company designs, manufactures, and markets"
+  },
+  "ZTS": {
+    "name_en": "Zoetis Inc.",
+    "name_local": "ZTS",
+    "sector": "헬스케어",
+    "description": "Zoetis Inc. engages in the discovery, development, manufacture, and commercialization of medicines, vaccines, diagnostic products and services, biodevices, gene"
+  }
+}

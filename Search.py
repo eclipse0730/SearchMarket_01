@@ -18,7 +18,7 @@ from market_scanner.compat import (
 from market_scanner.markets import MARKETS
 from market_scanner.models import ScanSettings
 
-_TRANSLATABLE = {"us"}
+_TRANSLATABLE = {"us", "nasdaq100", "sp500"}
 
 
 def main() -> None:
@@ -28,12 +28,14 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  python Search.py --market us\n"
+            "  python Search.py --market nasdaq100\n"
+            "  python Search.py --market sp500\n"
             "  python Search.py --market kospi\n"
             "  python Search.py --market kosdaq\n"
-            "  python Search.py --market us --stage scan --force\n"
-            "  python Search.py --market us --stage news\n"
-            "  python Search.py --market us --stage render\n"
+            "  python Search.py --market nasdaq100 --stage scan --force\n"
+            "  python Search.py --market sp500 --stage news\n"
+            "  python Search.py --market sp500 --stage render\n"
+            "  python Search.py --market us  # legacy combined US scan\n"
         ),
     )
     parser.add_argument(
@@ -41,7 +43,7 @@ def main() -> None:
         choices=market_choices,
         default="us",
         metavar="MARKET",
-        help=f"Market to scan. Choices: {', '.join(market_choices)}  (default: us)",
+        help=f"Market to scan. Choices: {', '.join(market_choices)}  (default: us, legacy combined US)",
     )
     parser.add_argument(
         "--stage",

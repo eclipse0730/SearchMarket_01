@@ -1,15 +1,15 @@
 {
-  "247540.KQ": {
-    "name_en": "EcoPro BM Co.",
-    "name_local": "에코프로비엠",
-    "sector": "이차전지 소재",
-    "description": "NCM 양극재 제조, 전기차 배터리 핵심 소재"
-  },
   "086520.KQ": {
     "name_en": "EcoPro Co.",
     "name_local": "에코프로",
     "sector": "이차전지 소재",
     "description": "에코프로비엠 지주, 이차전지 소재 그룹사"
+  },
+  "247540.KQ": {
+    "name_en": "EcoPro BM Co.",
+    "name_local": "에코프로비엠",
+    "sector": "이차전지 소재",
+    "description": "NCM 양극재 제조, 전기차 배터리 핵심 소재"
   },
   "196170.KQ": {
     "name_en": "Alteogen Inc.",
@@ -17,11 +17,23 @@
     "sector": "바이오",
     "description": "피하주사 플랫폼 ALT-B4, ADC 항체-약물 접합체 개발"
   },
-  "028300.KQ": {
-    "name_en": "HLB Inc.",
-    "name_local": "HLB",
+  "277810.KQ": {
+    "name_en": "Rainbow Robotics Inc.",
+    "name_local": "레인보우로보틱스",
+    "sector": "로봇",
+    "description": "협동로봇·이족보행로봇 개발, 삼성전자 지분 투자"
+  },
+  "000250.KQ": {
+    "name_en": "Sam Chun Dang Pharm. Co., Ltd",
+    "name_local": "삼천당제약",
+    "sector": "제약",
+    "description": "삼천당제약 (KOSDAQ150)"
+  },
+  "950160.KQ": {
+    "name_en": "Kolon TissueGene, Inc.",
+    "name_local": "코오롱티슈진",
     "sector": "바이오",
-    "description": "리보세라닙 항암 신약 개발, HLB그룹 지주"
+    "description": "코오롱티슈진 (KOSDAQ150)"
   },
   "058470.KQ": {
     "name_en": "Leeno Industrial Inc.",
@@ -29,53 +41,41 @@
     "sector": "반도체 부품",
     "description": "반도체 검사용 소켓·핀 제조, 글로벌 점유율 1위"
   },
-  "041510.KQ": {
-    "name_en": "SM Entertainment",
-    "name_local": "에스엠",
-    "sector": "엔터테인먼트",
-    "description": "SM엔터 K-팝 기획·제작, EXO·aespa·NCT"
+  "028300.KQ": {
+    "name_en": "HLB Inc.",
+    "name_local": "HLB",
+    "sector": "바이오",
+    "description": "리보세라닙 항암 신약 개발, HLB그룹 지주"
   },
-  "035900.KQ": {
-    "name_en": "JYP Entertainment",
-    "name_local": "JYP엔터테인먼트",
-    "sector": "엔터테인먼트",
-    "description": "K-팝 기획사, TWICE·Stray Kids·NMIXX"
+  "298380.KQ": {
+    "name_en": "ABL Bio Inc.",
+    "name_local": "에이비엘바이오",
+    "sector": "헬스케어",
+    "description": "ABL Bio Inc., a biotech research company, focuses on the development of therapeutic drugs for immuno-oncology and neurod"
   },
-  "122870.KQ": {
-    "name_en": "YG Entertainment Inc.",
-    "name_local": "와이지엔터테인먼트",
-    "sector": "엔터테인먼트",
-    "description": "K-팝 기획사, BLACKPINK·BIGBANG·TREASURE"
+  "141080.KQ": {
+    "name_en": "LigaChem Biosciences Inc.",
+    "name_local": "리가켐바이오",
+    "sector": "헬스케어",
+    "description": "LigaChem Biosciences Inc., a clinical stage biopharmaceutical company, engages in the discovery and development of medic"
   },
-  "263750.KQ": {
-    "name_en": "Pearl Abyss Corp.",
-    "name_local": "펄어비스",
-    "sector": "게임",
-    "description": "검은사막 개발사, 자체 엔진 기반 MMORPG"
+  "039030.KQ": {
+    "name_en": "EO Technics Co., Ltd.",
+    "name_local": "이오테크닉스",
+    "sector": "기술",
+    "description": "EO Technics Co., Ltd. manufactures and supplies laser processing equipment worldwide. The company offers semiconductor p"
   },
-  "293490.KQ": {
-    "name_en": "Kakao Games Corp.",
-    "name_local": "카카오게임즈",
-    "sector": "게임",
-    "description": "카카오 게임 퍼블리싱, 오딘·아키에이지 워"
+  "087010.KQ": {
+    "name_en": "Peptron, Inc.",
+    "name_local": "펩트론",
+    "sector": "바이오",
+    "description": "펩트론 (KOSDAQ150)"
   },
-  "096530.KQ": {
-    "name_en": "Seegene Inc.",
-    "name_local": "씨젠",
-    "sector": "바이오 진단",
-    "description": "분자진단 시약·장비 제조, 다중 동시 검출 원천기술"
-  },
-  "357780.KQ": {
-    "name_en": "Solbrain Co.",
-    "name_local": "솔브레인",
-    "sector": "반도체 소재",
-    "description": "반도체·디스플레이용 화학 소재, 식각액·CMP슬러리"
-  },
-  "005290.KQ": {
-    "name_en": "Dongjin Semichem Co.",
-    "name_local": "동진쎄미켐",
-    "sector": "반도체 소재",
-    "description": "감광재(PR)·반도체 공정 화학재료 제조"
+  "036930.KQ": {
+    "name_en": "JUSUNG ENGINEERING Co.,Ltd.",
+    "name_local": "주성엔지니어링",
+    "sector": "반도체 장비",
+    "description": "주성엔지니어링 (KOSDAQ150)"
   },
   "240810.KQ": {
     "name_en": "Wonik IPS Co.",
@@ -83,23 +83,65 @@
     "sector": "반도체 장비",
     "description": "ALD·CVD 반도체 증착 장비 전문"
   },
-  "022100.KQ": {
-    "name_en": "POSCO DX Co.",
-    "name_local": "포스코DX",
-    "sector": "IT 서비스",
-    "description": "포스코 그룹 IT·DX 전담, 스마트팩토리 솔루션"
+  "214370.KQ": {
+    "name_en": "Caregen Co., Ltd.",
+    "name_local": "케어젠",
+    "sector": "헬스케어 서비스",
+    "description": "케어젠 (KOSDAQ150)"
   },
-  "277810.KQ": {
-    "name_en": "Rainbow Robotics Inc.",
-    "name_local": "레인보우로보틱스",
-    "sector": "로봇",
-    "description": "협동로봇·이족보행로봇 개발, 삼성전자 지분 투자"
+  "310210.KQ": {
+    "name_en": "Voronoi, Inc.",
+    "name_local": "보로노이",
+    "sector": "헬스케어",
+    "description": "Voronoi, Inc. researches, develops, and discovers small molecule kinase inhibitors in South Korea. Its products pipeline"
   },
-  "030520.KQ": {
-    "name_en": "Hancom Inc.",
-    "name_local": "한글과컴퓨터",
-    "sector": "소프트웨어",
-    "description": "한컴오피스·한컴AI 오피스 솔루션, 공공 SW 1위"
+  "095340.KQ": {
+    "name_en": "ISC Co., Ltd.",
+    "name_local": "ISC",
+    "sector": "반도체 장비",
+    "description": "ISC (KOSDAQ150)"
+  },
+  "108490.KQ": {
+    "name_en": "ROBOTIS Co., Ltd.",
+    "name_local": "로보티즈",
+    "sector": "기술",
+    "description": "ROBOTIS Co., Ltd. provides robotic solutions in South Korea. It provides autonomous indoor robot that offers small goods"
+  },
+  "403870.KQ": {
+    "name_en": "HPSP Co., Ltd.",
+    "name_local": "HPSP",
+    "sector": "산업재",
+    "description": "HPSP Co., Ltd. manufactures and sells high pressure annealing semiconductor equipment for the semiconductor industry in"
+  },
+  "440110.KQ": {
+    "name_en": "FADU Inc.",
+    "name_local": "파두",
+    "sector": "기술",
+    "description": "FADU Inc., a fabless semiconductor company, develops and manufactures flash controller architecture for solid-state driv"
+  },
+  "263750.KQ": {
+    "name_en": "Pearl Abyss Corp.",
+    "name_local": "펄어비스",
+    "sector": "게임",
+    "description": "검은사막 개발사, 자체 엔진 기반 MMORPG"
+  },
+  "032820.KQ": {
+    "name_en": "Woori Technology, Inc.",
+    "name_local": "우리기술",
+    "sector": "우주항공·방산",
+    "description": "우리기술 (KOSDAQ150)"
+  },
+  "226950.KQ": {
+    "name_en": "OliX Pharmaceuticals, Inc",
+    "name_local": "올릭스",
+    "sector": "헬스케어",
+    "description": "OliX Pharmaceuticals, Inc., a clinical stage pharmaceutical company, focuses on developing RNA interference (RNAi) thera"
+  },
+  "357780.KQ": {
+    "name_en": "Solbrain Co.",
+    "name_local": "솔브레인",
+    "sector": "반도체 소재",
+    "description": "반도체·디스플레이용 화학 소재, 식각액·CMP슬러리"
   },
   "214150.KQ": {
     "name_en": "Classys Inc.",
@@ -107,17 +149,113 @@
     "sector": "의료기기",
     "description": "비침습 미용 의료기기, 슈링크·볼뉴머 글로벌 판매"
   },
+  "064760.KQ": {
+    "name_en": "TCSemiconductor Co.",
+    "name_local": "티씨케이",
+    "sector": "반도체 부품",
+    "description": "식각 공정용 SiC 링·포커스링 제조, 고순도 세라믹"
+  },
+  "237690.KQ": {
+    "name_en": "ST Pharm Co.,Ltd.",
+    "name_local": "에스티팜",
+    "sector": "제약",
+    "description": "에스티팜 (KOSDAQ150)"
+  },
+  "319400.KQ": {
+    "name_en": "HYUNDAI MOVEX Co., Ltd.",
+    "name_local": "현대무벡스",
+    "sector": "금융 서비스",
+    "description": "HYUNDAI MOVEX Co., Ltd. operates in the information technology (IT) and logistics system businesses in South Korea and i"
+  },
+  "347850.KQ": {
+    "name_en": "D&D Pharmatech",
+    "name_local": "디앤디파마텍",
+    "sector": "헬스케어",
+    "description": "D&D Pharmatech Inc. engages in the research and development and manufacturing of pharmaceuticals in South Korea. It deve"
+  },
   "214450.KQ": {
     "name_en": "PharmaResearch Co.",
     "name_local": "파마리서치",
     "sector": "의약품",
     "description": "DNA 단편(PDRN) 기반 조직재생 의약품·화장품"
   },
-  "064760.KQ": {
-    "name_en": "TCSemiconductor Co.",
-    "name_local": "티씨케이",
-    "sector": "반도체 부품",
-    "description": "식각 공정용 SiC 링·포커스링 제조, 고순도 세라믹"
+  "145020.KQ": {
+    "name_en": "Hugel, Inc.",
+    "name_local": "휴젤",
+    "sector": "헬스케어",
+    "description": "Hugel, Inc. develops and manufactures biopharmaceuticals in South Korea and internationally. The company offers Botulinu"
+  },
+  "084370.KQ": {
+    "name_en": "Eugene Technology Co.,Ltd.",
+    "name_local": "유진테크",
+    "sector": "반도체 장비",
+    "description": "유진테크 (KOSDAQ150)"
+  },
+  "222800.KQ": {
+    "name_en": "SIMMTECH Co., Ltd.",
+    "name_local": "심텍",
+    "sector": "기술",
+    "description": "SIMMTECH Co., Ltd. engages in the developing and manufacturing of high-layer printed circuit boards (PCBs) for semicondu"
+  },
+  "100790.KQ": {
+    "name_en": "Mirae Asset Venture Investment Co., Ltd.",
+    "name_local": "미래에셋벤처투자",
+    "sector": "벤처투자",
+    "description": "미래에셋벤처투자 (KOSDAQ150)"
+  },
+  "178320.KQ": {
+    "name_en": "Seojin System Co.,Ltd",
+    "name_local": "서진시스템",
+    "sector": "기술",
+    "description": "Seojin System Co.,Ltd provides telecom equipment, repeaters, mechanical products, and LED and other equipment. The compa"
+  },
+  "005290.KQ": {
+    "name_en": "Dongjin Semichem Co.",
+    "name_local": "동진쎄미켐",
+    "sector": "반도체 소재",
+    "description": "감광재(PR)·반도체 공정 화학재료 제조"
+  },
+  "083650.KQ": {
+    "name_en": "BHI Co., Ltd.",
+    "name_local": "비에이치아이",
+    "sector": "에너지 장비·서비스",
+    "description": "비에이치아이 (KOSDAQ150)"
+  },
+  "058610.KQ": {
+    "name_en": "SPG Co., Ltd.",
+    "name_local": "에스피지",
+    "sector": "전기제품",
+    "description": "에스피지 (KOSDAQ150)"
+  },
+  "043260.KQ": {
+    "name_en": "Sungho Electronics Corp.",
+    "name_local": "성호전자",
+    "sector": "전기제품",
+    "description": "성호전자 (KOSDAQ150)"
+  },
+  "031980.KQ": {
+    "name_en": "PSK HOLDINGS Inc.",
+    "name_local": "피에스케이홀딩스",
+    "sector": "반도체 장비",
+    "description": "피에스케이홀딩스 (KOSDAQ150)"
+  },
+  "140410.KQ": {
+    "name_en": "Mezzion Pharma Co.,Ltd.",
+    "name_local": "메지온",
+    "sector": "식품",
+    "description": "메지온 (KOSDAQ150)"
+  },
+  "098460.KQ": {
+    "name_en": "Koh Young Technology Inc.",
+    "name_local": "고영",
+    "sector": "기술",
+    "description": "Koh Young Technology Inc. engages in the manufacturing and sale of automated inspection and precise measurement systems"
+  },
+  "030530.KQ": {
+    "name_en": "Wonik Holdings Co., Ltd",
+    "name_local": "원익홀딩스",
+    "sector": "산업재",
+    "description": "Wonik Holdings Co.,Ltd. manufactures and sells semiconductor and electronic equipment, and other products. The company p"
   },
   "257720.KQ": {
     "name_en": "Silicon2 Inc.",
@@ -125,34 +263,640 @@
     "sector": "화장품 유통",
     "description": "K-뷰티 역직구 플랫폼, 글로벌 화장품 B2B 유통"
   },
-  "067630.KQ": {
-    "name_en": "HLB Life Science Co.",
-    "name_local": "HLB생명과학",
+  "319660.KQ": {
+    "name_en": "PSK Inc.",
+    "name_local": "피에스케이",
+    "sector": "기술",
+    "description": "PSK Inc. develops, manufactures, and sells semiconductor processing equipment worldwide. The company offers dry strip, s"
+  },
+  "067310.KQ": {
+    "name_en": "HANA Micron Inc.",
+    "name_local": "하나마이크론",
+    "sector": "반도체 장비",
+    "description": "하나마이크론 (KOSDAQ150)"
+  },
+  "476830.KQ": {
+    "name_en": "알지노믹스",
+    "name_local": "알지노믹스",
     "sector": "바이오",
-    "description": "HLB 계열 바이오, 항암 개량신약·천연물 의약품"
+    "description": "알지노믹스 (KOSDAQ150)"
   },
-  "450080.KQ": {
-    "name_en": "EcoPro Materials Co.",
-    "name_local": "에코프로머티리얼즈",
-    "sector": "이차전지 소재",
-    "description": "양극재 전구체(pCAM) 제조, 에코프로그룹 소재 계열"
+  "323280.KQ": {
+    "name_en": "Taesung Co.,Ltd.",
+    "name_local": "태성",
+    "sector": "산업재",
+    "description": "Taesung Co.,Ltd. develops, manufactures, and sells PCB automation equipment in South Korea and internationally. The comp"
   },
-  "393890.KQ": {
-    "name_en": "W-Scope Chungju Plant",
-    "name_local": "더블유씨피",
-    "sector": "이차전지 소재",
-    "description": "리튬이온 배터리 분리막(LiBS) 전문 제조"
+  "078600.KQ": {
+    "name_en": "Daejoo Electronic Materials Co., Ltd.",
+    "name_local": "대주전자재료",
+    "sector": "전자장비·기기",
+    "description": "대주전자재료 (KOSDAQ150)"
   },
-  "041020.KQ": {
-    "name_en": "Isplus Corp.",
-    "name_local": "이스트소프트",
-    "sector": "소프트웨어",
-    "description": "AI 영상 솔루션·알약·알툴즈 개인용 소프트웨어"
+  "068760.KQ": {
+    "name_en": "Celltrion Pharm, Inc.",
+    "name_local": "셀트리온제약",
+    "sector": "헬스케어",
+    "description": "Celltrion Pharm, Inc., a pharmaceutical company, develops and sells biosimilars and over-the-counter drugs in South Kore"
+  },
+  "131970.KQ": {
+    "name_en": "DOOSAN TESNA Inc.",
+    "name_local": "두산테스나",
+    "sector": "반도체 장비",
+    "description": "두산테스나 (KOSDAQ150)"
+  },
+  "082920.KQ": {
+    "name_en": "VITZROCELL Co.,Ltd.",
+    "name_local": "비츠로셀",
+    "sector": "전기제품",
+    "description": "비츠로셀 (KOSDAQ150)"
+  },
+  "010170.KQ": {
+    "name_en": "Taihan Fiber Optics Co., Ltd",
+    "name_local": "대한광통신",
+    "sector": "기술",
+    "description": "Taihan Fiber Optics Co., Ltd researches, develops, and produces optical materials in South Korea and internationally. Th"
+  },
+  "218410.KQ": {
+    "name_en": "RFHIC Corporation",
+    "name_local": "RFHIC",
+    "sector": "통신장비",
+    "description": "RFHIC (KOSDAQ150)"
+  },
+  "027360.KQ": {
+    "name_en": "Aju IB Investment Co., Ltd.",
+    "name_local": "아주IB투자",
+    "sector": "벤처투자",
+    "description": "아주IB투자 (KOSDAQ150)"
+  },
+  "035900.KQ": {
+    "name_en": "JYP Entertainment",
+    "name_local": "JYP Ent.",
+    "sector": "엔터테인먼트",
+    "description": "K-팝 기획사, TWICE·Stray Kids·NMIXX"
+  },
+  "089030.KQ": {
+    "name_en": "Techwing, Inc.",
+    "name_local": "테크윙",
+    "sector": "기술",
+    "description": "Techwing, Inc., together with its subsidiaries, develops, manufactures, sells, and services semiconductor inspection equ"
+  },
+  "041510.KQ": {
+    "name_en": "SM Entertainment",
+    "name_local": "에스엠",
+    "sector": "엔터테인먼트",
+    "description": "SM엔터 K-팝 기획·제작, EXO·aespa·NCT"
+  },
+  "101490.KQ": {
+    "name_en": "S&S Tech Corporation",
+    "name_local": "에스앤에스텍",
+    "sector": "반도체 장비",
+    "description": "에스앤에스텍 (KOSDAQ150)"
+  },
+  "099320.KQ": {
+    "name_en": "Satrec Initiative Co., Ltd.",
+    "name_local": "쎄트렉아이",
+    "sector": "우주항공·방산",
+    "description": "쎄트렉아이 (KOSDAQ150)"
   },
   "039200.KQ": {
     "name_en": "Oscotec Inc.",
     "name_local": "오스코텍",
     "sector": "바이오",
     "description": "키나제 억제제 계열 신약 개발, 세로토닌·JAK 표적"
+  },
+  "347700.KQ": {
+    "name_en": "Sphere Corp.",
+    "name_local": "스피어",
+    "sector": "헬스케어",
+    "description": "Sphere Corp. provides digital healthcare technology, and life care products and services. It develops LifeRecord, a comm"
+  },
+  "140860.KQ": {
+    "name_en": "Park Systems Corp.",
+    "name_local": "파크시스템스",
+    "sector": "기술",
+    "description": "Park Systems Corp. develops, manufactures, and sells atomic force microscopy (AFM) systems worldwide. It provides AFM fo"
+  },
+  "458870.KQ": {
+    "name_en": "SEERS Co., Ltd.",
+    "name_local": "씨어스",
+    "sector": "헬스케어",
+    "description": "SEERS Co., Ltd. engages in the development, manufacturing, and sales of medical devices in South Korea. It offers wearab"
+  },
+  "475830.KQ": {
+    "name_en": "Orum Therapeutics, Inc.",
+    "name_local": "오름테라퓨틱",
+    "sector": "헬스케어",
+    "description": "Orum Therapeutics, Inc., a biopharmaceutical company, engages in the research and development of pharmaceuticals for can"
+  },
+  "131290.KQ": {
+    "name_en": "TSE Co., Ltd",
+    "name_local": "티에스이",
+    "sector": "반도체 장비",
+    "description": "티에스이 (KOSDAQ150)"
+  },
+  "080220.KQ": {
+    "name_en": "Jeju Semiconductor Corp.",
+    "name_local": "제주반도체",
+    "sector": "반도체 장비",
+    "description": "제주반도체 (KOSDAQ150)"
+  },
+  "232140.KQ": {
+    "name_en": "YC Corporation",
+    "name_local": "와이씨",
+    "sector": "기술",
+    "description": "YC Corporation engages in the development, manufacture, and sale of inspection equipment for semiconductor memories in S"
+  },
+  "060370.KQ": {
+    "name_en": "KT Submarine Co., Ltd.",
+    "name_local": "LS마린솔루션",
+    "sector": "건설",
+    "description": "LS마린솔루션 (KOSDAQ150)"
+  },
+  "417200.KQ": {
+    "name_en": "LS Materials",
+    "name_local": "LS머트리얼즈",
+    "sector": "산업재",
+    "description": "LS materials.,Ltd. provides energy storage devices in South Korea and internationally. The company offers cells and modu"
+  },
+  "437730.KQ": {
+    "name_en": "SAMHYUN",
+    "name_local": "삼현",
+    "sector": "산업재",
+    "description": "Samhyun Co., Ltd. engages in the manufacture and sale of parts and accessories for motor vehicles. It offers smart actua"
+  },
+  "038500.KQ": {
+    "name_en": "SAMPYO Cement Co., Ltd.",
+    "name_local": "삼표시멘트",
+    "sector": "원자재",
+    "description": "SAMPYO Cement Co., Ltd. engages in the manufacture and distribution of cement in South Korea. The company offers Portlan"
+  },
+  "290650.KQ": {
+    "name_en": "L&C BIO Co.,LTD",
+    "name_local": "엘앤씨바이오",
+    "sector": "헬스케어",
+    "description": "L&C Bio Co., Ltd operates as a research and development company in tissue regeneration medicine. The company offers phar"
+  },
+  "491000.KQ": {
+    "name_en": "리브스메드",
+    "name_local": "리브스메드",
+    "sector": "의료기기",
+    "description": "리브스메드 (KOSDAQ150)"
+  },
+  "095610.KQ": {
+    "name_en": "TES Co., Ltd",
+    "name_local": "테스",
+    "sector": "반도체 장비",
+    "description": "테스 (KOSDAQ150)"
+  },
+  "085660.KQ": {
+    "name_en": "Chabiotech Co.,Ltd.",
+    "name_local": "차바이오텍",
+    "sector": "헬스케어",
+    "description": "Chabiotech Co.,Ltd., a bio company, develops cell and gene therapy related to stem and immune cells in South Korea and i"
+  },
+  "065350.KQ": {
+    "name_en": "Shinsung Delta Tech Co.,Ltd.",
+    "name_local": "신성델타테크",
+    "sector": "산업재",
+    "description": "Shinsung Delta Tech Co.,Ltd., together with its subsidiaries, manufactures and sells household electronic components, pl"
+  },
+  "445680.KQ": {
+    "name_en": "Curiox Biosystems Co., Ltd",
+    "name_local": "큐리옥스바이오시스템즈",
+    "sector": "바이오 장비·서비스",
+    "description": "큐리옥스바이오시스템즈 (KOSDAQ150)"
+  },
+  "281740.KQ": {
+    "name_en": "Lake Materials Co., Ltd.",
+    "name_local": "레이크머티리얼즈",
+    "sector": "원자재",
+    "description": "Lake Materials Co., Ltd. develops and manufactures organometallic compounds that are used as materials for semiconductor"
+  },
+  "036830.KQ": {
+    "name_en": "Soulbrain Holdings Co., Ltd.",
+    "name_local": "솔브레인홀딩스",
+    "sector": "원자재",
+    "description": "Soulbrain Holdings Co., Ltd. develops, manufactures, and supplies technology industry core materials for semiconductor,"
+  },
+  "183300.KQ": {
+    "name_en": "KoMiCo Ltd.",
+    "name_local": "코미코",
+    "sector": "기술",
+    "description": "KoMiCo Ltd. provides semiconductor equipment cleaning and coating products in South Korea, the United States, China, Tai"
+  },
+  "195940.KQ": {
+    "name_en": "HK inno.N Corporation",
+    "name_local": "HK이노엔",
+    "sector": "헬스케어",
+    "description": "HK inno.N Corporation engages in the pharmaceutical business in South Korea. The company offers prescription drugs for t"
+  },
+  "090710.KQ": {
+    "name_en": "Hyulim ROBOT Co.,Ltd.",
+    "name_local": "휴림로봇",
+    "sector": "기계·로봇",
+    "description": "휴림로봇 (KOSDAQ150)"
+  },
+  "166090.KQ": {
+    "name_en": "Hana Materials Inc.",
+    "name_local": "하나머티리얼즈",
+    "sector": "기술",
+    "description": "Hana Materials Inc. manufactures and sells silicon electrodes and rings in South Korea. The company offers silicon ceram"
+  },
+  "189300.KQ": {
+    "name_en": "Intellian Technologies, Inc.",
+    "name_local": "인텔리안테크",
+    "sector": "통신장비",
+    "description": "인텔리안테크 (KOSDAQ150)"
+  },
+  "397030.KQ": {
+    "name_en": "AprilBio Co.,Ltd.",
+    "name_local": "에이프릴바이오",
+    "sector": "헬스케어",
+    "description": "AprilBio Co., Ltd. develops long-acting type biobetter and antibody biologics. The company develops antibody drugs, doub"
+  },
+  "003380.KQ": {
+    "name_en": "Harim Holdings Co., Ltd.",
+    "name_local": "하림지주",
+    "sector": "필수 소비재",
+    "description": "Harim Holdings Co., Ltd., together with its subsidiaries, engages in the food and daily services management business. Th"
+  },
+  "115180.KQ": {
+    "name_en": "Qurient Co., Ltd.",
+    "name_local": "큐리언트",
+    "sector": "헬스케어",
+    "description": "Qurient Co., Ltd., a biotech company, engages in the research and development of drugs to address unmet medical needs in"
+  },
+  "127120.KQ": {
+    "name_en": "JS Link, Inc.",
+    "name_local": "제이에스링크",
+    "sector": "헬스케어",
+    "description": "JS Link, Inc., a genome-based biotechnology company, focuses on the research and development of genome analysis services"
+  },
+  "388210.KQ": {
+    "name_en": "씨엠티엑스",
+    "name_local": "씨엠티엑스",
+    "sector": "반도체 장비",
+    "description": "씨엠티엑스 (KOSDAQ150)"
+  },
+  "036540.KQ": {
+    "name_en": "SFA Semicon Co., Ltd.",
+    "name_local": "SFA반도체",
+    "sector": "기술",
+    "description": "SFA Semicon Co., Ltd. provides semiconductors in Korea. The company offers packaging products, such as fan out wafer lev"
+  },
+  "222080.KQ": {
+    "name_en": "Creative & Innovative System Corporation",
+    "name_local": "씨아이에스",
+    "sector": "산업재",
+    "description": "Creative & Innovative System Corporation manufactures and sells equipment for lithium-ion batteries powering IT instrume"
+  },
+  "048410.KQ": {
+    "name_en": "Hyundai Bioscience Co., Ltd.",
+    "name_local": "현대바이오",
+    "sector": "헬스케어",
+    "description": "Hyundai Bioscience Co., Ltd. operates as a biotechnology company. The company provides Vitabrid C12, a vitamin C product"
+  },
+  "052020.KQ": {
+    "name_en": "STCube, Inc.",
+    "name_local": "에스티큐브",
+    "sector": "유통",
+    "description": "에스티큐브 (KOSDAQ150)"
+  },
+  "089970.KQ": {
+    "name_en": "VM Inc.",
+    "name_local": "브이엠",
+    "sector": "기술",
+    "description": "VM Inc. manufactures and sells dry etcher systems that are used for semiconductor production process in South Korea and"
+  },
+  "160190.KQ": {
+    "name_en": "HIGEN RNM",
+    "name_local": "하이젠알앤엠",
+    "sector": "경기 소비재",
+    "description": "HIGEN Motor Co., Ltd. manufactures and sells industrial motors in South Korea. It offers low voltage and high voltage mo"
+  },
+  "137400.KQ": {
+    "name_en": "People & Technology Inc.",
+    "name_local": "피엔티",
+    "sector": "산업재",
+    "description": "People & Technology Inc. offers coating, calendaring, slitting, automation, and other machineries. The company's product"
+  },
+  "490470.KQ": {
+    "name_en": "세미파이브",
+    "name_local": "세미파이브",
+    "sector": "반도체 장비",
+    "description": "세미파이브 (KOSDAQ150)"
+  },
+  "420770.KQ": {
+    "name_en": "GigaVis Co., Ltd.",
+    "name_local": "기가비스",
+    "sector": "기술",
+    "description": "GigaVis Co., Ltd. researches, develops, and supplies vision inspection systems in South Korea and internationally. It of"
+  },
+  "466100.KQ": {
+    "name_en": "CLOBOT",
+    "name_local": "클로봇",
+    "sector": "기술",
+    "description": "CLOBOT Co., Ltd operates as a robotics integration company in Korea. It develops CHAMELEON software for general-purpose"
+  },
+  "213420.KQ": {
+    "name_en": "Duk San Neolux Co.,Ltd",
+    "name_local": "덕산네오룩스",
+    "sector": "기술",
+    "description": "Duk San Neolux Co.,Ltd develops and manufactures OLED materials for display industry in South Korea. It offers ETL, EIL,"
+  },
+  "456160.KQ": {
+    "name_en": "지투지바이오",
+    "name_local": "지투지바이오",
+    "sector": "제약",
+    "description": "지투지바이오 (KOSDAQ150)"
+  },
+  "007390.KQ": {
+    "name_en": "NatureCell Co.,Ltd.",
+    "name_local": "네이처셀",
+    "sector": "바이오",
+    "description": "네이처셀 (KOSDAQ150)"
+  },
+  "096530.KQ": {
+    "name_en": "Seegene Inc.",
+    "name_local": "씨젠",
+    "sector": "바이오 진단",
+    "description": "분자진단 시약·장비 제조, 다중 동시 검출 원천기술"
+  },
+  "376900.KQ": {
+    "name_en": "로킷헬스케어",
+    "name_local": "로킷헬스케어",
+    "sector": "의료기기",
+    "description": "로킷헬스케어 (KOSDAQ150)"
+  },
+  "014620.KQ": {
+    "name_en": "Sung Kwang Bend Co.,Ltd.",
+    "name_local": "성광벤드",
+    "sector": "산업재",
+    "description": "Sung Kwang Bend Co.,Ltd. engages in the manufacture and sale of pipe fittings in South Korea and internationally. The co"
+  },
+  "035760.KQ": {
+    "name_en": "CJ ENM CO., Ltd.",
+    "name_local": "CJ ENM",
+    "sector": "커뮤니케이션 서비스",
+    "description": "CJ ENM CO., Ltd., together with its subsidiaries, engages in media platform, film/drama, music, and commerce businesses"
+  },
+  "023160.KQ": {
+    "name_en": "Tae Kwang Corporation",
+    "name_local": "태광",
+    "sector": "기계·로봇",
+    "description": "태광 (KOSDAQ150)"
+  },
+  "388720.KQ": {
+    "name_en": "Yuil Robotics Co., Ltd.",
+    "name_local": "유일로보틱스",
+    "sector": "기계·로봇",
+    "description": "유일로보틱스 (KOSDAQ150)"
+  },
+  "124500.KQ": {
+    "name_en": "ITCENGLOBAL CO., Ltd.",
+    "name_local": "아이티센글로벌",
+    "sector": "기술",
+    "description": "ITCENGLOBAL CO., Ltd. engages in the provision of consulting, ICT, and outsourcing services and solutions in South Korea"
+  },
+  "032500.KQ": {
+    "name_en": "Kmw Inc.",
+    "name_local": "케이엠더블유",
+    "sector": "기술",
+    "description": "Kmw Inc. develops and produces equipment, and parts and components for mobile communication base stations. Its products"
+  },
+  "033790.KQ": {
+    "name_en": "Fino Inc.",
+    "name_local": "피노",
+    "sector": "기술",
+    "description": "Fino Inc. operates as an information and communication, and game development company in South Korea and internationally. The company offers communication equipm"
+  },
+  "161580.KQ": {
+    "name_en": "Philoptics Co., Ltd.",
+    "name_local": "필옵틱스",
+    "sector": "산업재",
+    "description": "Philoptics Co., Ltd., together with its subsidiaries, manufactures and sells OLED display laser processing equipment in"
+  },
+  "056190.KQ": {
+    "name_en": "SFA Engineering Corporation",
+    "name_local": "에스에프에이",
+    "sector": "산업재",
+    "description": "SFA Engineering Corporation manufactures and sells display equipment, logistics systems, secondary battery, semiconducto"
+  },
+  "204270.KQ": {
+    "name_en": "JNTC Co., Ltd.",
+    "name_local": "제이앤티씨",
+    "sector": "기술",
+    "description": "JNTC Co., Ltd. manufactures and sells mobile device components, specializing in tempered glass and connectors in South K"
+  },
+  "086450.KQ": {
+    "name_en": "DongKook Pharmaceutical Co., Ltd.",
+    "name_local": "동국제약",
+    "sector": "제약",
+    "description": "동국제약 (KOSDAQ150)"
+  },
+  "328130.KQ": {
+    "name_en": "Lunit Inc.",
+    "name_local": "루닛",
+    "sector": "헬스케어",
+    "description": "Lunit Inc. provides AI-powered software and solutions for cancer diagnostics and therapeutics in South Korea. It offers"
+  },
+  "171090.KQ": {
+    "name_en": "SUNIC SYSTEM Co., Ltd.",
+    "name_local": "선익시스템",
+    "sector": "기술",
+    "description": "SUNIC SYSTEM Co., Ltd. manufactures and sells OLED deposition equipment and semiconductor vacuum equipment in Korea. It"
+  },
+  "082270.KQ": {
+    "name_en": "GemVax&KAEL Co.,Ltd",
+    "name_local": "젬백스",
+    "sector": "반도체 장비",
+    "description": "젬백스 (KOSDAQ150)"
+  },
+  "293490.KQ": {
+    "name_en": "Kakao Games Corp.",
+    "name_local": "카카오게임즈",
+    "sector": "게임",
+    "description": "카카오 게임 퍼블리싱, 오딘·아키에이지 워"
+  },
+  "295310.KQ": {
+    "name_en": "HVM",
+    "name_local": "에이치브이엠",
+    "sector": "원자재",
+    "description": "Hvm, Co.,Ltd. produces and sells special metals in Korea. The company offers special nickel alloy for use in parts of ai"
+  },
+  "078160.KQ": {
+    "name_en": "MEDIPOST Co., Ltd.",
+    "name_local": "메디포스트",
+    "sector": "바이오",
+    "description": "메디포스트 (KOSDAQ150)"
+  },
+  "253450.KQ": {
+    "name_en": "Studio Dragon Corporation",
+    "name_local": "스튜디오드래곤",
+    "sector": "커뮤니케이션 서비스",
+    "description": "Studio Dragon Corporation, a drama studio, produces and provides drama contents worldwide. The company was founded in 20"
+  },
+  "044490.KQ": {
+    "name_en": "Taewoong Co.,Ltd",
+    "name_local": "태웅",
+    "sector": "산업재",
+    "description": "Taewoong Co.,Ltd manufactures and sells open-die forgings and ring rolled products in South Korea and internationally. T"
+  },
+  "121600.KQ": {
+    "name_en": "Advanced Nano Products Co., Ltd.",
+    "name_local": "나노신소재",
+    "sector": "원자재",
+    "description": "Advanced Nano Products Co., Ltd. engages in the manufacturing materials used in thin-film solar cells, display panels, a"
+  },
+  "348370.KQ": {
+    "name_en": "Enchem Co., Ltd.",
+    "name_local": "엔켐",
+    "sector": "산업재",
+    "description": "Enchem Co., Ltd. manufactures and sells electrolytes and additives for secondary batteries and EDLC. The company offers"
+  },
+  "056080.KQ": {
+    "name_en": "Yujin Robot Co., Ltd.",
+    "name_local": "유진로봇",
+    "sector": "기계·로봇",
+    "description": "유진로봇 (KOSDAQ150)"
+  },
+  "174900.KQ": {
+    "name_en": "AbClon Inc.",
+    "name_local": "앱클론",
+    "sector": "헬스케어",
+    "description": "AbClon Inc. engages in the research and development of antibody drugs in South Korea and Sweden. The company's products"
+  },
+  "074600.KQ": {
+    "name_en": "Wonik QnC Corporation",
+    "name_local": "원익QnC",
+    "sector": "기술",
+    "description": "Wonik QnC Corporation manufactures and sells quartz and ceramic wares used in the production of semiconductor wafers in"
+  },
+  "122870.KQ": {
+    "name_en": "YG Entertainment Inc.",
+    "name_local": "와이지엔터테인먼트",
+    "sector": "엔터테인먼트",
+    "description": "K-팝 기획사, BLACKPINK·BIGBANG·TREASURE"
+  },
+  "358570.KQ": {
+    "name_en": "GI Innovation, Inc.",
+    "name_local": "지아이이노베이션",
+    "sector": "바이오",
+    "description": "지아이이노베이션 (KOSDAQ150)"
+  },
+  "126340.KQ": {
+    "name_en": "VINA TECH Co.,Ltd.",
+    "name_local": "비나텍",
+    "sector": "전기장비",
+    "description": "비나텍 (KOSDAQ150)"
+  },
+  "094170.KQ": {
+    "name_en": "Dongwoon Anatech Co., Ltd.",
+    "name_local": "동운아나텍",
+    "sector": "기술",
+    "description": "Dongwoon Anatech Co., Ltd. manufactures and sells analog semiconductors in South Korea, China, Taiwan, Japan, and internationally. The company offers ICs for im"
+  },
+  "476060.KQ": {
+    "name_en": "Onconic Therapeutics",
+    "name_local": "온코닉테라퓨틱스",
+    "sector": "헬스케어",
+    "description": "Onconic Therapeutics Inc. engages in the research and development of anti-cancer therapy in South Korea. It develops Zastaprazan (OCN-101), a potassium-competit"
+  },
+  "372320.KQ": {
+    "name_en": "Curocell",
+    "name_local": "큐로셀",
+    "sector": "헬스케어",
+    "description": "Curocell Inc., a cell gene therapy development company, engages in the development and manufacturing of pharmaceuticals. It provides research and development se"
+  },
+  "050890.KQ": {
+    "name_en": "SOLiD, Inc.",
+    "name_local": "쏠리드",
+    "sector": "통신장비",
+    "description": "쏠리드 (KOSDAQ150)"
+  },
+  "365340.KQ": {
+    "name_en": "SungEel HiTech Co., Ltd.",
+    "name_local": "성일하이텍",
+    "sector": "산업재",
+    "description": "SungEel HiTech Co., Ltd. operates as a recycling company in South Korea. The company enages in the lithium secondary battery recycling business. It serves recyc"
+  },
+  "006730.KQ": {
+    "name_en": "Seobu T&D Co., Ltd.",
+    "name_local": "서부T&D",
+    "sector": "경기 소비재",
+    "description": "Seobu T&D Co., Ltd. engages in the tourist hotel business in South Korea. It is also involved in the new business, complex shopping mall business, hotel flex bu"
+  },
+  "033100.KQ": {
+    "name_en": "Cheryong Electric Co.,Ltd.",
+    "name_local": "제룡전기",
+    "sector": "산업재",
+    "description": "Cheryong Electric Co.,Ltd. manufactures and sells power electric equipment in South Korea. It offers transformers, such as amorphous, solid insulation distribut"
+  },
+  "036810.KQ": {
+    "name_en": "Fine Semitech Corp.",
+    "name_local": "에프에스티",
+    "sector": "기술",
+    "description": "Fine Semitech Corp. develops and supplies products to semiconductor and FPD industries in South Korea and internationally. It operates through Materials Divisio"
+  },
+  "032190.KQ": {
+    "name_en": "Daou Data Corp.",
+    "name_local": "다우데이타",
+    "sector": "기술",
+    "description": "Daou Data Corp. provides IT and online/offline payment infrastructure services in South Korea and internationally. It offers KIWOOM pay VAN services, including"
+  },
+  "241710.KQ": {
+    "name_en": "Cosmecca Korea Co., Ltd.",
+    "name_local": "코스메카코리아",
+    "sector": "필수 소비재",
+    "description": "Cosmecca Korea Co., Ltd. engages in the research and development, manufacture, and sale of skincare products in South Korea and internationally. It offers skinc"
+  },
+  "009520.KQ": {
+    "name_en": "POSCO M-TECH Co., Ltd.",
+    "name_local": "포스코엠텍",
+    "sector": "철강",
+    "description": "포스코엠텍 (KOSDAQ150)"
+  },
+  "033500.KQ": {
+    "name_en": "Dongsung FineTec Co., Ltd.",
+    "name_local": "동성화인텍",
+    "sector": "화학",
+    "description": "동성화인텍 (KOSDAQ150)"
+  },
+  "102710.KQ": {
+    "name_en": "ENF Technology Co., Ltd.",
+    "name_local": "이엔에프테크놀로지",
+    "sector": "반도체 장비",
+    "description": "이엔에프테크놀로지 (KOSDAQ150)"
+  },
+  "399720.KQ": {
+    "name_en": "Gaonchips Co., Ltd.",
+    "name_local": "가온칩스",
+    "sector": "기술",
+    "description": "Gaonchips Co., Ltd. designs and manufactures semiconductors. The company offers SoC solutions, turnkey solutions, IP solutions, and MPW services. Gaonchips Co.,"
+  },
+  "046890.KQ": {
+    "name_en": "Seoul Semiconductor Co., Ltd.",
+    "name_local": "서울반도체",
+    "sector": "기술",
+    "description": "Seoul Semiconductor Co., Ltd. manufactures and sells light emitting diodes (LEDs) products worldwide. The company offers high and mid power products; low power"
+  },
+  "053610.KQ": {
+    "name_en": "Protec Co., Ltd.",
+    "name_local": "프로텍",
+    "sector": "기술",
+    "description": "Protec Co., Ltd. manufactures and sells semiconductor packaging equipment and automated pneumatic parts in South Korea. The company provides dispensers, precisi"
+  },
+  "199800.KQ": {
+    "name_en": "ToolGen Incorporated",
+    "name_local": "툴젠",
+    "sector": "헬스케어",
+    "description": "ToolGen Incorporated, a biotechnology company, focuses on the development of genome editing technology in South Korea. The company develops clustered regularly"
+  },
+  "083450.KQ": {
+    "name_en": "GST",
+    "name_local": "GST",
+    "sector": "반도체 장비",
+    "description": "GST (KOSDAQ150)"
   }
 }

@@ -14,37 +14,41 @@ uv pip install -r requirements.txt
 ## 사용법
 
 ```bash
-# 기본 (US 전체 파이프라인)
+# 기본 (legacy combined US 파이프라인)
 python Search.py
 
 # 시장 선택
-python Search.py --market us
+python Search.py --market nasdaq100
+python Search.py --market sp500
 python Search.py --market kospi
 python Search.py --market kosdaq
 python Search.py --market global-indices
 python Search.py --market theme-proxies
 python Search.py --market commodities
+python Search.py --market us              # legacy combined US scan
 
 # 단계 선택 (기본: all)
-python Search.py --market us --stage scan      # 스캔 → data/Data_YYYYMMDD.csv
-python Search.py --market us --stage analyze   # 분석 → analysis/Analysis_YYYYMMDD.md
-python Search.py --market us --stage translate # 번역 (US 전용)
-python Search.py --market us --stage news      # 뉴스 캐시 → market_scanner/assets/news_cache.json
-python Search.py --market us --stage render    # HTML → reports/Report_YYYYMMDD.html
+python Search.py --market nasdaq100 --stage scan      # 스캔 → data/Data_Nasdaq100_YYYYMMDD.csv
+python Search.py --market nasdaq100 --stage analyze   # 분석 → analysis/Analysis_Nasdaq100_YYYYMMDD.md
+python Search.py --market nasdaq100 --stage translate # 번역 (US 계열)
+python Search.py --market sp500 --stage news          # 뉴스 캐시 → market_scanner/assets/news_cache.json
+python Search.py --market sp500 --stage render        # HTML → reports/Report_Sp500_YYYYMMDD.html
 
 # 기타 옵션
-python Search.py --market us --workers 8       # 병렬 worker 수
-python Search.py --market us --date 20260425   # 대상 날짜 지정
-python Search.py --market us --force           # CSV 있어도 재스캔
-python Search.py --market us --stage news --news-symbols 80 --news-items 2
-python Search.py --market us --setup-scheduler # 윈도우 작업 스케줄러 등록
-python Search.py --market us --setup-scheduler --time 08:30
+python Search.py --market nasdaq100 --workers 8       # 병렬 worker 수
+python Search.py --market sp500 --date 20260425       # 대상 날짜 지정
+python Search.py --market nasdaq100 --force           # CSV 있어도 재스캔
+python Search.py --market sp500 --stage news --news-symbols 80 --news-items 2
+python Search.py --market nasdaq100 --setup-scheduler # 윈도우 작업 스케줄러 등록
+python Search.py --market sp500 --setup-scheduler --time 08:30
 ```
 
 ## 출력 파일
 
 | 시장 | CSV | Markdown | HTML |
 |---|---|---|---|
+| nasdaq100 | `data/Data_Nasdaq100_YYYYMMDD.csv` | `analysis/Analysis_Nasdaq100_YYYYMMDD.md` | `reports/Report_Nasdaq100_YYYYMMDD.html` |
+| sp500 | `data/Data_Sp500_YYYYMMDD.csv` | `analysis/Analysis_Sp500_YYYYMMDD.md` | `reports/Report_Sp500_YYYYMMDD.html` |
 | us | `data/Data_YYYYMMDD.csv` | `analysis/Analysis_YYYYMMDD.md` | `reports/Report_YYYYMMDD.html` |
 | kospi | `data/Data_Kospi_YYYYMMDD.csv` | `analysis/Analysis_Kospi_YYYYMMDD.md` | `reports/Report_Kospi_YYYYMMDD.html` |
 | kosdaq | `data/Data_Kosdaq_YYYYMMDD.csv` | `analysis/Analysis_Kosdaq_YYYYMMDD.md` | `reports/Report_Kosdaq_YYYYMMDD.html` |
@@ -55,16 +59,16 @@ python Search.py --market us --setup-scheduler --time 08:30
 ## 사이트 대시보드
 
 ```bash
-python3 -m market_scanner.site_builder
+python -m market_scanner.site_builder
 ```
 
 `site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 로컬 실행 시 빌드 완료 후 `site/index.html`이 기본 브라우저로 자동 열립니다. 자동 열기를 건너뛰려면 `--no-open`을 붙입니다.
 
 ```bash
-python3 -m market_scanner.site_builder --no-open
+python -m market_scanner.site_builder --no-open
 ```
 
-메인페이지 업그레이드 샘플은 `site/preview-home/index.html`에 함께 생성됩니다. 현재 메인페이지를 바꾸기 전에 이 preview 페이지에서 시장별 상태 카드와 Today Watchlist 구성을 확인할 수 있습니다.
+메인페이지는 preview-home v2 디자인을 반영해 `site/index.html`에 생성됩니다. `site/preview-home/index.html`은 같은 디자인을 확인하는 보조 미리보기 페이지입니다.
 
 메인 페이지는 최신 CSV/리포트 데이터를 기반으로 다음 통합 지표를 보여줍니다.
 
@@ -75,7 +79,7 @@ python3 -m market_scanner.site_builder --no-open
 - 시장별 스냅샷: NASDAQ 100, S&P 500, Dow 30, KOSPI, KOSDAQ, 글로벌 지수, 테마 ETF, 원자재 비교
 - 섹터 리더십: 추세 점수가 높은 섹터 요약
 
-`reports/Report_*.html`이 없더라도 `data/`의 최신 CSV가 있으면 사이트 페이지를 재렌더링합니다. 과거 루트 `Report_*.html`은 읽기 fallback으로만 지원합니다.
+GitHub Pages 사이트는 `data/`의 최신 CSV를 현재 템플릿으로 다시 렌더링합니다. `reports/Report_*.html`은 개별 HTML 리포트 산출물로 보관됩니다.
 
 상세 페이지는 좌측 종목 리스트와 우측 인사이트 패널로 구성됩니다.
 
@@ -88,7 +92,7 @@ python3 -m market_scanner.site_builder --no-open
 - 추세 화살표 표시: `↑↑`, `↑`, `→`, `↓`, `↓↓`
 - 뉴스 브리핑 탭: 향후 뉴스 수집 캐시가 있으면 밤새 뉴스 요약 표시
 
-티커 링크는 한국 사용자 기준으로 동작하며, 모든 시장의 Investing 링크는 `kr.investing.com`으로 연결합니다.
+티커 링크는 한국 사용자 기준으로 동작하며, 모든 시장의 Investing 링크는 `kr.investing.com`으로 연결합니다. KOSPI/KOSDAQ도 NASDAQ 100처럼 Investing 상세 URL 캐시를 우선 사용하고, 캐시에 없거나 해석에 실패한 종목만 검색 링크로 fallback합니다.
 
 `news` 단계는 최신 스캔 CSV가 있어야 실행됩니다. 기본적으로 종합점수 상위 50개 종목에서 종목당 최대 3개 뉴스를 수집해 `market_scanner/assets/news_cache.json`에 날짜/시장별로 저장합니다. 실행 시간이 늘 수 있어 `all`에는 자동 포함하지 않습니다.
 
@@ -103,11 +107,11 @@ market_scanner/
   compat.py        # 파일명 규칙·stage 흐름 래퍼
   translator.py    # US CSV 번역 단계
   assets/
-    us_static_meta.json
+    instruments.json
+    nasdaq100_static_meta.json
     kospi_static_meta.json
     kosdaq_static_meta.json
     sp500_members_cache.json
-    sp500_members_manual.json
     global_indices_meta.json
     theme_proxies_meta.json
     commodities_meta.json
@@ -115,6 +119,18 @@ market_scanner/
     report.html
     report.css
 ```
+
+## Metadata Notes
+
+KOSPI/KOSDAQ 종목명과 섹터는 정적 메타데이터와 FinanceDataReader 한국 종목명을 우선 사용하고, 동적 편입 종목은 스캔 단계에서 yfinance `Ticker.info`도 함께 사용합니다. 이미 생성된 CSV에 티커 문자열이나 `Unknown`이 남아 있어도 사이트 렌더링 단계에서 가능한 범위의 표시값을 보정합니다. 한국 시장 화면은 한글 종목명을 우선 표시하고, 한글명을 확보하지 못한 경우 영어 회사명 대신 종목코드를 표시합니다.
+
+`market_scanner/assets/instruments.json` is the shared instrument master for all markets. Fixed metadata such as `symbol`, `display_symbol`, `name_en`, `name_local`, `sector`, and `description` is read from this file first, while `Data_*.csv` remains the daily scan output. Scan runs append newly observed metadata to `instruments.json`, but `static`/`manual` records are not overwritten by automatic scan values.
+
+KOSPI metadata is maintained against the KOSPI 200 component set. When the static KOSPI metadata already contains at least 200 symbols, the scanner treats that list as the authoritative KOSPI universe instead of appending the FinanceDataReader market-cap fallback.
+
+## US Market Split
+
+`nasdaq100` and `sp500` are standalone scan markets. New US scans write `data/Data_Nasdaq100_YYYYMMDD.csv` and `data/Data_Sp500_YYYYMMDD.csv` instead of relying on the legacy combined `us` CSV. The `us` market remains available for backward compatibility, and the site builder can still derive NASDAQ 100, S&P 500, and Dow 30 pages from an old combined US CSV when standalone files are missing.
 
 ## GitHub Actions
 

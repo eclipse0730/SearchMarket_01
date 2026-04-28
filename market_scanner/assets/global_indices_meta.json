@@ -64,5 +64,29 @@
     "name_local": "상하이 종합",
     "sector": "CN Index",
     "description": "Shanghai Stock Exchange composite index."
+  },
+  "^STOXX50E": {
+    "name_en": "Euro STOXX 50",
+    "name_local": "유로존 50",
+    "sector": "EU Index",
+    "description": "Eurozone large-cap benchmark covering 50 blue-chip stocks."
+  },
+  "^BSESN": {
+    "name_en": "BSE SENSEX",
+    "name_local": "인도 센섹스",
+    "sector": "IN Index",
+    "description": "Indian stock market large-cap benchmark."
+  },
+  "^AXJO": {
+    "name_en": "S&P/ASX 200",
+    "name_local": "호주 ASX 200",
+    "sector": "AU Index",
+    "description": "Australian large-cap benchmark."
+  },
+  "^TWII": {
+    "name_en": "Taiwan Weighted Index",
+    "name_local": "대만 가권지수",
+    "sector": "TW Index",
+    "description": "Taiwan stock market composite benchmark."
   }
 }

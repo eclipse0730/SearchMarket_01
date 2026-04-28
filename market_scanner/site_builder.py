@@ -13,9 +13,9 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
-from market_scanner.markets import MARKETS, _fetch_sp500_tickers, _us_static_meta
+from market_scanner.markets import MARKETS, _fetch_sp500_tickers, _nasdaq100_static_meta
 from market_scanner.models import MarketDefinition, ScanSettings
-from market_scanner.pipeline import write_html, write_markdown
+from market_scanner.pipeline import enrich_metadata_frame, write_html, write_markdown
 
 
 ROOT_DIR = Path(".")
@@ -28,6 +28,8 @@ SITE_ASSET_DIR = SITE_DIR / "assets"
 
 _SPECIAL_PREFIXES: dict[str, tuple[str, str, str]] = {
     "us": ("Data", "Analysis", "Report"),
+    "nasdaq100": ("Data_Nasdaq100", "Analysis_Nasdaq100", "Report_Nasdaq100"),
+    "sp500": ("Data_Sp500", "Analysis_Sp500", "Report_Sp500"),
     "kospi": ("Data_Kospi", "Analysis_Kospi", "Report_Kospi"),
     "kosdaq": ("Data_Kosdaq", "Analysis_Kosdaq", "Report_Kosdaq"),
 }
@@ -69,13 +71,18 @@ def _prefixes_for_market(market_key: str) -> tuple[str, str, str]:
     return f"Data_{label}", f"Analysis_{label}", f"Report_{label}"
 
 
-def _latest_date_for_prefix(prefix: str, directory: Path = ROOT_DIR) -> str | None:
+def _dates_for_prefix(prefix: str, directory: Path = ROOT_DIR) -> list[str]:
     pattern = re.compile(rf"^{re.escape(prefix)}_(\d{{8}})\.(csv|md|html)$")
     dates: list[str] = []
     for path in directory.glob(f"{prefix}_*.*"):
         match = pattern.match(path.name)
         if match:
             dates.append(match.group(1))
+    return dates
+
+
+def _latest_date_for_prefix(prefix: str, directory: Path = ROOT_DIR) -> str | None:
+    dates = _dates_for_prefix(prefix, directory)
     return max(dates) if dates else None
 
 
@@ -93,24 +100,28 @@ def _csv_path_for_date(prefix: str, date_str: str) -> Path:
     return ROOT_DIR / f"{prefix}_{date_str}.csv"
 
 
+def _csv_has_columns(path: Path) -> bool:
+    if not path.exists() or path.stat().st_size <= 5:
+        return False
+    try:
+        frame = pd.read_csv(path, encoding="utf-8-sig", nrows=1)
+    except (pd.errors.EmptyDataError, OSError, UnicodeDecodeError):
+        return False
+    return bool(list(frame.columns))
+
+
 def _latest_market_artifacts(market_key: str) -> tuple[str, Path, Path, Path | None] | None:
     csv_prefix, md_prefix, html_prefix = _prefixes_for_market(market_key)
     candidate_dates = sorted(
-        {
-            date
-            for date in (
-                _latest_date_for_prefix(html_prefix, REPORT_DIR),
-                _latest_date_for_prefix(html_prefix),
-                _latest_date_for_prefix(csv_prefix, DATA_DIR),
-                _latest_date_for_prefix(csv_prefix),
-            )
-            if date
-        },
+        set(_dates_for_prefix(html_prefix, REPORT_DIR))
+        | set(_dates_for_prefix(html_prefix))
+        | set(_dates_for_prefix(csv_prefix, DATA_DIR))
+        | set(_dates_for_prefix(csv_prefix)),
         reverse=True,
     )
     for date_str in candidate_dates:
         csv_path = _csv_path_for_date(csv_prefix, date_str)
-        if not csv_path.exists():
+        if not _csv_has_columns(csv_path):
             continue
         md_path = _first_existing_path(
             ANALYSIS_DIR / f"{md_prefix}_{date_str}.md",
@@ -134,7 +145,10 @@ def _ensure_site_dirs() -> None:
 
 
 def _load_frame(csv_path: Path) -> pd.DataFrame:
-    return pd.read_csv(csv_path, encoding="utf-8-sig")
+    try:
+        return pd.read_csv(csv_path, encoding="utf-8-sig")
+    except pd.errors.EmptyDataError as exc:
+        raise ValueError(f"CSV has no columns: {csv_path}") from exc
 
 
 def _copy_text_file(src: Path, dest: Path) -> None:
@@ -501,8 +515,14 @@ def _preview_combined_frame(pages: list[BuiltPage], overview_frames: dict[str, p
     return _combined_frame(frames)
 
 
-def _preview_market_cards_html(pages: list[BuiltPage], overview_frames: dict[str, pd.DataFrame]) -> str:
+def _preview_market_cards_html(
+    pages: list[BuiltPage],
+    overview_frames: dict[str, pd.DataFrame],
+    *,
+    depth: int = 1,
+) -> str:
     cards: list[str] = []
+    prefix = "../" * depth
     for key, title, description, slug in _ROOT_PAGES:
         frame = _market_frame_for_slug(pages, overview_frames, key, slug)
         if frame.empty:
@@ -524,7 +544,7 @@ def _preview_market_cards_html(pages: list[BuiltPage], overview_frames: dict[str
         change_cls = "up" if change is not None and change >= 0 else "down" if change is not None else "neutral"
         leading_sector, lagging_sector = _sector_extremes(frame)
         cards.append(
-            f'<a class="v2-market" href="../{escape(slug)}/index.html">'
+            f'<a class="v2-market" href="{prefix}{escape(slug)}/index.html">'
             f'<div><span>{escape(title)}</span><strong>{int(stats["total"] or 0):,}</strong></div>'
             f'<p>{escape(description)}</p>'
             '<dl>'
@@ -578,7 +598,7 @@ def _trend_arrow_html(trend: object) -> str:
     return f'<span class="trend-arrow" title="{escape(trend_text or "-")}" style="color:{color}">{escape(arrow)}</span>'
 
 
-def _watchlist_rows(frame: pd.DataFrame, mode: str, limit: int = 8) -> str:
+def _watchlist_rows(frame: pd.DataFrame, mode: str, limit: int = 8, depth: int = 1) -> str:
     if frame.empty or "symbol" not in frame.columns:
         return '<tr><td colspan="5" class="muted">데이터가 없습니다.</td></tr>'
 
@@ -621,6 +641,7 @@ def _watchlist_rows(frame: pd.DataFrame, mode: str, limit: int = 8) -> str:
         selected = working
 
     rows: list[str] = []
+    prefix = "../" * depth
     for _, row in selected.head(limit).iterrows():
         symbol = str(row.get("display_symbol") or row.get("symbol") or "-")
         slug = str(row.get("_source_slug") or "index")
@@ -634,13 +655,12 @@ def _watchlist_rows(frame: pd.DataFrame, mode: str, limit: int = 8) -> str:
         volume_text = f"{float(volume):.2f}x" if pd.notna(volume) else "-"
         rows.append(
             '<tr>'
-            f'<td><a href="../{escape(slug)}/index.html">{escape(symbol)}</a><small>{escape(_display_name(row)[:22])}</small></td>'
+            f'<td><a href="{prefix}{escape(slug)}/index.html">{escape(symbol)}</a><small>{escape(_display_name(row)[:22])}</small></td>'
             f'<td>{escape(market)}</td>'
             f'<td>{escape(_format_price_value(row.get("price")))}</td>'
             f'<td class="{change_cls}">{escape(change_text)}</td>'
             f'<td class="{_rsi_class(rsi)}">{escape(rsi_text)}</td>'
             f'<td>{_trend_arrow_html(row.get("trend"))}</td>'
-            f'<td>{escape(_closest_ma_label(row))}</td>'
             f'<td>{escape(volume_text)}</td>'
             '</tr>'
         )
@@ -654,7 +674,7 @@ def _watchlist_panel(title: str, subtitle: str, rows: str) -> str:
         f'<h3>{escape(title)}</h3>'
         f'<p>{escape(subtitle)}</p>'
         '</div>'
-        '<table class="v2-watch"><thead><tr><th>종목</th><th>시장</th><th>종가</th><th>등락</th><th>RSI</th><th>추세</th><th>MA</th><th>거래량</th></tr></thead>'
+        '<table class="v2-watch"><thead><tr><th>종목</th><th>시장</th><th>종가</th><th>등락</th><th>RSI</th><th>추세</th><th>거래량</th></tr></thead>'
         f'<tbody>{rows}</tbody></table>'
         '</section>'
     )
@@ -1082,7 +1102,14 @@ def _build_home_page(pages: list[BuiltPage], overview_frames: dict[str, pd.DataF
     (SITE_DIR / "index.html").write_text(html, encoding="utf-8")
 
 
-def _build_home_preview_page(pages: list[BuiltPage], overview_frames: dict[str, pd.DataFrame]) -> None:
+def _build_home_preview_page(
+    pages: list[BuiltPage],
+    overview_frames: dict[str, pd.DataFrame],
+    *,
+    page_path: Path | None = None,
+    depth: int = 1,
+    preview: bool = True,
+) -> None:
     combined = _preview_combined_frame(pages, overview_frames)
     stock_frames = [
         _market_frame_for_slug(pages, overview_frames, "nasdaq100", "nasdaq100"),
@@ -1102,23 +1129,39 @@ def _build_home_preview_page(pages: list[BuiltPage], overview_frames: dict[str, 
     macro_breadth = float(macro_stats["breadth"]) if macro_stats.get("breadth") is not None else 0.0
     avg_change = _avg_change(combined)
     avg_change_text = f"{avg_change:+.2f}%" if avg_change is not None else "-"
-    market_cards = _preview_market_cards_html(pages, overview_frames)
+    market_cards = _preview_market_cards_html(pages, overview_frames, depth=depth)
     watchlists = [
-        _watchlist_panel("Strong Momentum", "추세 점수와 당일 등락이 함께 강한 후보", _watchlist_rows(combined, "momentum")),
-        _watchlist_panel("MA Pullback", "강한 추세 안에서 이동평균선에 가까운 후보", _watchlist_rows(combined, "pullback")),
-        _watchlist_panel("Oversold Bounce", "RSI가 낮아 반등 관찰이 필요한 후보", _watchlist_rows(combined, "oversold")),
-        _watchlist_panel("Overheated Risk", "RSI 과열과 고점 근접을 함께 보는 위험 후보", _watchlist_rows(combined, "heated")),
-        _watchlist_panel("Weak Trend Spike", "약하거나 횡보 중인 추세에서 상승률이 튀는 후보", _watchlist_rows(combined, "weak-spike")),
-        _watchlist_panel("Volume Spike", "평균 대비 거래량이 크게 늘어난 후보", _watchlist_rows(combined, "volume")),
+        _watchlist_panel("Strong Momentum", "추세 점수와 당일 등락이 함께 강한 후보", _watchlist_rows(combined, "momentum", depth=depth)),
+        _watchlist_panel("MA Pullback", "강한 추세 안에서 이동평균선에 가까운 후보", _watchlist_rows(combined, "pullback", depth=depth)),
+        _watchlist_panel("Oversold Bounce", "RSI가 낮아 반등 관찰이 필요한 후보", _watchlist_rows(combined, "oversold", depth=depth)),
+        _watchlist_panel("Overheated Risk", "RSI 과열과 고점 근접을 함께 보는 위험 후보", _watchlist_rows(combined, "heated", depth=depth)),
+        _watchlist_panel("Weak Trend Spike", "약하거나 횡보 중인 추세에서 상승률이 튀는 후보", _watchlist_rows(combined, "weak-spike", depth=depth)),
+        _watchlist_panel("Volume Spike", "평균 대비 거래량이 크게 늘어난 후보", _watchlist_rows(combined, "volume", depth=depth)),
     ]
     generated_at = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
+    page_title = "Market Scanner Preview" if preview else "Market Scanner"
+    eyebrow_text = "Market Pulse Preview" if preview else "Market Pulse"
+    nav_html = _site_nav("home", depth)
+    preview_bar = (
+        '<div class="preview-bar">'
+        f'<span>Preview Home v2 - generated {escape(generated_at)}</span>'
+        '<a href="../index.html">Back to main</a>'
+        '</div>'
+        if preview
+        else (
+            '<div class="preview-bar">'
+            f'<span>Market Scanner - generated {escape(generated_at)}</span>'
+            '<span>Latest dashboard</span>'
+            '</div>'
+        )
+    )
 
     html = f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Market Scanner Preview</title>
+  <title>{escape(page_title)}</title>
   <style>
     :root {{
       color-scheme: dark;
@@ -1274,16 +1317,13 @@ def _build_home_preview_page(pages: list[BuiltPage], overview_frames: dict[str, 
   </style>
 </head>
 <body>
-  {_site_nav("home", 1)}
+  {nav_html}
   <main class="wrap">
-    <div class="preview-bar">
-      <span>Preview Home v2 · 생성 {escape(generated_at)}</span>
-      <a href="../index.html">현재 메인으로 돌아가기</a>
-    </div>
+    {preview_bar}
 
     <section class="hero-v2">
       <div class="hero-copy">
-        <div class="eyebrow">Market Pulse Preview</div>
+        <div class="eyebrow">{escape(eyebrow_text)}</div>
         <h1>{escape(regime)}</h1>
         <p class="lead">{escape(regime_note)} 주식 breadth는 {stock_breadth:.0f}%, 매크로 breadth는 {macro_breadth:.0f}%이며 전체 평균 등락률은 {escape(avg_change_text)}입니다.</p>
         <div class="regime">
@@ -1320,7 +1360,8 @@ def _build_home_preview_page(pages: list[BuiltPage], overview_frames: dict[str, 
 </body>
 </html>
 """
-    page_path = SITE_DIR / "preview-home" / "index.html"
+    if page_path is None:
+        page_path = SITE_DIR / "preview-home" / "index.html"
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text(html, encoding="utf-8")
 
@@ -1386,24 +1427,6 @@ def _archive_copy(html_text: str, date_str: str, slug: str) -> Path:
     return archive_path
 
 
-def _copy_existing_report(
-    market_key: str,
-    slug: str,
-    title: str,
-    description: str,
-    date_str: str,
-    frame: pd.DataFrame,
-    report_path: Path,
-) -> BuiltPage:
-    source_html = report_path.read_text(encoding="utf-8")
-    html_text = _inject_site_shell(source_html, slug, 1)
-    page_path = SITE_DIR / slug / "index.html"
-    page_path.parent.mkdir(parents=True, exist_ok=True)
-    page_path.write_text(html_text, encoding="utf-8")
-    archive_path = _archive_copy(_inject_site_shell(source_html, slug, 3), date_str, slug)
-    return BuiltPage(market_key, slug, title, description, date_str, frame, page_path, archive_path)
-
-
 def _render_filtered_report(
     market: MarketDefinition,
     frame: pd.DataFrame,
@@ -1412,6 +1435,7 @@ def _render_filtered_report(
     description: str,
     date_str: str,
 ) -> BuiltPage:
+    frame = enrich_metadata_frame(frame, market)
     page_dir = SITE_DIR / slug
     page_dir.mkdir(parents=True, exist_ok=True)
     settings = ScanSettings(output_dir=page_dir)
@@ -1430,30 +1454,35 @@ def _build_market_page(market_key: str, title: str, description: str, slug: str)
     artifacts = _latest_market_artifacts(market_key)
     if not artifacts:
         return None
-    date_str, csv_path, _, html_path = artifacts
+    date_str, csv_path, _, _ = artifacts
     frame = _load_frame(csv_path)
-    if html_path is not None:
-        return _copy_existing_report(market_key, slug, title, description, date_str, frame, html_path)
+    # Re-render site pages from CSV so all markets pick up the current report template.
     return _render_filtered_report(MARKETS[market_key], frame, slug, title, description, date_str)
 
 
 def _latest_csv_for_market(market_key: str) -> tuple[str, Path] | None:
     csv_prefix, _, _ = _prefixes_for_market(market_key)
-    date_str = _latest_date_for_prefix(csv_prefix, DATA_DIR) or _latest_date_for_prefix(csv_prefix)
-    if not date_str:
-        return None
-    csv_path = _csv_path_for_date(csv_prefix, date_str)
-    return (date_str, csv_path) if csv_path.exists() else None
+    candidate_dates = sorted(
+        set(_dates_for_prefix(csv_prefix, DATA_DIR)) | set(_dates_for_prefix(csv_prefix)),
+        reverse=True,
+    )
+    for date_str in candidate_dates:
+        csv_path = _csv_path_for_date(csv_prefix, date_str)
+        if _csv_has_columns(csv_path):
+            return date_str, csv_path
+    return None
 
 
-def _build_derived_us_pages(source_page: BuiltPage) -> list[BuiltPage]:
+def _build_derived_us_pages(source_page: BuiltPage, include_keys: set[str] | None = None) -> list[BuiltPage]:
     pages: list[BuiltPage] = []
     source_frame = source_page.frame.copy()
     source_market = MARKETS["us"]
 
-    nasdaq_members = set(_us_static_meta().keys())
+    include_keys = include_keys or {"nasdaq100", "sp500", "dow30"}
+
+    nasdaq_members = set(_nasdaq100_static_meta().keys())
     nasdaq_frame = source_frame[source_frame["symbol"].astype(str).isin(nasdaq_members)].copy()
-    if not nasdaq_frame.empty:
+    if "nasdaq100" in include_keys and not nasdaq_frame.empty:
         nasdaq_market = replace(source_market, key="nasdaq100", label="NASDAQ 100", output_prefix="nasdaq100")
         pages.append(
             _render_filtered_report(
@@ -1468,7 +1497,7 @@ def _build_derived_us_pages(source_page: BuiltPage) -> list[BuiltPage]:
 
     sp500_members = set(_fetch_sp500_tickers())
     sp500_frame = source_frame[source_frame["symbol"].astype(str).isin(sp500_members)].copy()
-    if not sp500_frame.empty:
+    if "sp500" in include_keys and not sp500_frame.empty:
         sp500_market = replace(source_market, key="sp500", label="S&P 500", output_prefix="sp500")
         pages.append(
             _render_filtered_report(
@@ -1482,7 +1511,7 @@ def _build_derived_us_pages(source_page: BuiltPage) -> list[BuiltPage]:
         )
 
     dow30_frame = source_frame[source_frame["symbol"].astype(str).isin(_DOW30_SYMBOLS)].copy()
-    if not dow30_frame.empty:
+    if "dow30" in include_keys and not dow30_frame.empty:
         dow30_market = replace(source_market, key="dow30", label="Dow 30", output_prefix="dow30")
         pages.append(
             _render_filtered_report(
@@ -1498,6 +1527,23 @@ def _build_derived_us_pages(source_page: BuiltPage) -> list[BuiltPage]:
     return pages
 
 
+def _build_dow30_from_page(source_page: BuiltPage) -> BuiltPage | None:
+    source_frame = source_page.frame.copy()
+    dow30_frame = source_frame[source_frame["symbol"].astype(str).isin(_DOW30_SYMBOLS)].copy()
+    if dow30_frame.empty:
+        return None
+    source_market = MARKETS.get(source_page.key, MARKETS.get("sp500", MARKETS["us"]))
+    dow30_market = replace(source_market, key="dow30", label="Dow 30", output_prefix="dow30")
+    return _render_filtered_report(
+        dow30_market,
+        dow30_frame,
+        "dow30",
+        "Dow 30",
+        f"Derived from the {source_page.title} scan",
+        source_page.date_str,
+    )
+
+
 _OVERVIEW_ONLY_MARKETS = {"global-indices", "theme-proxies", "commodities"}
 
 
@@ -1506,20 +1552,10 @@ def build_site() -> list[BuiltPage]:
     built_pages: list[BuiltPage] = []
     overview_frames: dict[str, pd.DataFrame] = {}
 
-    # Load us data in memory only (not written to site) to derive nasdaq100/sp500
-    us_artifacts = _latest_market_artifacts("us")
-    if us_artifacts:
-        us_date_str, us_csv_path, _, us_html_path = us_artifacts
-        us_frame = _load_frame(us_csv_path)
-        us_source_path = us_html_path or us_csv_path
-        us_source = BuiltPage("us", "us", "US Market", "", us_date_str, us_frame, us_source_path, us_source_path)
-        derived = _build_derived_us_pages(us_source)
-        built_pages.extend(derived)
-        for p in derived:
-            overview_frames[p.key] = p.frame
-
     for market_key, title, description, slug in _ROOT_PAGES:
-        if market_key in {"nasdaq100", "sp500", "dow30", "us"}:
+        if market_key == "dow30":
+            continue
+        if market_key not in MARKETS and market_key not in _OVERVIEW_ONLY_MARKETS:
             continue
         page = _build_market_page(market_key, title, description, slug)
         if page:
@@ -1530,7 +1566,36 @@ def build_site() -> list[BuiltPage]:
             if csv_info:
                 overview_frames[market_key] = _load_frame(csv_info[1])
 
-    _build_home_page(built_pages, overview_frames)
+    built_keys = {page.key for page in built_pages}
+    if "dow30" not in built_keys:
+        sp500_page = next((page for page in built_pages if page.key == "sp500"), None)
+        if sp500_page is not None:
+            dow30_page = _build_dow30_from_page(sp500_page)
+            if dow30_page is not None:
+                built_pages.append(dow30_page)
+                overview_frames[dow30_page.key] = dow30_page.frame
+                built_keys.add("dow30")
+
+    missing_derived = {"nasdaq100", "sp500", "dow30"} - built_keys
+    # Legacy fallback: old combined US CSV can still derive pages until standalone CSVs exist.
+    us_artifacts = _latest_market_artifacts("us")
+    if missing_derived and us_artifacts:
+        us_date_str, us_csv_path, _, us_html_path = us_artifacts
+        us_frame = _load_frame(us_csv_path)
+        us_source_path = us_html_path or us_csv_path
+        us_source = BuiltPage("us", "us", "US Market", "", us_date_str, us_frame, us_source_path, us_source_path)
+        derived = _build_derived_us_pages(us_source, missing_derived)
+        built_pages.extend(derived)
+        for p in derived:
+            overview_frames[p.key] = p.frame
+
+    _build_home_preview_page(
+        built_pages,
+        overview_frames,
+        page_path=SITE_DIR / "index.html",
+        depth=0,
+        preview=False,
+    )
     _build_home_preview_page(built_pages, overview_frames)
     built_keys = {page.key for page in built_pages}
     built_slugs = {page.slug for page in built_pages}

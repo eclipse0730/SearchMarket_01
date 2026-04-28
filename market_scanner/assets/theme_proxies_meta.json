@@ -2,49 +2,79 @@
   "SOXX": {
     "name_en": "iShares Semiconductor ETF",
     "name_local": "반도체 ETF",
-    "sector": "Theme Proxy",
+    "sector": "반도체",
     "description": "Semiconductor cycle proxy."
   },
   "BOTZ": {
     "name_en": "Global X Robotics & AI ETF",
     "name_local": "로봇·AI ETF",
-    "sector": "Theme Proxy",
+    "sector": "로봇·AI",
     "description": "Robotics and AI proxy."
   },
   "IBB": {
     "name_en": "iShares Biotechnology ETF",
     "name_local": "바이오테크 ETF",
-    "sector": "Theme Proxy",
+    "sector": "바이오테크",
     "description": "Biotechnology proxy."
   },
   "XLK": {
     "name_en": "Technology Select Sector SPDR",
     "name_local": "기술 ETF",
-    "sector": "Theme Proxy",
+    "sector": "기술",
     "description": "Large-cap technology proxy."
   },
   "XLE": {
     "name_en": "Energy Select Sector SPDR",
     "name_local": "에너지 ETF",
-    "sector": "Theme Proxy",
+    "sector": "에너지",
     "description": "Energy sector proxy."
   },
   "XLF": {
     "name_en": "Financial Select Sector SPDR",
     "name_local": "금융 ETF",
-    "sector": "Theme Proxy",
+    "sector": "금융",
     "description": "Financial sector proxy."
   },
   "ICLN": {
     "name_en": "iShares Global Clean Energy ETF",
     "name_local": "클린에너지 ETF",
-    "sector": "Theme Proxy",
+    "sector": "클린에너지",
     "description": "Clean energy proxy."
   },
   "ARKK": {
     "name_en": "ARK Innovation ETF",
     "name_local": "혁신성장 ETF",
-    "sector": "Theme Proxy",
+    "sector": "혁신성장",
     "description": "High-beta innovation proxy."
+  },
+  "ITA": {
+    "name_en": "iShares U.S. Aerospace & Defense ETF",
+    "name_local": "방산·항공 ETF",
+    "sector": "방산·항공",
+    "description": "US aerospace and defense sector proxy."
+  },
+  "HACK": {
+    "name_en": "ETFMG Prime Cyber Security ETF",
+    "name_local": "사이버보안 ETF",
+    "sector": "사이버보안",
+    "description": "Cybersecurity industry proxy."
+  },
+  "MCHI": {
+    "name_en": "iShares MSCI China ETF",
+    "name_local": "중국 대형주 ETF",
+    "sector": "중국",
+    "description": "China large-cap equity proxy."
+  },
+  "GLD": {
+    "name_en": "SPDR Gold Shares",
+    "name_local": "금 ETF",
+    "sector": "금",
+    "description": "Physical gold price proxy."
+  },
+  "TLT": {
+    "name_en": "iShares 20+ Year Treasury Bond ETF",
+    "name_local": "장기채 ETF",
+    "sector": "장기채",
+    "description": "US long-term Treasury bond proxy."
   }
 }

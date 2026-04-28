@@ -69,8 +69,8 @@
 - `reports/Report_*.html`
 - `site/**`
 - `market_scanner/assets/investing_url_cache.json`
+- `market_scanner/assets/instruments.json`은 공통 종목 마스터입니다. 고정 메타데이터를 누적하지만 자동 스캔값이 `static`/`manual` 출처 레코드를 덮어쓰지 않게 관리합니다.
 - `market_scanner/assets/sp500_members_cache.json`
-- `market_scanner/assets/sp500_members_manual.json`
 - `market_scanner/assets/.yfinance_cache/`는 로컬 yfinance SQLite 캐시이며 Git 추적 대상이 아닙니다.
 
 주의:
@@ -78,21 +78,26 @@
 - `analysis/Analysis_*.md`는 자동 생성 리포트입니다. 개발 노트는 `DEVELOPMENT_NOTES.md`에 작성합니다.
 - 새 스캔 CSV 산출물은 `data/`에 저장합니다.
 - `site_builder.py`는 `site/`를 삭제 후 재생성합니다. 수동으로 넣은 `site/` 파일은 유지되지 않습니다.
-- `reports/Report_*.html`이 있으면 Pages 생성 시 재사용합니다. 없으면 최신 CSV/Markdown에서 사이트 페이지를 재렌더링합니다. 과거 루트 `Report_*.html`은 읽기 fallback으로만 지원합니다.
-- S&P 500 구성 종목은 `sp500_members_cache.json` 구조화 캐시와 `sp500_members_manual.json` 수동 override를 사용합니다.
+- Pages 상세페이지는 최신 CSV를 현재 템플릿으로 다시 렌더링합니다. `reports/Report_*.html`은 개별 HTML 리포트 산출물로 보관합니다. 과거 루트 `Report_*.html`은 읽기 fallback으로만 지원합니다.
+- S&P 500 구성 종목은 `sp500_members_cache.json` 구조화 캐시를 사용합니다.
 
 ## Current Known State
 
 2026-04-28 기준:
 
+- `nasdaq100`과 `sp500`은 독립 CLI 시장이며, 기존 `us` 결합 스캔은 호환용으로 유지함. 사이트 빌더는 독립 CSV가 없을 때만 기존 US CSV에서 NASDAQ 100/S&P 500/Dow 30 페이지를 fallback 생성함
+- `site_builder.py`는 빈 최신 CSV를 건너뛰고 이전 정상 CSV를 찾아 Pages 빌드를 계속함
 - `.\.venv\Scripts\python.exe -m compileall Search.py market_scanner` 통과
 - `.\.venv\Scripts\python.exe Search.py --help` 통과
 - 최신 CSV 샘플은 정상 로드됨
 - `site_builder.py`는 최신 CSV 기반 페이지 fallback을 지원함
-- 메인페이지 v2 샘플은 `site/preview-home/index.html`에 생성하며, 현재 메인 승격 전 검토용 임시 페이지임
+- 메인페이지는 preview-home v2 디자인을 반영해 `site/index.html`에 생성하며, `site/preview-home/index.html`은 같은 디자인의 보조 미리보기 페이지임
 - 상세페이지 v2는 좌측 종목 리스트와 우측 Sector Heatmap/Fear/Setup/Scatter 패널 구조임
 - 상세페이지 헤더는 제목 아래 기준일/행 수와 KST 기준 갱신시간을 표시함
 - 모든 시장의 Investing 링크는 한국 사용자 UX를 위해 `kr.investing.com` 도메인으로 출력함
+- KOSPI/KOSDAQ 상세페이지 링크도 NASDAQ 100과 같이 Investing 상세 URL 캐시를 우선 사용하고, 실패 시 검색 링크로 fallback함
+- KOSPI/KOSDAQ 동적 편입 종목은 스캔 시 yfinance `Ticker.info`와 FinanceDataReader 한국 종목명으로 이름/섹터를 보강하고, 렌더링 시 정적/FDR 메타데이터로 placeholder 이름/섹터를 보정함. 한국 시장 화면은 한글 종목명 우선이며, 한글명을 확보하지 못하면 영어 회사명 대신 종목코드를 표시함
+- 모든 시장의 고정 종목 메타데이터는 `market_scanner/assets/instruments.json`을 우선 사용하고, 기존 시장별 `*_static_meta.json`은 호환 fallback으로 유지함
 - 상세페이지 종목 리스트의 추세 정렬은 표시 문자열이 아니라 숫자 추세 점수 기준으로 처리함
 - 상세페이지 Heatmap은 섹터별 `change_pct` 평균 상승률 강도 기준으로 표시함. 타일에는 평균, 중앙값, 상승 종목 비율, 종목 수를 함께 표시함
 - 상세페이지 종목 리스트에서는 MA60/120/240 차이율 컬럼을 숨기고, 해당 값은 Scatter/Setup 계산용 DATA에는 유지함

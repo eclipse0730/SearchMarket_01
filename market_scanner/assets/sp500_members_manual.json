@@ -1,5 +1,0 @@
-{
-  "description": "Manual S&P 500 membership overrides. Use add/remove only when the primary source or cache is temporarily stale.",
-  "add": [],
-  "remove": []
-}

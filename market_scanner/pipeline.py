@@ -55,14 +55,115 @@ def _resolve_metadata(market: MarketDefinition, symbol: str, info: dict) -> tupl
     return name_en, name_en, sector, description
 
 
+def _clean_text(value: object) -> str:
+    if value is None:
+        return ""
+    try:
+        if pd.isna(value):
+            return ""
+    except (TypeError, ValueError):
+        pass
+    return str(value).strip()
+
+
+def _is_placeholder_text(value: object) -> bool:
+    return _clean_text(value).lower() in {"", "-", "nan", "none", "unknown", "no description", "n/a"}
+
+
+def _is_placeholder_name(value: object, symbol: str) -> bool:
+    text = _clean_text(value)
+    if _is_placeholder_text(text):
+        return True
+    normalized = symbol.strip().upper()
+    display = normalized.replace(".KS", "").replace(".KQ", "")
+    return text.upper() in {normalized, display}
+
+
+def _has_hangul(value: object) -> bool:
+    return any("\uac00" <= char <= "\ud7a3" for char in _clean_text(value))
+
+
+def _looks_like_english_company_name(value: object, symbol: str) -> bool:
+    text = _clean_text(value)
+    if _is_placeholder_name(text, symbol) or _has_hangul(text):
+        return False
+    if not any(char.isalpha() for char in text):
+        return False
+    upper = text.upper()
+    company_markers = (
+        " INC", " CORP", " CORPORATION", " CO.", " CO ", " LTD", " LIMITED",
+        " HOLDINGS", " ENGINEERING", " CONSTRUCTION", " ELECTRONICS",
+        " CHEMICAL", " INDUSTRIES", " FINANCIAL", " INSURANCE",
+    )
+    return " " in text or any(marker in upper for marker in company_markers)
+
+
+def _display_symbol_name(row: pd.Series, symbol: str) -> str:
+    display = _clean_text(row.get("display_symbol"))
+    if symbol.endswith((".KS", ".KQ")):
+        if display and display.isdigit():
+            return display.zfill(6)
+        code = symbol.replace(".KS", "").replace(".KQ", "")
+        return code.zfill(6) if code.isdigit() else code
+    if display:
+        return display
+    return symbol.replace(".KS", "").replace(".KQ", "")
+
+
+def enrich_metadata_frame(frame: pd.DataFrame, market: MarketDefinition) -> pd.DataFrame:
+    if frame.empty or "symbol" not in frame.columns:
+        return frame
+
+    metadata = market.metadata_loader()
+    if not metadata:
+        return frame
+
+    enriched = frame.copy()
+    if "display_symbol" not in enriched.columns:
+        enriched["display_symbol"] = ""
+    else:
+        enriched["display_symbol"] = enriched["display_symbol"].astype("object")
+    for column in ("name_en", "name_local", "sector", "description"):
+        if column not in enriched.columns:
+            enriched[column] = ""
+        else:
+            enriched[column] = enriched[column].astype("object")
+
+    for index, row in enriched.iterrows():
+        symbol = _clean_text(row.get("symbol"))
+        meta = metadata.get(symbol)
+        if not symbol:
+            continue
+
+        if meta is not None:
+            if _is_placeholder_name(row.get("name_en"), symbol) and not _is_placeholder_text(meta.name_en):
+                enriched.at[index, "name_en"] = meta.name_en
+            if _is_placeholder_name(row.get("name_local"), symbol) and not _is_placeholder_text(meta.name_local):
+                enriched.at[index, "name_local"] = meta.name_local
+            if _is_placeholder_text(row.get("sector")) and not _is_placeholder_text(meta.sector):
+                enriched.at[index, "sector"] = meta.sector
+            if _is_placeholder_text(row.get("description")) and not _is_placeholder_text(meta.description):
+                enriched.at[index, "description"] = meta.description
+
+        if market.key in {"kospi", "kosdaq"}:
+            enriched.at[index, "display_symbol"] = _display_symbol_name(row, symbol)
+            local_name = enriched.at[index, "name_local"]
+            if _is_placeholder_name(local_name, symbol) or _looks_like_english_company_name(local_name, symbol):
+                enriched.at[index, "name_local"] = _display_symbol_name(row, symbol)
+
+    return enriched
+
+
 def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) -> ScanRecord | None:
     min_history = max(settings.ma_periods) + settings.min_history_buffer
     hist = pd.DataFrame()
+    ticker: yf.Ticker | None = None
     for attempt in range(3):
         if attempt:
             time.sleep(attempt * 2)
         try:
-            hist = yf.Ticker(symbol).history(period=settings.history_period)
+            ticker = yf.Ticker(symbol)
+            hist = ticker.history(period=settings.history_period)
         except Exception:
             continue
         if not hist.empty and len(hist) >= min_history:
@@ -82,7 +183,8 @@ def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) 
 
     info: dict = {}
     try:
-        info = ticker.info
+        if ticker is not None:
+            info = ticker.info
     except Exception:
         info = {}
 
@@ -652,6 +754,7 @@ def _summary_lines_rich(
 
 
 def write_markdown(frame: pd.DataFrame, market: MarketDefinition, settings: ScanSettings, date_str: str, path: Path) -> str:
+    frame = enrich_metadata_frame(frame, market)
     text = "\n".join(_summary_lines_rich(frame, market, settings, date_str))
     path.write_text(text, encoding="utf-8")
     return text
@@ -992,6 +1095,7 @@ def _interactive_table_data(frame: pd.DataFrame, market: MarketDefinition, setti
 
 
 def write_html(frame: pd.DataFrame, market: MarketDefinition, settings: ScanSettings, date_str: str, markdown_text: str, path: Path) -> None:
+    frame = enrich_metadata_frame(frame, market)
     sector_labels, sector_bull, sector_neu, sector_bear = _sector_strength_data(frame)
     rsi_labels, rsi_values = _rsi_chart_data(frame)
     display_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}" if len(date_str) == 8 else date_str

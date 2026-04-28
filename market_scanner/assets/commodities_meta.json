@@ -2,49 +2,67 @@
   "GC=F": {
     "name_en": "Gold Futures",
     "name_local": "금 선물",
-    "sector": "Commodity",
+    "sector": "귀금속",
     "description": "Precious metals proxy."
   },
   "SI=F": {
     "name_en": "Silver Futures",
     "name_local": "은 선물",
-    "sector": "Commodity",
+    "sector": "귀금속",
     "description": "Precious metals proxy."
+  },
+  "PL=F": {
+    "name_en": "Platinum Futures",
+    "name_local": "백금 선물",
+    "sector": "귀금속",
+    "description": "Platinum precious metals proxy."
   },
   "CL=F": {
     "name_en": "Crude Oil Futures",
     "name_local": "WTI 원유",
-    "sector": "Commodity",
-    "description": "Energy benchmark."
+    "sector": "에너지",
+    "description": "WTI crude oil energy benchmark."
+  },
+  "BZ=F": {
+    "name_en": "Brent Crude Oil Futures",
+    "name_local": "브렌트 원유",
+    "sector": "에너지",
+    "description": "Brent crude oil international benchmark."
   },
   "NG=F": {
     "name_en": "Natural Gas Futures",
     "name_local": "천연가스",
-    "sector": "Commodity",
-    "description": "Gas benchmark."
+    "sector": "에너지",
+    "description": "Natural gas energy benchmark."
   },
   "HG=F": {
     "name_en": "Copper Futures",
     "name_local": "구리 선물",
-    "sector": "Commodity",
+    "sector": "산업금속",
     "description": "Industrial metals proxy."
   },
   "ZC=F": {
     "name_en": "Corn Futures",
     "name_local": "옥수수 선물",
-    "sector": "Commodity",
-    "description": "Agriculture proxy."
+    "sector": "농산물",
+    "description": "Agriculture grain proxy."
   },
   "ZW=F": {
     "name_en": "Wheat Futures",
     "name_local": "밀 선물",
-    "sector": "Commodity",
-    "description": "Agriculture proxy."
+    "sector": "농산물",
+    "description": "Agriculture grain proxy."
   },
   "SB=F": {
     "name_en": "Sugar Futures",
     "name_local": "설탕 선물",
-    "sector": "Commodity",
+    "sector": "농산물",
+    "description": "Soft commodities proxy."
+  },
+  "KC=F": {
+    "name_en": "Coffee Futures",
+    "name_local": "커피 선물",
+    "sector": "농산물",
     "description": "Soft commodities proxy."
   }
 }

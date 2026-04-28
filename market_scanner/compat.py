@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from market_scanner.markets import MARKETS
+from market_scanner.markets import MARKETS, upsert_instruments_from_frame
 from market_scanner.models import MarketDefinition, ScanSettings
 from market_scanner.news import collect_news_cache
 from market_scanner.pipeline import scan_market, write_html, write_markdown
@@ -20,9 +20,11 @@ REPORT_DIR = Path("reports")
 # Flat-file path conventions for known markets (backward compat).
 # New markets fall through to the generic pattern below.
 _COMPAT_PREFIXES: dict[str, tuple[str, str, str]] = {
-    "us":     ("Data",       "Analysis",       "Report"),
-    "kospi":  ("Data_Kospi", "Analysis_Kospi", "Report_Kospi"),
-    "kosdaq": ("Data_Kosdaq","Analysis_Kosdaq","Report_Kosdaq"),
+    "us":        ("Data",            "Analysis",            "Report"),
+    "nasdaq100": ("Data_Nasdaq100",  "Analysis_Nasdaq100",  "Report_Nasdaq100"),
+    "sp500":     ("Data_Sp500",      "Analysis_Sp500",      "Report_Sp500"),
+    "kospi":     ("Data_Kospi",      "Analysis_Kospi",      "Report_Kospi"),
+    "kosdaq":    ("Data_Kosdaq",     "Analysis_Kosdaq",     "Report_Kosdaq"),
 }
 
 
@@ -75,6 +77,7 @@ def run_scan_stage_with_settings(
     settings: ScanSettings,
 ) -> tuple[MarketDefinition, pd.DataFrame, dict[str, Path]]:
     market, _, frame = scan_market(market_key, settings)
+    upsert_instruments_from_frame(frame, market_key)
     paths = compat_paths(market_key, date_str)
     paths["csv"].parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(paths["csv"], index=False, encoding="utf-8-sig")

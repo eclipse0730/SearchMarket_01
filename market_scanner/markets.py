@@ -14,6 +14,7 @@ from market_scanner.models import MarketDefinition, StaticTickerMeta
 
 
 ASSET_DIR = Path(__file__).with_name("assets")
+_INSTRUMENTS_PATH = ASSET_DIR / "instruments.json"
 _INVESTING_BASE_URL = "https://www.investing.com"
 _INVESTING_KR_BASE_URL = "https://kr.investing.com"
 _INVESTING_SEARCH_URL = f"{_INVESTING_BASE_URL}/search"
@@ -36,15 +37,22 @@ _INVESTING_SPECIAL_QUERIES: dict[str, str] = {
     "^FTSE": "FTSE 100",
     "^GDAXI": "DAX Index",
     "^FCHI": "CAC 40",
+    "^STOXX50E": "Euro STOXX 50",
+    "^BSESN": "BSE SENSEX",
+    "^AXJO": "S&P ASX 200",
+    "^TWII": "Taiwan Weighted Index",
     "000001.SS": "SSE Composite Index",
     "GC=F": "Gold Futures",
     "SI=F": "Silver Futures",
+    "PL=F": "Platinum Futures",
     "CL=F": "Crude Oil Futures",
+    "BZ=F": "Brent Crude Oil Futures",
     "NG=F": "Natural Gas Futures",
     "HG=F": "Copper Futures",
     "ZC=F": "Corn Futures",
     "ZW=F": "Wheat Futures",
     "SB=F": "Sugar Futures",
+    "KC=F": "Coffee Futures",
 }
 
 _SECTOR_KO: dict[str, str] = {
@@ -61,6 +69,19 @@ _SECTOR_KO: dict[str, str] = {
     "Basic Materials":        "원자재",
 }
 
+_STATIC_META_ASSETS: dict[str, str] = {
+    "us": "nasdaq100_static_meta.json",
+    "nasdaq100": "nasdaq100_static_meta.json",
+    "kospi": "kospi_static_meta.json",
+    "kosdaq": "kosdaq_static_meta.json",
+    "global-indices": "global_indices_meta.json",
+    "theme-proxies": "theme_proxies_meta.json",
+    "commodities": "commodities_meta.json",
+}
+
+_PROTECTED_INSTRUMENT_SOURCES = {"manual", "static"}
+_INSTRUMENT_META_FIELDS = ("name_en", "name_local", "sector", "description")
+
 
 def _load_meta_asset(filename: str) -> dict[str, StaticTickerMeta]:
     payload = json.loads((ASSET_DIR / filename).read_text(encoding="utf-8"))
@@ -75,34 +96,186 @@ def _load_meta_asset(filename: str) -> dict[str, StaticTickerMeta]:
     }
 
 
+def _clean_instrument_value(value: object) -> str:
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def _is_placeholder_instrument_value(value: object) -> bool:
+    text = _clean_instrument_value(value)
+    return text.lower() in {"", "-", "nan", "none", "unknown", "no description", "n/a"}
+
+
+def _has_hangul(value: object) -> bool:
+    return any("\uac00" <= char <= "\ud7a3" for char in _clean_instrument_value(value))
+
+
+def _default_display_symbol(symbol: str, market_key: str) -> str:
+    if market_key in {"kospi", "kosdaq"}:
+        code = symbol.replace(".KS", "").replace(".KQ", "")
+        return code.zfill(6) if code.isdigit() else code
+    if market_key == "global-indices":
+        if symbol == "000001.SS":
+            return "SSE"
+        return symbol.lstrip("^")
+    if market_key == "commodities":
+        return symbol.replace("=F", "")
+    return symbol
+
+
+def _normalized_instrument_record(symbol: str, values: dict[str, object]) -> dict[str, str]:
+    market_key = _clean_instrument_value(values.get("market_key"))
+    display_symbol = _clean_instrument_value(values.get("display_symbol")) or _default_display_symbol(symbol, market_key)
+    if market_key in {"kospi", "kosdaq"} and display_symbol.isdigit():
+        display_symbol = display_symbol.zfill(6)
+    record = {
+        "market_key": market_key,
+        "display_symbol": display_symbol,
+        "name_en": _clean_instrument_value(values.get("name_en")) or symbol,
+        "name_local": _clean_instrument_value(values.get("name_local")) or _clean_instrument_value(values.get("name_en")) or symbol,
+        "sector": _clean_instrument_value(values.get("sector")) or "Unknown",
+        "description": _clean_instrument_value(values.get("description")) or "No description",
+        "source": _clean_instrument_value(values.get("source")) or "static",
+        "updated_at": _clean_instrument_value(values.get("updated_at")),
+    }
+    return record
+
+
+@lru_cache(maxsize=1)
+def _load_instruments_payload() -> dict[str, dict[str, str]]:
+    if not _INSTRUMENTS_PATH.exists():
+        return {}
+    try:
+        payload = json.loads(_INSTRUMENTS_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    records: dict[str, dict[str, str]] = {}
+    for symbol, values in payload.items():
+        if not isinstance(values, dict):
+            continue
+        symbol_text = str(symbol).strip()
+        if not symbol_text:
+            continue
+        records[symbol_text] = _normalized_instrument_record(symbol_text, values)
+    return records
+
+
+def _instrument_meta(market_key: str, legacy_filename: str) -> dict[str, StaticTickerMeta]:
+    legacy = _load_meta_asset(legacy_filename)
+    records = _load_instruments_payload()
+    instrument_meta = {
+        symbol: StaticTickerMeta(
+            name_en=values["name_en"],
+            name_local=values["name_local"],
+            sector=values["sector"],
+            description=values["description"],
+        )
+        for symbol, values in records.items()
+        if values.get("market_key") == market_key
+    }
+    merged = dict(legacy)
+    merged.update(instrument_meta)
+    return merged
+
+
+def _write_instruments_payload(payload: dict[str, dict[str, str]]) -> None:
+    _INSTRUMENTS_PATH.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    _load_instruments_payload.cache_clear()
+
+
+def upsert_instruments_from_frame(frame, market_key: str) -> bool:
+    if frame is None or getattr(frame, "empty", True) or "symbol" not in getattr(frame, "columns", []):
+        return False
+
+    payload = dict(_load_instruments_payload())
+    today = datetime.now(timezone.utc).date().isoformat()
+    changed = False
+
+    for _, row in frame.iterrows():
+        symbol = _clean_instrument_value(row.get("symbol"))
+        if not symbol:
+            continue
+
+        current = dict(payload.get(symbol, {}))
+        source = _clean_instrument_value(current.get("source")) or "csv"
+        protected = source in _PROTECTED_INSTRUMENT_SOURCES
+        record = _normalized_instrument_record(
+            symbol,
+            {
+                **current,
+                "market_key": current.get("market_key") or market_key,
+                "display_symbol": current.get("display_symbol") or row.get("display_symbol") or _default_display_symbol(symbol, market_key),
+                "source": source,
+            },
+        )
+
+        for field in _INSTRUMENT_META_FIELDS:
+            value = row.get(field)
+            if field == "name_local" and market_key in {"kospi", "kosdaq"} and not _has_hangul(value):
+                value = row.get("display_symbol") or _default_display_symbol(symbol, market_key)
+            if _is_placeholder_instrument_value(value):
+                continue
+            if protected and not _is_placeholder_instrument_value(record.get(field)):
+                continue
+            cleaned = _clean_instrument_value(value)
+            if record.get(field) != cleaned:
+                record[field] = cleaned
+                changed = True
+
+        if not protected and record.get("source") != "csv":
+            record["source"] = "csv"
+            changed = True
+        if not protected and record.get("updated_at") != today:
+            record["updated_at"] = today
+            changed = True
+        if symbol not in payload:
+            changed = True
+        payload[symbol] = record
+
+    if changed:
+        _write_instruments_payload(payload)
+    return changed
+
+
+@lru_cache(maxsize=None)
+def _nasdaq100_static_meta() -> dict[str, StaticTickerMeta]:
+    return _load_meta_asset(_STATIC_META_ASSETS["nasdaq100"])
+
+
 @lru_cache(maxsize=None)
 def _us_static_meta() -> dict[str, StaticTickerMeta]:
-    return _load_meta_asset("us_static_meta.json")
+    return _instrument_meta("us", _STATIC_META_ASSETS["us"])
 
 
 @lru_cache(maxsize=None)
 def _kospi_static_meta() -> dict[str, StaticTickerMeta]:
-    return _load_meta_asset("kospi_static_meta.json")
+    return _instrument_meta("kospi", _STATIC_META_ASSETS["kospi"])
 
 
 @lru_cache(maxsize=None)
 def _kosdaq_static_meta() -> dict[str, StaticTickerMeta]:
-    return _load_meta_asset("kosdaq_static_meta.json")
+    return _instrument_meta("kosdaq", _STATIC_META_ASSETS["kosdaq"])
 
 
 @lru_cache(maxsize=None)
 def _global_index_meta() -> dict[str, StaticTickerMeta]:
-    return _load_meta_asset("global_indices_meta.json")
+    return _instrument_meta("global-indices", _STATIC_META_ASSETS["global-indices"])
 
 
 @lru_cache(maxsize=None)
 def _theme_proxy_meta() -> dict[str, StaticTickerMeta]:
-    return _load_meta_asset("theme_proxies_meta.json")
+    return _instrument_meta("theme-proxies", _STATIC_META_ASSETS["theme-proxies"])
 
 
 @lru_cache(maxsize=None)
 def _commodity_meta() -> dict[str, StaticTickerMeta]:
-    return _load_meta_asset("commodities_meta.json")
+    return _instrument_meta("commodities", _STATIC_META_ASSETS["commodities"])
 
 
 def _fetch_sp500_tickers() -> list[str]:
@@ -122,14 +295,66 @@ def _fetch_sp500_tickers() -> list[str]:
         return _apply_sp500_manual_overrides(_load_sp500_members_cache())
 
 
+@lru_cache(maxsize=None)
+def _fetch_fdr_listing(market: str):
+    import FinanceDataReader as fdr
+
+    return fdr.StockListing(market)
+
+
+def _fdr_market_meta(market: str, suffix: str, label: str) -> dict[str, StaticTickerMeta]:
+    try:
+        df = _fetch_fdr_listing(market)
+    except Exception as exc:
+        print(f"  {label} FDR metadata load failed ({type(exc).__name__}) - using static metadata only")
+        return {}
+
+    metadata: dict[str, StaticTickerMeta] = {}
+    for _, row in df.iterrows():
+        code = str(row.get("Code") or "").strip()
+        name = str(row.get("Name") or "").strip()
+        if not code or not name or name.lower() == "nan":
+            continue
+        code = code.zfill(6) if code.isdigit() else code
+        symbol = f"{code}{suffix}"
+        raw_sector = row.get("Sector") or row.get("Industry") or row.get("SectorName") or "Unknown"
+        sector = str(raw_sector).strip() if str(raw_sector).strip() and str(raw_sector).lower() != "nan" else "Unknown"
+        metadata[symbol] = StaticTickerMeta(
+            name_en=name,
+            name_local=name,
+            sector=sector,
+            description=f"{name} ({label})",
+        )
+    return metadata
+
+
+def _merge_metadata(*sources: dict[str, StaticTickerMeta]) -> dict[str, StaticTickerMeta]:
+    merged: dict[str, StaticTickerMeta] = {}
+    for source in sources:
+        merged.update(source)
+    return merged
+
+
+@lru_cache(maxsize=None)
+def _kospi_metadata() -> dict[str, StaticTickerMeta]:
+    return _merge_metadata(_fdr_market_meta("KOSPI", ".KS", "KOSPI"), _kospi_static_meta())
+
+
+@lru_cache(maxsize=None)
+def _kosdaq_metadata() -> dict[str, StaticTickerMeta]:
+    return _merge_metadata(_fdr_market_meta("KOSDAQ", ".KQ", "KOSDAQ"), _kosdaq_static_meta())
+
+
 def _fetch_fdr_market(market: str, suffix: str, top_n: int, label: str) -> list[str]:
     try:
-        import FinanceDataReader as fdr
         import pandas as pd
-        df = fdr.StockListing(market)
+        df = _fetch_fdr_listing(market)
         df["Marcap"] = pd.to_numeric(df["Marcap"], errors="coerce")
         top = df.nlargest(top_n, "Marcap")
-        tickers = [f"{code}{suffix}" for code in top["Code"].tolist()]
+        tickers = [
+            f"{str(code).strip().zfill(6) if str(code).strip().isdigit() else str(code).strip()}{suffix}"
+            for code in top["Code"].tolist()
+        ]
         print(f"  {label} (FDR): loaded {len(tickers)} tickers")
         return tickers
     except Exception as exc:
@@ -224,7 +449,7 @@ def _apply_sp500_manual_overrides(tickers: list[str]) -> list[str]:
 
 
 def _us_universe() -> list[str]:
-    static = list(_us_static_meta().keys())
+    static = list(_nasdaq100_static_meta().keys())
     sp500 = _fetch_sp500_tickers()
     seen = set(static)
     for t in sp500:
@@ -234,8 +459,18 @@ def _us_universe() -> list[str]:
     return static
 
 
+def _nasdaq100_universe() -> list[str]:
+    return list(_nasdaq100_static_meta().keys())
+
+
+def _sp500_universe() -> list[str]:
+    return _fetch_sp500_tickers()
+
+
 def _kospi_universe() -> list[str]:
     static = list(_kospi_static_meta().keys())
+    if len(static) >= 200:
+        return static
     krx = _fetch_krx_kospi200()
     seen = set(static)
     for t in krx:
@@ -433,7 +668,8 @@ def _quote_url_naver(symbol: str) -> str:
 
 
 def _display_strip_kr(symbol: str) -> str:
-    return symbol.replace(".KS", "").replace(".KQ", "")
+    code = symbol.replace(".KS", "").replace(".KQ", "")
+    return code.zfill(6) if code.isdigit() else code
 
 
 def _display_index(symbol: str) -> str:
@@ -457,7 +693,31 @@ MARKETS: dict[str, MarketDefinition] = {
         metadata_loader=_us_static_meta,
         quote_url_builder=_quote_url_investing_detail,
         sector_aliases=_SECTOR_KO,
-        notes="NASDAQ 100 (static JSON) + S&P 500 (Wikipedia, live).",
+        notes="Legacy combined US scan: NASDAQ 100 (static JSON) + S&P 500 (Wikipedia, live).",
+    ),
+    "nasdaq100": MarketDefinition(
+        key="nasdaq100",
+        label="NASDAQ 100",
+        output_prefix="nasdaq100",
+        currency_symbol="$",
+        price_decimals=2,
+        universe_loader=_nasdaq100_universe,
+        metadata_loader=_us_static_meta,
+        quote_url_builder=_quote_url_investing_detail,
+        sector_aliases=_SECTOR_KO,
+        notes="Standalone NASDAQ 100 scan based on the curated static universe.",
+    ),
+    "sp500": MarketDefinition(
+        key="sp500",
+        label="S&P 500",
+        output_prefix="sp500",
+        currency_symbol="$",
+        price_decimals=2,
+        universe_loader=_sp500_universe,
+        metadata_loader=_us_static_meta,
+        quote_url_builder=_quote_url_investing_detail,
+        sector_aliases=_SECTOR_KO,
+        notes="Standalone S&P 500 scan based on Wikipedia live members with cache fallback.",
     ),
     "kospi": MarketDefinition(
         key="kospi",
@@ -466,8 +726,8 @@ MARKETS: dict[str, MarketDefinition] = {
         currency_symbol="KRW ",
         price_decimals=0,
         universe_loader=_kospi_universe,
-        metadata_loader=_kospi_static_meta,
-        quote_url_builder=_quote_url_investing_search,
+        metadata_loader=_kospi_metadata,
+        quote_url_builder=_quote_url_investing_detail,
         display_symbol_builder=_display_strip_kr,
         sector_aliases=_SECTOR_KO,
         notes="Static JSON + KOSPI200 (KRX API, live).",
@@ -479,8 +739,8 @@ MARKETS: dict[str, MarketDefinition] = {
         currency_symbol="KRW ",
         price_decimals=0,
         universe_loader=_kosdaq_universe,
-        metadata_loader=_kosdaq_static_meta,
-        quote_url_builder=_quote_url_investing_search,
+        metadata_loader=_kosdaq_metadata,
+        quote_url_builder=_quote_url_investing_detail,
         display_symbol_builder=_display_strip_kr,
         sector_aliases=_SECTOR_KO,
         notes="Static JSON + KOSDAQ150 (KRX API, live).",
