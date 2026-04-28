@@ -38,8 +38,8 @@
 | VRTX | 버텍스 파마슈티컬스 | <span class="badge badge-neutral" title="Neutral">→</span> | $430.14 | 41 | -15.6% | 27.5% | 28.0 | MA240 -2.0% |
 | BIIB | 바이오젠 | <span class="badge badge-up" title="Uptrend">⬆</span> | $183.38 | 51 | -8.8% | 15.8% | 20.8 | MA60 -1.2% |
 | CCEP | 코카콜라 유로퍼시픽 | <span class="badge badge-up" title="Uptrend">⬆</span> | $97.24 | 52 | -11.9% | 9.9% | 19.5 | MA60 -1.2% |
-| CDW | CDW | <span class="badge badge-down" title="Downtrend">⬇</span> | $132.92 | 56 | -29.1% | 25.0% | 16.5 | MA120 +0.7% |
-| ASML | ASML | <span class="badge badge-up" title="Uptrend">⬆</span> | $1,384.56 | 47 | -9.1% | 20.0% | 45.6 | MA60 -1.1% |
+| CDW | CDW 주식회사 | <span class="badge badge-down" title="Downtrend">⬇</span> | $132.92 | 56 | -29.1% | 25.0% | 16.5 | MA120 +0.7% |
+| ASML | ASML 홀딩 NV | <span class="badge badge-up" title="Uptrend">⬆</span> | $1,384.56 | 47 | -9.1% | 20.0% | 45.6 | MA60 -1.1% |
 | META | 메타 플랫폼스 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | $671.34 | 60 | -14.8% | 27.4% | 28.6 | MA240 -1.2% |
 | MDLZ | 몬델리즈 | <span class="badge badge-neutral" title="Neutral">→</span> | $58.54 | 57 | -15.1% | 13.3% | 31.0 | MA60 +0.9% / MA240 -1.8% |
 | MNST | 몬스터 비버리지 | <span class="badge badge-neutral" title="Neutral">→</span> | $77.19 | 55 | -10.9% | 10.7% | 39.8 | MA60 -0.8% / MA120 +0.8% |
@@ -49,8 +49,8 @@
 - **VRTX 버텍스 파마슈티컬스**: 추세 중립(Neutral), 방향성 선택 대기 구간 / MA240 -2.0% 단일 기준선 테스트 / RSI 41 과매도 회복 시도 구간 / 애널리스트 업사이드 27.5%.
 - **BIIB 바이오젠**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -1.2% 단일 기준선 테스트 / RSI 51 부담 없는 진입 구간.
 - **CCEP 코카콜라 유로퍼시픽**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -1.2% 단일 기준선 테스트 / RSI 52 부담 없는 진입 구간.
-- **CDW CDW**: 추세 약세(Downtrend), 반등 여부 확인 필요 / MA120 +0.7% 단일 기준선 테스트 / RSI 56 부담 없는 진입 구간 / 애널리스트 업사이드 25.0%.
-- **ASML ASML**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -1.1% 단일 기준선 테스트 / RSI 47 부담 없는 진입 구간 / 애널리스트 업사이드 20.0%.
+- **CDW CDW 주식회사**: 추세 약세(Downtrend), 반등 여부 확인 필요 / MA120 +0.7% 단일 기준선 테스트 / RSI 56 부담 없는 진입 구간 / 애널리스트 업사이드 25.0%.
+- **ASML ASML 홀딩 NV**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -1.1% 단일 기준선 테스트 / RSI 47 부담 없는 진입 구간 / 애널리스트 업사이드 20.0%.
 - **META 메타 플랫폼스**: 추세 약세(Strong Downtrend), 반등 여부 확인 필요 / MA240 -1.2% 단일 기준선 테스트 / RSI 60 부담 없는 진입 구간 / 애널리스트 업사이드 27.4%.
 - **MDLZ 몬델리즈**: 추세 중립(Neutral), 방향성 선택 대기 구간 / 2개 MA 수렴, MA60 +0.9% / MA240 -1.8% 지지·저항 겹침 / RSI 57 부담 없는 진입 구간.
 - **MNST 몬스터 비버리지**: 추세 중립(Neutral), 방향성 선택 대기 구간 / 2개 MA 수렴, MA60 -0.8% / MA120 +0.8% 지지·저항 겹침 / RSI 55 부담 없는 진입 구간.
@@ -91,9 +91,9 @@ _해당 종목 없음_
 | OKTA | 옥타 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | $76.20 | 52 | -40.1% | 31.6% | 58.2 | MA60 -1.9% |
 | VRTX | 버텍스 파마슈티컬스 | <span class="badge badge-neutral" title="Neutral">→</span> | $430.14 | 41 | -15.6% | 27.5% | 28.0 | MA240 -2.0% |
 | META | 메타 플랫폼스 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | $671.34 | 60 | -14.8% | 27.4% | 28.6 | MA240 -1.2% |
-| CDW | CDW | <span class="badge badge-down" title="Downtrend">⬇</span> | $132.92 | 56 | -29.1% | 25.0% | 16.5 | MA120 +0.7% |
+| CDW | CDW 주식회사 | <span class="badge badge-down" title="Downtrend">⬇</span> | $132.92 | 56 | -29.1% | 25.0% | 16.5 | MA120 +0.7% |
 | NFLX | 넷플릭스 | <span class="badge badge-down" title="Downtrend">⬇</span> | $92.27 | 41 | -31.1% | 24.0% | 29.8 | MA60 +0.8% |
-| ASML | ASML | <span class="badge badge-up" title="Uptrend">⬆</span> | $1,384.56 | 47 | -9.1% | 20.0% | 45.6 | MA60 -1.1% |
+| ASML | ASML 홀딩 NV | <span class="badge badge-up" title="Uptrend">⬆</span> | $1,384.56 | 47 | -9.1% | 20.0% | 45.6 | MA60 -1.1% |
 
 - 성장 기대 구간의 선두는 **PCVX** 로, 업사이드 85.6%와 MA60 +1.1%가 함께 보입니다.
 
@@ -167,7 +167,7 @@ _해당 종목 없음_
 | MNST | 몬스터 비버리지 | <span class="badge badge-neutral" title="Neutral">→</span> | $77.19 | 55 | -10.9% | 10.7% | 39.8 | MA60 -0.8% / MA120 +0.8% |
 | NFLX | 넷플릭스 | <span class="badge badge-down" title="Downtrend">⬇</span> | $92.27 | 41 | -31.1% | 24.0% | 29.8 | MA60 +0.8% |
 | MDLZ | 몬델리즈 | <span class="badge badge-neutral" title="Neutral">→</span> | $58.54 | 57 | -15.1% | 13.3% | 31.0 | MA60 +0.9% / MA240 -1.8% |
-| ASML | ASML | <span class="badge badge-up" title="Uptrend">⬆</span> | $1,384.56 | 47 | -9.1% | 20.0% | 45.6 | MA60 -1.1% |
+| ASML | ASML 홀딩 NV | <span class="badge badge-up" title="Uptrend">⬆</span> | $1,384.56 | 47 | -9.1% | 20.0% | 45.6 | MA60 -1.1% |
 | SBUX | 스타벅스 | <span class="badge badge-strong-up" title="Strong Uptrend">⬆⬆</span> | $97.28 | 52 | -4.1% | 4.2% | 81.1 | MA60 +1.1% |
 | PCVX | 박스사이트 | <span class="badge badge-strong-up" title="Strong Uptrend">⬆⬆</span> | $58.73 | 47 | -6.8% | 85.6% | - | MA60 +1.1% |
 | EXC | 엑셀론 | <span class="badge badge-up" title="Uptrend">⬆</span> | $47.04 | 45 | -6.5% | 6.7% | 17.2 | MA60 -1.2% |
@@ -186,7 +186,7 @@ _해당 종목 없음_
 |---|---|:---:|---:|---:|---:|---:|---:|---|
 | EA | 일렉트로닉 아츠 | <span class="badge badge-neutral" title="Neutral">→</span> | $202.53 | 49 | -1.0% | 1.5% | 75.9 | MA60 +0.5% / MA120 +0.2% |
 | WBD | 워너브라더스 디스커버리 | <span class="badge badge-neutral" title="Neutral">→</span> | $26.95 | 40 | -10.1% | 9.8% | 92.9 | MA120 -0.6% |
-| CDW | CDW | <span class="badge badge-down" title="Downtrend">⬇</span> | $132.92 | 56 | -29.1% | 25.0% | 16.5 | MA120 +0.7% |
+| CDW | CDW 주식회사 | <span class="badge badge-down" title="Downtrend">⬇</span> | $132.92 | 56 | -29.1% | 25.0% | 16.5 | MA120 +0.7% |
 | CRWD | 크라우드스트라이크 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | $454.99 | 61 | -18.4% | 8.1% | - | MA120 +0.7% / MA240 -1.3% |
 | MNST | 몬스터 비버리지 | <span class="badge badge-neutral" title="Neutral">→</span> | $77.19 | 55 | -10.9% | 10.7% | 39.8 | MA60 -0.8% / MA120 +0.8% |
 | QCOM | 퀄컴 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | $150.00 | 74 | -19.2% | 0.1% | 30.2 | MA120 -1.4% |
