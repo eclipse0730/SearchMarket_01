@@ -36,23 +36,23 @@
 | 214150 | 클래시스 | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 57,500 | 54 | -23.9% | - | - | MA60 -1.9% / MA120 +0.3% / MA240 +1.4% |
 | 241710 | 241710.KQ | <span class="badge badge-strong-up" title="Strong Uptrend">⬆⬆</span> | KRW 85,300 | 57 | -17.2% | - | - | MA60 +1.7% |
 | 277810 | 레인보우로보틱스 | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 668,000 | 61 | -24.1% | - | - | MA60 -0.4% |
-| 006730 | 006730.KQ | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 14,840 | 61 | -20.1% | - | - | MA60 -1.1% |
-| 087010 | 087010.KQ | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 270,500 | 48 | -29.9% | - | - | MA240 +1.7% |
-| 068760 | 068760.KQ | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 57,900 | 49 | -23.5% | - | - | MA240 +1.6% |
+| 6730 | 006730.KQ | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 14,840 | 61 | -20.1% | - | - | MA60 -1.1% |
+| 87010 | 087010.KQ | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 270,500 | 48 | -29.9% | - | - | MA240 +1.7% |
+| 68760 | 068760.KQ | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 57,900 | 49 | -23.5% | - | - | MA240 +1.6% |
 | 204270 | 204270.KQ | <span class="badge badge-down" title="Downtrend">⬇</span> | KRW 19,650 | 57 | -33.3% | - | - | MA60 +1.3% / MA240 -0.3% |
 | 290650 | 290650.KQ | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 70,100 | 47 | -40.7% | - | - | MA120 +0.3% |
-| 090710 | 090710.KQ | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 12,800 | 57 | -40.5% | - | - | MA60 -0.6% |
+| 90710 | 090710.KQ | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 12,800 | 57 | -40.5% | - | - | MA60 -0.6% |
 | 257720 | 실리콘투 | <span class="badge badge-down" title="Downtrend">⬇</span> | KRW 44,650 | 52 | -27.2% | - | - | MA240 -0.4% |
 
 - **214150 클래시스**: 추세 중립(Neutral), 방향성 선택 대기 구간 / 3개 MA 수렴, MA60 -1.9% / MA120 +0.3% / MA240 +1.4% 압축 구간 / RSI 54 부담 없는 진입 구간 / 52주 고점 대비 -23.9%, 반등 여지.
 - **241710 241710.KQ**: 추세 양호(Strong Uptrend), MA 배열·기울기 확인 / MA60 +1.7% 단일 기준선 테스트 / RSI 57 부담 없는 진입 구간.
 - **277810 레인보우로보틱스**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -0.4% 단일 기준선 테스트 / 52주 고점 대비 -24.1%, 반등 여지.
-- **006730 006730.KQ**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -1.1% 단일 기준선 테스트 / 52주 고점 대비 -20.1%, 반등 여지.
-- **087010 087010.KQ**: 추세 중립(Neutral), 방향성 선택 대기 구간 / MA240 +1.7% 단일 기준선 테스트 / RSI 48 부담 없는 진입 구간 / 52주 고점 대비 -29.9%, 반등 여지.
-- **068760 068760.KQ**: 추세 중립(Neutral), 방향성 선택 대기 구간 / MA240 +1.6% 단일 기준선 테스트 / RSI 49 부담 없는 진입 구간 / 52주 고점 대비 -23.5%, 반등 여지.
+- **6730 006730.KQ**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -1.1% 단일 기준선 테스트 / 52주 고점 대비 -20.1%, 반등 여지.
+- **87010 087010.KQ**: 추세 중립(Neutral), 방향성 선택 대기 구간 / MA240 +1.7% 단일 기준선 테스트 / RSI 48 부담 없는 진입 구간 / 52주 고점 대비 -29.9%, 반등 여지.
+- **68760 068760.KQ**: 추세 중립(Neutral), 방향성 선택 대기 구간 / MA240 +1.6% 단일 기준선 테스트 / RSI 49 부담 없는 진입 구간 / 52주 고점 대비 -23.5%, 반등 여지.
 - **204270 204270.KQ**: 추세 약세(Downtrend), 반등 여부 확인 필요 / 2개 MA 수렴, MA60 +1.3% / MA240 -0.3% 지지·저항 겹침 / RSI 57 부담 없는 진입 구간 / 52주 고점 대비 -33.3%, 반등 여지.
 - **290650 290650.KQ**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA120 +0.3% 단일 기준선 테스트 / RSI 47 부담 없는 진입 구간 / 52주 고점 대비 -40.7%, 반등 여지.
-- **090710 090710.KQ**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -0.6% 단일 기준선 테스트 / RSI 57 부담 없는 진입 구간 / 52주 고점 대비 -40.5%, 반등 여지.
+- **90710 090710.KQ**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -0.6% 단일 기준선 테스트 / RSI 57 부담 없는 진입 구간 / 52주 고점 대비 -40.5%, 반등 여지.
 - **257720 실리콘투**: 추세 약세(Downtrend), 반등 여부 확인 필요 / MA240 -0.4% 단일 기준선 테스트 / RSI 52 부담 없는 진입 구간 / 52주 고점 대비 -27.2%, 반등 여지.
 
 ---
@@ -73,7 +73,7 @@ _해당 종목 없음_
 |---|---|:---:|---:|---:|---:|---:|---:|---|
 | 214150 | 클래시스 | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 57,500 | 54 | -23.9% | - | - | MA60 -1.9% / MA120 +0.3% / MA240 +1.4% |
 | 204270 | 204270.KQ | <span class="badge badge-down" title="Downtrend">⬇</span> | KRW 19,650 | 57 | -33.3% | - | - | MA60 +1.3% / MA240 -0.3% |
-| 096530 | 씨젠 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 24,800 | 54 | -27.8% | - | - | MA60 +1.5% / MA120 +1.2% |
+| 96530 | 씨젠 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 24,800 | 54 | -27.8% | - | - | MA60 +1.5% / MA120 +1.2% |
 | 328130 | 328130.KQ | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 38,450 | 57 | -33.2% | - | - | MA60 +1.7% / MA120 -1.2% |
 
 - 복수 MA 수렴의 중심 후보는 **214150** 이며, MA60 -1.9% / MA120 +0.3% / MA240 +1.4% 구간에서 방향성 선택을 앞둔 모습입니다.
@@ -107,7 +107,7 @@ _해당 종목 없음_
 
 - **Unknown**: 근접 종목 11개(57.9%), 평균 RSI 54, 평균 업사이드 -, 상위 후보는 241710.
 - **바이오**: 근접 종목 2개(10.5%), 평균 RSI 54, 평균 업사이드 -, 상위 후보는 196170.
-- **엔터테인먼트**: 근접 종목 1개(5.3%), 평균 RSI 54, 평균 업사이드 -, 상위 후보는 035900.
+- **엔터테인먼트**: 근접 종목 1개(5.3%), 평균 RSI 54, 평균 업사이드 -, 상위 후보는 35900.
 - 상위 섹터 비중이 57.9%로 높아 이번 스캔은 특정 섹터 쏠림이 비교적 강합니다.
 
 ---
@@ -127,17 +127,17 @@ _해당 종목 없음_
 | 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |
 |---|---|:---:|---:|---:|---:|---:|---:|---|
 | 277810 | 레인보우로보틱스 | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 668,000 | 61 | -24.1% | - | - | MA60 -0.4% |
-| 090710 | 090710.KQ | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 12,800 | 57 | -40.5% | - | - | MA60 -0.6% |
+| 90710 | 090710.KQ | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 12,800 | 57 | -40.5% | - | - | MA60 -0.6% |
 | 196170 | 알테오젠 | <span class="badge badge-down" title="Downtrend">⬇</span> | KRW 376,500 | 54 | -32.6% | - | - | MA60 +0.8% |
-| 007390 | 007390.KQ | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 20,200 | 55 | -46.6% | - | - | MA60 -0.8% |
-| 006730 | 006730.KQ | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 14,840 | 61 | -20.1% | - | - | MA60 -1.1% |
+| 7390 | 007390.KQ | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 20,200 | 55 | -46.6% | - | - | MA60 -0.8% |
+| 6730 | 006730.KQ | <span class="badge badge-up" title="Uptrend">⬆</span> | KRW 14,840 | 61 | -20.1% | - | - | MA60 -1.1% |
 | 204270 | 204270.KQ | <span class="badge badge-down" title="Downtrend">⬇</span> | KRW 19,650 | 57 | -33.3% | - | - | MA60 +1.3% / MA240 -0.3% |
-| 096530 | 씨젠 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 24,800 | 54 | -27.8% | - | - | MA60 +1.5% / MA120 +1.2% |
+| 96530 | 씨젠 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 24,800 | 54 | -27.8% | - | - | MA60 +1.5% / MA120 +1.2% |
 | 241710 | 241710.KQ | <span class="badge badge-strong-up" title="Strong Uptrend">⬆⬆</span> | KRW 85,300 | 57 | -17.2% | - | - | MA60 +1.7% |
 | 328130 | 328130.KQ | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 38,450 | 57 | -33.2% | - | - | MA60 +1.7% / MA120 -1.2% |
 | 214450 | 파마리서치 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 325,000 | 57 | -54.2% | - | - | MA60 -1.8% |
 | 214150 | 클래시스 | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 57,500 | 54 | -23.9% | - | - | MA60 -1.9% / MA120 +0.3% / MA240 +1.4% |
-| 035900 | JYP엔터테인먼트 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 63,500 | 54 | -24.3% | - | - | MA60 -2.0% |
+| 35900 | JYP엔터테인먼트 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 63,500 | 54 | -24.3% | - | - | MA60 -2.0% |
 
 ### MA120 근접 (6개)
 
@@ -148,7 +148,7 @@ _해당 종목 없음_
 | 174900 | 174900.KQ | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 52,000 | 44 | -41.6% | - | - | MA120 +0.4% |
 | 358570 | 358570.KQ | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 15,760 | 58 | -34.3% | - | - | MA120 +0.6% |
 | 328130 | 328130.KQ | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 38,450 | 57 | -33.2% | - | - | MA60 +1.7% / MA120 -1.2% |
-| 096530 | 씨젠 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 24,800 | 54 | -27.8% | - | - | MA60 +1.5% / MA120 +1.2% |
+| 96530 | 씨젠 | <span class="badge badge-strong-down" title="Strong Downtrend">⬇⬇</span> | KRW 24,800 | 54 | -27.8% | - | - | MA60 +1.5% / MA120 +1.2% |
 
 ### MA240 근접 (6개)
 
@@ -157,8 +157,8 @@ _해당 종목 없음_
 | 204270 | 204270.KQ | <span class="badge badge-down" title="Downtrend">⬇</span> | KRW 19,650 | 57 | -33.3% | - | - | MA60 +1.3% / MA240 -0.3% |
 | 257720 | 실리콘투 | <span class="badge badge-down" title="Downtrend">⬇</span> | KRW 44,650 | 52 | -27.2% | - | - | MA240 -0.4% |
 | 214150 | 클래시스 | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 57,500 | 54 | -23.9% | - | - | MA60 -1.9% / MA120 +0.3% / MA240 +1.4% |
-| 067630 | HLB생명과학 | <span class="badge badge-down" title="Downtrend">⬇</span> | KRW 4,300 | 54 | -35.1% | - | - | MA240 -1.4% |
-| 068760 | 068760.KQ | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 57,900 | 49 | -23.5% | - | - | MA240 +1.6% |
-| 087010 | 087010.KQ | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 270,500 | 48 | -29.9% | - | - | MA240 +1.7% |
+| 67630 | HLB생명과학 | <span class="badge badge-down" title="Downtrend">⬇</span> | KRW 4,300 | 54 | -35.1% | - | - | MA240 -1.4% |
+| 68760 | 068760.KQ | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 57,900 | 49 | -23.5% | - | - | MA240 +1.6% |
+| 87010 | 087010.KQ | <span class="badge badge-neutral" title="Neutral">→</span> | KRW 270,500 | 48 | -29.9% | - | - | MA240 +1.7% |
 
 *이 리포트는 공통 리팩터링 파이프라인에서 생성되었습니다.*
