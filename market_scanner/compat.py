@@ -14,6 +14,8 @@ from market_scanner.pipeline import scan_market, write_html, write_markdown
 from market_scanner.translator import translate_scan_csv
 
 DATA_DIR = Path("data")
+ANALYSIS_DIR = Path("analysis")
+REPORT_DIR = Path("reports")
 
 # Flat-file path conventions for known markets (backward compat).
 # New markets fall through to the generic pattern below.
@@ -32,8 +34,8 @@ def compat_paths(market_key: str, date_str: str) -> dict[str, Path]:
         data_pfx, md_pfx, html_pfx = f"Data_{label}", f"Analysis_{label}", f"Report_{label}"
     return {
         "csv":  DATA_DIR / f"{data_pfx}_{date_str}.csv",
-        "md":   Path(f"{md_pfx}_{date_str}.md"),
-        "html": Path(f"{html_pfx}_{date_str}.html"),
+        "md":   ANALYSIS_DIR / f"{md_pfx}_{date_str}.md",
+        "html": REPORT_DIR / f"{html_pfx}_{date_str}.html",
     }
 
 
@@ -41,10 +43,23 @@ def _legacy_csv_path(path: Path) -> Path:
     return Path(path.name)
 
 
+def _legacy_report_path(path: Path) -> Path:
+    return Path(path.name)
+
+
 def _existing_csv_path(path: Path) -> Path:
     if path.exists():
         return path
     legacy_path = _legacy_csv_path(path)
+    if legacy_path.exists():
+        return legacy_path
+    return path
+
+
+def _existing_report_path(path: Path) -> Path:
+    if path.exists():
+        return path
+    legacy_path = _legacy_report_path(path)
     if legacy_path.exists():
         return legacy_path
     return path
@@ -79,6 +94,7 @@ def run_analysis_stage(market_key: str, date_str: str, frame: pd.DataFrame | Non
     settings = ScanSettings(output_dir=Path("."))
     if frame is None:
         frame = pd.read_csv(_existing_csv_path(paths["csv"]), encoding="utf-8-sig")
+    paths["md"].parent.mkdir(parents=True, exist_ok=True)
     markdown = write_markdown(frame, market, settings, date_str, paths["md"])
     return markdown, paths
 
@@ -95,7 +111,9 @@ def run_render_stage(
     if frame is None:
         frame = pd.read_csv(_existing_csv_path(paths["csv"]), encoding="utf-8-sig")
     if markdown is None:
-        markdown = paths["md"].read_text(encoding="utf-8") if paths["md"].exists() else ""
+        md_path = _existing_report_path(paths["md"])
+        markdown = md_path.read_text(encoding="utf-8") if md_path.exists() else ""
+    paths["html"].parent.mkdir(parents=True, exist_ok=True)
     write_html(frame, market, settings, date_str, markdown, paths["html"])
     return paths
 

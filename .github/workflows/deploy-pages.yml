@@ -11,8 +11,8 @@ on:
       - "market_scanner/**"
       - ".github/workflows/**"
       - "data/Data*.csv"
-      - "Analysis*.md"
-      - "Report*.html"
+      - "analysis/Analysis*.md"
+      - "reports/Report*.html"
   workflow_dispatch:
 
 permissions:

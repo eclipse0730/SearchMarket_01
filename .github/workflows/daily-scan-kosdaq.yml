@@ -34,7 +34,7 @@ jobs:
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          git add data/Data_Kosdaq_*.csv Analysis_Kosdaq_*.md Report_Kosdaq_*.html market_scanner/assets/investing_url_cache.json market_scanner/assets/sp500_members_cache.json
+          git add data/Data_Kosdaq_*.csv analysis/Analysis_Kosdaq_*.md reports/Report_Kosdaq_*.html market_scanner/assets/investing_url_cache.json market_scanner/assets/sp500_members_cache.json
           git diff --staged --quiet || git commit -m "scan(KOSDAQ): $(date +'%Y-%m-%d')"
 
       - name: Push

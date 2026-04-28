@@ -20,6 +20,8 @@ from market_scanner.pipeline import write_html, write_markdown
 
 ROOT_DIR = Path(".")
 DATA_DIR = ROOT_DIR / "data"
+ANALYSIS_DIR = ROOT_DIR / "analysis"
+REPORT_DIR = ROOT_DIR / "reports"
 SITE_DIR = ROOT_DIR / "site"
 SITE_ARCHIVE_DIR = SITE_DIR / "archive"
 SITE_ASSET_DIR = SITE_DIR / "assets"
@@ -77,6 +79,13 @@ def _latest_date_for_prefix(prefix: str, directory: Path = ROOT_DIR) -> str | No
     return max(dates) if dates else None
 
 
+def _first_existing_path(*paths: Path) -> Path | None:
+    for path in paths:
+        if path.exists():
+            return path
+    return None
+
+
 def _csv_path_for_date(prefix: str, date_str: str) -> Path:
     data_path = DATA_DIR / f"{prefix}_{date_str}.csv"
     if data_path.exists():
@@ -90,6 +99,7 @@ def _latest_market_artifacts(market_key: str) -> tuple[str, Path, Path, Path | N
         {
             date
             for date in (
+                _latest_date_for_prefix(html_prefix, REPORT_DIR),
                 _latest_date_for_prefix(html_prefix),
                 _latest_date_for_prefix(csv_prefix, DATA_DIR),
                 _latest_date_for_prefix(csv_prefix),
@@ -102,9 +112,15 @@ def _latest_market_artifacts(market_key: str) -> tuple[str, Path, Path, Path | N
         csv_path = _csv_path_for_date(csv_prefix, date_str)
         if not csv_path.exists():
             continue
-        md_path = ROOT_DIR / f"{md_prefix}_{date_str}.md"
-        html_path = ROOT_DIR / f"{html_prefix}_{date_str}.html"
-        return date_str, csv_path, md_path, html_path if html_path.exists() else None
+        md_path = _first_existing_path(
+            ANALYSIS_DIR / f"{md_prefix}_{date_str}.md",
+            ROOT_DIR / f"{md_prefix}_{date_str}.md",
+        ) or ANALYSIS_DIR / f"{md_prefix}_{date_str}.md"
+        html_path = _first_existing_path(
+            REPORT_DIR / f"{html_prefix}_{date_str}.html",
+            ROOT_DIR / f"{html_prefix}_{date_str}.html",
+        )
+        return date_str, csv_path, md_path, html_path
     return None
 
 

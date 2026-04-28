@@ -27,10 +27,10 @@ python Search.py --market commodities
 
 # 단계 선택 (기본: all)
 python Search.py --market us --stage scan      # 스캔 → data/Data_YYYYMMDD.csv
-python Search.py --market us --stage analyze   # 분석 → Analysis_YYYYMMDD.md
+python Search.py --market us --stage analyze   # 분석 → analysis/Analysis_YYYYMMDD.md
 python Search.py --market us --stage translate # 번역 (US 전용)
 python Search.py --market us --stage news      # 뉴스 캐시 → market_scanner/assets/news_cache.json
-python Search.py --market us --stage render    # HTML → Report_YYYYMMDD.html
+python Search.py --market us --stage render    # HTML → reports/Report_YYYYMMDD.html
 
 # 기타 옵션
 python Search.py --market us --workers 8       # 병렬 worker 수
@@ -45,12 +45,12 @@ python Search.py --market us --setup-scheduler --time 08:30
 
 | 시장 | CSV | Markdown | HTML |
 |---|---|---|---|
-| us | `data/Data_YYYYMMDD.csv` | `Analysis_YYYYMMDD.md` | `Report_YYYYMMDD.html` |
-| kospi | `data/Data_Kospi_YYYYMMDD.csv` | `Analysis_Kospi_YYYYMMDD.md` | `Report_Kospi_YYYYMMDD.html` |
-| kosdaq | `data/Data_Kosdaq_YYYYMMDD.csv` | `Analysis_Kosdaq_YYYYMMDD.md` | `Report_Kosdaq_YYYYMMDD.html` |
-| global-indices | `data/Data_GlobalIndices_YYYYMMDD.csv` | … | `Report_GlobalIndices_YYYYMMDD.html` |
-| theme-proxies | `data/Data_ThemeProxies_YYYYMMDD.csv` | … | `Report_ThemeProxies_YYYYMMDD.html` |
-| commodities | `data/Data_Commodities_YYYYMMDD.csv` | … | `Report_Commodities_YYYYMMDD.html` |
+| us | `data/Data_YYYYMMDD.csv` | `analysis/Analysis_YYYYMMDD.md` | `reports/Report_YYYYMMDD.html` |
+| kospi | `data/Data_Kospi_YYYYMMDD.csv` | `analysis/Analysis_Kospi_YYYYMMDD.md` | `reports/Report_Kospi_YYYYMMDD.html` |
+| kosdaq | `data/Data_Kosdaq_YYYYMMDD.csv` | `analysis/Analysis_Kosdaq_YYYYMMDD.md` | `reports/Report_Kosdaq_YYYYMMDD.html` |
+| global-indices | `data/Data_GlobalIndices_YYYYMMDD.csv` | `analysis/Analysis_GlobalIndices_YYYYMMDD.md` | `reports/Report_GlobalIndices_YYYYMMDD.html` |
+| theme-proxies | `data/Data_ThemeProxies_YYYYMMDD.csv` | `analysis/Analysis_ThemeProxies_YYYYMMDD.md` | `reports/Report_ThemeProxies_YYYYMMDD.html` |
+| commodities | `data/Data_Commodities_YYYYMMDD.csv` | `analysis/Analysis_Commodities_YYYYMMDD.md` | `reports/Report_Commodities_YYYYMMDD.html` |
 
 ## 사이트 대시보드
 
@@ -75,7 +75,7 @@ python3 -m market_scanner.site_builder --no-open
 - 시장별 스냅샷: NASDAQ 100, S&P 500, Dow 30, KOSPI, KOSDAQ, 글로벌 지수, 테마 ETF, 원자재 비교
 - 섹터 리더십: 추세 점수가 높은 섹터 요약
 
-루트 `Report_*.html`이 없더라도 `data/`의 최신 CSV가 있으면 사이트 페이지를 재렌더링합니다.
+`reports/Report_*.html`이 없더라도 `data/`의 최신 CSV가 있으면 사이트 페이지를 재렌더링합니다. 과거 루트 `Report_*.html`은 읽기 fallback으로만 지원합니다.
 
 상세 페이지는 좌측 종목 리스트와 우측 인사이트 패널로 구성됩니다.
 

@@ -65,8 +65,8 @@
 
 - `data/Data_*.csv`가 canonical CSV 위치입니다.
 - 과거 루트 `Data_*.csv`는 읽기 fallback으로만 지원합니다.
-- `Analysis_*.md`
-- `Report_*.html`
+- `analysis/Analysis_*.md`
+- `reports/Report_*.html`
 - `site/**`
 - `market_scanner/assets/investing_url_cache.json`
 - `market_scanner/assets/sp500_members_cache.json`
@@ -75,10 +75,10 @@
 
 주의:
 
-- `Analysis_*.md`는 자동 생성 리포트입니다. 개발 노트는 `DEVELOPMENT_NOTES.md`에 작성합니다.
+- `analysis/Analysis_*.md`는 자동 생성 리포트입니다. 개발 노트는 `DEVELOPMENT_NOTES.md`에 작성합니다.
 - 새 스캔 CSV 산출물은 `data/`에 저장합니다.
 - `site_builder.py`는 `site/`를 삭제 후 재생성합니다. 수동으로 넣은 `site/` 파일은 유지되지 않습니다.
-- 루트 `Report_*.html`이 있으면 Pages 생성 시 재사용합니다. 없으면 최신 CSV/Markdown에서 사이트 페이지를 재렌더링합니다.
+- `reports/Report_*.html`이 있으면 Pages 생성 시 재사용합니다. 없으면 최신 CSV/Markdown에서 사이트 페이지를 재렌더링합니다. 과거 루트 `Report_*.html`은 읽기 fallback으로만 지원합니다.
 - S&P 500 구성 종목은 `sp500_members_cache.json` 구조화 캐시와 `sp500_members_manual.json` 수동 override를 사용합니다.
 
 ## Current Known State
@@ -101,7 +101,7 @@
 - 공포지수는 `yfinance` VIX 조회를 우선 사용하되, 렌더링 환경 네트워크가 막힐 수 있으므로 글로벌 지수 CSV의 `^VIX` fallback을 지원함
 - Dow 30은 별도 CLI 시장이 아니라 US 스캔 결과에서 파생 생성되는 사이트 페이지임
 - S&P 500 캐시는 과거 list 형식과 새 metadata 형식을 모두 읽을 수 있음
-- `git status`에 루트 `Report_*.html` 삭제 상태가 존재함. 사용자 변경일 수 있으므로 명시 요청 전에는 직접 복구하지 않습니다.
+- `Analysis_*.md`와 `Report_*.html`은 루트가 아니라 각각 `analysis/`, `reports/` 폴더에서 관리함.
 
 ## Maintenance Rule
 

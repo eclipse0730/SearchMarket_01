@@ -37,9 +37,9 @@ jobs:
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          git add data/Data_GlobalIndices_*.csv Analysis_GlobalIndices_*.md Report_GlobalIndices_*.html
-          git add data/Data_ThemeProxies_*.csv Analysis_ThemeProxies_*.md Report_ThemeProxies_*.html
-          git add data/Data_Commodities_*.csv Analysis_Commodities_*.md Report_Commodities_*.html
+          git add data/Data_GlobalIndices_*.csv analysis/Analysis_GlobalIndices_*.md reports/Report_GlobalIndices_*.html
+          git add data/Data_ThemeProxies_*.csv analysis/Analysis_ThemeProxies_*.md reports/Report_ThemeProxies_*.html
+          git add data/Data_Commodities_*.csv analysis/Analysis_Commodities_*.md reports/Report_Commodities_*.html
           git add market_scanner/assets/investing_url_cache.json market_scanner/assets/sp500_members_cache.json
           git diff --staged --quiet || git commit -m "scan(overview): $(date +'%Y-%m-%d')"
 
