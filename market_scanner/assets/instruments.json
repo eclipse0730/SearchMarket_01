@@ -3289,6 +3289,16 @@
     "source": "static",
     "updated_at": "2026-04-29"
   },
+  "389470.KQ": {
+    "description": "인벤티지랩 (KOSDAQ)",
+    "display_symbol": "389470",
+    "market_key": "kosdaq",
+    "name_en": "인벤티지랩",
+    "name_local": "인벤티지랩",
+    "sector": "Unknown",
+    "source": "csv",
+    "updated_at": "2026-04-29"
+  },
   "397030.KQ": {
     "description": "AprilBio Co., Ltd. develops long-acting type biobetter and antibody biologics. The company develops antibody drugs, doub",
     "display_symbol": "397030",
@@ -6620,7 +6630,7 @@
     "updated_at": "2026-04-28"
   },
   "LUV": {
-    "description": "Southwest Airlines Co. operates as a passenger airline company that provides scheduled air transportation services in the United States and internationally. It ",
+    "description": "Southwest Airlines Co. operates as a passenger airline company that provides scheduled air transportation services in the United States and internationally. It",
     "display_symbol": "LUV",
     "market_key": "us",
     "name_en": "Southwest Airlines Co.",
@@ -7140,7 +7150,7 @@
     "updated_at": "2026-04-28"
   },
   "NSC": {
-    "description": "Norfolk Southern Corporation, together with its subsidiaries, engages in the rail transportation of raw materials, intermediate products, and finished goods in ",
+    "description": "Norfolk Southern Corporation, together with its subsidiaries, engages in the rail transportation of raw materials, intermediate products, and finished goods in",
     "display_symbol": "NSC",
     "market_key": "us",
     "name_en": "Norfolk Southern Corporation",
@@ -7160,7 +7170,7 @@
     "updated_at": "2026-04-28"
   },
   "NTRS": {
-    "description": "Northern Trust Corporation, a financial holding company, provides wealth management, asset servicing, asset management, and banking solutions for corporations, ",
+    "description": "Northern Trust Corporation, a financial holding company, provides wealth management, asset servicing, asset management, and banking solutions for corporations,",
     "display_symbol": "NTRS",
     "market_key": "us",
     "name_en": "Northern Trust Corporation",
@@ -7170,7 +7180,7 @@
     "updated_at": "2026-04-28"
   },
   "NUE": {
-    "description": "Nucor Corporation engages in the manufacture and sale of steel and steel products. The company operates in three segments: Steel Mills, Steel Products, and Raw ",
+    "description": "Nucor Corporation engages in the manufacture and sale of steel and steel products. The company operates in three segments: Steel Mills, Steel Products, and Raw",
     "display_symbol": "NUE",
     "market_key": "us",
     "name_en": "Nucor Corporation",
@@ -7250,7 +7260,7 @@
     "updated_at": "2026-04-28"
   },
   "OKE": {
-    "description": "ONEOK, Inc. operates as a midstream service provider of gathering, processing, fractionation, transportation, storage, and marine export services in the United ",
+    "description": "ONEOK, Inc. operates as a midstream service provider of gathering, processing, fractionation, transportation, storage, and marine export services in the United",
     "display_symbol": "OKE",
     "market_key": "us",
     "name_en": "ONEOK, Inc.",
@@ -7400,7 +7410,7 @@
     "updated_at": "2026-04-28"
   },
   "PFE": {
-    "description": "Pfizer Inc. discovers, develops, manufactures, markets, distributes, and sells biopharmaceutical products in the United States and internationally. It operates ",
+    "description": "Pfizer Inc. discovers, develops, manufactures, markets, distributes, and sells biopharmaceutical products in the United States and internationally. It operates",
     "display_symbol": "PFE",
     "market_key": "us",
     "name_en": "Pfizer Inc.",
@@ -7430,7 +7440,7 @@
     "updated_at": "2026-04-28"
   },
   "PGR": {
-    "description": "The Progressive Corporation operates as an insurance company in the United States. It writes insurance for personal autos and special lines products, including ",
+    "description": "The Progressive Corporation operates as an insurance company in the United States. It writes insurance for personal autos and special lines products, including",
     "display_symbol": "PGR",
     "market_key": "us",
     "name_en": "The Progressive Corporation",
@@ -7590,7 +7600,7 @@
     "updated_at": "2026-04-28"
   },
   "PSA": {
-    "description": "Public Storage, a member of the S&P 500, is a REIT that primarily acquires, develops, owns, and operates self-storage facilities. At December 31, 2025, we: (i) ",
+    "description": "Public Storage, a member of the S&P 500, is a REIT that primarily acquires, develops, owns, and operates self-storage facilities. At December 31, 2025, we: (i)",
     "display_symbol": "PSA",
     "market_key": "us",
     "name_en": "Public Storage",
@@ -7630,7 +7640,7 @@
     "updated_at": "2026-04-28"
   },
   "PWR": {
-    "description": "Quanta Services, Inc. offers infrastructure solutions for the electric and gas utility, power generation, load center, manufacturing, communications, pipeline, ",
+    "description": "Quanta Services, Inc. offers infrastructure solutions for the electric and gas utility, power generation, load center, manufacturing, communications, pipeline,",
     "display_symbol": "PWR",
     "market_key": "us",
     "name_en": "Quanta Services, Inc.",
@@ -7720,7 +7730,7 @@
     "updated_at": "2026-04-28"
   },
   "RL": {
-    "description": "Ralph Lauren Corporation designs, markets, and distributes lifestyle products in North America, Europe, Asia, and internationally. It offers apparel, including ",
+    "description": "Ralph Lauren Corporation designs, markets, and distributes lifestyle products in North America, Europe, Asia, and internationally. It offers apparel, including",
     "display_symbol": "RL",
     "market_key": "us",
     "name_en": "Ralph Lauren Corporation",
@@ -7960,7 +7970,7 @@
     "updated_at": "2026-04-28"
   },
   "SOLV": {
-    "description": "Solventum Corporation, a healthcare company, develops, manufactures, and commercializes a portfolio of solutions to address critical customer and patient needs ",
+    "description": "Solventum Corporation, a healthcare company, develops, manufactures, and commercializes a portfolio of solutions to address critical customer and patient needs",
     "display_symbol": "SOLV",
     "market_key": "us",
     "name_en": "Solventum Corporation",
@@ -8200,7 +8210,7 @@
     "updated_at": "2026-04-28"
   },
   "TFC": {
-    "description": "Truist Financial Corporation, a financial services company, provides banking and trust services in the Southeastern and Mid-Atlantic United States. The company ",
+    "description": "Truist Financial Corporation, a financial services company, provides banking and trust services in the Southeastern and Mid-Atlantic United States. The company",
     "display_symbol": "TFC",
     "market_key": "us",
     "name_en": "Truist Financial Corporation",
@@ -8210,7 +8220,7 @@
     "updated_at": "2026-04-28"
   },
   "TGT": {
-    "description": "Target Corporation operates as a general merchandise retailer in the United States. It offers apparel for women, men, young adults, kids, toddlers, and babies, ",
+    "description": "Target Corporation operates as a general merchandise retailer in the United States. It offers apparel for women, men, young adults, kids, toddlers, and babies,",
     "display_symbol": "TGT",
     "market_key": "us",
     "name_en": "Target Corporation",
@@ -8370,7 +8380,7 @@
     "updated_at": "2026-04-28"
   },
   "TTD": {
-    "description": "The Trade Desk, Inc. operates as a technology company in the United States and internationally. The company creates, manages, and optimizes digital advertising ",
+    "description": "The Trade Desk, Inc. operates as a technology company in the United States and internationally. The company creates, manages, and optimizes digital advertising",
     "display_symbol": "TTD",
     "market_key": "us",
     "name_en": "The Trade Desk, Inc.",
@@ -8430,7 +8440,7 @@
     "updated_at": "2026-04-28"
   },
   "UBER": {
-    "description": "Uber Technologies, Inc. develops and operates proprietary technology applications in the United States, Canada, Latin America, Europe, the Middle East, Africa, ",
+    "description": "Uber Technologies, Inc. develops and operates proprietary technology applications in the United States, Canada, Latin America, Europe, the Middle East, Africa,",
     "display_symbol": "UBER",
     "market_key": "us",
     "name_en": "Uber Technologies, Inc.",
@@ -8580,7 +8590,7 @@
     "updated_at": "2026-04-28"
   },
   "VRSN": {
-    "description": "VeriSign, Inc., together with its subsidiaries, provides internet infrastructure and domain name registry services that enables internet navigation for various ",
+    "description": "VeriSign, Inc., together with its subsidiaries, provides internet infrastructure and domain name registry services that enables internet navigation for various",
     "display_symbol": "VRSN",
     "market_key": "us",
     "name_en": "VeriSign, Inc.",
@@ -8640,7 +8650,7 @@
     "updated_at": "2026-04-28"
   },
   "VZ": {
-    "description": "Verizon Communications Inc., through its subsidiaries, engages in the provision of communications, technology, information, and streaming products and services ",
+    "description": "Verizon Communications Inc., through its subsidiaries, engages in the provision of communications, technology, information, and streaming products and services",
     "display_symbol": "VZ",
     "market_key": "us",
     "name_en": "Verizon Communications Inc.",
@@ -8760,7 +8770,7 @@
     "updated_at": "2026-04-28"
   },
   "WRB": {
-    "description": "W. R. Berkley Corporation, an insurance holding company, operates as a commercial line writer worldwide. The company operates through Insurance and Reinsurance ",
+    "description": "W. R. Berkley Corporation, an insurance holding company, operates as a commercial line writer worldwide. The company operates through Insurance and Reinsurance",
     "display_symbol": "WRB",
     "market_key": "us",
     "name_en": "W. R. Berkley Corporation",
@@ -8870,7 +8880,7 @@
     "updated_at": "2026-04-28"
   },
   "XYL": {
-    "description": "Xylem Inc., together with its subsidiaries, engages in the design, manufacture, and servicing of engineered products and solutions for utility, industrial, and ",
+    "description": "Xylem Inc., together with its subsidiaries, engages in the design, manufacture, and servicing of engineered products and solutions for utility, industrial, and",
     "display_symbol": "XYL",
     "market_key": "us",
     "name_en": "Xylem Inc.",
