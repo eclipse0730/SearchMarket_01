@@ -1,0 +1,14 @@
+﻿symbol,display_symbol,name_en,name_local,sector,description,price,change_pct,rsi,high_52w,low_52w,from_high_pct,volume_ratio,trailing_pe,target_price,upside_pct,trend,trend_score,ma_60,diff_60,near_60,ma_120,diff_120,near_120,ma_240,diff_240,near_240,composite_score,near_count
+ICLN,ICLN,iShares Global Clean Energy ETF,클린에너지 ETF,클린에너지,Clean energy proxy.,19.84,-1.68,59.6,20.18,11.53,-1.7,1.3,22.5,,,Strong Uptrend,5,18.67,6.27,False,17.85,11.15,False,16.0,24.0,False,48.0,0
+SOXX,SOXX,iShares Semiconductor ETF,반도체 ETF,반도체,Semiconductor cycle proxy.,438.71,-3.67,69.7,461.6,181.35,-5.0,1.53,49.3,,,Strong Uptrend,5,360.95,21.54,False,335.58,30.73,False,292.21,50.14,False,30.0,0
+XLK,XLK,Technology Select Sector SPDR,기술 ETF,기술,Large-cap technology proxy.,157.85,-1.69,69.0,160.57,103.47,-1.7,0.78,37.5,,,Uptrend,4,141.7,11.4,False,142.98,10.4,False,136.94,15.27,False,19.0,0
+IBB,IBB,iShares Biotechnology ETF,바이오테크 ETF,바이오테크,Biotechnology proxy.,167.81,-0.72,43.5,177.51,116.35,-5.5,0.68,22.9,,,Neutral,3,170.62,-1.65,True,169.89,-1.22,True,153.19,9.54,False,37.0,2
+BOTZ,BOTZ,Global X Robotics & AI ETF,로봇·AI ETF,로봇·AI,Robotics and AI proxy.,37.66,-2.16,59.0,39.66,28.32,-5.0,1.17,38.6,,,Downtrend,2,36.36,3.58,False,36.36,3.58,False,34.97,7.69,False,27.0,0
+XLE,XLE,Energy Select Sector SPDR,에너지 ETF,에너지,Energy sector proxy.,57.71,1.66,53.3,62.56,39.0,-7.8,0.75,22.2,,,Strong Uptrend,5,56.47,2.2,False,50.95,13.27,False,46.68,23.63,False,48.0,0
+XLF,XLF,Financial Select Sector SPDR,금융 ETF,금융,Financial sector proxy.,51.85,0.08,57.2,56.11,47.44,-7.6,0.61,17.5,,,Downtrend,2,50.98,1.71,True,52.21,-0.69,True,52.01,-0.31,True,46.0,3
+ARKK,ARKK,ARK Innovation ETF,혁신성장 ETF,혁신성장,High-beta innovation proxy.,75.45,-1.44,54.1,92.53,48.78,-18.5,0.98,49.7,,,Downtrend,2,72.02,4.76,False,75.88,-0.57,True,75.39,0.08,True,41.0,2
+ITA,ITA,iShares U.S. Aerospace & Defense ETF,방산·항공 ETF,방산·항공,US aerospace and defense sector proxy.,216.21,0.08,37.5,250.42,154.89,-13.7,1.28,37.1,,,Neutral,3,231.27,-6.51,False,223.8,-3.39,False,209.07,3.42,False,32.0,0
+HACK,HACK,ETFMG Prime Cyber Security ETF,사이버보안 ETF,사이버보안,Cybersecurity industry proxy.,79.21,-0.38,55.2,89.1,70.69,-11.1,0.68,30.0,,,Strong Downtrend,1,76.34,3.76,False,79.19,0.03,True,81.97,-3.37,False,31.0,1
+GLD,GLD,SPDR Gold Shares,금 ETF,금,Physical gold price proxy.,421.91,-1.86,41.1,495.9,293.16,-14.9,0.94,,,,Neutral,3,447.47,-5.71,False,425.61,-0.87,True,375.92,12.23,False,36.0,1
+MCHI,MCHI,iShares MSCI China ETF,중국 대형주 ETF,중국,China large-cap equity proxy.,56.76,-0.63,44.4,66.18,50.47,-14.2,0.68,12.7,,,Strong Downtrend,1,58.28,-2.61,False,60.09,-5.54,False,59.36,-4.38,False,27.0,0
+TLT,TLT,iShares 20+ Year Treasury Bond ETF,장기채 ETF,장기채,US long-term Treasury bond proxy.,86.37,0.1,46.2,90.16,80.62,-4.2,0.65,,,,Downtrend,2,87.28,-1.04,True,87.19,-0.94,True,86.15,0.26,True,39.0,3
