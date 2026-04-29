@@ -13,6 +13,17 @@ on:
       - "data/Data*.csv"
       - "analysis/Analysis*.md"
       - "reports/Report*.html"
+  workflow_run:
+    workflows:
+      - Daily Scan US Markets (KST 08:05)
+      - Daily Scan Overview Markets (KST 08:20)
+      - Daily Scan KOSPI (KST 16:05)
+      - Daily Scan KOSDAQ (KST 16:35)
+    types:
+      - completed
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 permissions:
@@ -26,6 +37,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:

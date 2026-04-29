@@ -80,6 +80,7 @@ python -m market_scanner.site_builder --no-open
 - 섹터 리더십: 추세 점수가 높은 섹터 요약
 
 GitHub Pages 사이트는 `data/`의 최신 CSV를 현재 템플릿으로 다시 렌더링합니다. `reports/Report_*.html`은 개별 HTML 리포트 산출물로 보관됩니다.
+자동 스캔 워크플로가 성공적으로 끝나면 `Deploy GitHub Pages`가 이어서 실행되어 Pages artifact를 다시 빌드하고 배포합니다.
 
 상세 페이지는 좌측 종목 리스트와 우측 인사이트 패널로 구성됩니다.
 
@@ -137,5 +138,7 @@ KOSPI metadata is maintained against the KOSPI 200 component set. When the stati
 | 워크플로우 | 실행 시각 | 대상 |
 |---|---|---|
 | `daily-scan.yml` | KST 08:05 (장 마감 후 익일 오전) | US Market |
+| `daily-scan-overview.yml` | KST 08:20 | 글로벌 지수·테마 ETF·원자재 |
 | `daily-scan-kospi.yml` | KST 16:05 (코스피 장 마감 직후) | KOSPI |
 | `daily-scan-kosdaq.yml` | KST 16:35 (코스닥 장 마감 직후) | KOSDAQ |
+| `deploy-pages.yml` | 스캔 성공 후 자동, 또는 관련 파일 push/수동 실행 | GitHub Pages 사이트 빌드·배포 |
