@@ -325,7 +325,7 @@ def _regime_label(stock_stats: dict[str, float | int | str | None], macro_stats:
     rsi_value = float(avg_rsi) if avg_rsi is not None else 50.0
 
     if stock_value >= 58 and macro_value >= 52 and rsi_value < 68:
-        return "Risk-On", "주식 breadth와 매크로 프록시가 함께 우호적인 구간입니다."
+        return "Risk-On", "주식 강세 비율과 매크로 프록시가 함께 우호적인 구간입니다."
     if stock_value <= 42 or macro_value <= 38:
         return "Risk-Off", "강세 종목 비율이 약해 방어적 해석이 필요한 구간입니다."
     if rsi_value >= 65:
@@ -341,6 +341,15 @@ def _pulse_card(title: str, value: str, subtitle: str, tone: str = "info") -> st
         f'<p>{escape(subtitle)}</p>'
         '</div>'
     )
+
+
+def _regime_display_label(regime: str) -> str:
+    return {
+        "Risk-On": "위험 선호",
+        "Risk-Off": "위험 회피",
+        "Heated": "과열",
+        "Balanced": "중립",
+    }.get(regime, regime)
 
 
 def _market_pulse_html(pages: list[BuiltPage], overview_frames: dict[str, pd.DataFrame]) -> str:
@@ -364,10 +373,10 @@ def _market_pulse_html(pages: list[BuiltPage], overview_frames: dict[str, pd.Dat
     oversold = int(stock_stats["oversold_count"] or 0) + int(macro_stats["oversold_count"] or 0)
 
     cards = [
-        _pulse_card("Market Regime", regime, regime_note, "gold" if regime in {"Balanced", "Heated"} else "green" if regime == "Risk-On" else "red"),
-        _pulse_card("Equity Breadth", _pct(stock_stats["breadth"]), f"강세 {stock_stats['up_count']} / 약세 {stock_stats['down_count']}", "green"),
-        _pulse_card("MA Concentration", f"{total_near:,}개", f"전체 {total_rows:,}개 중 이동평균선 근접", "blue"),
-        _pulse_card("RSI Temperature", f"{_stat_number(_combined_frame(stock_frames + macro_frames), 'rsi')}", f"과열 {overbought}개 / 과매도 {oversold}개", "red" if overbought > oversold else "green"),
+        _pulse_card("시장 국면", _regime_display_label(regime), regime_note, "gold" if regime in {"Balanced", "Heated"} else "green" if regime == "Risk-On" else "red"),
+        _pulse_card("주식 강세 비율", _pct(stock_stats["breadth"]), f"강세 {stock_stats['up_count']} / 약세 {stock_stats['down_count']}", "green"),
+        _pulse_card("이동평균 근접도", f"{total_near:,}개", f"전체 {total_rows:,}개 중 이동평균선 근접", "blue"),
+        _pulse_card("RSI 온도", f"{_stat_number(_combined_frame(stock_frames + macro_frames), 'rsi')}", f"과열 {overbought}개 / 과매도 {oversold}개", "red" if overbought > oversold else "green"),
     ]
     return "".join(cards)
 
@@ -405,7 +414,7 @@ def _market_snapshot_table_html(pages: list[BuiltPage], overview_frames: dict[st
 
     return (
         '<div class="panel wide-panel">'
-        '<div class="panel-head"><h3>시장별 스냅샷</h3><p class="panel-sub inline">강세 breadth, RSI, MA 근접률을 한 줄로 비교합니다.</p></div>'
+        '<div class="panel-head"><h3>시장별 스냅샷</h3><p class="panel-sub inline">강세 비율, RSI, MA 근접률을 한 줄로 비교합니다.</p></div>'
         '<table class="snapshot-table">'
         '<thead><tr><th>시장</th><th>종목</th><th>강세 비율</th><th>평균 RSI</th><th>MA 근접률</th><th>대표 추세</th></tr></thead>'
         '<tbody>'
@@ -548,7 +557,7 @@ def _preview_market_cards_html(
             f'<div><span>{escape(title)}</span><strong>{int(stats["total"] or 0):,}</strong></div>'
             f'<p>{escape(description)}</p>'
             '<dl>'
-            f'<div class="wide"><dt>Breadth</dt><dd><b>{escape(_pct(stats["breadth"]))}</b><i class="breadth-mini"><em style="width:{breadth_width:.0f}%"></em></i></dd></div>'
+            f'<div class="wide"><dt>강세 비율</dt><dd><b>{escape(_pct(stats["breadth"]))}</b><i class="breadth-mini"><em style="width:{breadth_width:.0f}%"></em></i></dd></div>'
             f'<div><dt>RSI</dt><dd>{escape(avg_rsi_text)}</dd></div>'
             f'<div><dt>평균 등락</dt><dd class="{change_cls}">{escape(change_text)}</dd></div>'
             f'<div><dt>리딩 섹터</dt><dd>{escape(leading_sector)}</dd></div>'
@@ -559,13 +568,42 @@ def _preview_market_cards_html(
     return "".join(cards)
 
 
-def _format_price_value(value: object) -> str:
+def _market_for_source_key(source_key: object) -> MarketDefinition | None:
+    key = str(source_key or "")
+    if key == "dow30":
+        key = "sp500"
+    return MARKETS.get(key)
+
+
+def _format_price_value(value: object, currency_symbol: str = "", decimals: int = 2) -> str:
     if value is None or pd.isna(value):
         return "-"
     try:
-        return f"{float(value):,.2f}"
+        number = float(value)
     except (TypeError, ValueError):
         return "-"
+    if decimals <= 0:
+        text = f"{number:,.0f}"
+    else:
+        text = f"{number:,.{decimals}f}"
+    return f"{currency_symbol}{text}"
+
+
+def _watchlist_quote_url(row: pd.Series, depth: int) -> str:
+    symbol = str(row.get("symbol") or "")
+    market = _market_for_source_key(row.get("_source_key"))
+    if symbol and market is not None:
+        return market.quote_url_builder(symbol)
+    prefix = "../" * depth
+    slug = str(row.get("_source_slug") or "index")
+    return f"{prefix}{slug}/index.html"
+
+
+def _watchlist_price_text(row: pd.Series) -> str:
+    market = _market_for_source_key(row.get("_source_key"))
+    if market is None:
+        return _format_price_value(row.get("price"))
+    return _format_price_value(row.get("price"), market.currency_symbol, market.price_decimals)
 
 
 def _rsi_class(value: object) -> str:
@@ -600,7 +638,7 @@ def _trend_arrow_html(trend: object) -> str:
 
 def _watchlist_rows(frame: pd.DataFrame, mode: str, limit: int = 8, depth: int = 1) -> str:
     if frame.empty or "symbol" not in frame.columns:
-        return '<tr><td colspan="5" class="muted">데이터가 없습니다.</td></tr>'
+        return '<tr><td colspan="7" class="muted">데이터가 없습니다.</td></tr>'
 
     working = frame.copy()
     for column in (
@@ -641,11 +679,10 @@ def _watchlist_rows(frame: pd.DataFrame, mode: str, limit: int = 8, depth: int =
         selected = working
 
     rows: list[str] = []
-    prefix = "../" * depth
     for _, row in selected.head(limit).iterrows():
         symbol = str(row.get("display_symbol") or row.get("symbol") or "-")
-        slug = str(row.get("_source_slug") or "index")
         market = str(row.get("_source_title") or "-")
+        quote_url = _watchlist_quote_url(row, depth)
         change = row.get("change_pct")
         change_text = f"{float(change):+.2f}%" if pd.notna(change) else "-"
         change_cls = "up" if pd.notna(change) and float(change) >= 0 else "down" if pd.notna(change) else "neutral"
@@ -655,16 +692,16 @@ def _watchlist_rows(frame: pd.DataFrame, mode: str, limit: int = 8, depth: int =
         volume_text = f"{float(volume):.2f}x" if pd.notna(volume) else "-"
         rows.append(
             '<tr>'
-            f'<td><a href="{prefix}{escape(slug)}/index.html">{escape(symbol)}</a><small>{escape(_display_name(row)[:22])}</small></td>'
+            f'<td><a href="{escape(quote_url)}" target="_blank" rel="noopener noreferrer">{escape(symbol)}</a><small>{escape(_display_name(row)[:22])}</small></td>'
             f'<td>{escape(market)}</td>'
-            f'<td>{escape(_format_price_value(row.get("price")))}</td>'
+            f'<td>{escape(_watchlist_price_text(row))}</td>'
             f'<td class="{change_cls}">{escape(change_text)}</td>'
             f'<td class="{_rsi_class(rsi)}">{escape(rsi_text)}</td>'
             f'<td>{_trend_arrow_html(row.get("trend"))}</td>'
             f'<td>{escape(volume_text)}</td>'
             '</tr>'
         )
-    return "".join(rows) if rows else '<tr><td colspan="5" class="muted">조건에 맞는 데이터가 없습니다.</td></tr>'
+    return "".join(rows) if rows else '<tr><td colspan="7" class="muted">조건에 맞는 데이터가 없습니다.</td></tr>'
 
 
 def _watchlist_panel(title: str, subtitle: str, rows: str) -> str:
@@ -1019,8 +1056,8 @@ def _build_home_page(pages: list[BuiltPage], overview_frames: dict[str, pd.DataF
     .snapshot-table .num, .ov-table .num {{ text-align: right; font-variant-numeric: tabular-nums; }}
     .breadth {{
       display: inline-block;
-      width: 92px;
-      height: 7px;
+      width: 46px;
+      height: 4px;
       margin-right: 9px;
       overflow: hidden;
       border-radius: 999px;
@@ -1031,7 +1068,7 @@ def _build_home_page(pages: list[BuiltPage], overview_frames: dict[str, pd.DataF
       display: block;
       height: 100%;
       border-radius: inherit;
-      background: linear-gradient(90deg, #38bdf8, #4ade80);
+      background: #7dd3fc;
     }}
     @media (max-width: 720px) {{
       .market-card dl {{ grid-template-columns: 1fr; }}
@@ -1125,33 +1162,34 @@ def _build_home_preview_page(
     stock_stats = _market_stats(_combined_frame(stock_frames))
     macro_stats = _market_stats(_combined_frame(macro_frames))
     regime, regime_note = _regime_label(stock_stats, macro_stats)
+    regime_display = _regime_display_label(regime)
     stock_breadth = float(stock_stats["breadth"]) if stock_stats.get("breadth") is not None else 0.0
     macro_breadth = float(macro_stats["breadth"]) if macro_stats.get("breadth") is not None else 0.0
     avg_change = _avg_change(combined)
     avg_change_text = f"{avg_change:+.2f}%" if avg_change is not None else "-"
     market_cards = _preview_market_cards_html(pages, overview_frames, depth=depth)
     watchlists = [
-        _watchlist_panel("Strong Momentum", "추세 점수와 당일 등락이 함께 강한 후보", _watchlist_rows(combined, "momentum", depth=depth)),
-        _watchlist_panel("MA Pullback", "강한 추세 안에서 이동평균선에 가까운 후보", _watchlist_rows(combined, "pullback", depth=depth)),
-        _watchlist_panel("Oversold Bounce", "RSI가 낮아 반등 관찰이 필요한 후보", _watchlist_rows(combined, "oversold", depth=depth)),
-        _watchlist_panel("Overheated Risk", "RSI 과열과 고점 근접을 함께 보는 위험 후보", _watchlist_rows(combined, "heated", depth=depth)),
-        _watchlist_panel("Weak Trend Spike", "약하거나 횡보 중인 추세에서 상승률이 튀는 후보", _watchlist_rows(combined, "weak-spike", depth=depth)),
-        _watchlist_panel("Volume Spike", "평균 대비 거래량이 크게 늘어난 후보", _watchlist_rows(combined, "volume", depth=depth)),
+        _watchlist_panel("강한 모멘텀", "추세 점수와 당일 등락이 함께 강한 후보", _watchlist_rows(combined, "momentum", depth=depth)),
+        _watchlist_panel("이동평균 눌림목", "강한 추세 안에서 이동평균선에 가까운 후보", _watchlist_rows(combined, "pullback", depth=depth)),
+        _watchlist_panel("과매도 반등", "RSI가 낮아 반등 관찰이 필요한 후보", _watchlist_rows(combined, "oversold", depth=depth)),
+        _watchlist_panel("과열 주의", "RSI 과열과 고점 근접을 함께 보는 위험 후보", _watchlist_rows(combined, "heated", depth=depth)),
+        _watchlist_panel("약세 추세 급등", "약하거나 횡보 중인 추세에서 상승률이 튀는 후보", _watchlist_rows(combined, "weak-spike", depth=depth)),
+        _watchlist_panel("거래량 급증", "평균 대비 거래량이 크게 늘어난 후보", _watchlist_rows(combined, "volume", depth=depth)),
     ]
     generated_at = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
     page_title = "Market Scanner Preview" if preview else "Market Scanner"
-    eyebrow_text = "Market Pulse Preview" if preview else "Market Pulse"
+    eyebrow_text = "시장 펄스 미리보기" if preview else "시장 펄스"
     nav_html = _site_nav("home", depth)
     preview_bar = (
         '<div class="preview-bar">'
-        f'<span>Preview Home v2 - generated {escape(generated_at)}</span>'
-        '<a href="../index.html">Back to main</a>'
+        f'<span>홈 v2 미리보기 - 생성 {escape(generated_at)}</span>'
+        '<a href="../index.html">메인으로 돌아가기</a>'
         '</div>'
         if preview
         else (
             '<div class="preview-bar">'
-            f'<span>Market Scanner - generated {escape(generated_at)}</span>'
-            '<span>Latest dashboard</span>'
+            f'<span>Market Scanner - 생성 {escape(generated_at)}</span>'
+            '<span>최신 대시보드</span>'
             '</div>'
         )
     )
@@ -1265,8 +1303,8 @@ def _build_home_preview_page(
     .v2-market:hover {{ border-color: rgba(125, 211, 252, .45); transform: translateY(-1px); }}
     .v2-market.muted {{ opacity: .58; }}
     .v2-market > div {{ display: flex; justify-content: space-between; gap: 12px; align-items: start; }}
-    .v2-market span {{ color: var(--accent); font-size: 12px; font-weight: 900; }}
-    .v2-market strong {{ font-size: 26px; line-height: 1; }}
+    .v2-market span {{ color: var(--accent); font-size: 26px; line-height: 1; font-weight: 900; }}
+    .v2-market strong {{ font-size: 12px; line-height: 1; }}
     .v2-market p {{ min-height: 38px; margin: 14px 0 14px; color: var(--muted); font-size: 13px; line-height: 1.45; }}
     .v2-market dl {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 0; }}
     .v2-market .wide {{ grid-column: 1 / -1; }}
@@ -1275,8 +1313,9 @@ def _build_home_preview_page(
     .v2-market dd b {{ display: inline-block; min-width: 46px; font: inherit; }}
     .breadth-mini {{
       display: inline-block;
-      width: calc(100% - 56px);
-      height: 8px;
+      width: 50%;
+      max-width: 110px;
+      height: 4px;
       margin-left: 8px;
       overflow: hidden;
       border-radius: 999px;
@@ -1287,7 +1326,7 @@ def _build_home_preview_page(
       display: block;
       height: 100%;
       border-radius: inherit;
-      background: linear-gradient(90deg, #f87171, #f7b267 52%, #4ade80);
+      background: #7dd3fc;
     }}
     .watch-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }}
     .v2-panel {{ padding: 18px; border-radius: 18px; min-width: 0; }}
@@ -1324,12 +1363,12 @@ def _build_home_preview_page(
     <section class="hero-v2">
       <div class="hero-copy">
         <div class="eyebrow">{escape(eyebrow_text)}</div>
-        <h1>{escape(regime)}</h1>
-        <p class="lead">{escape(regime_note)} 주식 breadth는 {stock_breadth:.0f}%, 매크로 breadth는 {macro_breadth:.0f}%이며 전체 평균 등락률은 {escape(avg_change_text)}입니다.</p>
+        <h1>{escape(regime_display)}</h1>
+        <p class="lead">{escape(regime_note)} 주식 강세 비율은 {stock_breadth:.0f}%, 매크로 강세 비율은 {macro_breadth:.0f}%이며 전체 평균 등락률은 {escape(avg_change_text)}입니다.</p>
         <div class="regime">
-          <div><span>Equity Breadth</span><strong>{escape(_pct(stock_stats["breadth"]))}</strong></div>
-          <div><span>Macro Breadth</span><strong>{escape(_pct(macro_stats["breadth"]))}</strong></div>
-          <div><span>Avg Change</span><strong>{escape(avg_change_text)}</strong></div>
+          <div><span>주식 강세 비율</span><strong>{escape(_pct(stock_stats["breadth"]))}</strong></div>
+          <div><span>매크로 강세 비율</span><strong>{escape(_pct(macro_stats["breadth"]))}</strong></div>
+          <div><span>평균 등락률</span><strong>{escape(avg_change_text)}</strong></div>
         </div>
       </div>
       <div class="pulse-grid">
@@ -1340,7 +1379,7 @@ def _build_home_preview_page(
     <section>
       <div class="section-head">
         <h2>시장별 상태</h2>
-        <p>Breadth, RSI, MA 근접, 평균 등락률을 한 카드에서 확인합니다.</p>
+        <p>강세 비율, RSI, MA 근접, 평균 등락률을 한 카드에서 확인합니다.</p>
       </div>
       <div class="market-grid">
         {market_cards}
@@ -1349,7 +1388,7 @@ def _build_home_preview_page(
 
     <section>
       <div class="section-head">
-        <h2>Today Watchlist</h2>
+        <h2>오늘의 관찰 종목</h2>
         <p>전체 시장 데이터를 네 가지 관찰 관점으로 재정렬한 샘플입니다.</p>
       </div>
       <div class="watch-grid">

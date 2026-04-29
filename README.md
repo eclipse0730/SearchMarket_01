@@ -78,6 +78,7 @@ python -m market_scanner.site_builder --no-open
 - RSI Temperature: 평균 RSI와 과열/과매도 종목 수
 - 시장별 스냅샷: NASDAQ 100, S&P 500, Dow 30, KOSPI, KOSDAQ, 글로벌 지수, 테마 ETF, 원자재 비교
 - 섹터 리더십: 추세 점수가 높은 섹터 요약
+- 오늘의 관찰 종목: 모멘텀, 눌림목, 과매도, 과열, 급등, 거래량 관점의 후보를 표시하며 종목 링크는 Investing 한국 상세페이지로 연결
 
 GitHub Pages 사이트는 `data/`의 최신 CSV를 현재 템플릿으로 다시 렌더링합니다. `reports/Report_*.html`은 개별 HTML 리포트 산출물로 보관됩니다.
 자동 스캔 워크플로가 성공적으로 끝나면 `Deploy GitHub Pages`가 이어서 실행되어 Pages artifact를 다시 빌드하고 배포합니다.
@@ -85,9 +86,8 @@ GitHub Pages 사이트는 `data/`의 최신 CSV를 현재 템플릿으로 다시
 상세 페이지는 좌측 종목 리스트와 우측 인사이트 패널로 구성됩니다.
 
 - 헤더 갱신시간: 상세페이지 제목 아래에 생성 시각을 `KST` 기준으로 표시
-- 압축형 Signal Strip
-- 섹터별 상승률 Heatmap: 섹터 평균 등락률, 중앙값, 상승 종목 비율, 종목 수 표시
-- Fear & Volatility 패널
+- 압축형 Signal Strip: 이동평균선 근접 수, 시장 상태와 리딩/약세 섹터, RSI 온도 분포, 강세 비율, VIX 공포지수 해석
+- 섹터별 상승률 Heatmap: 섹터 평균 등락률, 중앙값, 상승 종목 비율, 종목 수와 전체 상승/하락 종목 수 표시
 - Setup Buckets
 - MA Distance vs RSI Scatter
 - 추세 화살표 표시: `↑↑`, `↑`, `→`, `↓`, `↓↓`

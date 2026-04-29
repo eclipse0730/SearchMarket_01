@@ -828,9 +828,6 @@ def _interactive_tab_nav_html(settings: ScanSettings) -> str:
         )
     if len(settings.ma_periods) > 1:
         items.append('<li class="nav-item"><a class="nav-link" href="#" data-tab="multi">복수MA</a></li>')
-    items.append(
-        '<li class="nav-item ms-auto"><a class="nav-link" href="#" data-tab="report" style="color:#e3b341">분석 리포트</a></li>'
-    )
     return "".join(items)
 
 
