@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KOSPI Stocks Report 20260429</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+  <style>:root{
+  color-scheme:dark;
+  --bg:#07101c;
+  --panel:#0e1a2a;
+  --panel-2:#111f32;
+  --line:rgba(148,163,184,.16);
+  --line-strong:rgba(148,163,184,.28);
+  --text:#e6edf3;
+  --muted:#8fa3ba;
+  --accent:#62c7ff;
+  --good:#28d17c;
+  --bad:#f45b69;
+  --warn:#d8a94a;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 10% -10%,rgba(98,199,255,.18),transparent 28%),
+    radial-gradient(circle at 98% 0,rgba(216,169,74,.12),transparent 24%),
+    linear-gradient(180deg,#081321,#050a12 74%);
+  color:var(--text);
+  font-family:"Segoe UI","Noto Sans KR",sans-serif;
+}
+.report-shell{max-width:1880px;margin:0 auto;padding:18px 18px 36px}
+.report-header{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:20px;
+  margin:8px 0 14px;
+}
+.eyebrow{
+  display:inline-flex;
+  padding:5px 10px;
+  border:1px solid rgba(98,199,255,.24);
+  border-radius:999px;
+  color:var(--accent);
+  background:rgba(98,199,255,.08);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+h1{margin:10px 0 4px;font-size:clamp(26px,3vw,40px);line-height:1.05}
+.report-header p{margin:0;color:var(--muted);font-size:13px}
+.report-updated{margin-top:3px!important;color:#b8c6d7!important;font-size:12px!important}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.ghost-btn,.mini-btn{
+  border:1px solid var(--line);
+  color:#c8d6e6;
+  background:rgba(14,26,42,.74);
+  border-radius:999px;
+  padding:8px 13px;
+  font-size:12px;
+  font-weight:800;
+}
+.ghost-btn.active,.ghost-btn:hover,.mini-btn:hover{border-color:rgba(98,199,255,.52);color:var(--accent)}
+.ghost-btn.active{background:rgba(98,199,255,.14);box-shadow:0 0 0 3px rgba(98,199,255,.08)}
+.signal-strip{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(110px,1fr));
+  gap:8px;
+  margin:0 0 14px;
+}
+.signal-strip div{
+  padding:11px 13px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:
+    linear-gradient(145deg,rgba(17,31,50,.94),rgba(10,22,37,.88)),
+    radial-gradient(circle at top right,rgba(98,199,255,.12),transparent 50%);
+}
+.signal-strip span{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.signal-strip strong{display:block;margin-top:4px;font-size:20px;line-height:1;color:#f4f8fb}
+.detail-layout{
+  display:grid;
+  grid-template-columns:minmax(780px,1.78fr) minmax(400px,.78fr);
+  gap:14px;
+  align-items:start;
+}
+.list-pane,.panel,.table-card,.report-card{
+  border:1px solid var(--line);
+  background:rgba(10,22,37,.76);
+  box-shadow:0 28px 80px rgba(0,0,0,.24);
+  backdrop-filter:blur(14px);
+}
+.list-pane{border-radius:24px;overflow:hidden}
+.toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:14px;
+  padding:16px;
+  border-bottom:1px solid var(--line);
+  background:rgba(17,31,50,.72);
+}
+.toolbar-title h2{margin:0 0 4px;font-size:18px}
+.toolbar-title span{color:var(--muted);font-size:12px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+input[type=text],select{
+  min-height:34px;
+  background:#0a1524;
+  border:1px solid var(--line-strong);
+  color:#dbe7f5;
+  padding:6px 10px;
+  border-radius:10px;
+  font-size:12px;
+}
+input[type=text]:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(98,199,255,.1)}
+.compact-tabs{
+  padding:8px 10px 0;
+  border-bottom:1px solid var(--line);
+  background:rgba(6,14,25,.45);
+}
+.compact-tabs .nav-link{
+  color:var(--muted);
+  border:0;
+  border-radius:12px 12px 0 0;
+  padding:8px 12px;
+  font-size:12px;
+  font-weight:800;
+}
+.compact-tabs .nav-link.active{background:var(--panel-2);color:var(--accent)}
+.table-card{border:0;border-radius:0;box-shadow:none;background:transparent}
+.table-scroll{overflow:auto;max-height:72vh}
+table{width:100%;border-collapse:collapse}
+td,th{
+  padding:7px 9px;
+  border-bottom:1px solid rgba(148,163,184,.1);
+  font-size:12px;
+  white-space:nowrap;
+}
+thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:#122037;
+  color:#9eb1c8;
+  cursor:pointer;
+  user-select:none;
+  text-align:left;
+  font-size:10px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+thead th:hover,.th-sorted{color:var(--accent)}
+tbody td{color:#f7fbff}
+tbody tr:hover{background:rgba(98,199,255,.07)}
+.table-footer{
+  padding:8px 14px;
+  border-top:1px solid var(--line);
+  color:var(--muted);
+  font-size:12px;
+  background:rgba(17,31,50,.64);
+}
+.ticker-link{color:#71cbff;text-decoration:none;font-weight:900}
+.ticker-link:hover{text-decoration:underline}
+.trend-chip{
+  display:inline-flex;
+  justify-content:center;
+  min-width:30px;
+  font-weight:950;
+  font-size:15px;
+}
+.rsi-green,.up-green,.per-green{color:var(--good);font-weight:800}
+.rsi-red,.up-red,.per-red{color:var(--bad);font-weight:800}
+.ma-warn{color:var(--warn);font-weight:800}
+.ma-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:26px;
+  margin-right:3px;
+  padding:2px 6px;
+  border-radius:999px;
+  background:rgba(98,199,255,.14);
+  color:#9ad8ff;
+  font-size:10px;
+  font-weight:900;
+}
+.setup-tag{
+  display:inline-flex;
+  margin-left:4px;
+  padding:2px 6px;
+  border-radius:999px;
+  color:#cbd7e6;
+  background:rgba(148,163,184,.12);
+  font-size:10px;
+}
+.setup-tag.trend-pullback,.setup-tag.strong-momentum{color:#8ff0b8;background:rgba(40,209,124,.14)}
+.setup-tag.oversold-bounce{color:#9ad8ff;background:rgba(98,199,255,.14)}
+.setup-tag.overheated{color:#ffd38b;background:rgba(216,169,74,.15)}
+.setup-tag.bearish{color:#ffabb5;background:rgba(244,91,105,.15)}
+.insight-pane{display:grid;gap:14px}
+.panel{
+  border-radius:24px;
+  padding:16px;
+}
+.panel-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+.panel-head span{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.panel-head h3{margin:3px 0 0;font-size:16px}
+.sector-heatmap{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  min-height:260px;
+  max-height:420px;
+  overflow:auto;
+  padding-right:4px;
+  align-content:flex-start;
+}
+.heat-tile{
+  flex:var(--tile-flex) 1 112px;
+  min-height:76px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  color:#f7fbff;
+  padding:10px;
+  text-align:left;
+  overflow:hidden;
+  transition:transform .15s ease,border-color .15s ease;
+}
+.heat-tile:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.32)}
+.heat-tile strong{display:block;font-size:13px;line-height:1.15}
+.heat-tile span{display:block;margin-top:7px;font-size:12px;font-weight:900}
+.heat-tile em{display:block;margin-top:4px;color:rgba(255,255,255,.72);font-size:10px;font-style:normal}
+.sector-tile{min-height:92px}
+.sector-tile strong{font-size:14px}
+.sector-tile span{font-size:16px}
+.sector-tile em{line-height:1.35}
+.legend-row{display:flex;justify-content:space-between;margin-top:10px;color:var(--muted);font-size:11px}
+.legend::before{
+  content:"";
+  display:inline-block;
+  width:28px;
+  height:8px;
+  margin-right:6px;
+  border-radius:999px;
+  vertical-align:middle;
+}
+.legend.bear::before{background:var(--bad)}
+.legend.neutral::before{background:var(--warn)}
+.legend.bull::before{background:var(--good)}
+.fear-panel{
+  background:
+    linear-gradient(145deg,rgba(17,31,50,.94),rgba(10,22,37,.88)),
+    radial-gradient(circle at 90% 20%,rgba(216,169,74,.16),transparent 46%);
+}
+.fear-badge{
+  display:inline-flex;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+}
+.fear-badge.calm{color:#8ff0b8;background:rgba(40,209,124,.14)}
+.fear-badge.normal{color:#9ad8ff;background:rgba(98,199,255,.14)}
+.fear-badge.danger{color:#ffd38b;background:rgba(216,169,74,.15)}
+.fear-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+.fear-grid div{
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(5,10,18,.28);
+}
+.fear-grid span{display:block;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase}
+.fear-grid strong{display:block;margin-top:5px;font-size:18px}
+.fear-panel p{margin:12px 0 0;color:#b8c6d7;font-size:12px;line-height:1.6}
+.setup-buckets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bucket{
+  min-height:84px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(5,10,18,.24);
+  color:var(--text);
+  text-align:left;
+  padding:10px;
+}
+.bucket:hover{border-color:rgba(98,199,255,.44)}
+.bucket span{display:block;color:var(--muted);font-size:11px;font-weight:900}
+.bucket strong{display:block;margin:6px 0;font-size:24px;line-height:1}
+.bucket em{display:block;color:#b8c6d7;font-size:10px;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bucket.trend-pullback strong,.bucket.strong-momentum strong{color:var(--good)}
+.bucket.oversold-bounce strong{color:var(--accent)}
+.bucket.overheated strong{color:var(--warn)}
+.bucket.bearish strong{color:var(--bad)}
+.chart-panel{min-height:330px}
+.chart-panel canvas{height:262px!important}
+.panel-note{
+  margin:-4px 0 10px;
+  color:#9fb1c5;
+  font-size:11px;
+  line-height:1.55;
+}
+.scatter-commentary{
+  margin:0 0 10px;
+  padding:9px 10px;
+  border:1px solid rgba(98,199,255,.18);
+  border-radius:14px;
+  color:#d5e2f0;
+  background:rgba(98,199,255,.08);
+  font-size:12px;
+  line-height:1.5;
+}
+.report-card{
+  border:0;
+  border-radius:0;
+  padding:16px;
+  background:rgba(5,10,18,.22);
+}
+.report-nav{margin-bottom:12px}
+.md-content{color:#c9d1d9}
+.md-content h1{color:#e6edf3;font-size:1.3rem;border-bottom:1px solid #30363d;padding-bottom:.4rem;margin:1.4rem 0 .8rem}
+.md-content h2{color:#58a6ff;font-size:1.1rem;border-bottom:1px solid #30363d;padding-bottom:.3rem;margin:1.8rem 0 .7rem;scroll-margin-top:10px}
+.md-content h3{color:#e3b341;font-size:.95rem;margin:1.2rem 0 .5rem}
+.md-content table{width:100%;border-collapse:collapse;margin:.6rem 0;font-size:.8rem}
+.md-content table th{background:#21262d;color:#8b949e;padding:5px 8px;border:1px solid #30363d;text-align:left}
+.md-content table td{padding:5px 8px;border:1px solid #30363d;color:#ffffff}
+.md-content table tr:hover{background:#1c2128}
+.md-content blockquote{border-left:3px solid #58a6ff;background:#1c2128;margin:.6rem 0;padding:.5rem 1rem;border-radius:0 4px 4px 0}
+.md-content blockquote p{margin:0;color:#8b949e;font-size:.85rem}
+.md-content hr{border-color:#30363d;margin:1.2rem 0}
+.md-content p{margin:.4rem 0}
+.md-content li{margin:.2rem 0;color:#c9d1d9}
+.md-content strong{color:#e6edf3}
+.md-content code{background:#21262d;border-radius:3px;padding:1px 5px;font-size:.85em;color:#79c0ff}
+.report-nav-btn{display:inline-block;padding:4px 12px;margin:0 4px 6px 0;border:1px solid #30363d;border-radius:4px;font-size:.8rem;cursor:pointer;text-decoration:none}
+.report-nav-btn:hover{border-color:#58a6ff;color:#58a6ff}
+.report-nav-btn.top{color:#58a6ff;border-color:#58a6ff}
+.report-nav-btn.theme{color:#e3b341;border-color:#e3b341}
+.report-nav-btn.sector{color:#3fb950;border-color:#3fb950}
+.report-nav-btn.warn{color:#f85149;border-color:#f85149}
+.news-card{min-height:420px}
+.news-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:10px}
+.news-head span{display:block;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.news-head h2{margin:3px 0 0;font-size:20px}
+.news-count{padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:rgba(98,199,255,.08);color:var(--accent)!important}
+.news-subtitle{margin:0 0 14px;color:#b8c6d7}
+.news-list{display:grid;gap:10px}
+.news-empty,.news-item{
+  padding:13px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(15,23,42,.42);
+}
+.news-empty strong{display:block;margin-bottom:5px;color:#f7fbff}
+.news-empty p{margin:0;color:#9fb1c5;line-height:1.55}
+.news-item{border-left:3px solid var(--warn)}
+.news-item.positive{border-left-color:var(--good)}
+.news-item.negative{border-left-color:var(--bad)}
+.news-item div{display:flex;gap:8px;align-items:center;margin-bottom:5px}
+.news-item b{color:#f7fbff}
+.news-item span{padding:2px 7px;border-radius:999px;background:rgba(148,163,184,.12);color:#b8c6d7;font-size:10px;font-weight:900;text-transform:uppercase}
+.news-item a{display:block;color:#9ad8ff;font-weight:900;text-decoration:none}
+.news-item a:hover{text-decoration:underline}
+.news-item p{margin:7px 0;color:#d5e2f0;line-height:1.55}
+.news-item em{display:block;color:var(--muted);font-size:11px;font-style:normal}
+@media (max-width:1200px){
+  .detail-layout{grid-template-columns:1fr}
+  .table-scroll{max-height:62vh}
+  .signal-strip{grid-template-columns:repeat(4,minmax(110px,1fr))}
+}
+@media (max-width:760px){
+  .report-shell{padding:12px}
+  .report-header,.toolbar{align-items:flex-start;flex-direction:column}
+  .filters{justify-content:flex-start}
+  input[type=text],select{width:100%}
+  .signal-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .setup-buckets,.fear-grid{grid-template-columns:1fr}
+  .sector-heatmap{min-height:220px}
+}
+</style>
+</head>
+<body>
+<div class="report-shell">
+
+<header class="report-header">
+  <div>
+    <div class="eyebrow">MA Scanner Detail</div>
+    <h1>KOSPI Stocks MA Scanner</h1>
+    <p class="report-meta">2026-04-29 | KOSPI Stocks | 199 rows</p>
+    <p class="report-updated">갱신시간: 2026-04-29 18:21:12 KST</p>
+  </div>
+  <div class="header-actions">
+    <button class="ghost-btn active" type="button" data-tab-button="all">종목 리스트</button>
+    <button class="ghost-btn" type="button" data-tab-button="report">분석 리포트</button>
+    <button class="ghost-btn" type="button" data-tab-button="news">뉴스 브리핑</button>
+  </div>
+</header>
+
+<section class="signal-strip" id="signalStrip"></section>
+
+<section class="detail-layout">
+  <main class="list-pane">
+    <div class="toolbar">
+      <div class="toolbar-title">
+        <h2>종목 리스트</h2>
+        <span id="rowCount"></span>
+      </div>
+      <div class="filters">
+        <input type="text" id="searchBox" placeholder="티커 또는 종목명 검색" oninput="applyFilter()">
+        <select id="sectorFilter" onchange="applyFilter()"><option value="">All sectors</option></select>
+        <select id="setupFilter" onchange="applyFilter()">
+          <option value="">All setups</option>
+          <option value="trend-pullback">추세 눌림목</option>
+          <option value="oversold-bounce">과매도 반등</option>
+          <option value="strong-momentum">강세 지속</option>
+          <option value="overheated">과열 주의</option>
+          <option value="bearish">약세 지속</option>
+        </select>
+        <select id="trendFilter" onchange="applyFilter()"><option value="">All trends</option></select>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs compact-tabs" id="mainTabs">
+      <li class="nav-item"><a class="nav-link active" href="#" data-tab="all">전체</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="ma60">MA60</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="ma120">MA120</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="ma240">MA240</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="multi">복수MA</a></li><li class="nav-item ms-auto"><a class="nav-link" href="#" data-tab="report" style="color:#e3b341">분석 리포트</a></li>
+    </ul>
+
+    <div id="tableSection" class="table-card">
+      <div class="table-scroll">
+        <table id="mainTable">
+          <thead><tr><th data-col="ticker">티커</th><th data-col="kr_name">종목명</th><th data-col="sector">섹터</th><th data-col="trend">추세</th><th data-col="price">현재가(KRW )</th><th data-col="changePct">등락률</th><th data-col="rsi">RSI</th><th data-col="fromHigh">52주고점%</th><th data-col="volRatio">거래량비율</th><th data-col="per">PER</th><th data-col="upside">업사이드</th><th>근접</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="rowCount2"></div>
+    </div>
+
+    <div id="reportSection" class="report-card" style="display:none">
+      <div class="report-nav">
+        <a class="report-nav-btn top" href="#sec-top">Top picks</a>
+        <a class="report-nav-btn theme" href="#sec-theme">Themes</a>
+        <a class="report-nav-btn sector" href="#sec-sector">Sectors</a>
+        <a class="report-nav-btn warn" href="#sec-warn">Warnings</a>
+      </div>
+      <div id="mdContent" class="md-content"></div>
+    </div>
+
+    <div id="newsSection" class="report-card news-card" style="display:none">
+      <div class="news-head">
+        <div>
+          <span>Overnight Briefing</span>
+          <h2 id="newsTitle">뉴스 브리핑</h2>
+        </div>
+        <span id="newsCount" class="news-count"></span>
+      </div>
+      <p id="newsSubtitle" class="news-subtitle"></p>
+      <div id="newsContent" class="news-list"></div>
+      <p id="newsNote" class="panel-note"></p>
+    </div>
+  </main>
+
+  <aside class="insight-pane">
+    <section class="panel heatmap-panel">
+      <div class="panel-head">
+        <div>
+          <span>Sector Heatmap</span>
+          <h3>섹터별 상승률 강도</h3>
+        </div>
+        <button class="mini-btn" type="button" onclick="clearSectorFilter()">전체</button>
+      </div>
+      <div id="sectorHeatmap" class="sector-heatmap"></div>
+      <div class="legend-row">
+        <span class="legend bear">하락</span>
+        <span class="legend neutral">보합</span>
+        <span class="legend bull">상승</span>
+      </div>
+    </section>
+
+    <section class="panel fear-panel" id="fearPanel"></section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <span>Setup Buckets</span>
+          <h3>살 자리와 위험 구간</h3>
+        </div>
+      </div>
+      <div id="setupBuckets" class="setup-buckets"></div>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="panel-head">
+        <div>
+          <span>MA Distance vs RSI</span>
+          <h3>이격률과 온도</h3>
+        </div>
+      </div>
+      <p class="panel-note">이격률은 현재가가 가장 가까운 MA(60/120/240)에서 몇 % 떨어졌는지, 온도는 RSI 과열·과매도 수준을 뜻합니다.</p>
+      <div id="scatterCommentary" class="scatter-commentary"></div>
+      <canvas id="scatterChart"></canvas>
+    </section>
+  </aside>
+</section>
+
+</div>
+<script>
+const CURRENCY = "KRW ";
+const PERIODS = [60, 120, 240];
+const DATA = [{"ticker": "373220.KS", "displayTicker": "373220", "quoteUrl": "https://kr.investing.com/equities/lg-energy-solution", "en_name": "LG Energy Solution", "kr_name": "LG에너지솔루션", "sector": "배터리", "desc": "전기차 배터리 세계 2위", "price": 473000.0, "changePct": 0.21, "rsi": 63.8, "fromHigh": -8.0, "volRatio": 0.65, "per": null, "upside": 3.7, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": 17.13, "near_60": false, "diff_120": 15.19, "near_120": false, "diff_240": 24.66, "near_240": false}, {"ticker": "402340.KS", "displayTicker": "402340", "quoteUrl": "https://kr.investing.com/equities/sk-square", "en_name": "SK Square Co., Ltd.", "kr_name": "SK스퀘어", "sector": "기술", "desc": "SK스퀘어 (KOSPI200)", "price": 830000.0, "changePct": 2.34, "rsi": 77.7, "fromHigh": 0.0, "volRatio": 1.55, "per": null, "upside": -10.4, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 40.29, "near_60": false, "diff_120": 76.61, "near_120": false, "diff_240": 160.45, "near_240": false}, {"ticker": "005380.KS", "displayTicker": "005380", "quoteUrl": "https://kr.investing.com/equities/hyundai-motor", "en_name": "Hyundai Motor", "kr_name": "현대차", "sector": "자동차", "desc": "국내 1위 완성차, 전기차 전환 중", "price": 556000.0, "changePct": 0.18, "rsi": 60.0, "fromHigh": -17.5, "volRatio": 0.96, "per": null, "upside": 15.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 8.4, "near_60": false, "diff_120": 32.56, "near_120": false, "diff_240": 76.81, "near_240": false}, {"ticker": "000660.KS", "displayTicker": "000660", "quoteUrl": "https://kr.investing.com/equities/sk-hynix-inc", "en_name": "SK Hynix", "kr_name": "SK하이닉스", "sector": "반도체", "desc": "D램·낸드플래시 메모리 세계 2위", "price": 1293000.0, "changePct": -0.54, "rsi": 71.6, "fromHigh": -0.5, "volRatio": 0.7, "per": null, "upside": 29.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 30.96, "near_60": false, "diff_120": 59.89, "near_120": false, "diff_240": 133.85, "near_240": false}, {"ticker": "005930.KS", "displayTicker": "005930", "quoteUrl": "https://kr.investing.com/equities/samsung-electronics-co-ltd", "en_name": "Samsung Electronics", "kr_name": "삼성전자", "sector": "반도체·전자", "desc": "메모리·시스템반도체·스마트폰·가전", "price": 226000.0, "changePct": 1.8, "rsi": 63.2, "fromHigh": 0.0, "volRatio": 0.82, "per": null, "upside": 21.5, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 17.41, "near_60": false, "diff_120": 45.54, "near_120": false, "diff_240": 100.44, "near_240": false}, {"ticker": "012450.KS", "displayTicker": "012450", "quoteUrl": "https://kr.investing.com/equities/samsung-techwin", "en_name": "Hanwha Aerospace Co., Ltd.", "kr_name": "한화에어로스페이스", "sector": "산업재", "desc": "한화에어로스페이스 (KOSPI200)", "price": 1420000.0, "changePct": 1.79, "rsi": 49.6, "fromHigh": -7.6, "volRatio": 0.55, "per": null, "upside": 15.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 4.67, "near_60": false, "diff_120": 20.32, "near_120": false, "diff_240": 35.75, "near_240": false}, {"ticker": "034020.KS", "displayTicker": "034020", "quoteUrl": "https://kr.investing.com/equities/doosan-heavy-ind.---const.", "en_name": "Doosan Enerbility", "kr_name": "두산에너빌리티", "sector": "에너지기계", "desc": "원자력·가스터빈 발전설비", "price": 129200.0, "changePct": 1.1, "rsi": 74.0, "fromHigh": 0.0, "volRatio": 0.82, "per": null, "upside": -4.7, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 26.61, "near_60": false, "diff_120": 40.9, "near_120": false, "diff_240": 69.38, "near_240": false}, {"ticker": "329180.KS", "displayTicker": "329180", "quoteUrl": "https://kr.investing.com/equities/hyundai-heavy-industries-co", "en_name": "HD Hyundai Heavy Industries Co., Ltd.", "kr_name": "HD현대중공업", "sector": "산업재", "desc": "HD현대중공업 (KOSPI200)", "price": 690000.0, "changePct": 3.45, "rsi": 76.6, "fromHigh": 0.0, "volRatio": 1.13, "per": null, "upside": 14.4, "trend": "Downtrend", "trendScore": 2, "nearCount": 0, "diff_60": 25.57, "near_60": false, "diff_120": 24.61, "near_120": false, "diff_240": 36.01, "near_240": false}, {"ticker": "207940.KS", "displayTicker": "207940", "quoteUrl": "https://kr.investing.com/equities/samsung-biologics-co-ltd", "en_name": "Samsung Biologics", "kr_name": "삼성바이오로직스", "sector": "바이오·CMO", "desc": "글로벌 바이오 CDMO", "price": 1473000.0, "changePct": -2.06, "rsi": 36.0, "fromHigh": -25.0, "volRatio": 1.4, "per": null, "upside": 49.4, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 0, "diff_60": -9.09, "near_60": false, "diff_120": -13.41, "near_120": false, "diff_240": -10.98, "near_240": false}, {"ticker": "006400.KS", "displayTicker": "006400", "quoteUrl": "https://kr.investing.com/equities/samsung-sdi", "en_name": "Samsung SDI", "kr_name": "삼성SDI", "sector": "배터리", "desc": "전기차 배터리·ESS", "price": 712000.0, "changePct": 4.71, "rsi": 82.9, "fromHigh": 0.0, "volRatio": 1.29, "per": null, "upside": -32.7, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 60.26, "near_60": false, "diff_120": 89.58, "near_120": false, "diff_240": 147.04, "near_240": false}, {"ticker": "032830.KS", "displayTicker": "032830", "quoteUrl": "https://kr.investing.com/equities/samsung-life", "en_name": "Samsung Life Insurance", "kr_name": "삼성생명", "sector": "보험", "desc": "국내 1위 생명보험", "price": 252000.0, "changePct": 0.0, "rsi": 58.0, "fromHigh": -2.3, "volRatio": 0.59, "per": null, "upside": -3.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 12.95, "near_60": false, "diff_120": 32.6, "near_120": false, "diff_240": 58.64, "near_240": false}, {"ticker": "000270.KS", "displayTicker": "000270", "quoteUrl": "https://kr.investing.com/equities/kia-motors", "en_name": "Kia Corporation", "kr_name": "기아", "sector": "자동차", "desc": "현대차 계열 완성차, 글로벌 디자인", "price": 156900.0, "changePct": 0.84, "rsi": 51.9, "fromHigh": -20.5, "volRatio": 0.67, "per": null, "upside": 40.9, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -0.19, "near_60": true, "diff_120": 12.52, "near_120": false, "diff_240": 32.72, "near_240": false}, {"ticker": "009150.KS", "displayTicker": "009150", "quoteUrl": "https://kr.investing.com/equities/samsung-electro-mechanics", "en_name": "Samsung Electro-Mechanics", "kr_name": "삼성전기", "sector": "전자부품", "desc": "MLCC·카메라모듈·반도체 패키지기판", "price": 827000.0, "changePct": -1.43, "rsi": 79.5, "fromHigh": -1.4, "volRatio": 0.76, "per": null, "upside": -20.2, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 74.73, "near_60": false, "diff_120": 127.29, "near_120": false, "diff_240": 217.36, "near_240": false}, {"ticker": "028260.KS", "displayTicker": "028260", "quoteUrl": "https://kr.investing.com/equities/cheil-industries-inc", "en_name": "Samsung C&T", "kr_name": "삼성물산", "sector": "지주·건설", "desc": "삼성그룹 지주 역할, 건설·상사", "price": 308500.0, "changePct": -0.32, "rsi": 55.3, "fromHigh": -14.3, "volRatio": 0.88, "per": null, "upside": 21.2, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 3.28, "near_60": false, "diff_120": 12.88, "near_120": false, "diff_240": 39.24, "near_240": false}, {"ticker": "105560.KS", "displayTicker": "105560", "quoteUrl": "https://kr.investing.com/equities/kb-financial-group", "en_name": "KB Financial Group", "kr_name": "KB금융", "sector": "금융지주", "desc": "국민은행 계열 종합금융그룹", "price": 160600.0, "changePct": 1.13, "rsi": 59.0, "fromHigh": -3.9, "volRatio": 0.76, "per": null, "upside": 19.2, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 4.95, "near_60": false, "diff_120": 15.03, "near_120": false, "diff_240": 29.69, "near_240": false}, {"ticker": "055550.KS", "displayTicker": "055550", "quoteUrl": "https://kr.investing.com/equities/shinhan-financial-group", "en_name": "Shinhan Financial Group", "kr_name": "신한지주", "sector": "금융지주", "desc": "신한은행 계열 종합금융그룹", "price": 100000.0, "changePct": 0.85, "rsi": 62.2, "fromHigh": -4.1, "volRatio": 1.23, "per": null, "upside": 19.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 6.06, "near_60": false, "diff_120": 16.38, "near_120": false, "diff_240": 33.91, "near_240": false}, {"ticker": "068270.KS", "displayTicker": "068270", "quoteUrl": "https://kr.investing.com/equities/celltrion-inc", "en_name": "Celltrion", "kr_name": "셀트리온", "sector": "바이오", "desc": "항체 바이오시밀러 세계 1위", "price": 204000.0, "changePct": -1.45, "rsi": 49.5, "fromHigh": -17.9, "volRatio": 0.82, "per": null, "upside": 27.6, "trend": "Neutral", "trendScore": 3, "nearCount": 1, "diff_60": -3.55, "near_60": false, "diff_120": 1.01, "near_120": true, "diff_240": 10.33, "near_240": false}, {"ticker": "267260.KS", "displayTicker": "267260", "quoteUrl": "https://kr.investing.com/equities/hyundai-electric-energy-systems", "en_name": "HD Hyundai Electric Co., Ltd.", "kr_name": "HD현대일렉트릭", "sector": "산업재", "desc": "HD현대일렉트릭 (KOSPI200)", "price": 1260000.0, "changePct": 1.78, "rsi": 69.9, "fromHigh": -3.5, "volRatio": 1.04, "per": null, "upside": -12.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 28.09, "near_60": false, "diff_120": 38.68, "near_120": false, "diff_240": 77.78, "near_240": false}, {"ticker": "298040.KS", "displayTicker": "298040", "quoteUrl": "https://kr.investing.com/equities/hyosung-heavy-industries", "en_name": "Hyosung Heavy Industries Corporation", "kr_name": "효성중공업", "sector": "산업재", "desc": "효성중공업 (KOSPI200)", "price": 3982000.0, "changePct": 0.15, "rsi": 80.9, "fromHigh": 0.0, "volRatio": 0.93, "per": null, "upside": 7.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 45.46, "near_60": false, "diff_120": 66.61, "near_120": false, "diff_240": 127.29, "near_240": false}, {"ticker": "042660.KS", "displayTicker": "042660", "quoteUrl": "https://kr.investing.com/equities/daewoo-shipbuilding", "en_name": "Hanwha Ocean", "kr_name": "한화오션", "sector": "조선", "desc": "전 대우조선해양, 잠수함·LNG선", "price": 132300.0, "changePct": -1.19, "rsi": 53.8, "fromHigh": -11.7, "volRatio": 0.74, "per": null, "upside": 24.0, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": 1.37, "near_60": true, "diff_120": 3.95, "near_120": false, "diff_240": 17.23, "near_240": false}, {"ticker": "010120.KS", "displayTicker": "010120", "quoteUrl": "https://kr.investing.com/equities/ls-industrial-systems", "en_name": "LS ELECTRIC", "kr_name": "010120", "sector": "산업재", "desc": "LS ELECTRIC (KOSPI200)", "price": 273000.0, "changePct": 4.4, "rsi": 87.2, "fromHigh": 0.0, "volRatio": 1.39, "per": null, "upside": -25.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 70.91, "near_60": false, "diff_120": 112.78, "near_120": false, "diff_240": 193.61, "near_240": false}, {"ticker": "012330.KS", "displayTicker": "012330", "quoteUrl": "https://kr.investing.com/equities/hyundai-mobis", "en_name": "Hyundai Mobis", "kr_name": "현대모비스", "sector": "자동차부품", "desc": "현대·기아 핵심 부품 계열사", "price": 439000.0, "changePct": -1.79, "rsi": 55.7, "fromHigh": -16.0, "volRatio": 0.91, "per": null, "upside": 28.4, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 3.9, "near_60": false, "diff_120": 12.57, "near_120": false, "diff_240": 29.43, "near_240": false}, {"ticker": "006800.KS", "displayTicker": "006800", "quoteUrl": "https://kr.investing.com/equities/daewoo-securities", "en_name": "Mirae Asset Securities", "kr_name": "미래에셋증권", "sector": "증권", "desc": "국내 1위 증권사, 해외 진출", "price": 67700.0, "changePct": -1.17, "rsi": 51.9, "fromHigh": -6.9, "volRatio": 0.55, "per": null, "upside": -4.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 6.12, "near_60": false, "diff_120": 52.61, "near_120": false, "diff_240": 112.55, "near_240": false}, {"ticker": "005490.KS", "displayTicker": "005490", "quoteUrl": "https://kr.investing.com/equities/posco-inc", "en_name": "POSCO Holdings", "kr_name": "POSCO홀딩스", "sector": "철강·소재", "desc": "국내 1위 철강, 이차전지 소재", "price": 469000.0, "changePct": 0.54, "rsi": 80.0, "fromHigh": 0.0, "volRatio": 1.24, "per": null, "upside": -7.6, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 27.79, "near_60": false, "diff_120": 37.15, "near_120": false, "diff_240": 51.03, "near_240": false}, {"ticker": "042700.KS", "displayTicker": "042700", "quoteUrl": "https://kr.investing.com/equities/hanmi-semicon", "en_name": "HANMI Semiconductor Co., Ltd.", "kr_name": "한미반도체", "sector": "기술", "desc": "한미반도체 (KOSPI200)", "price": 357500.0, "changePct": -2.59, "rsi": 69.1, "fromHigh": -4.3, "volRatio": 0.97, "per": null, "upside": -44.0, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 32.51, "near_60": false, "diff_120": 74.04, "near_120": false, "diff_240": 137.35, "near_240": false}, {"ticker": "086790.KS", "displayTicker": "086790", "quoteUrl": "https://kr.investing.com/equities/hana-financial", "en_name": "Hana Financial Group", "kr_name": "하나금융지주", "sector": "금융지주", "desc": "하나은행 계열 종합금융그룹", "price": 127100.0, "changePct": 0.08, "rsi": 67.7, "fromHigh": -2.1, "volRatio": 1.33, "per": null, "upside": 11.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 9.53, "near_60": false, "diff_120": 21.37, "near_120": false, "diff_240": 37.15, "near_240": false}, {"ticker": "035420.KS", "displayTicker": "035420", "quoteUrl": "https://kr.investing.com/equities/nhn-corp", "en_name": "NAVER Corporation", "kr_name": "NAVER", "sector": "인터넷·플랫폼", "desc": "국내 1위 검색 포털·클라우드", "price": 220000.0, "changePct": 0.23, "rsi": 56.8, "fromHigh": -23.5, "volRatio": 0.93, "per": null, "upside": 39.0, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 0, "diff_60": -2.53, "near_60": false, "diff_120": -7.36, "near_120": false, "diff_240": -5.66, "near_240": false}, {"ticker": "034730.KS", "displayTicker": "034730", "quoteUrl": "https://kr.investing.com/equities/sk-c-c", "en_name": "SK Inc.", "kr_name": "SK", "sector": "지주사", "desc": "SK그룹 지주, ICT·에너지·바이오", "price": 425000.0, "changePct": 2.66, "rsi": 73.8, "fromHigh": 0.0, "volRatio": 1.23, "per": null, "upside": 3.5, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 22.04, "near_60": false, "diff_120": 38.96, "near_120": false, "diff_240": 70.02, "near_240": false}, {"ticker": "009540.KS", "displayTicker": "009540", "quoteUrl": "https://kr.investing.com/equities/hyundai-heavy-industries", "en_name": "HD한국조선해양", "kr_name": "HD한국조선해양", "sector": "조선", "desc": "HD한국조선해양 (KOSPI200)", "price": 472000.0, "changePct": 0.75, "rsi": 67.9, "fromHigh": -1.5, "volRatio": 0.85, "per": null, "upside": 20.1, "trend": "Downtrend", "trendScore": 2, "nearCount": 0, "diff_60": 15.66, "near_60": false, "diff_120": 14.2, "near_120": false, "diff_240": 22.31, "near_240": false}, {"ticker": "010130.KS", "displayTicker": "010130", "quoteUrl": "https://kr.investing.com/equities/korea-zinc-inc", "en_name": "Korea Zinc", "kr_name": "고려아연", "sector": "비철금속", "desc": "아연 세계 1위 제련·이차전지 소재", "price": 1604000.0, "changePct": -1.41, "rsi": 48.0, "fromHigh": -24.2, "volRatio": 1.0, "per": null, "upside": 17.5, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": -3.47, "near_60": false, "diff_120": 7.64, "near_120": false, "diff_240": 36.21, "near_240": false}, {"ticker": "010140.KS", "displayTicker": "010140", "quoteUrl": "https://kr.investing.com/equities/samsung-heavy-industries", "en_name": "Samsung Heavy Industries", "kr_name": "삼성중공업", "sector": "조선", "desc": "삼성 계열 조선사", "price": 33000.0, "changePct": -1.05, "rsi": 65.0, "fromHigh": -4.1, "volRatio": 0.67, "per": null, "upside": 8.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 15.66, "near_60": false, "diff_120": 19.78, "near_120": false, "diff_240": 40.68, "near_240": false}, {"ticker": "015760.KS", "displayTicker": "015760", "quoteUrl": "https://kr.investing.com/equities/kepco", "en_name": "Korea Electric Power (KEPCO)", "kr_name": "한국전력", "sector": "유틸리티", "desc": "국내 전력 공급 독점 공기업", "price": 44500.0, "changePct": -0.45, "rsi": 45.1, "fromHigh": -34.5, "volRatio": 0.83, "per": null, "upside": 46.0, "trend": "Downtrend", "trendScore": 2, "nearCount": 0, "diff_60": -11.32, "near_60": false, "diff_120": -11.52, "near_120": false, "diff_240": 4.81, "near_240": false}, {"ticker": "051910.KS", "displayTicker": "051910", "quoteUrl": "https://kr.investing.com/equities/lg-chemicals", "en_name": "LG Chem", "kr_name": "LG화학", "sector": "화학·배터리", "desc": "배터리 분사 후 석유화학·첨단소재", "price": 407500.0, "changePct": 3.43, "rsi": 69.6, "fromHigh": -2.2, "volRatio": 1.27, "per": null, "upside": 2.1, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 22.45, "near_60": false, "diff_120": 17.89, "near_120": false, "diff_240": 33.11, "near_240": false}, {"ticker": "316140.KS", "displayTicker": "316140", "quoteUrl": "https://kr.investing.com/equities/woori-financial", "en_name": "Woori Financial Group", "kr_name": "우리금융지주", "sector": "금융지주", "desc": "우리은행 계열 종합금융그룹", "price": 33500.0, "changePct": 0.0, "rsi": 46.4, "fromHigh": -16.3, "volRatio": 1.1, "per": null, "upside": 22.0, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -1.43, "near_60": true, "diff_120": 9.76, "near_120": false, "diff_240": 25.72, "near_240": false}, {"ticker": "064350.KS", "displayTicker": "064350", "quoteUrl": "https://kr.investing.com/equities/hyundai-rotem", "en_name": "Hyundai Rotem Company", "kr_name": "현대로템", "sector": "산업재", "desc": "현대로템 (KOSPI200)", "price": 264000.0, "changePct": 7.98, "rsi": 75.1, "fromHigh": 0.0, "volRatio": 1.78, "per": null, "upside": 16.1, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 25.9, "near_60": false, "diff_120": 30.28, "near_120": false, "diff_240": 35.24, "near_240": false}, {"ticker": "003670.KS", "displayTicker": "003670", "quoteUrl": "https://kr.investing.com/equities/posco-chemtech-co-ltd", "en_name": "Posco Future M Co., Ltd.", "kr_name": "포스코퓨처엠", "sector": "산업재", "desc": "포스코퓨처엠 (KOSPI200)", "price": 261000.0, "changePct": -0.76, "rsi": 68.2, "fromHigh": -0.8, "volRatio": 0.94, "per": null, "upside": -24.7, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 18.56, "near_60": false, "diff_120": 23.09, "near_120": false, "diff_240": 46.92, "near_240": false}, {"ticker": "000150.KS", "displayTicker": "000150", "quoteUrl": "https://kr.investing.com/equities/doosan", "en_name": "Doosan Corporation", "kr_name": "두산", "sector": "지주·방산", "desc": "두산그룹 지주, 로봇·방산", "price": 1572000.0, "changePct": -0.69, "rsi": 72.1, "fromHigh": -0.7, "volRatio": 0.63, "per": null, "upside": 1.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 37.3, "near_60": false, "diff_120": 56.81, "near_120": false, "diff_240": 98.51, "near_240": false}, {"ticker": "272210.KS", "displayTicker": "272210", "quoteUrl": "https://kr.investing.com/equities/hanwha-systems-co-ltd", "en_name": "Hanwha Systems", "kr_name": "한화시스템", "sector": "방산·IT", "desc": "방산 전자·ICT 서비스", "price": 118100.0, "changePct": -1.5, "rsi": 39.4, "fromHigh": -27.1, "volRatio": 0.72, "per": null, "upside": -24.3, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": -6.33, "near_60": false, "diff_120": 26.41, "near_120": false, "diff_240": 60.46, "near_240": false}, {"ticker": "096770.KS", "displayTicker": "096770", "quoteUrl": "https://kr.investing.com/equities/sk-innovation", "en_name": "SK Innovation", "kr_name": "SK이노베이션", "sector": "에너지·화학", "desc": "정유·화학·배터리 소재", "price": 149800.0, "changePct": 12.63, "rsi": 75.7, "fromHigh": 0.0, "volRatio": 5.45, "per": null, "upside": -21.0, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 24.9, "near_60": false, "diff_120": 29.28, "near_120": false, "diff_240": 35.32, "near_240": false}, {"ticker": "066570.KS", "displayTicker": "066570", "quoteUrl": "https://kr.investing.com/equities/lg-electronics-inc", "en_name": "LG Electronics", "kr_name": "LG전자", "sector": "전자·가전", "desc": "가전·TV·차량부품·B2B", "price": 135800.0, "changePct": -3.0, "rsi": 63.7, "fromHigh": -6.7, "volRatio": 1.7, "per": null, "upside": -3.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 15.84, "near_60": false, "diff_120": 29.49, "near_120": false, "diff_240": 50.35, "near_240": false}, {"ticker": "267250.KS", "displayTicker": "267250", "quoteUrl": "https://kr.investing.com/equities/hyundai-robotics-co-ltd", "en_name": "HD Hyundai Co., Ltd.", "kr_name": "HD현대", "sector": "에너지", "desc": "HD현대 (KOSPI200)", "price": 301000.0, "changePct": 7.31, "rsi": 68.6, "fromHigh": 0.0, "volRatio": 2.42, "per": null, "upside": 1.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 14.96, "near_60": false, "diff_120": 27.22, "near_120": false, "diff_240": 62.41, "near_240": false}, {"ticker": "000810.KS", "displayTicker": "000810", "quoteUrl": "https://kr.investing.com/equities/samsung-fire---marine-insurance", "en_name": "Samsung Fire & Marine", "kr_name": "삼성화재", "sector": "보험", "desc": "국내 1위 손해보험", "price": 464000.0, "changePct": -3.93, "rsi": 48.4, "fromHigh": -23.3, "volRatio": 0.96, "per": null, "upside": 33.0, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": -3.23, "near_60": false, "diff_120": -2.4, "near_120": false, "diff_240": 3.56, "near_240": false}, {"ticker": "035720.KS", "displayTicker": "035720", "quoteUrl": "https://kr.investing.com/equities/kakao-corp", "en_name": "Kakao Corp.", "kr_name": "카카오", "sector": "인터넷·플랫폼", "desc": "카카오톡 기반 플랫폼·핀테크", "price": 48400.0, "changePct": -0.92, "rsi": 47.6, "fromHigh": -31.2, "volRatio": 0.93, "per": null, "upside": 51.9, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 0, "diff_60": -6.61, "near_60": false, "diff_120": -13.39, "near_120": false, "diff_240": -13.85, "near_240": false}, {"ticker": "079550.KS", "displayTicker": "079550", "quoteUrl": "https://kr.investing.com/equities/lig-nex1-co-ltd", "en_name": "LIG Nex1", "kr_name": "LIG디펜스앤에어로스페이스", "sector": "방산", "desc": "미사일·레이더 방산 전문", "price": 968000.0, "changePct": 3.75, "rsi": 61.0, "fromHigh": -5.1, "volRatio": 0.65, "per": null, "upside": -18.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 37.56, "near_60": false, "diff_120": 68.87, "near_120": false, "diff_240": 79.83, "near_240": false}, {"ticker": "017670.KS", "displayTicker": "017670", "quoteUrl": "https://kr.investing.com/equities/sk-telecom-co-ltd", "en_name": "SK Telecom", "kr_name": "SK텔레콤", "sector": "통신", "desc": "국내 1위 이동통신", "price": 95600.0, "changePct": -1.24, "rsi": 58.7, "fromHigh": -4.9, "volRatio": 0.58, "per": null, "upside": -14.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 15.66, "near_60": false, "diff_120": 38.75, "near_120": false, "diff_240": 55.69, "near_240": false}, {"ticker": "033780.KS", "displayTicker": "033780", "quoteUrl": "https://kr.investing.com/equities/kt-g-corp", "en_name": "KT&G", "kr_name": "KT&G", "sector": "담배·건강기능식품", "desc": "국내 1위 담배, 인삼공사 계열", "price": 176500.0, "changePct": -0.84, "rsi": 68.6, "fromHigh": -0.8, "volRatio": 0.47, "per": null, "upside": 9.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 8.73, "near_60": false, "diff_120": 17.08, "near_120": false, "diff_240": 26.93, "near_240": false}, {"ticker": "138040.KS", "displayTicker": "138040", "quoteUrl": "https://kr.investing.com/equities/meritz-financi", "en_name": "Meritz Financial Group Inc.", "kr_name": "메리츠금융지주", "sector": "금융 서비스", "desc": "메리츠금융지주 (KOSPI200)", "price": 113900.0, "changePct": -1.21, "rsi": 46.9, "fromHigh": -22.1, "volRatio": 0.82, "per": null, "upside": 27.7, "trend": "Neutral", "trendScore": 3, "nearCount": 2, "diff_60": -3.74, "near_60": false, "diff_120": -0.17, "near_120": true, "diff_240": -1.06, "near_240": true}, {"ticker": "011200.KS", "displayTicker": "011200", "quoteUrl": "https://kr.investing.com/equities/hyundai-merchant-marine", "en_name": "HMM", "kr_name": "HMM", "sector": "해운", "desc": "국내 1위 컨테이너 해운", "price": 20750.0, "changePct": 0.0, "rsi": 49.3, "fromHigh": -17.6, "volRatio": 0.57, "per": null, "upside": 4.4, "trend": "Neutral", "trendScore": 3, "nearCount": 2, "diff_60": -0.18, "near_60": true, "diff_120": 3.11, "near_120": false, "diff_240": -0.9, "near_240": true}, {"ticker": "000720.KS", "displayTicker": "000720", "quoteUrl": "https://kr.investing.com/equities/hyundai-engineering---construction", "en_name": "Hyundai E&C", "kr_name": "현대건설", "sector": "건설", "desc": "국내 1위 건설사", "price": 168600.0, "changePct": 0.9, "rsi": 51.8, "fromHigh": -10.7, "volRatio": 0.53, "per": null, "upside": 6.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 12.41, "near_60": false, "diff_120": 49.3, "near_120": false, "diff_240": 91.39, "near_240": false}, {"ticker": "278470.KS", "displayTicker": "278470", "quoteUrl": "https://kr.investing.com/equities/apr", "en_name": "APR Co., Ltd.", "kr_name": "에이피알", "sector": "필수 소비재", "desc": "에이피알 (KOSPI200)", "price": 451000.0, "changePct": -1.74, "rsi": 70.3, "fromHigh": -1.7, "volRatio": 0.69, "per": null, "upside": -0.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 34.56, "near_60": false, "diff_120": 56.27, "near_120": false, "diff_240": 91.82, "near_240": false}, {"ticker": "024110.KS", "displayTicker": "024110", "quoteUrl": "https://kr.investing.com/equities/industrial-bank-of-korea", "en_name": "Industrial Bank of Korea", "kr_name": "기업은행", "sector": "은행", "desc": "중소기업 전문 국책은행", "price": 22550.0, "changePct": 0.22, "rsi": 53.3, "fromHigh": -17.3, "volRatio": 0.83, "per": null, "upside": 7.7, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -0.69, "near_60": true, "diff_120": 6.19, "near_120": false, "diff_240": 15.84, "near_240": false}, {"ticker": "047810.KS", "displayTicker": "047810", "quoteUrl": "https://kr.investing.com/equities/korea-aerospac", "en_name": "Korea Aerospace Industries", "kr_name": "한국항공우주", "sector": "항공우주·방산", "desc": "국산 전투기(KF-21)·헬기 제조", "price": 166300.0, "changePct": -1.01, "rsi": 37.1, "fromHigh": -17.4, "volRatio": 1.07, "per": null, "upside": 13.6, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": -7.26, "near_60": false, "diff_120": 10.02, "near_120": false, "diff_240": 35.62, "near_240": false}, {"ticker": "047040.KS", "displayTicker": "047040", "quoteUrl": "https://kr.investing.com/equities/daewoo-engineering---construction", "en_name": "Daewoo Engineering & Construction", "kr_name": "대우건설", "sector": "건설", "desc": "주택·토목·플랜트 중심 종합건설사", "price": 36900.0, "changePct": -0.67, "rsi": 82.3, "fromHigh": -0.7, "volRatio": 0.29, "per": null, "upside": -67.4, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 131.12, "near_60": false, "diff_120": 272.65, "near_120": false, "diff_240": 434.24, "near_240": false}, {"ticker": "030200.KS", "displayTicker": "030200", "quoteUrl": "https://kr.investing.com/equities/kt-corporation", "en_name": "KT Corporation", "kr_name": "KT", "sector": "통신", "desc": "유선·무선통신, IPTV, 클라우드", "price": 60500.0, "changePct": -0.66, "rsi": 45.0, "fromHigh": -11.4, "volRatio": 0.43, "per": null, "upside": 19.1, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -0.68, "near_60": true, "diff_120": 7.62, "near_120": false, "diff_240": 12.43, "near_240": false}, {"ticker": "086280.KS", "displayTicker": "086280", "quoteUrl": "https://kr.investing.com/equities/hyundai-glovis", "en_name": "Hyundai Glovis Co., Ltd.", "kr_name": "현대글로비스", "sector": "산업재", "desc": "현대글로비스 (KOSPI200)", "price": 238500.0, "changePct": 1.71, "rsi": 58.4, "fromHigh": -15.8, "volRatio": 1.64, "per": null, "upside": 25.1, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 2.76, "near_60": false, "diff_120": 13.29, "near_120": false, "diff_240": 33.63, "near_240": false}, {"ticker": "003550.KS", "displayTicker": "003550", "quoteUrl": "https://kr.investing.com/equities/lg-corp", "en_name": "LG Corporation", "kr_name": "LG", "sector": "지주사", "desc": "LG그룹 지주회사", "price": 98300.0, "changePct": 0.1, "rsi": 62.2, "fromHigh": -6.5, "volRatio": 0.89, "per": null, "upside": 8.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 7.26, "near_60": false, "diff_120": 13.64, "near_120": false, "diff_240": 22.95, "near_240": false}, {"ticker": "047050.KS", "displayTicker": "047050", "quoteUrl": "https://kr.investing.com/equities/daewoo-international-corp", "en_name": "포스코인터내셔널", "kr_name": "포스코인터내셔널", "sector": "상사·무역", "desc": "포스코인터내셔널 (KOSPI200)", "price": 84900.0, "changePct": -0.12, "rsi": 65.8, "fromHigh": -0.2, "volRatio": 0.74, "per": null, "upside": 2.5, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 16.31, "near_60": false, "diff_120": 34.28, "near_120": false, "diff_240": 51.07, "near_240": false}, {"ticker": "071050.KS", "displayTicker": "071050", "quoteUrl": "https://kr.investing.com/equities/korea-investment-holdings-co", "en_name": "Korea Investment Holdings Co., Ltd.", "kr_name": "한국금융지주", "sector": "금융 서비스", "desc": "한국금융지주 (KOSPI200)", "price": 249000.0, "changePct": -3.68, "rsi": 53.3, "fromHigh": -12.0, "volRatio": 1.05, "per": null, "upside": 21.2, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 6.32, "near_60": false, "diff_120": 25.08, "near_120": false, "diff_240": 50.5, "near_240": false}, {"ticker": "259960.KS", "displayTicker": "259960", "quoteUrl": "https://kr.investing.com/equities/krafton", "en_name": "KRAFTON, Inc.", "kr_name": "크래프톤", "sector": "커뮤니케이션 서비스", "desc": "크래프톤 (KOSPI200)", "price": 277500.0, "changePct": -2.12, "rsi": 64.8, "fromHigh": -27.5, "volRatio": 1.15, "per": null, "upside": 27.1, "trend": "Downtrend", "trendScore": 2, "nearCount": 0, "diff_60": 12.79, "near_60": false, "diff_120": 12.4, "near_120": false, "diff_240": -4.42, "near_240": false}, {"ticker": "010950.KS", "displayTicker": "010950", "quoteUrl": "https://kr.investing.com/equities/s-oil-corp", "en_name": "S-Oil", "kr_name": "S-Oil", "sector": "정유", "desc": "국내 3위 정유, 아람코 계열", "price": 134300.0, "changePct": 13.14, "rsi": 66.6, "fromHigh": -4.7, "volRatio": 3.69, "per": null, "upside": -8.4, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 18.52, "near_60": false, "diff_120": 35.68, "near_120": false, "diff_240": 68.11, "near_240": false}, {"ticker": "011070.KS", "displayTicker": "011070", "quoteUrl": "https://kr.investing.com/equities/lg-innotek-co-ltd", "en_name": "LG Innotek Co., Ltd.", "kr_name": "LG이노텍", "sector": "기술", "desc": "LG이노텍 (KOSPI200)", "price": 592000.0, "changePct": 2.6, "rsi": 85.1, "fromHigh": 0.0, "volRatio": 0.78, "per": null, "upside": -11.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 85.66, "near_60": false, "diff_120": 103.28, "near_120": false, "diff_240": 159.49, "near_240": false}, {"ticker": "018260.KS", "displayTicker": "018260", "quoteUrl": "https://kr.investing.com/equities/samsung-sds-co-ltd", "en_name": "Samsung SDS", "kr_name": "삼성에스디에스", "sector": "IT서비스", "desc": "삼성그룹 IT서비스·물류 BPO", "price": 170200.0, "changePct": -1.33, "rsi": 52.4, "fromHigh": -12.7, "volRatio": 0.56, "per": null, "upside": 24.9, "trend": "Downtrend", "trendScore": 2, "nearCount": 1, "diff_60": 2.46, "near_60": false, "diff_120": 0.84, "near_120": true, "diff_240": 5.29, "near_240": false}, {"ticker": "307950.KS", "displayTicker": "307950", "quoteUrl": "https://kr.investing.com/equities/hyundai-autoever-corp", "en_name": "Hyundai Autoever Corporation", "kr_name": "현대오토에버", "sector": "기술", "desc": "현대오토에버 (KOSPI200)", "price": 474000.0, "changePct": -0.84, "rsi": 64.5, "fromHigh": -5.7, "volRatio": 1.09, "per": null, "upside": 3.2, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 12.99, "near_60": false, "diff_120": 30.91, "near_120": false, "diff_240": 82.79, "near_240": false}, {"ticker": "006260.KS", "displayTicker": "006260", "quoteUrl": "https://kr.investing.com/equities/ls-corp", "en_name": "LS", "kr_name": "LS", "sector": "산업재", "desc": "LS (KOSPI200)", "price": 418500.0, "changePct": 3.98, "rsi": 74.0, "fromHigh": -1.8, "volRatio": 1.17, "per": null, "upside": -17.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 50.36, "near_60": false, "diff_120": 75.41, "near_120": false, "diff_240": 103.27, "near_240": false}, {"ticker": "323410.KS", "displayTicker": "323410", "quoteUrl": "https://kr.investing.com/equities/kakaobank", "en_name": "KakaoBank Corp.", "kr_name": "카카오뱅크", "sector": "금융 서비스", "desc": "카카오뱅크 (KOSPI200)", "price": 24550.0, "changePct": -1.6, "rsi": 47.1, "fromHigh": -32.5, "volRatio": 0.61, "per": null, "upside": 12.7, "trend": "Neutral", "trendScore": 3, "nearCount": 2, "diff_60": -1.95, "near_60": true, "diff_120": 5.57, "near_120": false, "diff_240": 0.62, "near_240": true}, {"ticker": "005940.KS", "displayTicker": "005940", "quoteUrl": "https://kr.investing.com/equities/woori-investment---securities", "en_name": "NH Investment & Securities Co., Ltd.", "kr_name": "NH투자증권", "sector": "금융 서비스", "desc": "NH투자증권 (KOSPI200)", "price": 34600.0, "changePct": -1.28, "rsi": 55.0, "fromHigh": -8.3, "volRatio": 0.75, "per": null, "upside": 11.0, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 8.76, "near_60": false, "diff_120": 31.78, "near_120": false, "diff_240": 54.11, "near_240": false}, {"ticker": "443060.KS", "displayTicker": "443060", "quoteUrl": "https://kr.investing.com/equities/hd-hyundai-marine-solution", "en_name": "HDHMS", "kr_name": "HD현대마린솔루션", "sector": "산업재", "desc": "HD현대마린솔루션 (KOSPI200)", "price": 268500.0, "changePct": -2.72, "rsi": 74.9, "fromHigh": -4.3, "volRatio": 1.66, "per": null, "upside": 14.6, "trend": "Downtrend", "trendScore": 2, "nearCount": 0, "diff_60": 44.48, "near_60": false, "diff_120": 40.62, "near_120": false, "diff_240": 38.21, "near_240": false}, {"ticker": "005830.KS", "displayTicker": "005830", "quoteUrl": "https://kr.investing.com/equities/dongbu-insurance", "en_name": "DB Insurance Co., Ltd.", "kr_name": "DB손해보험", "sector": "금융 서비스", "desc": "DB손해보험 (KOSPI200)", "price": 172200.0, "changePct": -0.75, "rsi": 51.9, "fromHigh": -12.8, "volRatio": 0.79, "per": null, "upside": 26.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 1, "diff_60": 0.94, "near_60": true, "diff_120": 17.55, "near_120": false, "diff_240": 29.19, "near_240": false}, {"ticker": "039490.KS", "displayTicker": "039490", "quoteUrl": "https://kr.investing.com/equities/kiwoom", "en_name": "Kiwoom Securities Co., Ltd.", "kr_name": "키움증권", "sector": "금융 서비스", "desc": "키움증권 (KOSPI200)", "price": 423500.0, "changePct": -4.94, "rsi": 44.5, "fromHigh": -14.5, "volRatio": 1.24, "per": null, "upside": 30.1, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": -4.15, "near_60": false, "diff_120": 15.16, "near_120": false, "diff_240": 46.83, "near_240": false}, {"ticker": "007660.KS", "displayTicker": "007660", "quoteUrl": "https://kr.investing.com/equities/isupetasys", "en_name": "ISU Petasys Co., Ltd.", "kr_name": "이수페타시스", "sector": "기술", "desc": "이수페타시스 (KOSPI200)", "price": 146000.0, "changePct": -3.05, "rsi": 60.2, "fromHigh": -9.5, "volRatio": 0.69, "per": null, "upside": 19.9, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 23.87, "near_60": false, "diff_120": 21.01, "near_120": false, "diff_240": 60.44, "near_240": false}, {"ticker": "028050.KS", "displayTicker": "028050", "quoteUrl": "https://kr.investing.com/equities/samsung-engineering", "en_name": "Samsung E&A Co., Ltd.", "kr_name": "삼성E&A", "sector": "산업재", "desc": "삼성E&A (KOSPI200)", "price": 54300.0, "changePct": -3.55, "rsi": 67.3, "fromHigh": -3.6, "volRatio": 0.62, "per": null, "upside": 1.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 39.19, "near_60": false, "diff_120": 69.31, "near_120": false, "diff_240": 91.71, "near_240": false}, {"ticker": "352820.KS", "displayTicker": "352820", "quoteUrl": "https://kr.investing.com/equities/big-hit-entertainment-co-ltd", "en_name": "HYBE Co.", "kr_name": "하이브", "sector": "엔터테인먼트", "desc": "BTS 소속 K-POP 최대 기획사", "price": 252500.0, "changePct": 1.61, "rsi": 37.6, "fromHigh": -37.5, "volRatio": 0.57, "per": null, "upside": 64.8, "trend": "Downtrend", "trendScore": 2, "nearCount": 0, "diff_60": -21.51, "near_60": false, "diff_120": -21.11, "near_120": false, "diff_240": -16.28, "near_240": false}, {"ticker": "003230.KS", "displayTicker": "003230", "quoteUrl": "https://kr.investing.com/equities/sam-yang-foods", "en_name": "Samyang Foods Co., Ltd.", "kr_name": "삼양식품", "sector": "필수 소비재", "desc": "삼양식품 (KOSPI200)", "price": 1314000.0, "changePct": 2.26, "rsi": 55.9, "fromHigh": -19.2, "volRatio": 0.8, "per": null, "upside": 38.9, "trend": "Downtrend", "trendScore": 2, "nearCount": 1, "diff_60": 10.45, "near_60": false, "diff_120": 6.5, "near_120": false, "diff_240": 1.82, "near_240": true}, {"ticker": "016360.KS", "displayTicker": "016360", "quoteUrl": "https://kr.investing.com/equities/samsung-securities", "en_name": "Samsung Securities", "kr_name": "삼성증권", "sector": "증권", "desc": "삼성그룹 계열 대형 증권사", "price": 108700.0, "changePct": -2.25, "rsi": 55.5, "fromHigh": -5.1, "volRatio": 1.27, "per": null, "upside": 12.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 8.13, "near_60": false, "diff_120": 22.28, "near_120": false, "diff_240": 40.56, "near_240": false}, {"ticker": "003490.KS", "displayTicker": "003490", "quoteUrl": "https://kr.investing.com/equities/korean-air-lines-co", "en_name": "Korean Air Lines", "kr_name": "대한항공", "sector": "항공", "desc": "국내 1위 항공사, 아시아나 합병", "price": 25100.0, "changePct": 3.08, "rsi": 54.2, "fromHigh": -10.7, "volRatio": 1.02, "per": null, "upside": 22.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 3.48, "near_60": false, "diff_120": 9.01, "near_120": false, "diff_240": 9.93, "near_240": false}, {"ticker": "001440.KS", "displayTicker": "001440", "quoteUrl": "https://kr.investing.com/equities/taihan-electric-wire-co-ltd", "en_name": "Taihan Cable & Solution Co., Ltd.", "kr_name": "대한전선", "sector": "산업재", "desc": "대한전선 (KOSPI200)", "price": 51200.0, "changePct": 11.55, "rsi": 79.9, "fromHigh": 0.0, "volRatio": 2.94, "per": null, "upside": -30.7, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 56.16, "near_60": false, "diff_120": 78.81, "near_120": false, "diff_240": 130.33, "near_240": false}, {"ticker": "000880.KS", "displayTicker": "000880", "quoteUrl": "https://kr.investing.com/equities/hanwha", "en_name": "Hanwha Corporation", "kr_name": "한화", "sector": "산업재", "desc": "한화 (KOSPI200)", "price": 132500.0, "changePct": 2.63, "rsi": 59.7, "fromHigh": -3.9, "volRatio": 1.04, "per": null, "upside": 17.5, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 8.78, "near_60": false, "diff_120": 24.48, "near_120": false, "diff_240": 39.38, "near_240": false}, {"ticker": "009830.KS", "displayTicker": "009830", "quoteUrl": "https://kr.investing.com/equities/hanwhachem", "en_name": "Hanwha Solutions Corporation", "kr_name": "한화솔루션", "sector": "기술", "desc": "한화솔루션 (KOSPI200)", "price": 47950.0, "changePct": -2.94, "rsi": 58.0, "fromHigh": -18.0, "volRatio": 1.55, "per": null, "upside": -13.2, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 7.62, "near_60": false, "diff_120": 32.61, "near_120": false, "diff_240": 41.12, "near_240": false}, {"ticker": "090430.KS", "displayTicker": "090430", "quoteUrl": "https://kr.investing.com/equities/amorepacific", "en_name": "Amorepacific Corporation", "kr_name": "아모레퍼시픽", "sector": "필수 소비재", "desc": "아모레퍼시픽 (KOSPI200)", "price": 141400.0, "changePct": -3.28, "rsi": 55.9, "fromHigh": -13.6, "volRatio": 3.0, "per": null, "upside": 20.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 1, "diff_60": 1.82, "near_60": true, "diff_120": 7.91, "near_120": false, "diff_240": 9.78, "near_240": false}, {"ticker": "326030.KS", "displayTicker": "326030", "quoteUrl": "https://kr.investing.com/equities/sk-biopharmaceuticals-co-ltd", "en_name": "SK Biopharmaceuticals Co., Ltd.", "kr_name": "SK바이오팜", "sector": "헬스케어", "desc": "SK바이오팜 (KOSPI200)", "price": 101800.0, "changePct": -0.78, "rsi": 50.6, "fromHigh": -27.6, "volRatio": 0.72, "per": null, "upside": 40.4, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 1, "diff_60": -1.96, "near_60": true, "diff_120": -11.68, "near_120": false, "diff_240": -5.14, "near_240": false}, {"ticker": "161390.KS", "displayTicker": "161390", "quoteUrl": "https://kr.investing.com/equities/hankook-tire", "en_name": "Hankook Tire & Tech", "kr_name": "한국타이어앤테크놀로지", "sector": "타이어", "desc": "국내 1위 타이어 제조", "price": 61200.0, "changePct": -1.61, "rsi": 52.3, "fromHigh": -17.2, "volRatio": 0.79, "per": null, "upside": 24.5, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -0.19, "near_60": true, "diff_120": 2.64, "near_120": false, "diff_240": 23.24, "near_240": false}, {"ticker": "180640.KS", "displayTicker": "180640", "quoteUrl": "https://kr.investing.com/equities/hanjinkal", "en_name": "Hanjin Kal", "kr_name": "한진칼", "sector": "경기 소비재", "desc": "한진칼 (KOSPI200)", "price": 113300.0, "changePct": -1.22, "rsi": 46.4, "fromHigh": -34.3, "volRatio": 0.7, "per": null, "upside": null, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": -7.17, "near_60": false, "diff_120": -3.33, "near_120": false, "diff_240": -2.65, "near_240": false}, {"ticker": "066970.KS", "displayTicker": "066970", "quoteUrl": "https://kr.investing.com/equities/lf-co-ltd", "en_name": "L&F", "kr_name": "엘앤에프", "sector": "산업재", "desc": "엘앤에프 (KOSPI200)", "price": 209000.0, "changePct": 1.95, "rsi": 72.9, "fromHigh": 0.0, "volRatio": 0.33, "per": null, "upside": null, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 47.38, "near_60": false, "diff_120": 60.25, "near_120": false, "diff_240": 108.1, "near_240": false}, {"ticker": "377300.KS", "displayTicker": "377300", "quoteUrl": "https://kr.investing.com/equities/kakaopay", "en_name": "Kakao Pay Corp.", "kr_name": "카카오페이", "sector": "기술", "desc": "카카오페이 (KOSPI200)", "price": 56600.0, "changePct": 2.35, "rsi": 54.4, "fromHigh": -39.7, "volRatio": 0.74, "per": null, "upside": 0.8, "trend": "Downtrend", "trendScore": 2, "nearCount": 1, "diff_60": -3.06, "near_60": false, "diff_120": 3.5, "near_120": false, "diff_240": 1.54, "near_240": true}, {"ticker": "000100.KS", "displayTicker": "000100", "quoteUrl": "https://kr.investing.com/equities/yuhan", "en_name": "Yuhan Corporation", "kr_name": "유한양행", "sector": "제약", "desc": "국내 대형 제약사, 레이저티닙 개발", "price": 93200.0, "changePct": -0.53, "rsi": 41.7, "fromHigh": -31.0, "volRatio": 0.9, "per": null, "upside": 53.8, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 0, "diff_60": -7.02, "near_60": false, "diff_120": -13.03, "near_120": false, "diff_240": -15.18, "near_240": false}, {"ticker": "052690.KS", "displayTicker": "052690", "quoteUrl": "https://kr.investing.com/equities/kepco-engineering---construction", "en_name": "KEPCO Engineering & Construction Company, Inc.", "kr_name": "한전기술", "sector": "산업재", "desc": "한전기술 (KOSPI200)", "price": 193300.0, "changePct": 0.73, "rsi": 63.3, "fromHigh": -0.8, "volRatio": 0.64, "per": null, "upside": -8.4, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 18.37, "near_60": false, "diff_120": 46.35, "near_120": false, "diff_240": 75.98, "near_240": false}, {"ticker": "241560.KS", "displayTicker": "241560", "quoteUrl": "https://kr.investing.com/equities/doosan-bobcat-inc", "en_name": "Doosan Bobcat Inc.", "kr_name": "두산밥캣", "sector": "산업재", "desc": "두산밥캣 (KOSPI200)", "price": 74500.0, "changePct": -2.61, "rsi": 66.8, "fromHigh": -2.6, "volRatio": 1.6, "per": null, "upside": 9.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 16.88, "near_60": false, "diff_120": 22.06, "near_120": false, "diff_240": 30.22, "near_240": false}, {"ticker": "032640.KS", "displayTicker": "032640", "quoteUrl": "https://kr.investing.com/equities/lg-uplus", "en_name": "LG Uplus", "kr_name": "LG유플러스", "sector": "통신", "desc": "이동통신·초고속인터넷·IPTV", "price": 16050.0, "changePct": -2.55, "rsi": 44.8, "fromHigh": -8.8, "volRatio": 0.89, "per": null, "upside": 16.0, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 1, "diff_60": 0.82, "near_60": true, "diff_120": 4.34, "near_120": false, "diff_240": 9.89, "near_240": false}, {"ticker": "078930.KS", "displayTicker": "078930", "quoteUrl": "https://kr.investing.com/equities/gs-holdings", "en_name": "GS", "kr_name": "GS", "sector": "산업재", "desc": "GS (KOSPI200)", "price": 82100.0, "changePct": 6.9, "rsi": 72.2, "fromHigh": 0.0, "volRatio": 2.42, "per": null, "upside": -11.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 20.08, "near_60": false, "diff_120": 32.73, "near_120": false, "diff_240": 54.52, "near_240": false}, {"ticker": "010060.KS", "displayTicker": "010060", "quoteUrl": "https://kr.investing.com/equities/oci-co-ltd", "en_name": "OCI Holdings Company Ltd.", "kr_name": "OCI홀딩스", "sector": "금융 서비스", "desc": "OCI홀딩스 (KOSPI200)", "price": 371500.0, "changePct": 1.09, "rsi": 75.1, "fromHigh": -3.3, "volRatio": 0.51, "per": null, "upside": -9.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 91.19, "near_60": false, "diff_120": 144.68, "near_120": false, "diff_240": 210.53, "near_240": false}, {"ticker": "062040.KS", "displayTicker": "062040", "quoteUrl": "https://kr.investing.com/equities/sanil-electric", "en_name": "SANIL ELECTRIC", "kr_name": "산일전기", "sector": "산업재", "desc": "산일전기 (KOSPI200)", "price": 221000.0, "changePct": -0.45, "rsi": 69.6, "fromHigh": -4.5, "volRatio": 0.95, "per": null, "upside": -3.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 37.3, "near_60": false, "diff_120": 45.67, "near_120": false, "diff_240": 74.79, "near_240": false}, {"ticker": "082740.KS", "displayTicker": "082740", "quoteUrl": "https://kr.investing.com/equities/doosan-engine", "en_name": "Hanwha Engine Co., Ltd.", "kr_name": "한화엔진", "sector": "산업재", "desc": "한화엔진 (KOSPI200)", "price": 87700.0, "changePct": 8.14, "rsi": 77.5, "fromHigh": -0.9, "volRatio": 1.73, "per": null, "upside": -16.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 64.82, "near_60": false, "diff_120": 76.8, "near_120": false, "diff_240": 103.83, "near_240": false}, {"ticker": "064400.KS", "displayTicker": "064400", "quoteUrl": "https://kr.investing.com/equities/lg-cns", "en_name": "LG CNS", "kr_name": "LG씨엔에스", "sector": "기술", "desc": "LG씨엔에스 (KOSPI200)", "price": 66700.0, "changePct": -1.19, "rsi": 55.7, "fromHigh": -29.5, "volRatio": 0.65, "per": null, "upside": 29.9, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": 2.57, "near_60": false, "diff_120": 5.41, "near_120": false, "diff_240": 3.29, "near_240": false}, {"ticker": "454910.KS", "displayTicker": "454910", "quoteUrl": "https://kr.investing.com/equities/doosan-robotics", "en_name": "Doosan Robotics Inc.", "kr_name": "두산로보틱스", "sector": "산업재", "desc": "두산로보틱스 (KOSPI200)", "price": 102200.0, "changePct": 2.1, "rsi": 66.3, "fromHigh": -15.4, "volRatio": 2.79, "per": null, "upside": 6.7, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 8.34, "near_60": false, "diff_120": 13.69, "near_120": false, "diff_240": 35.56, "near_240": false}, {"ticker": "001040.KS", "displayTicker": "001040", "quoteUrl": "https://kr.investing.com/equities/cj-corp", "en_name": "CJ Corporation", "kr_name": "CJ", "sector": "지주사", "desc": "식품·물류·바이오·엔터 지주", "price": 227500.0, "changePct": 2.48, "rsi": 67.1, "fromHigh": -0.3, "volRatio": 1.0, "per": null, "upside": 5.5, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 12.2, "near_60": false, "diff_120": 20.05, "near_120": false, "diff_240": 31.44, "near_240": false}, {"ticker": "034220.KS", "displayTicker": "034220", "quoteUrl": "https://kr.investing.com/equities/lg-display", "en_name": "LG Display Co., Ltd.", "kr_name": "LG디스플레이", "sector": "기술", "desc": "LG디스플레이 (KOSPI200)", "price": 12430.0, "changePct": -2.51, "rsi": 47.2, "fromHigh": -21.6, "volRatio": 0.77, "per": null, "upside": 17.0, "trend": "Neutral", "trendScore": 3, "nearCount": 2, "diff_60": 1.1, "near_60": true, "diff_120": 0.17, "near_120": true, "diff_240": 6.56, "near_240": false}, {"ticker": "128940.KS", "displayTicker": "128940", "quoteUrl": "https://kr.investing.com/equities/hanmi-pharm-co-ltd", "en_name": "Hanmi Pharmaceutical", "kr_name": "한미약품", "sector": "제약", "desc": "국내 제약 R&D 선도, 신약 수출", "price": 483000.0, "changePct": -1.73, "rsi": 41.9, "fromHigh": -22.6, "volRatio": 0.92, "per": null, "upside": 15.8, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -8.7, "near_60": false, "diff_120": -1.23, "near_120": true, "diff_240": 21.31, "near_240": false}, {"ticker": "450080.KS", "displayTicker": "450080", "quoteUrl": "https://kr.investing.com/equities/ecopro-materials", "en_name": "ECOPRO MAT", "kr_name": "에코프로머티", "sector": "산업재", "desc": "에코프로머티 (KOSPI200)", "price": 83700.0, "changePct": -2.22, "rsi": 61.6, "fromHigh": -3.1, "volRatio": 0.75, "per": null, "upside": null, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 19.93, "near_60": false, "diff_120": 29.78, "near_120": false, "diff_240": 45.0, "near_240": false}, {"ticker": "029780.KS", "displayTicker": "029780", "quoteUrl": "https://kr.investing.com/equities/samsung-card", "en_name": "Samsung Card Co., Ltd.", "kr_name": "삼성카드", "sector": "금융 서비스", "desc": "삼성카드 (KOSPI200)", "price": 53000.0, "changePct": -1.12, "rsi": 42.5, "fromHigh": -17.5, "volRatio": 1.09, "per": null, "upside": 27.0, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -5.07, "near_60": false, "diff_120": -1.12, "near_120": true, "diff_240": 5.19, "near_240": false}, {"ticker": "021240.KS", "displayTicker": "021240", "quoteUrl": "https://kr.investing.com/equities/coway", "en_name": "Coway", "kr_name": "코웨이", "sector": "가전·렌탈", "desc": "정수기·공기청정기 렌탈 1위", "price": 87400.0, "changePct": 2.22, "rsi": 69.0, "fromHigh": -20.6, "volRatio": 0.82, "per": null, "upside": 34.0, "trend": "Downtrend", "trendScore": 2, "nearCount": 1, "diff_60": 12.24, "near_60": false, "diff_120": 8.73, "near_120": false, "diff_240": -1.17, "near_240": true}, {"ticker": "004020.KS", "displayTicker": "004020", "quoteUrl": "https://kr.investing.com/equities/hyundai-steel", "en_name": "Hyundai Steel", "kr_name": "현대제철", "sector": "철강", "desc": "현대차 계열 철강, 전기로·고로", "price": 45750.0, "changePct": 3.74, "rsi": 71.8, "fromHigh": -0.2, "volRatio": 2.23, "per": null, "upside": 2.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 25.63, "near_60": false, "diff_120": 36.49, "near_120": false, "diff_240": 40.26, "near_240": false}, {"ticker": "138930.KS", "displayTicker": "138930", "quoteUrl": "https://kr.investing.com/equities/bs-financial-group", "en_name": "BNK Financial Group Inc.", "kr_name": "BNK금융지주", "sector": "금융 서비스", "desc": "BNK금융지주 (KOSPI200)", "price": 18860.0, "changePct": 0.0, "rsi": 54.3, "fromHigh": -15.3, "volRatio": 1.04, "per": null, "upside": 13.5, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 1, "diff_60": 0.38, "near_60": true, "diff_120": 11.14, "near_120": false, "diff_240": 25.22, "near_240": false}, {"ticker": "271560.KS", "displayTicker": "271560", "quoteUrl": "https://kr.investing.com/equities/orion-corp", "en_name": "ORION Corp.", "kr_name": "오리온", "sector": "필수 소비재", "desc": "오리온 (KOSPI200)", "price": 146000.0, "changePct": 3.4, "rsi": 68.1, "fromHigh": 0.0, "volRatio": 1.47, "per": null, "upside": 9.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 12.4, "near_60": false, "diff_120": 25.11, "near_120": false, "diff_240": 30.4, "near_240": false}, {"ticker": "036570.KS", "displayTicker": "036570", "quoteUrl": "https://kr.investing.com/equities/ncsoft-corp", "en_name": "NCsoft Corporation", "kr_name": "NC", "sector": "게임", "desc": "리니지·블레이드&소울 MMORPG", "price": 277500.0, "changePct": 3.74, "rsi": 66.0, "fromHigh": 0.0, "volRatio": 2.29, "per": null, "upside": 2.4, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 21.31, "near_60": false, "diff_120": 25.19, "near_120": false, "diff_240": 33.27, "near_240": false}, {"ticker": "022100.KS", "displayTicker": "022100", "quoteUrl": "https://kr.investing.com/equities/posco-ict-co-ltd", "en_name": "Posco Dx Company Ltd.", "kr_name": "포스코DX", "sector": "기술", "desc": "포스코DX (KOSPI200)", "price": 36350.0, "changePct": -0.68, "rsi": 63.7, "fromHigh": -14.8, "volRatio": 0.83, "per": null, "upside": -4.5, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 6.5, "near_60": false, "diff_120": 14.43, "near_120": false, "diff_240": 31.6, "near_240": false}, {"ticker": "175330.KS", "displayTicker": "175330", "quoteUrl": "https://kr.investing.com/equities/jb-financial", "en_name": "JB Financial Group Co., Ltd.", "kr_name": "JB금융지주", "sector": "금융 서비스", "desc": "JB금융지주 (KOSPI200)", "price": 27100.0, "changePct": -0.73, "rsi": 34.6, "fromHigh": -26.3, "volRatio": 0.91, "per": null, "upside": 31.3, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -10.16, "near_60": false, "diff_120": 0.21, "near_120": true, "diff_240": 12.22, "near_240": false}, {"ticker": "002380.KS", "displayTicker": "002380", "quoteUrl": "https://kr.investing.com/equities/kcc", "en_name": "KCC", "kr_name": "KCC", "sector": "원자재", "desc": "KCC (KOSPI200)", "price": 576000.0, "changePct": 4.16, "rsi": 60.6, "fromHigh": -15.3, "volRatio": 1.15, "per": null, "upside": 16.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 8.5, "near_60": false, "diff_120": 21.76, "near_120": false, "diff_240": 40.01, "near_240": false}, {"ticker": "011790.KS", "displayTicker": "011790", "quoteUrl": "https://kr.investing.com/equities/skc", "en_name": "SKC", "kr_name": "SKC", "sector": "원자재", "desc": "SKC (KOSPI200)", "price": 123000.0, "changePct": -1.13, "rsi": 64.4, "fromHigh": -8.8, "volRatio": 0.79, "per": null, "upside": -14.4, "trend": "Downtrend", "trendScore": 2, "nearCount": 0, "diff_60": 17.55, "near_60": false, "diff_120": 14.06, "near_120": false, "diff_240": 17.37, "near_240": false}, {"ticker": "018880.KS", "displayTicker": "018880", "quoteUrl": "https://kr.investing.com/equities/halla-visteon-climate-control", "en_name": "Hanon Systems", "kr_name": "한온시스템", "sector": "경기 소비재", "desc": "한온시스템 (KOSPI200)", "price": 4355.0, "changePct": -1.02, "rsi": 61.3, "fromHigh": -17.4, "volRatio": 0.72, "per": null, "upside": -6.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 6.3, "near_60": false, "diff_120": 15.46, "near_120": false, "diff_240": 22.13, "near_240": false}, {"ticker": "251270.KS", "displayTicker": "251270", "quoteUrl": "https://kr.investing.com/equities/netmarble-games-corp", "en_name": "Netmarble", "kr_name": "넷마블", "sector": "게임", "desc": "모바일 게임 글로벌 퍼블리셔", "price": 51300.0, "changePct": 1.38, "rsi": 51.9, "fromHigh": -23.4, "volRatio": 2.03, "per": null, "upside": 38.9, "trend": "Downtrend", "trendScore": 2, "nearCount": 2, "diff_60": -1.54, "near_60": true, "diff_120": 0.02, "near_120": true, "diff_240": -5.71, "near_240": false}, {"ticker": "088350.KS", "displayTicker": "088350", "quoteUrl": "https://kr.investing.com/equities/hanwha-life", "en_name": "Hanwha Life Insurance", "kr_name": "한화생명", "sector": "보험", "desc": "한화그룹 생명보험 계열사", "price": 5080.0, "changePct": 2.11, "rsi": 58.3, "fromHigh": -23.0, "volRatio": 1.81, "per": null, "upside": -10.0, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 7.95, "near_60": false, "diff_120": 29.16, "near_120": false, "diff_240": 42.06, "near_240": false}, {"ticker": "011170.KS", "displayTicker": "011170", "quoteUrl": "https://kr.investing.com/equities/lotte-chemical-corp", "en_name": "Lotte Chemical", "kr_name": "롯데케미칼", "sector": "화학", "desc": "기초화학·첨단소재", "price": 118000.0, "changePct": 24.87, "rsi": 78.0, "fromHigh": 0.0, "volRatio": 7.61, "per": null, "upside": -21.4, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 41.58, "near_60": false, "diff_120": 49.65, "near_120": false, "diff_240": 64.9, "near_240": false}, {"ticker": "051900.KS", "displayTicker": "051900", "quoteUrl": "https://kr.investing.com/equities/lg-household---healthcare", "en_name": "LG H&H Co., Ltd.", "kr_name": "LG생활건강", "sector": "필수 소비재", "desc": "LG생활건강 (KOSPI200)", "price": 254500.0, "changePct": -0.2, "rsi": 54.9, "fromHigh": -26.6, "volRatio": 1.29, "per": null, "upside": 0.7, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 1, "diff_60": 0.54, "near_60": true, "diff_120": -3.17, "near_120": false, "diff_240": -10.87, "near_240": false}, {"ticker": "017800.KS", "displayTicker": "017800", "quoteUrl": "https://kr.investing.com/equities/hyundai-elevator", "en_name": "Hyundai Elevator Co., Ltd", "kr_name": "현대엘리베이터", "sector": "산업재", "desc": "현대엘리베이터 (KOSPI200)", "price": 99000.0, "changePct": -0.4, "rsi": 59.9, "fromHigh": -3.1, "volRatio": 0.52, "per": null, "upside": 21.2, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 8.55, "near_60": false, "diff_120": 18.02, "near_120": false, "diff_240": 28.2, "near_240": false}, {"ticker": "375500.KS", "displayTicker": "375500", "quoteUrl": "https://kr.investing.com/equities/dl-e-c-co", "en_name": "DL E&C Co.,Ltd.", "kr_name": "DL이앤씨", "sector": "산업재", "desc": "DL이앤씨 (KOSPI200)", "price": 101100.0, "changePct": 1.2, "rsi": 69.9, "fromHigh": -1.4, "volRatio": 0.39, "per": null, "upside": -14.9, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 54.14, "near_60": false, "diff_120": 89.84, "near_120": false, "diff_240": 105.63, "near_240": false}, {"ticker": "023530.KS", "displayTicker": "023530", "quoteUrl": "https://kr.investing.com/equities/lotte-shopping", "en_name": "Lotte Shopping Co., Ltd.", "kr_name": "롯데쇼핑", "sector": "경기 소비재", "desc": "롯데쇼핑 (KOSPI200)", "price": 134300.0, "changePct": 1.28, "rsi": 72.4, "fromHigh": 0.0, "volRatio": 0.77, "per": null, "upside": -11.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 26.86, "near_60": false, "diff_120": 51.9, "near_120": false, "diff_240": 69.87, "near_240": false}, {"ticker": "457190.KS", "displayTicker": "457190", "quoteUrl": "https://kr.investing.com/equities/isu-specialty-chemical", "en_name": "ISU Specialty Chemical Co., Ltd.", "kr_name": "이수스페셜티케미컬", "sector": "화학", "desc": "이수스페셜티케미컬 (KOSPI200)", "price": 125900.0, "changePct": 1.94, "rsi": 67.6, "fromHigh": -3.2, "volRatio": 0.7, "per": null, "upside": null, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 23.98, "near_60": false, "diff_120": 53.77, "near_120": false, "diff_240": 97.62, "near_240": false}, {"ticker": "004170.KS", "displayTicker": "004170", "quoteUrl": "https://kr.investing.com/equities/shinsegae", "en_name": "SHINSEGAE Inc.", "kr_name": "신세계", "sector": "경기 소비재", "desc": "신세계 (KOSPI200)", "price": 406500.0, "changePct": -0.25, "rsi": 69.9, "fromHigh": -0.2, "volRatio": 0.49, "per": null, "upside": -2.6, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 18.61, "near_60": false, "diff_120": 39.19, "near_120": false, "diff_240": 74.39, "near_240": false}, {"ticker": "111770.KS", "displayTicker": "111770", "quoteUrl": "https://kr.investing.com/equities/youngone", "en_name": "Youngone Corporation", "kr_name": "영원무역", "sector": "경기 소비재", "desc": "영원무역 (KOSPI200)", "price": 84200.0, "changePct": 0.12, "rsi": 51.0, "fromHigh": -14.1, "volRatio": 0.9, "per": null, "upside": 28.7, "trend": "Neutral", "trendScore": 3, "nearCount": 1, "diff_60": -2.6, "near_60": false, "diff_120": 0.12, "near_120": true, "diff_240": 18.71, "near_240": false}, {"ticker": "035250.KS", "displayTicker": "035250", "quoteUrl": "https://kr.investing.com/equities/kangwon-land", "en_name": "Kangwon Land, Inc.", "kr_name": "강원랜드", "sector": "경기 소비재", "desc": "강원랜드 (KOSPI200)", "price": 17200.0, "changePct": -0.69, "rsi": 54.7, "fromHigh": -11.6, "volRatio": 0.58, "per": null, "upside": 19.7, "trend": "Neutral", "trendScore": 3, "nearCount": 3, "diff_60": 0.27, "near_60": true, "diff_120": 0.9, "near_120": true, "diff_240": 0.69, "near_240": true}, {"ticker": "006360.KS", "displayTicker": "006360", "quoteUrl": "https://kr.investing.com/equities/gs-engineering---construction", "en_name": "GS Engineering & Construction", "kr_name": "GS건설", "sector": "건설", "desc": "GS그룹 건설 계열사", "price": 41700.0, "changePct": -1.77, "rsi": 65.5, "fromHigh": -3.2, "volRatio": 0.37, "per": null, "upside": -17.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 51.54, "near_60": false, "diff_120": 80.4, "near_120": false, "diff_240": 95.73, "near_240": false}, {"ticker": "071970.KS", "displayTicker": "071970", "quoteUrl": "https://kr.investing.com/equities/stx-heavy-indu", "en_name": "HD-Hyundai Marine Engine Co., Ltd.", "kr_name": "HD현대마린엔진", "sector": "산업재", "desc": "HD현대마린엔진 (KOSPI200)", "price": 109700.0, "changePct": 3.39, "rsi": 69.0, "fromHigh": -5.0, "volRatio": 1.27, "per": null, "upside": 8.7, "trend": "Downtrend", "trendScore": 2, "nearCount": 0, "diff_60": 30.38, "near_60": false, "diff_120": 28.04, "near_120": false, "diff_240": 43.29, "near_240": false}, {"ticker": "097950.KS", "displayTicker": "097950", "quoteUrl": "https://kr.investing.com/equities/cj-cheiljedang", "en_name": "CJ CheilJedang", "kr_name": "CJ제일제당", "sector": "식품·바이오", "desc": "식품 1위·바이오 아미노산 세계 1위", "price": 243500.0, "changePct": 4.51, "rsi": 64.4, "fromHigh": -7.8, "volRatio": 1.54, "per": null, "upside": 13.1, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 11.11, "near_60": false, "diff_120": 12.96, "near_120": false, "diff_240": 7.98, "near_240": false}, {"ticker": "036460.KS", "displayTicker": "036460", "quoteUrl": "https://kr.investing.com/equities/kogas", "en_name": "Korea Gas Corporation", "kr_name": "한국가스공사", "sector": "유틸리티", "desc": "한국가스공사 (KOSPI200)", "price": 39200.0, "changePct": 0.38, "rsi": 65.6, "fromHigh": -14.8, "volRatio": 1.41, "per": null, "upside": 19.1, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 2, "diff_60": 2.79, "near_60": false, "diff_120": 0.39, "near_120": true, "diff_240": -0.25, "near_240": true}, {"ticker": "011780.KS", "displayTicker": "011780", "quoteUrl": "https://kr.investing.com/equities/kumho-petro-chemical", "en_name": "Kumho Petrochem", "kr_name": "금호석유화학", "sector": "화학", "desc": "합성고무·합성수지 전문", "price": 150200.0, "changePct": 9.08, "rsi": 68.0, "fromHigh": -2.1, "volRatio": 3.34, "per": null, "upside": 9.9, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 12.93, "near_60": false, "diff_120": 17.0, "near_120": false, "diff_240": 24.76, "near_240": false}, {"ticker": "302440.KS", "displayTicker": "302440", "quoteUrl": "https://kr.investing.com/equities/sk-bioscience-co", "en_name": "SK bioscience Co.,Ltd.", "kr_name": "SK바이오사이언스", "sector": "헬스케어", "desc": "SK바이오사이언스 (KOSPI200)", "price": 43650.0, "changePct": 0.58, "rsi": 50.2, "fromHigh": -27.4, "volRatio": 0.74, "per": null, "upside": -8.4, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 0, "diff_60": -3.02, "near_60": false, "diff_120": -9.72, "near_120": false, "diff_240": -8.41, "near_240": false}, {"ticker": "014680.KS", "displayTicker": "014680", "quoteUrl": "https://kr.investing.com/equities/hansol-chemica", "en_name": "Hansol Chemical Co., Ltd.", "kr_name": "한솔케미칼", "sector": "원자재", "desc": "한솔케미칼 (KOSPI200)", "price": 295000.0, "changePct": -0.17, "rsi": 56.5, "fromHigh": -11.9, "volRatio": 0.52, "per": null, "upside": 18.4, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 3.16, "near_60": false, "diff_120": 13.59, "near_120": false, "diff_240": 37.25, "near_240": false}, {"ticker": "012750.KS", "displayTicker": "012750", "quoteUrl": "https://kr.investing.com/equities/s-1-corp", "en_name": "S-1 Corporation", "kr_name": "에스원", "sector": "산업재", "desc": "에스원 (KOSPI200)", "price": 86600.0, "changePct": 1.05, "rsi": 45.3, "fromHigh": -8.0, "volRatio": 0.87, "per": null, "upside": 10.5, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -1.08, "near_60": true, "diff_120": 7.67, "near_120": false, "diff_240": 14.59, "near_240": false}, {"ticker": "112610.KS", "displayTicker": "112610", "quoteUrl": "https://kr.investing.com/equities/cs-wind-corp", "en_name": "CS Wind Corporation", "kr_name": "씨에스윈드", "sector": "산업재", "desc": "씨에스윈드 (KOSPI200)", "price": 72500.0, "changePct": -0.28, "rsi": 61.0, "fromHigh": -5.7, "volRatio": 0.39, "per": null, "upside": -8.5, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 26.4, "near_60": false, "diff_120": 46.6, "near_120": false, "diff_240": 54.1, "near_240": false}, {"ticker": "139130.KS", "displayTicker": "139130", "quoteUrl": "https://kr.investing.com/equities/dgb-financial", "en_name": "iM Financial Group Co., Ltd.", "kr_name": "iM금융지주", "sector": "금융 서비스", "desc": "iM금융지주 (KOSPI200)", "price": 19000.0, "changePct": -1.45, "rsi": 61.6, "fromHigh": -9.1, "volRatio": 0.82, "per": null, "upside": 6.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 7.31, "near_60": false, "diff_120": 19.86, "near_120": false, "diff_240": 33.28, "near_240": false}, {"ticker": "005850.KS", "displayTicker": "005850", "quoteUrl": "https://kr.investing.com/equities/sl-corp", "en_name": "SL Corporation", "kr_name": "에스엘", "sector": "경기 소비재", "desc": "에스엘 (KOSPI200)", "price": 66500.0, "changePct": 0.76, "rsi": 62.1, "fromHigh": -5.6, "volRatio": 0.72, "per": null, "upside": 12.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 12.48, "near_60": false, "diff_120": 32.13, "near_120": false, "diff_240": 61.48, "near_240": false}, {"ticker": "120110.KS", "displayTicker": "120110", "quoteUrl": "https://kr.investing.com/equities/kolon-industries-inc", "en_name": "Kolon Industries, Inc.", "kr_name": "코오롱인더", "sector": "원자재", "desc": "코오롱인더 (KOSPI200)", "price": 100900.0, "changePct": 0.9, "rsi": 71.4, "fromHigh": 0.0, "volRatio": 1.23, "per": null, "upside": -14.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 37.92, "near_60": false, "diff_120": 73.6, "near_120": false, "diff_240": 113.45, "near_240": false}, {"ticker": "028670.KS", "displayTicker": "028670", "quoteUrl": "https://kr.investing.com/equities/stx-pan-ocean", "en_name": "Pan Ocean Co., Ltd.", "kr_name": "팬오션", "sector": "산업재", "desc": "팬오션 (KOSPI200)", "price": 5550.0, "changePct": -0.54, "rsi": 55.6, "fromHigh": -10.5, "volRatio": 0.47, "per": null, "upside": 10.6, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 6.12, "near_60": false, "diff_120": 21.58, "near_120": false, "diff_240": 33.57, "near_240": false}, {"ticker": "139480.KS", "displayTicker": "139480", "quoteUrl": "https://kr.investing.com/equities/e-mart", "en_name": "E-MART", "kr_name": "이마트", "sector": "유통", "desc": "국내 1위 할인마트", "price": 108100.0, "changePct": 1.22, "rsi": 69.0, "fromHigh": -13.1, "volRatio": 1.24, "per": null, "upside": 20.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 10.07, "near_60": false, "diff_120": 21.43, "near_120": false, "diff_240": 27.24, "near_240": false}, {"ticker": "004990.KS", "displayTicker": "004990", "quoteUrl": "https://kr.investing.com/equities/lotte-confectionery", "en_name": "LOTTE Corporation", "kr_name": "롯데지주", "sector": "필수 소비재", "desc": "롯데지주 (KOSPI200)", "price": 31300.0, "changePct": 7.19, "rsi": 64.9, "fromHigh": -15.5, "volRatio": 4.56, "per": null, "upside": 26.2, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 3.98, "near_60": false, "diff_120": 8.71, "near_120": false, "diff_240": 11.1, "near_240": false}, {"ticker": "103140.KS", "displayTicker": "103140", "quoteUrl": "https://kr.investing.com/equities/poongsan", "en_name": "Poongsan Corporation", "kr_name": "풍산", "sector": "산업재", "desc": "풍산 (KOSPI200)", "price": 102000.0, "changePct": 0.2, "rsi": 52.1, "fromHigh": -37.0, "volRatio": 0.45, "per": null, "upside": 50.5, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 0, "diff_60": -2.56, "near_60": false, "diff_120": -3.34, "near_120": false, "diff_240": -6.47, "near_240": false}, {"ticker": "051600.KS", "displayTicker": "051600", "quoteUrl": "https://kr.investing.com/equities/kepco-plant-s-", "en_name": "KEPCO Plant Service & Engineering Co.,Ltd.", "kr_name": "한전KPS", "sector": "산업재", "desc": "한전KPS (KOSPI200)", "price": 63400.0, "changePct": -0.78, "rsi": 61.5, "fromHigh": -6.1, "volRatio": 0.78, "per": null, "upside": 1.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 7.15, "near_60": false, "diff_120": 14.13, "near_120": false, "diff_240": 21.52, "near_240": false}, {"ticker": "008770.KS", "displayTicker": "008770", "quoteUrl": "https://kr.investing.com/equities/hotel-shilla", "en_name": "Hotel Shilla Co.,Ltd", "kr_name": "호텔신라", "sector": "경기 소비재", "desc": "호텔신라 (KOSPI200)", "price": 67700.0, "changePct": -2.45, "rsi": 79.3, "fromHigh": -2.4, "volRatio": 0.97, "per": null, "upside": -13.3, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 40.59, "near_60": false, "diff_120": 44.1, "near_120": false, "diff_240": 40.35, "near_240": false}, {"ticker": "009970.KS", "displayTicker": "009970", "quoteUrl": "https://kr.investing.com/equities/youngone-holdi", "en_name": "Youngone Holdings Co., Ltd.", "kr_name": "영원무역홀딩스", "sector": "경기 소비재", "desc": "영원무역홀딩스 (KOSPI200)", "price": 212000.0, "changePct": 2.91, "rsi": 48.8, "fromHigh": -13.6, "volRatio": 1.26, "per": null, "upside": null, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": -2.78, "near_60": false, "diff_120": 6.74, "near_120": false, "diff_240": 30.53, "near_240": false}, {"ticker": "017960.KS", "displayTicker": "017960", "quoteUrl": "https://kr.investing.com/equities/hankuk-carbon", "en_name": "Hankuk Carbon Co., Ltd.", "kr_name": "한국카본", "sector": "원자재", "desc": "한국카본 (KOSPI200)", "price": 50400.0, "changePct": -2.7, "rsi": 56.8, "fromHigh": -3.4, "volRatio": 1.22, "per": null, "upside": 7.5, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 16.5, "near_60": false, "diff_120": 35.1, "near_120": false, "diff_240": 53.88, "near_240": false}, {"ticker": "204320.KS", "displayTicker": "204320", "quoteUrl": "https://kr.investing.com/equities/mando-corp", "en_name": "HL Mando Corporation", "kr_name": "HL만도", "sector": "경기 소비재", "desc": "HL만도 (KOSPI200)", "price": 57900.0, "changePct": 0.52, "rsi": 65.2, "fromHigh": -17.7, "volRatio": 1.29, "per": null, "upside": 21.8, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 6.59, "near_60": false, "diff_120": 9.51, "near_120": false, "diff_240": 32.74, "near_240": false}, {"ticker": "009420.KS", "displayTicker": "009420", "quoteUrl": "https://kr.investing.com/equities/hanall-biopharma", "en_name": "Hanall Biopharma Co., Ltd.", "kr_name": "한올바이오파마", "sector": "헬스케어", "desc": "한올바이오파마 (KOSPI200)", "price": 49500.0, "changePct": -3.88, "rsi": 46.6, "fromHigh": -23.1, "volRatio": 0.8, "per": null, "upside": 45.1, "trend": "Neutral", "trendScore": 3, "nearCount": 1, "diff_60": -7.51, "near_60": false, "diff_120": -1.3, "near_120": true, "diff_240": 24.88, "near_240": false}, {"ticker": "026960.KS", "displayTicker": "026960", "quoteUrl": "https://kr.investing.com/equities/dongsuh", "en_name": "Dong Suh Companies Inc.", "kr_name": "동서", "sector": "필수 소비재", "desc": "동서 (KOSPI200)", "price": 26550.0, "changePct": 0.0, "rsi": 44.0, "fromHigh": -12.8, "volRatio": 1.03, "per": null, "upside": null, "trend": "Uptrend", "trendScore": 4, "nearCount": 3, "diff_60": -1.35, "near_60": true, "diff_120": -0.86, "near_120": true, "diff_240": -0.73, "near_240": true}, {"ticker": "008930.KS", "displayTicker": "008930", "quoteUrl": "https://kr.investing.com/equities/hanmi-science", "en_name": "Hanmi Science Co., Ltd.", "kr_name": "한미사이언스", "sector": "헬스케어", "desc": "한미사이언스 (KOSPI200)", "price": 38000.0, "changePct": -1.3, "rsi": 45.1, "fromHigh": -26.2, "volRatio": 0.78, "per": null, "upside": null, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": -4.59, "near_60": false, "diff_120": -2.35, "near_120": false, "diff_240": -4.0, "near_240": false}, {"ticker": "001450.KS", "displayTicker": "001450", "quoteUrl": "https://kr.investing.com/equities/hyundai-mar-fi", "en_name": "Hyundai Marine & Fire", "kr_name": "현대해상", "sector": "보험", "desc": "현대차 계열 손해보험", "price": 31450.0, "changePct": 1.94, "rsi": 57.0, "fromHigh": -18.9, "volRatio": 1.19, "per": null, "upside": 16.5, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 1, "diff_60": 0.83, "near_60": true, "diff_120": 4.56, "near_120": false, "diff_240": 10.94, "near_240": false}, {"ticker": "001430.KS", "displayTicker": "001430", "quoteUrl": "https://kr.investing.com/equities/seah-bestee", "en_name": "SeAH Besteel Holdings Corporation", "kr_name": "세아베스틸지주", "sector": "원자재", "desc": "세아베스틸지주 (KOSPI200)", "price": 73100.0, "changePct": 0.0, "rsi": 56.6, "fromHigh": -17.7, "volRatio": 2.15, "per": null, "upside": -0.6, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 5.27, "near_60": false, "diff_120": 28.92, "near_120": false, "diff_240": 76.17, "near_240": false}, {"ticker": "383220.KS", "displayTicker": "383220", "quoteUrl": "https://kr.investing.com/equities/ff-co", "en_name": "F&F", "kr_name": "F&F", "sector": "경기 소비재", "desc": "F&F (KOSPI200)", "price": 67600.0, "changePct": 0.9, "rsi": 57.7, "fromHigh": -15.1, "volRatio": 1.38, "per": null, "upside": 32.1, "trend": "Downtrend", "trendScore": 2, "nearCount": 3, "diff_60": 1.8, "near_60": true, "diff_120": 0.25, "near_120": true, "diff_240": -0.13, "near_240": true}, {"ticker": "069960.KS", "displayTicker": "069960", "quoteUrl": "https://kr.investing.com/equities/hyundai-department", "en_name": "Hyundai Department Store Co. Ltd.", "kr_name": "현대백화점", "sector": "경기 소비재", "desc": "현대백화점 (KOSPI200)", "price": 111900.0, "changePct": 0.9, "rsi": 75.9, "fromHigh": -1.2, "volRatio": 1.04, "per": null, "upside": 10.9, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 22.14, "near_60": false, "diff_120": 23.44, "near_120": false, "diff_240": 36.12, "near_240": false}, {"ticker": "192820.KS", "displayTicker": "192820", "quoteUrl": "https://kr.investing.com/equities/cosmax-inc", "en_name": "Cosmax, Inc.", "kr_name": "코스맥스", "sector": "필수 소비재", "desc": "코스맥스 (KOSPI200)", "price": 222000.0, "changePct": 0.45, "rsi": 65.6, "fromHigh": -20.0, "volRatio": 0.65, "per": null, "upside": 4.5, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 15.63, "near_60": false, "diff_120": 22.69, "near_120": false, "diff_240": 9.91, "near_240": false}, {"ticker": "007340.KS", "displayTicker": "007340", "quoteUrl": "https://kr.investing.com/equities/dongah-tire", "en_name": "DN Automotive Corporation", "kr_name": "DN오토모티브", "sector": "경기 소비재", "desc": "DN오토모티브 (KOSPI200)", "price": 42800.0, "changePct": 4.39, "rsi": 62.0, "fromHigh": -0.3, "volRatio": 0.75, "per": null, "upside": null, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 27.52, "near_60": false, "diff_120": 47.7, "near_120": false, "diff_240": 62.81, "near_240": false}, {"ticker": "000240.KS", "displayTicker": "000240", "quoteUrl": "https://kr.investing.com/equities/hankook-tire-worldwide", "en_name": "Hankook & Company Co., Ltd.", "kr_name": "한국앤컴퍼니", "sector": "경기 소비재", "desc": "한국앤컴퍼니 (KOSPI200)", "price": 25150.0, "changePct": 0.2, "rsi": 50.7, "fromHigh": -25.2, "volRatio": 0.87, "per": null, "upside": 31.2, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": -4.15, "near_60": false, "diff_120": -3.11, "near_120": false, "diff_240": 7.48, "near_240": false}, {"ticker": "298020.KS", "displayTicker": "298020", "quoteUrl": "https://kr.investing.com/equities/hyosung-tnc", "en_name": "Hyosung TNC Corporation", "kr_name": "효성티앤씨", "sector": "경기 소비재", "desc": "효성티앤씨 (KOSPI200)", "price": 533000.0, "changePct": -0.37, "rsi": 68.5, "fromHigh": -0.4, "volRatio": 0.78, "per": null, "upside": 5.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 29.45, "near_60": false, "diff_120": 63.67, "near_120": false, "diff_240": 93.74, "near_240": false}, {"ticker": "000120.KS", "displayTicker": "000120", "quoteUrl": "https://kr.investing.com/equities/cj-korea-express", "en_name": "CJ Logistics Corporation", "kr_name": "CJ대한통운", "sector": "산업재", "desc": "CJ대한통운 (KOSPI200)", "price": 101800.0, "changePct": 0.59, "rsi": 42.4, "fromHigh": -29.6, "volRatio": 0.82, "per": null, "upside": 46.2, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -9.97, "near_60": false, "diff_120": -1.73, "near_120": true, "diff_240": 8.27, "near_240": false}, {"ticker": "011210.KS", "displayTicker": "011210", "quoteUrl": "https://kr.investing.com/equities/hyundai-wia", "en_name": "Hyundai Wia Corporation", "kr_name": "현대위아", "sector": "경기 소비재", "desc": "현대위아 (KOSPI200)", "price": 86200.0, "changePct": -0.58, "rsi": 56.5, "fromHigh": -13.6, "volRatio": 0.82, "per": null, "upside": 1.3, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 3.8, "near_60": false, "diff_120": 12.97, "near_120": false, "diff_240": 38.59, "near_240": false}, {"ticker": "282330.KS", "displayTicker": "282330", "quoteUrl": "https://kr.investing.com/equities/bgf-retail-ks", "en_name": "BGF Retail", "kr_name": "BGF리테일", "sector": "유통", "desc": "CU 편의점 운영", "price": 133000.0, "changePct": 1.22, "rsi": 51.1, "fromHigh": -10.0, "volRatio": 0.87, "per": null, "upside": 17.0, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 4.12, "near_60": false, "diff_120": 13.47, "near_120": false, "diff_240": 17.35, "near_240": false}, {"ticker": "004370.KS", "displayTicker": "004370", "quoteUrl": "https://kr.investing.com/equities/nongshim", "en_name": "Nongshim Co., Ltd.", "kr_name": "농심", "sector": "필수 소비재", "desc": "농심 (KOSPI200)", "price": 385000.0, "changePct": 1.45, "rsi": 56.7, "fromHigh": -25.0, "volRatio": 1.4, "per": null, "upside": 31.6, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 1, "diff_60": -1.46, "near_60": true, "diff_120": -5.38, "near_120": false, "diff_240": -5.55, "near_240": false}, {"ticker": "002790.KS", "displayTicker": "002790", "quoteUrl": "https://kr.investing.com/equities/amore-group", "en_name": "AMOREPACIFIC Holdings Corp.", "kr_name": "아모레퍼시픽홀딩스", "sector": "필수 소비재", "desc": "아모레퍼시픽홀딩스 (KOSPI200)", "price": 28750.0, "changePct": -2.71, "rsi": 53.0, "fromHigh": -16.8, "volRatio": 3.17, "per": null, "upside": 37.4, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -0.41, "near_60": true, "diff_120": 2.79, "near_120": false, "diff_240": 3.76, "near_240": false}, {"ticker": "030000.KS", "displayTicker": "030000", "quoteUrl": "https://kr.investing.com/equities/cheil-worldwide", "en_name": "Cheil Worldwide Inc.", "kr_name": "제일기획", "sector": "커뮤니케이션 서비스", "desc": "제일기획 (KOSPI200)", "price": 19800.0, "changePct": 0.51, "rsi": 49.4, "fromHigh": -13.5, "volRatio": 0.96, "per": null, "upside": 25.8, "trend": "Downtrend", "trendScore": 2, "nearCount": 1, "diff_60": -3.31, "near_60": false, "diff_120": -4.69, "near_120": false, "diff_240": -0.09, "near_240": true}, {"ticker": "361610.KS", "displayTicker": "361610", "quoteUrl": "https://kr.investing.com/equities/sk-ie-technology-co", "en_name": "SK IE Technology Co., Ltd.", "kr_name": "SK아이이테크놀로지", "sector": "기술", "desc": "SK아이이테크놀로지 (KOSPI200)", "price": 27300.0, "changePct": 1.3, "rsi": 64.4, "fromHigh": -20.4, "volRatio": 0.78, "per": null, "upside": -1.9, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 0, "diff_60": 13.13, "near_60": false, "diff_120": 5.32, "near_120": false, "diff_240": 2.82, "near_240": false}, {"ticker": "081660.KS", "displayTicker": "081660", "quoteUrl": "https://kr.investing.com/equities/fila-korea", "en_name": "Misto Holdings Corp.", "kr_name": "미스토홀딩스", "sector": "경기 소비재", "desc": "미스토홀딩스 (KOSPI200)", "price": 41400.0, "changePct": 1.47, "rsi": 43.5, "fromHigh": -21.7, "volRatio": 1.45, "per": null, "upside": 40.1, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": -8.43, "near_60": false, "diff_120": -4.92, "near_120": false, "diff_240": 4.14, "near_240": false}, {"ticker": "161890.KS", "displayTicker": "161890", "quoteUrl": "https://kr.investing.com/equities/korea-kolmar", "en_name": "Kolmar Korea Co., Ltd.", "kr_name": "한국콜마", "sector": "필수 소비재", "desc": "한국콜마 (KOSPI200)", "price": 89500.0, "changePct": -0.44, "rsi": 67.9, "fromHigh": -17.1, "volRatio": 1.27, "per": null, "upside": 9.5, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 18.57, "near_60": false, "diff_120": 27.77, "near_120": false, "diff_240": 15.79, "near_240": false}, {"ticker": "007070.KS", "displayTicker": "007070", "quoteUrl": "https://kr.investing.com/equities/gs-retail", "en_name": "GS Retail", "kr_name": "GS리테일", "sector": "유통", "desc": "GS25 편의점·홈쇼핑", "price": 23550.0, "changePct": 1.29, "rsi": 59.2, "fromHigh": -1.9, "volRatio": 1.09, "per": null, "upside": 4.6, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 9.55, "near_60": false, "diff_120": 11.73, "near_120": false, "diff_240": 26.97, "near_240": false}, {"ticker": "069620.KS", "displayTicker": "069620", "quoteUrl": "https://kr.investing.com/search?q=069620", "en_name": "대웅제약", "kr_name": "대웅제약", "sector": "제약", "desc": "대웅제약 (KOSPI200)", "price": 149600.0, "changePct": -1.51, "rsi": 43.5, "fromHigh": -22.9, "volRatio": 0.58, "per": null, "upside": 43.3, "trend": "Downtrend", "trendScore": 2, "nearCount": 0, "diff_60": -8.05, "near_60": false, "diff_120": -10.1, "near_120": false, "diff_240": -3.92, "near_240": false}, {"ticker": "073240.KS", "displayTicker": "073240", "quoteUrl": "https://kr.investing.com/search?q=073240", "en_name": "금호타이어", "kr_name": "금호타이어", "sector": "자동차부품", "desc": "금호타이어 (KOSPI200)", "price": 6080.0, "changePct": -0.65, "rsi": 50.0, "fromHigh": -19.3, "volRatio": 1.72, "per": null, "upside": 32.3, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -2.78, "near_60": false, "diff_120": 1.16, "near_120": true, "diff_240": 13.5, "near_240": false}, {"ticker": "006040.KS", "displayTicker": "006040", "quoteUrl": "https://kr.investing.com/search?q=006040", "en_name": "동원산업", "kr_name": "동원산업", "sector": "식품", "desc": "동원산업 (KOSPI200)", "price": 38400.0, "changePct": 0.39, "rsi": 46.6, "fromHigh": -25.1, "volRatio": 1.58, "per": null, "upside": 75.1, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 0, "diff_60": -3.45, "near_60": false, "diff_120": -7.19, "near_120": false, "diff_240": -11.03, "near_240": false}, {"ticker": "004000.KS", "displayTicker": "004000", "quoteUrl": "https://kr.investing.com/search?q=004000", "en_name": "롯데정밀화학", "kr_name": "롯데정밀화학", "sector": "화학", "desc": "롯데정밀화학 (KOSPI200)", "price": 71200.0, "changePct": 10.39, "rsi": 86.7, "fromHigh": 0.0, "volRatio": 4.36, "per": null, "upside": -5.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 41.52, "near_60": false, "diff_120": 50.27, "near_120": false, "diff_240": 61.69, "near_240": false}, {"ticker": "006280.KS", "displayTicker": "006280", "quoteUrl": "https://kr.investing.com/equities/gc-corp", "en_name": "Green Cross Holdings", "kr_name": "녹십자", "sector": "제약·혈액제제", "desc": "혈액제제 1위, 백신", "price": 139200.0, "changePct": -0.64, "rsi": 40.4, "fromHigh": -22.0, "volRatio": 1.22, "per": null, "upside": 47.6, "trend": "Neutral", "trendScore": 3, "nearCount": 1, "diff_60": -8.49, "near_60": false, "diff_120": -7.08, "near_120": false, "diff_240": -0.88, "near_240": true}, {"ticker": "001800.KS", "displayTicker": "001800", "quoteUrl": "https://kr.investing.com/search?q=001800", "en_name": "오리온홀딩스", "kr_name": "오리온홀딩스", "sector": "식품", "desc": "오리온홀딩스 (KOSPI200)", "price": 25300.0, "changePct": 3.05, "rsi": 60.8, "fromHigh": 0.0, "volRatio": 1.7, "per": null, "upside": null, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 8.76, "near_60": false, "diff_120": 18.71, "near_120": false, "diff_240": 22.48, "near_240": false}, {"ticker": "034230.KS", "displayTicker": "034230", "quoteUrl": "https://kr.investing.com/search?q=034230", "en_name": "파라다이스", "kr_name": "파라다이스", "sector": "호텔·레저", "desc": "파라다이스 (KOSPI200)", "price": 16140.0, "changePct": 0.31, "rsi": 51.3, "fromHigh": -31.1, "volRatio": 0.74, "per": null, "upside": 42.4, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 0, "diff_60": -7.48, "near_60": false, "diff_120": -5.71, "near_120": false, "diff_240": -7.11, "near_240": false}, {"ticker": "093370.KS", "displayTicker": "093370", "quoteUrl": "https://kr.investing.com/search?q=093370", "en_name": "후성", "kr_name": "후성", "sector": "화학", "desc": "후성 (KOSPI200)", "price": 14010.0, "changePct": 0.0, "rsi": 70.0, "fromHigh": -0.6, "volRatio": 0.28, "per": null, "upside": 42.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 56.43, "near_60": false, "diff_120": 64.55, "near_120": false, "diff_240": 100.52, "near_240": false}, {"ticker": "007310.KS", "displayTicker": "007310", "quoteUrl": "https://kr.investing.com/search?q=007310", "en_name": "오뚜기", "kr_name": "오뚜기", "sector": "식품", "desc": "오뚜기 (KOSPI200)", "price": 365500.0, "changePct": 0.41, "rsi": 50.7, "fromHigh": -13.5, "volRatio": 0.79, "per": null, "upside": 42.3, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 1, "diff_60": -1.01, "near_60": true, "diff_120": -2.06, "near_120": false, "diff_240": -3.98, "near_240": false}, {"ticker": "000210.KS", "displayTicker": "000210", "quoteUrl": "https://kr.investing.com/search?q=000210", "en_name": "DL", "kr_name": "DL", "sector": "화학", "desc": "DL (KOSPI200)", "price": 76800.0, "changePct": 9.09, "rsi": 72.4, "fromHigh": 0.0, "volRatio": 2.35, "per": null, "upside": -12.8, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 39.91, "near_60": false, "diff_120": 64.44, "near_120": false, "diff_240": 72.13, "near_240": false}, {"ticker": "003240.KS", "displayTicker": "003240", "quoteUrl": "https://kr.investing.com/search?q=003240", "en_name": "태광산업", "kr_name": "태광산업", "sector": "화학", "desc": "태광산업 (KOSPI200)", "price": 1219000.0, "changePct": 1.41, "rsi": 53.2, "fromHigh": -22.2, "volRatio": 0.51, "per": null, "upside": null, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 5.52, "near_60": false, "diff_120": 25.78, "near_120": false, "diff_240": 27.34, "near_240": false}, {"ticker": "192080.KS", "displayTicker": "192080", "quoteUrl": "https://kr.investing.com/search?q=192080", "en_name": "더블유게임즈", "kr_name": "더블유게임즈", "sector": "게임엔터테인먼트", "desc": "더블유게임즈 (KOSPI200)", "price": 61800.0, "changePct": -0.32, "rsi": 79.1, "fromHigh": -0.3, "volRatio": 2.21, "per": null, "upside": 11.8, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 19.42, "near_60": false, "diff_120": 19.58, "near_120": false, "diff_240": 18.62, "near_240": false}, {"ticker": "003090.KS", "displayTicker": "003090", "quoteUrl": "https://kr.investing.com/search?q=003090", "en_name": "대웅", "kr_name": "대웅", "sector": "제약", "desc": "대웅 (KOSPI200)", "price": 22700.0, "changePct": -1.09, "rsi": 45.5, "fromHigh": -22.7, "volRatio": 0.68, "per": null, "upside": null, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": -6.24, "near_60": false, "diff_120": -3.68, "near_120": false, "diff_240": -2.61, "near_240": false}, {"ticker": "300720.KS", "displayTicker": "300720", "quoteUrl": "https://kr.investing.com/search?q=300720", "en_name": "한일시멘트", "kr_name": "한일시멘트", "sector": "건축자재", "desc": "한일시멘트 (KOSPI200)", "price": 17530.0, "changePct": 1.33, "rsi": 58.5, "fromHigh": -13.2, "volRatio": 1.02, "per": null, "upside": 19.8, "trend": "Downtrend", "trendScore": 2, "nearCount": 2, "diff_60": 2.11, "near_60": false, "diff_120": 1.88, "near_120": true, "diff_240": -0.22, "near_240": true}, {"ticker": "000670.KS", "displayTicker": "000670", "quoteUrl": "https://kr.investing.com/search?q=000670", "en_name": "영풍", "kr_name": "영풍", "sector": "핸드셋", "desc": "영풍 (KOSPI200)", "price": 67100.0, "changePct": 0.6, "rsi": 61.0, "fromHigh": -2.7, "volRatio": 0.69, "per": null, "upside": null, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 12.09, "near_60": false, "diff_120": 16.43, "near_120": false, "diff_240": 36.5, "near_240": false}, {"ticker": "185750.KS", "displayTicker": "185750", "quoteUrl": "https://kr.investing.com/search?q=185750", "en_name": "종근당", "kr_name": "종근당", "sector": "제약", "desc": "종근당 (KOSPI200)", "price": 86900.0, "changePct": -1.47, "rsi": 45.1, "fromHigh": -11.1, "volRatio": 1.17, "per": null, "upside": 37.1, "trend": "Uptrend", "trendScore": 4, "nearCount": 1, "diff_60": -2.26, "near_60": false, "diff_120": 0.0, "near_120": true, "diff_240": 2.65, "near_240": false}, {"ticker": "298050.KS", "displayTicker": "298050", "quoteUrl": "https://kr.investing.com/search?q=298050", "en_name": "HS효성첨단소재", "kr_name": "HS효성첨단소재", "sector": "화학", "desc": "HS효성첨단소재 (KOSPI200)", "price": 277500.0, "changePct": 5.11, "rsi": 79.3, "fromHigh": 0.0, "volRatio": 3.91, "per": null, "upside": 5.7, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 20.19, "near_60": false, "diff_120": 29.46, "near_120": false, "diff_240": 36.44, "near_240": false}, {"ticker": "000080.KS", "displayTicker": "000080", "quoteUrl": "https://kr.investing.com/equities/hite-jinro", "en_name": "Hite Jinro", "kr_name": "하이트진로", "sector": "식품·음료", "desc": "소주 1위(참이슬)·맥주(테라)", "price": 17270.0, "changePct": 0.82, "rsi": 54.4, "fromHigh": -21.5, "volRatio": 0.87, "per": null, "upside": 30.6, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 1, "diff_60": 0.4, "near_60": true, "diff_120": -3.35, "near_120": false, "diff_240": -8.21, "near_240": false}, {"ticker": "280360.KS", "displayTicker": "280360", "quoteUrl": "https://kr.investing.com/search?q=280360", "en_name": "롯데웰푸드", "kr_name": "롯데웰푸드", "sector": "식품", "desc": "롯데웰푸드 (KOSPI200)", "price": 122300.0, "changePct": 0.82, "rsi": 64.3, "fromHigh": -7.2, "volRatio": 1.28, "per": null, "upside": 22.3, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 5.57, "near_60": false, "diff_120": 6.32, "near_120": false, "diff_240": 6.97, "near_240": false}, {"ticker": "005300.KS", "displayTicker": "005300", "quoteUrl": "https://kr.investing.com/search?q=005300", "en_name": "롯데칠성", "kr_name": "롯데칠성", "sector": "음료", "desc": "롯데칠성 (KOSPI200)", "price": 123500.0, "changePct": 0.98, "rsi": 58.1, "fromHigh": -14.2, "volRatio": 1.01, "per": null, "upside": 31.2, "trend": "Neutral", "trendScore": 3, "nearCount": 2, "diff_60": 0.05, "near_60": true, "diff_120": -0.25, "near_120": true, "diff_240": 3.06, "near_240": false}, {"ticker": "137310.KS", "displayTicker": "137310", "quoteUrl": "https://kr.investing.com/search?q=137310", "en_name": "에스디바이오센서", "kr_name": "에스디바이오센서", "sector": "의료기기", "desc": "에스디바이오센서 (KOSPI200)", "price": 8350.0, "changePct": -1.76, "rsi": 51.9, "fromHigh": -29.1, "volRatio": 0.44, "per": null, "upside": null, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 1, "diff_60": 2.22, "near_60": false, "diff_120": -1.91, "near_120": true, "diff_240": -10.12, "near_240": false}, {"ticker": "285130.KS", "displayTicker": "285130", "quoteUrl": "https://kr.investing.com/search?q=285130", "en_name": "SK케미칼", "kr_name": "SK케미칼", "sector": "화학", "desc": "SK케미칼 (KOSPI200)", "price": 62400.0, "changePct": 8.15, "rsi": 65.5, "fromHigh": -20.7, "volRatio": 3.03, "per": null, "upside": 38.6, "trend": "Downtrend", "trendScore": 2, "nearCount": 1, "diff_60": 5.97, "near_60": false, "diff_120": -2.54, "near_120": false, "diff_240": -0.66, "near_240": true}, {"ticker": "003030.KS", "displayTicker": "003030", "quoteUrl": "https://kr.investing.com/search?q=003030", "en_name": "세아제강지주", "kr_name": "세아제강지주", "sector": "철강", "desc": "세아제강지주 (KOSPI200)", "price": 245500.0, "changePct": -1.8, "rsi": 65.2, "fromHigh": -3.0, "volRatio": 1.48, "per": null, "upside": null, "trend": "Uptrend", "trendScore": 4, "nearCount": 0, "diff_60": 37.07, "near_60": false, "diff_120": 57.59, "near_120": false, "diff_240": 40.25, "near_240": false}, {"ticker": "006650.KS", "displayTicker": "006650", "quoteUrl": "https://kr.investing.com/search?q=006650", "en_name": "대한유화", "kr_name": "대한유화", "sector": "화학", "desc": "대한유화 (KOSPI200)", "price": 188000.0, "changePct": 19.14, "rsi": 73.6, "fromHigh": -1.4, "volRatio": 4.0, "per": null, "upside": 5.7, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 26.11, "near_60": false, "diff_120": 27.74, "near_120": false, "diff_240": 51.21, "near_240": false}, {"ticker": "009240.KS", "displayTicker": "009240", "quoteUrl": "https://kr.investing.com/search?q=009240", "en_name": "한샘", "kr_name": "한샘", "sector": "가구", "desc": "한샘 (KOSPI200)", "price": 44450.0, "changePct": 8.02, "rsi": 67.6, "fromHigh": -13.5, "volRatio": 3.08, "per": null, "upside": 10.8, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 2, "diff_60": 3.39, "near_60": false, "diff_120": 0.42, "near_120": true, "diff_240": 0.26, "near_240": true}, {"ticker": "004490.KS", "displayTicker": "004490", "quoteUrl": "https://kr.investing.com/search?q=004490", "en_name": "세방전지", "kr_name": "세방전지", "sector": "자동차부품", "desc": "세방전지 (KOSPI200)", "price": 67400.0, "changePct": 1.97, "rsi": 67.7, "fromHigh": -5.9, "volRatio": 1.17, "per": null, "upside": null, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": 6.77, "near_60": false, "diff_120": 7.96, "near_120": false, "diff_240": 6.7, "near_240": false}, {"ticker": "071320.KS", "displayTicker": "071320", "quoteUrl": "https://kr.investing.com/search?q=071320", "en_name": "지역난방공사", "kr_name": "지역난방공사", "sector": "복합유틸리티", "desc": "지역난방공사 (KOSPI200)", "price": 76600.0, "changePct": -0.39, "rsi": 47.1, "fromHigh": -26.9, "volRatio": 0.43, "per": null, "upside": 66.4, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 0, "diff_60": -6.79, "near_60": false, "diff_120": -14.51, "near_120": false, "diff_240": -7.88, "near_240": false}, {"ticker": "014820.KS", "displayTicker": "014820", "quoteUrl": "https://kr.investing.com/search?q=014820", "en_name": "동원시스템즈", "kr_name": "동원시스템즈", "sector": "포장재", "desc": "동원시스템즈 (KOSPI200)", "price": 28450.0, "changePct": 2.15, "rsi": 65.0, "fromHigh": -14.7, "volRatio": 1.07, "per": null, "upside": null, "trend": "Downtrend", "trendScore": 2, "nearCount": 1, "diff_60": 8.59, "near_60": false, "diff_120": 8.53, "near_120": false, "diff_240": 1.91, "near_240": true}, {"ticker": "114090.KS", "displayTicker": "114090", "quoteUrl": "https://kr.investing.com/search?q=114090", "en_name": "GKL", "kr_name": "GKL", "sector": "호텔·레저", "desc": "GKL (KOSPI200)", "price": 12060.0, "changePct": 0.67, "rsi": 53.9, "fromHigh": -28.8, "volRatio": 1.2, "per": null, "upside": 28.2, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 1, "diff_60": -0.39, "near_60": true, "diff_120": -6.79, "near_120": false, "diff_240": -14.17, "near_240": false}, {"ticker": "069260.KS", "displayTicker": "069260", "quoteUrl": "https://kr.investing.com/search?q=069260", "en_name": "TKG휴켐스", "kr_name": "TKG휴켐스", "sector": "화학", "desc": "TKG휴켐스 (KOSPI200)", "price": 18950.0, "changePct": 2.71, "rsi": 65.0, "fromHigh": -6.1, "volRatio": 0.98, "per": null, "upside": 16.1, "trend": "Strong Uptrend", "trendScore": 5, "nearCount": 0, "diff_60": 2.59, "near_60": false, "diff_120": 4.63, "near_120": false, "diff_240": 9.73, "near_240": false}, {"ticker": "005420.KS", "displayTicker": "005420", "quoteUrl": "https://kr.investing.com/search?q=005420", "en_name": "코스모화학", "kr_name": "코스모화학", "sector": "화학", "desc": "코스모화학 (KOSPI200)", "price": 18420.0, "changePct": 1.26, "rsi": 66.5, "fromHigh": -12.3, "volRatio": 0.86, "per": null, "upside": null, "trend": "Neutral", "trendScore": 3, "nearCount": 0, "diff_60": 15.07, "near_60": false, "diff_120": 14.39, "near_120": false, "diff_240": 14.77, "near_240": false}, {"ticker": "002840.KS", "displayTicker": "002840", "quoteUrl": "https://kr.investing.com/search?q=002840", "en_name": "미원상사", "kr_name": "미원상사", "sector": "화학", "desc": "미원상사 (KOSPI200)", "price": 148700.0, "changePct": 1.02, "rsi": 67.2, "fromHigh": -23.3, "volRatio": 1.36, "per": null, "upside": null, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 0, "diff_60": 5.82, "near_60": false, "diff_120": 3.24, "near_120": false, "diff_240": -2.9, "near_240": false}, {"ticker": "001680.KS", "displayTicker": "001680", "quoteUrl": "https://kr.investing.com/search?q=001680", "en_name": "대상", "kr_name": "대상", "sector": "식품", "desc": "대상 (KOSPI200)", "price": 20850.0, "changePct": 0.72, "rsi": 53.2, "fromHigh": -12.0, "volRatio": 0.55, "per": null, "upside": 48.7, "trend": "Uptrend", "trendScore": 4, "nearCount": 3, "diff_60": 0.66, "near_60": true, "diff_120": 1.52, "near_120": true, "diff_240": -1.02, "near_240": true}, {"ticker": "005250.KS", "displayTicker": "005250", "quoteUrl": "https://kr.investing.com/search?q=005250", "en_name": "녹십자홀딩스", "kr_name": "녹십자홀딩스", "sector": "제약", "desc": "녹십자홀딩스 (KOSPI200)", "price": 13900.0, "changePct": -2.18, "rsi": 46.6, "fromHigh": -17.4, "volRatio": 1.44, "per": null, "upside": null, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 0, "diff_60": -3.08, "near_60": false, "diff_120": -7.21, "near_120": false, "diff_240": -8.24, "near_240": false}, {"ticker": "008730.KS", "displayTicker": "008730", "quoteUrl": "https://kr.investing.com/search?q=008730", "en_name": "율촌화학", "kr_name": "율촌화학", "sector": "포장재", "desc": "율촌화학 (KOSPI200)", "price": 26700.0, "changePct": -0.37, "rsi": 54.2, "fromHigh": -29.4, "volRatio": 0.51, "per": null, "upside": null, "trend": "Strong Downtrend", "trendScore": 1, "nearCount": 1, "diff_60": 3.23, "near_60": false, "diff_120": -1.92, "near_120": true, "diff_240": -7.94, "near_240": false}, {"ticker": "268280.KS", "displayTicker": "268280", "quoteUrl": "https://kr.investing.com/search?q=268280", "en_name": "미원에스씨", "kr_name": "미원에스씨", "sector": "화학", "desc": "미원에스씨 (KOSPI200)", "price": 121400.0, "changePct": -0.25, "rsi": 45.3, "fromHigh": -25.6, "volRatio": 1.95, "per": null, "upside": null, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 0, "diff_60": -4.7, "near_60": false, "diff_120": -7.84, "near_120": false, "diff_240": -12.14, "near_240": false}, {"ticker": "002030.KS", "displayTicker": "002030", "quoteUrl": "https://kr.investing.com/search?q=002030", "en_name": "아세아", "kr_name": "아세아", "sector": "건축자재", "desc": "아세아 (KOSPI200)", "price": 267000.0, "changePct": -0.56, "rsi": 44.4, "fromHigh": -31.6, "volRatio": 1.71, "per": null, "upside": null, "trend": "Strong Downtrend", "trendScore": 0, "nearCount": 0, "diff_60": -4.61, "near_60": false, "diff_120": -13.61, "near_120": false, "diff_240": -15.25, "near_240": false}];
+const SECTOR_LABELS = ["화학", "필수 소비재", "보험", "금융 서비스", "원자재", "산업재", "유통", "건설", "금융지주", "자동차", "철강", "지주사", "증권", "통신"];
+const SECTOR_BULL  = [10, 8, 3, 9, 5, 26, 3, 3, 4, 2, 2, 3, 2, 3];
+const SECTOR_NEU   = [1, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const SECTOR_BEAR  = [3, 3, 0, 0, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0];
+const RSI_LABELS = ["<25", "25-30", "30-35", "35-40", "40-45", "45-50", "50-55", "55-60", "60-65", "65-70", "70-75", "75+"];
+const RSI_VALUES = [0, 0, 1, 4, 11, 24, 31, 27, 27, 39, 15, 20];
+const FEAR = {"available": true, "symbol": "^VIX", "label": "Normal", "level": 18.09, "avg20": 19.92, "avg60": 21.85, "vs20Pct": -9.2, "vsLabel": "20D 대비", "trend": "falling", "note": "변동성은 정상권입니다. 개별 종목 신호 품질을 우선 확인합니다."};
+const NEWS = {"available": false, "title": "뉴스 브리핑", "subtitle": "US 밤새 뉴스 수집은 가능하지만, 현재는 뉴스 캐시가 없어서 표시할 항목이 없습니다.", "note": "권장 구조: 별도 news 수집 단계에서 yfinance news/RSS/뉴스 API 결과를 캐시하고, 리포트는 캐시만 읽습니다.", "items": []};
+const ANALYSIS_MD = "# KOSPI Stocks 이동평균선 근접 종목 분석 리포트\n\n**기준일:** 20260429  \n**유니버스:** KOSPI Stocks (199개 종목)  \n**기준:** MA60, MA120, MA240 기준 ±2.0% 이내\n\n---\n\n## 요약\n\n| 구분 | 종목 수 |\n|---|---:|\n| MA60 근접 | **28개** |\n| MA120 근접 | **23개** |\n| MA240 근접 | **17개** |\n| 2개 이상 동시 근접 | **13개** |\n\n---\n\n## 시장 메모\n\n- 근접 종목은 전체 199개 중 51개로, 스캔 유니버스의 **25.6%** 입니다.\n- 복수 이동평균선이 동시에 겹친 종목은 13개로, 근접 종목 내부 비중은 **25.5%** 입니다.\n- 평균 RSI는 **52**, 과매도 후보는 **1개**, 과열 경고 구간은 **0개** 입니다.\n- 평균 업사이드는 **26.3%**, 52주 고점 대비 평균 괴리는 **-18.8%** 입니다.\n- 추세 분포상 가장 많은 그룹은 **Uptrend** 이며, 이번 스캔은 추세 확인형 접근이 유효한 구간으로 보입니다.\n\n---\n\n## 1. 상단 추천 종목\n\n> 복수 이동평균선 근접, RSI, 업사이드, PER까지 반영한 종합 점수 기준입니다.\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| 001680 | 대상 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 20,850 | 53 | -12.0% | 48.7% | - | MA60 +0.7% / MA120 +1.5% / MA240 -1.0% |\n| 005830 | DB손해보험 | <span class=\"badge badge-strong-up\" title=\"Strong Uptrend\">⬆⬆</span> | KRW 172,200 | 52 | -12.8% | 26.9% | - | MA60 +0.9% |\n| 002790 | 아모레퍼시픽홀딩스 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 28,750 | 53 | -16.8% | 37.4% | - | MA60 -0.4% |\n| 073240 | 금호타이어 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 6,080 | 50 | -19.3% | 32.3% | - | MA120 +1.2% |\n| 090430 | 아모레퍼시픽 | <span class=\"badge badge-strong-up\" title=\"Strong Uptrend\">⬆⬆</span> | KRW 141,400 | 56 | -13.6% | 20.1% | - | MA60 +1.8% |\n| 000270 | 기아 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 156,900 | 52 | -20.5% | 40.9% | - | MA60 -0.2% |\n| 185750 | 종근당 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 86,900 | 45 | -11.1% | 37.1% | - | MA120 +0.0% |\n| 138040 | 메리츠금융지주 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 113,900 | 47 | -22.1% | 27.7% | - | MA120 -0.2% / MA240 -1.1% |\n| 005300 | 롯데칠성 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 123,500 | 58 | -14.2% | 31.2% | - | MA60 +0.1% / MA120 -0.2% |\n| 001450 | 현대해상 | <span class=\"badge badge-strong-up\" title=\"Strong Uptrend\">⬆⬆</span> | KRW 31,450 | 57 | -18.9% | 16.5% | - | MA60 +0.8% |\n\n- **001680 대상**: 추세 양호(Uptrend), MA 배열·기울기 확인 / 3개 MA 수렴, MA60 +0.7% / MA120 +1.5% / MA240 -1.0% 압축 구간 / RSI 53 부담 없는 진입 구간 / 애널리스트 업사이드 48.7%.\n- **005830 DB손해보험**: 추세 양호(Strong Uptrend), MA 배열·기울기 확인 / MA60 +0.9% 단일 기준선 테스트 / RSI 52 부담 없는 진입 구간 / 애널리스트 업사이드 26.9%.\n- **002790 아모레퍼시픽홀딩스**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -0.4% 단일 기준선 테스트 / RSI 53 부담 없는 진입 구간 / 애널리스트 업사이드 37.4%.\n- **073240 금호타이어**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA120 +1.2% 단일 기준선 테스트 / RSI 50 부담 없는 진입 구간 / 애널리스트 업사이드 32.3%.\n- **090430 아모레퍼시픽**: 추세 양호(Strong Uptrend), MA 배열·기울기 확인 / MA60 +1.8% 단일 기준선 테스트 / RSI 56 부담 없는 진입 구간 / 애널리스트 업사이드 20.1%.\n- **000270 기아**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA60 -0.2% 단일 기준선 테스트 / RSI 52 부담 없는 진입 구간 / 애널리스트 업사이드 40.9%.\n- **185750 종근당**: 추세 양호(Uptrend), MA 배열·기울기 확인 / MA120 +0.0% 단일 기준선 테스트 / RSI 45 부담 없는 진입 구간 / 애널리스트 업사이드 37.1%.\n- **138040 메리츠금융지주**: 추세 중립(Neutral), 방향성 선택 대기 구간 / 2개 MA 수렴, MA120 -0.2% / MA240 -1.1% 지지·저항 겹침 / RSI 47 부담 없는 진입 구간 / 애널리스트 업사이드 27.7%.\n- **005300 롯데칠성**: 추세 중립(Neutral), 방향성 선택 대기 구간 / 2개 MA 수렴, MA60 +0.1% / MA120 -0.2% 지지·저항 겹침 / RSI 58 부담 없는 진입 구간 / 애널리스트 업사이드 31.2%.\n- **001450 현대해상**: 추세 양호(Strong Uptrend), MA 배열·기울기 확인 / MA60 +0.8% 단일 기준선 테스트 / RSI 57 부담 없는 진입 구간.\n\n---\n\n## 2. 테마별 분석\n\n### A. 과매도 반등 후보\n\n> RSI 40 미만이면서 이동평균선에 근접해 있는 종목입니다. Strong Downtrend 종목은 제외(낙도끼 위험).\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| 175330 | JB금융지주 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 27,100 | 35 | -26.3% | 31.3% | - | MA120 +0.2% |\n\n- 가장 강한 과매도 후보는 **175330** 로, RSI 35에서 MA120 +0.2% 구간을 시험 중입니다.\n\n### B. 복수 MA 수렴 구간\n\n> 단기, 중기, 장기 평균선이 가격 근처로 모인 종목입니다.\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| 001680 | 대상 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 20,850 | 53 | -12.0% | 48.7% | - | MA60 +0.7% / MA120 +1.5% / MA240 -1.0% |\n| 383220 | F&F | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 67,600 | 58 | -15.1% | 32.1% | - | MA60 +1.8% / MA120 +0.2% / MA240 -0.1% |\n| 035250 | 강원랜드 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 17,200 | 55 | -11.6% | 19.7% | - | MA60 +0.3% / MA120 +0.9% / MA240 +0.7% |\n| 026960 | 동서 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 26,550 | 44 | -12.8% | - | - | MA60 -1.4% / MA120 -0.9% / MA240 -0.7% |\n| 138040 | 메리츠금융지주 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 113,900 | 47 | -22.1% | 27.7% | - | MA120 -0.2% / MA240 -1.1% |\n| 005300 | 롯데칠성 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 123,500 | 58 | -14.2% | 31.2% | - | MA60 +0.1% / MA120 -0.2% |\n| 251270 | 넷마블 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 51,300 | 52 | -23.4% | 38.9% | - | MA60 -1.5% / MA120 +0.0% |\n| 034220 | LG디스플레이 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 12,430 | 47 | -21.6% | 17.0% | - | MA60 +1.1% / MA120 +0.2% |\n| 300720 | 한일시멘트 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 17,530 | 58 | -13.2% | 19.8% | - | MA120 +1.9% / MA240 -0.2% |\n| 323410 | 카카오뱅크 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 24,550 | 47 | -32.5% | 12.7% | - | MA60 -1.9% / MA240 +0.6% |\n\n- 복수 MA 수렴의 중심 후보는 **001680** 이며, MA60 +0.7% / MA120 +1.5% / MA240 -1.0% 구간에서 방향성 선택을 앞둔 모습입니다.\n\n### C. 성장 기대 구간\n\n> 업사이드 20% 이상 + RSI 65 미만 종목입니다. 과열 상태에서의 고업사이드는 제외.\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| 001680 | 대상 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 20,850 | 53 | -12.0% | 48.7% | - | MA60 +0.7% / MA120 +1.5% / MA240 -1.0% |\n| 006280 | 녹십자 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 139,200 | 40 | -22.0% | 47.6% | - | MA240 -0.9% |\n| 000120 | CJ대한통운 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 101,800 | 42 | -29.6% | 46.2% | - | MA120 -1.7% |\n| 009420 | 한올바이오파마 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 49,500 | 47 | -23.1% | 45.1% | - | MA120 -1.3% |\n| 007310 | 오뚜기 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 365,500 | 51 | -13.5% | 42.3% | - | MA60 -1.0% |\n| 000270 | 기아 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 156,900 | 52 | -20.5% | 40.9% | - | MA60 -0.2% |\n| 326030 | SK바이오팜 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 101,800 | 51 | -27.6% | 40.4% | - | MA60 -2.0% |\n| 251270 | 넷마블 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 51,300 | 52 | -23.4% | 38.9% | - | MA60 -1.5% / MA120 +0.0% |\n| 003230 | 삼양식품 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 1,314,000 | 56 | -19.2% | 38.9% | - | MA240 +1.8% |\n| 002790 | 아모레퍼시픽홀딩스 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 28,750 | 53 | -16.8% | 37.4% | - | MA60 -0.4% |\n\n- 성장 기대 구간의 선두는 **001680** 로, 업사이드 48.7%와 MA60 +0.7% / MA120 +1.5% / MA240 -1.0%가 함께 보입니다.\n\n### D. 밸류 후보\n\n> PER가 낮고 이동평균선 부근에 위치한 종목입니다.\n\n_해당 종목 없음_\n\n---\n\n## 3. 섹터 분포\n\n| 섹터 | 근접 종목 수 | 비중 |\n|---|---:|---:|\n| 금융 서비스 | 6 | 11.8% |\n| 필수 소비재 | 6 | 11.8% |\n| 경기 소비재 | 3 | 5.9% |\n| 통신 | 2 | 3.9% |\n| 헬스케어 | 2 | 3.9% |\n| 기술 | 2 | 3.9% |\n| 제약 | 2 | 3.9% |\n| 산업재 | 2 | 3.9% |\n| 식품 | 2 | 3.9% |\n| 포장재 | 2 | 3.9% |\n| 자동차 | 1 | 2.0% |\n| 바이오 | 1 | 2.0% |\n| 조선 | 1 | 2.0% |\n| 금융지주 | 1 | 2.0% |\n| 해운 | 1 | 2.0% |\n| 은행 | 1 | 2.0% |\n| IT서비스 | 1 | 2.0% |\n| 타이어 | 1 | 2.0% |\n| 가전·렌탈 | 1 | 2.0% |\n| 게임 | 1 | 2.0% |\n| 유틸리티 | 1 | 2.0% |\n| 보험 | 1 | 2.0% |\n| 커뮤니케이션 서비스 | 1 | 2.0% |\n| 자동차부품 | 1 | 2.0% |\n| 제약·혈액제제 | 1 | 2.0% |\n| 건축자재 | 1 | 2.0% |\n| 식품·음료 | 1 | 2.0% |\n| 음료 | 1 | 2.0% |\n| 의료기기 | 1 | 2.0% |\n| 화학 | 1 | 2.0% |\n| 가구 | 1 | 2.0% |\n| 호텔·레저 | 1 | 2.0% |\n\n- **금융 서비스**: 근접 종목 6개(11.8%), 평균 RSI 46, 평균 업사이드 23.2%, 상위 후보는 005830.\n- **필수 소비재**: 근접 종목 6개(11.8%), 평균 RSI 53, 평균 업사이드 25.7%, 상위 후보는 002790.\n- **경기 소비재**: 근접 종목 3개(5.9%), 평균 RSI 54, 평균 업사이드 26.8%, 상위 후보는 383220.\n- 상위 섹터 비중이 11.8% 수준이라 섹터 쏠림은 과도하지 않은 편입니다.\n\n---\n\n## 4. 주의 종목\n\n> RSI 70 이상인데 이동평균선 근처에 있는 경우 단기 과열일 수 있습니다.\n\n_해당 종목 없음_\n\n---\n\n## 5. 전체 근접 종목 목록\n\n### MA60 근접 (28개)\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| 005300 | 롯데칠성 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 123,500 | 58 | -14.2% | 31.2% | - | MA60 +0.1% / MA120 -0.2% |\n| 011200 | HMM | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 20,750 | 49 | -17.6% | 4.4% | - | MA60 -0.2% / MA240 -0.9% |\n| 161390 | 한국타이어앤테크놀로지 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 61,200 | 52 | -17.2% | 24.5% | - | MA60 -0.2% |\n| 000270 | 기아 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 156,900 | 52 | -20.5% | 40.9% | - | MA60 -0.2% |\n| 035250 | 강원랜드 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 17,200 | 55 | -11.6% | 19.7% | - | MA60 +0.3% / MA120 +0.9% / MA240 +0.7% |\n| 138930 | BNK금융지주 | <span class=\"badge badge-strong-up\" title=\"Strong Uptrend\">⬆⬆</span> | KRW 18,860 | 54 | -15.3% | 13.5% | - | MA60 +0.4% |\n| 114090 | GKL | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 12,060 | 54 | -28.8% | 28.2% | - | MA60 -0.4% |\n| 000080 | 하이트진로 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 17,270 | 54 | -21.5% | 30.6% | - | MA60 +0.4% |\n| 002790 | 아모레퍼시픽홀딩스 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 28,750 | 53 | -16.8% | 37.4% | - | MA60 -0.4% |\n| 051900 | LG생활건강 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 254,500 | 55 | -26.6% | 0.7% | - | MA60 +0.5% |\n| 001680 | 대상 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 20,850 | 53 | -12.0% | 48.7% | - | MA60 +0.7% / MA120 +1.5% / MA240 -1.0% |\n| 030200 | KT | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 60,500 | 45 | -11.4% | 19.1% | - | MA60 -0.7% |\n| 024110 | 기업은행 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 22,550 | 53 | -17.3% | 7.7% | - | MA60 -0.7% |\n| 032640 | LG유플러스 | <span class=\"badge badge-strong-up\" title=\"Strong Uptrend\">⬆⬆</span> | KRW 16,050 | 45 | -8.8% | 16.0% | - | MA60 +0.8% |\n| 001450 | 현대해상 | <span class=\"badge badge-strong-up\" title=\"Strong Uptrend\">⬆⬆</span> | KRW 31,450 | 57 | -18.9% | 16.5% | - | MA60 +0.8% |\n| 005830 | DB손해보험 | <span class=\"badge badge-strong-up\" title=\"Strong Uptrend\">⬆⬆</span> | KRW 172,200 | 52 | -12.8% | 26.9% | - | MA60 +0.9% |\n| 007310 | 오뚜기 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 365,500 | 51 | -13.5% | 42.3% | - | MA60 -1.0% |\n| 012750 | 에스원 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 86,600 | 45 | -8.0% | 10.5% | - | MA60 -1.1% |\n| 034220 | LG디스플레이 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 12,430 | 47 | -21.6% | 17.0% | - | MA60 +1.1% / MA120 +0.2% |\n| 026960 | 동서 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 26,550 | 44 | -12.8% | - | - | MA60 -1.4% / MA120 -0.9% / MA240 -0.7% |\n| 042660 | 한화오션 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 132,300 | 54 | -11.7% | 24.0% | - | MA60 +1.4% |\n| 316140 | 우리금융지주 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 33,500 | 46 | -16.3% | 22.0% | - | MA60 -1.4% |\n| 004370 | 농심 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 385,000 | 57 | -25.0% | 31.6% | - | MA60 -1.5% |\n| 251270 | 넷마블 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 51,300 | 52 | -23.4% | 38.9% | - | MA60 -1.5% / MA120 +0.0% |\n| 383220 | F&F | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 67,600 | 58 | -15.1% | 32.1% | - | MA60 +1.8% / MA120 +0.2% / MA240 -0.1% |\n| 090430 | 아모레퍼시픽 | <span class=\"badge badge-strong-up\" title=\"Strong Uptrend\">⬆⬆</span> | KRW 141,400 | 56 | -13.6% | 20.1% | - | MA60 +1.8% |\n| 323410 | 카카오뱅크 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 24,550 | 47 | -32.5% | 12.7% | - | MA60 -1.9% / MA240 +0.6% |\n| 326030 | SK바이오팜 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 101,800 | 51 | -27.6% | 40.4% | - | MA60 -2.0% |\n\n### MA120 근접 (23개)\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| 185750 | 종근당 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 86,900 | 45 | -11.1% | 37.1% | - | MA120 +0.0% |\n| 251270 | 넷마블 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 51,300 | 52 | -23.4% | 38.9% | - | MA60 -1.5% / MA120 +0.0% |\n| 111770 | 영원무역 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 84,200 | 51 | -14.1% | 28.7% | - | MA120 +0.1% |\n| 034220 | LG디스플레이 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 12,430 | 47 | -21.6% | 17.0% | - | MA60 +1.1% / MA120 +0.2% |\n| 138040 | 메리츠금융지주 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 113,900 | 47 | -22.1% | 27.7% | - | MA120 -0.2% / MA240 -1.1% |\n| 175330 | JB금융지주 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 27,100 | 35 | -26.3% | 31.3% | - | MA120 +0.2% |\n| 005300 | 롯데칠성 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 123,500 | 58 | -14.2% | 31.2% | - | MA60 +0.1% / MA120 -0.2% |\n| 383220 | F&F | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 67,600 | 58 | -15.1% | 32.1% | - | MA60 +1.8% / MA120 +0.2% / MA240 -0.1% |\n| 036460 | 한국가스공사 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 39,200 | 66 | -14.8% | 19.1% | - | MA120 +0.4% / MA240 -0.2% |\n| 009240 | 한샘 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 44,450 | 68 | -13.5% | 10.8% | - | MA120 +0.4% / MA240 +0.3% |\n| 018260 | 삼성에스디에스 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 170,200 | 52 | -12.7% | 24.9% | - | MA120 +0.8% |\n| 026960 | 동서 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 26,550 | 44 | -12.8% | - | - | MA60 -1.4% / MA120 -0.9% / MA240 -0.7% |\n| 035250 | 강원랜드 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 17,200 | 55 | -11.6% | 19.7% | - | MA60 +0.3% / MA120 +0.9% / MA240 +0.7% |\n| 068270 | 셀트리온 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 204,000 | 50 | -17.9% | 27.6% | - | MA120 +1.0% |\n| 029780 | 삼성카드 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 53,000 | 42 | -17.5% | 27.0% | - | MA120 -1.1% |\n| 073240 | 금호타이어 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 6,080 | 50 | -19.3% | 32.3% | - | MA120 +1.2% |\n| 128940 | 한미약품 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 483,000 | 42 | -22.6% | 15.8% | - | MA120 -1.2% |\n| 009420 | 한올바이오파마 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 49,500 | 47 | -23.1% | 45.1% | - | MA120 -1.3% |\n| 001680 | 대상 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 20,850 | 53 | -12.0% | 48.7% | - | MA60 +0.7% / MA120 +1.5% / MA240 -1.0% |\n| 000120 | CJ대한통운 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 101,800 | 42 | -29.6% | 46.2% | - | MA120 -1.7% |\n| 300720 | 한일시멘트 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 17,530 | 58 | -13.2% | 19.8% | - | MA120 +1.9% / MA240 -0.2% |\n| 137310 | 에스디바이오센서 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 8,350 | 52 | -29.1% | - | - | MA120 -1.9% |\n| 008730 | 율촌화학 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 26,700 | 54 | -29.4% | - | - | MA120 -1.9% |\n\n### MA240 근접 (17개)\n\n| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |\n|---|---|:---:|---:|---:|---:|---:|---:|---|\n| 030000 | 제일기획 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 19,800 | 49 | -13.5% | 25.8% | - | MA240 -0.1% |\n| 383220 | F&F | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 67,600 | 58 | -15.1% | 32.1% | - | MA60 +1.8% / MA120 +0.2% / MA240 -0.1% |\n| 300720 | 한일시멘트 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 17,530 | 58 | -13.2% | 19.8% | - | MA120 +1.9% / MA240 -0.2% |\n| 036460 | 한국가스공사 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 39,200 | 66 | -14.8% | 19.1% | - | MA120 +0.4% / MA240 -0.2% |\n| 009240 | 한샘 | <span class=\"badge badge-strong-down\" title=\"Strong Downtrend\">⬇⬇</span> | KRW 44,450 | 68 | -13.5% | 10.8% | - | MA120 +0.4% / MA240 +0.3% |\n| 323410 | 카카오뱅크 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 24,550 | 47 | -32.5% | 12.7% | - | MA60 -1.9% / MA240 +0.6% |\n| 285130 | SK케미칼 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 62,400 | 66 | -20.7% | 38.6% | - | MA240 -0.7% |\n| 035250 | 강원랜드 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 17,200 | 55 | -11.6% | 19.7% | - | MA60 +0.3% / MA120 +0.9% / MA240 +0.7% |\n| 026960 | 동서 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 26,550 | 44 | -12.8% | - | - | MA60 -1.4% / MA120 -0.9% / MA240 -0.7% |\n| 006280 | 녹십자 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 139,200 | 40 | -22.0% | 47.6% | - | MA240 -0.9% |\n| 011200 | HMM | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 20,750 | 49 | -17.6% | 4.4% | - | MA60 -0.2% / MA240 -0.9% |\n| 001680 | 대상 | <span class=\"badge badge-up\" title=\"Uptrend\">⬆</span> | KRW 20,850 | 53 | -12.0% | 48.7% | - | MA60 +0.7% / MA120 +1.5% / MA240 -1.0% |\n| 138040 | 메리츠금융지주 | <span class=\"badge badge-neutral\" title=\"Neutral\">→</span> | KRW 113,900 | 47 | -22.1% | 27.7% | - | MA120 -0.2% / MA240 -1.1% |\n| 021240 | 코웨이 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 87,400 | 69 | -20.6% | 34.0% | - | MA240 -1.2% |\n| 377300 | 카카오페이 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 56,600 | 54 | -39.7% | 0.8% | - | MA240 +1.5% |\n| 003230 | 삼양식품 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 1,314,000 | 56 | -19.2% | 38.9% | - | MA240 +1.8% |\n| 014820 | 동원시스템즈 | <span class=\"badge badge-down\" title=\"Downtrend\">⬇</span> | KRW 28,450 | 65 | -14.7% | - | - | MA240 +1.9% |\n\n*이 리포트는 공통 리팩터링 파이프라인에서 생성되었습니다.*";
+
+let currentTab = "all";
+let sortCol = "ticker";
+let sortAsc = true;
+let reportRendered = false;
+let newsRendered = false;
+
+const trendPoints = {
+  "Strong Uptrend": 2,
+  "Uptrend": 1,
+  "Neutral": 0,
+  "Downtrend": -1,
+  "Strong Downtrend": -2
+};
+const trendIcons = {
+  "Strong Uptrend": "↑↑",
+  "Uptrend": "↑",
+  "Neutral": "→",
+  "Downtrend": "↓",
+  "Strong Downtrend": "↓↓"
+};
+const trendColors = {
+  "Strong Uptrend": "#28d17c",
+  "Uptrend": "#7bdc94",
+  "Neutral": "#d8a94a",
+  "Downtrend": "#ff957d",
+  "Strong Downtrend": "#f45b69"
+};
+
+const sectorSet = [...new Set(DATA.map(d => d.sector).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "ko"));
+const trendSet = [...new Set(DATA.map(d => d.trend).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "en"));
+const sectorFilter = document.getElementById("sectorFilter");
+const trendFilter = document.getElementById("trendFilter");
+
+sectorSet.forEach(value => {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = value;
+  sectorFilter.appendChild(option);
+});
+
+trendSet.forEach(value => {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = value;
+  trendFilter.appendChild(option);
+});
+
+document.querySelectorAll("[data-tab-button]").forEach(button => {
+  button.addEventListener("click", () => activateTab(button.dataset.tabButton));
+});
+
+document.getElementById("mainTabs").addEventListener("click", event => {
+  const link = event.target.closest("a[data-tab]");
+  if (!link) return;
+  event.preventDefault();
+  activateTab(link.dataset.tab);
+});
+
+document.getElementById("mainTable").querySelector("thead").addEventListener("click", event => {
+  const th = event.target.closest("th[data-col]");
+  if (!th) return;
+  const col = th.dataset.col;
+  if (sortCol === col) sortAsc = !sortAsc;
+  else {
+    sortCol = col;
+    sortAsc = col !== "trend";
+  }
+  document.querySelectorAll("thead th").forEach(node => node.classList.remove("th-sorted"));
+  th.classList.add("th-sorted");
+  renderFilter();
+});
+
+function activateTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll("#mainTabs .nav-link").forEach(node => {
+    node.classList.toggle("active", node.dataset.tab === tab);
+  });
+  document.querySelectorAll("[data-tab-button]").forEach(node => {
+    node.classList.toggle("active", node.dataset.tabButton === tab);
+  });
+  const isReport = currentTab === "report";
+  const isNews = currentTab === "news";
+  document.getElementById("tableSection").style.display = isReport || isNews ? "none" : "";
+  document.getElementById("reportSection").style.display = isReport ? "" : "none";
+  document.getElementById("newsSection").style.display = isNews ? "" : "none";
+  if (isReport) renderReport();
+  else if (isNews) renderNews();
+  else renderFilter();
+}
+
+function esc(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function fmt(value, digits = 2, suffix = "") {
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  return Number(value).toFixed(digits) + suffix;
+}
+
+function fmtPrice(value) {
+  if (value == null || Number.isNaN(Number(value))) return "-";
+  return `${CURRENCY}${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function trendPoint(row) {
+  return trendPoints[row.trend] ?? 0;
+}
+
+function closestMADiff(row) {
+  const diffs = PERIODS
+    .map(period => row[`diff_${period}`])
+    .filter(value => value != null && !Number.isNaN(Number(value)))
+    .map(Number);
+  if (!diffs.length) return null;
+  return diffs.reduce((best, value) => Math.abs(value) < Math.abs(best) ? value : best, diffs[0]);
+}
+
+function setupType(row) {
+  const rsi = Number(row.rsi);
+  const near = row.nearCount || 0;
+  const point = trendPoint(row);
+  const closest = closestMADiff(row);
+  if (point >= 1 && near >= 1 && rsi >= 40 && rsi <= 65) return "trend-pullback";
+  if (rsi < 40 && point > -2) return "oversold-bounce";
+  if (point >= 2 && rsi < 70) return "strong-momentum";
+  if (rsi >= 70) return "overheated";
+  if (point <= -1 && (closest == null || closest < 0)) return "bearish";
+  return "neutral";
+}
+
+function setupLabel(type) {
+  return {
+    "trend-pullback": "추세 눌림목",
+    "oversold-bounce": "과매도 반등",
+    "strong-momentum": "강세 지속",
+    "overheated": "과열 주의",
+    "bearish": "약세 지속",
+    "neutral": "중립 관찰"
+  }[type] || "중립 관찰";
+}
+
+function trendCell(value) {
+  if (!value) return "-";
+  const icon = trendIcons[value] || "→";
+  const color = trendColors[value] || "#c9d1d9";
+  return `<span class="trend-chip" title="${esc(value)}" style="color:${color}">${icon}</span>`;
+}
+
+function rsiCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n < 35 ? "rsi-green" : n > 65 ? "rsi-red" : "";
+  return `<span class="${klass}">${n.toFixed(1)}</span>`;
+}
+
+function upCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n >= 20 ? "up-green" : n < 0 ? "up-red" : "";
+  return `<span class="${klass}">${n.toFixed(1)}%</span>`;
+}
+
+function changeCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n > 0 ? "up-green" : n < 0 ? "up-red" : "";
+  return `<span class="${klass}">${n >= 0 ? "+" : ""}${n.toFixed(2)}%</span>`;
+}
+
+function perCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = n < 15 ? "per-green" : n > 40 ? "per-red" : "";
+  return `<span class="${klass}">${n.toFixed(1)}</span>`;
+}
+
+function diffCell(value) {
+  if (value == null) return "-";
+  const n = +value;
+  const klass = Math.abs(n) <= 2 ? "ma-warn" : "";
+  return `<span class="${klass}">${n >= 0 ? "+" : ""}${n.toFixed(2)}%</span>`;
+}
+
+function badges(row) {
+  let html = "";
+  PERIODS.forEach(period => {
+    if (row[`near_${period}`]) {
+      html += `<span class="ma-badge">${period}</span>`;
+    }
+  });
+  return html || "-";
+}
+
+function tabMatch(row) {
+  if (currentTab === "all" || currentTab === "report" || currentTab === "news") return true;
+  if (currentTab === "multi") return (row.nearCount || 0) >= 2;
+  if (currentTab.startsWith("ma")) {
+    const period = currentTab.slice(2);
+    return !!row[`near_${period}`];
+  }
+  return true;
+}
+
+function filteredRows() {
+  const search = document.getElementById("searchBox").value.toLowerCase();
+  const sector = document.getElementById("sectorFilter").value;
+  const setup = document.getElementById("setupFilter").value;
+  const trend = document.getElementById("trendFilter").value;
+
+  return DATA.filter(row => {
+    if (!tabMatch(row)) return false;
+    if (search) {
+      const haystack = [row.ticker, row.displayTicker, row.kr_name, row.en_name].filter(Boolean).join(" ").toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    if (sector && row.sector !== sector) return false;
+    if (setup && setupType(row) !== setup) return false;
+    if (trend && row.trend !== trend) return false;
+    return true;
+  });
+}
+
+function applyFilter() {
+  renderFilter();
+}
+
+function renderFilter() {
+  let rows = filteredRows();
+
+  rows.sort((a, b) => {
+    let va = sortValue(a, sortCol);
+    let vb = sortValue(b, sortCol);
+    if (va == null) va = sortAsc ? Infinity : -Infinity;
+    if (vb == null) vb = sortAsc ? Infinity : -Infinity;
+    if (typeof va === "string" || typeof vb === "string") {
+      return sortAsc ? String(va).localeCompare(String(vb), "ko") : String(vb).localeCompare(String(va), "ko");
+    }
+    return sortAsc ? va - vb : vb - va;
+  });
+
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = rows.map(row => {
+    const title = esc([row.en_name || "", row.desc || ""].filter(Boolean).join("\n"));
+    const name = esc(row.kr_name || row.en_name || row.displayTicker || row.ticker);
+    const ticker = esc(row.displayTicker || row.ticker);
+    const sectorName = esc(row.sector || "-");
+    const setup = setupType(row);
+    return `
+    <tr>
+      <td><a href="${esc(row.quoteUrl || "#")}" target="_blank" class="ticker-link">${ticker}</a></td>
+      <td title="${title}">${name}</td>
+      <td>${sectorName}</td>
+      <td>${trendCell(row.trend)}</td>
+      <td>${fmtPrice(row.price)}</td>
+      <td>${changeCell(row.changePct)}</td>
+      <td>${rsiCell(row.rsi)}</td>
+      <td>${fmt(row.fromHigh, 1, "%")}</td>
+      <td>${fmt(row.volRatio, 2, "x")}</td>
+      <td>${perCell(row.per)}</td>
+      <td>${upCell(row.upside)}</td>
+      <td>${badges(row)} <span class="setup-tag ${setup}">${setupLabel(setup)}</span></td>
+    </tr>`;
+  }).join("");
+
+  const message = `${rows.length} shown / total ${DATA.length}`;
+  document.getElementById("rowCount").textContent = message;
+  document.getElementById("rowCount2").textContent = message;
+}
+
+function sortValue(row, col) {
+  if (col === "trend") return trendPoint(row);
+  if (col === "ticker") return row.displayTicker || row.ticker;
+  if (col === "kr_name") return row.kr_name || row.en_name || "";
+  return row[col];
+}
+
+function renderReport() {
+  if (reportRendered) return;
+  reportRendered = true;
+  const el = document.getElementById("mdContent");
+  if (!ANALYSIS_MD) {
+    el.innerHTML = '<p class="text-secondary py-3">No analysis markdown was found. Run the analyze stage or the full pipeline first.</p>';
+    return;
+  }
+  el.innerHTML = marked.parse(ANALYSIS_MD);
+  const ids = ["sec-top", "sec-theme", "sec-sector", "sec-warn"];
+  el.querySelectorAll("h2").forEach((heading, index) => {
+    heading.id = ids[index] || `sec-${index + 1}`;
+  });
+  el.querySelectorAll("a").forEach(link => {
+    if (link.href && link.href.startsWith("http")) link.target = "_blank";
+  });
+}
+
+function renderNews() {
+  if (newsRendered) return;
+  newsRendered = true;
+  document.getElementById("newsTitle").textContent = NEWS.title || "뉴스 브리핑";
+  document.getElementById("newsSubtitle").textContent = NEWS.subtitle || "";
+  document.getElementById("newsNote").textContent = NEWS.note || "";
+  const items = Array.isArray(NEWS.items) ? NEWS.items : [];
+  document.getElementById("newsCount").textContent = NEWS.available ? `${items.length} items` : "No cache";
+  if (!NEWS.available || !items.length) {
+    document.getElementById("newsContent").innerHTML = `
+      <div class="news-empty">
+        <strong>뉴스 데이터가 아직 없습니다.</strong>
+        <p>US 기준 밤새 뉴스 수집은 가능합니다. 다만 렌더링 안정성을 위해 별도 수집 단계에서 캐시를 만든 뒤 이 탭에서 읽는 방식으로 설계했습니다.</p>
+      </div>`;
+    return;
+  }
+  document.getElementById("newsContent").innerHTML = items.map(item => {
+    const tone = ["positive", "bullish"].includes(String(item.sentiment).toLowerCase())
+      ? "positive"
+      : ["negative", "bearish"].includes(String(item.sentiment).toLowerCase()) ? "negative" : "neutral";
+    const title = esc(item.title || "(제목 없음)");
+    const url = item.url ? esc(item.url) : "#";
+    const ticker = item.ticker ? `<b>${esc(item.ticker)}</b>` : "";
+    const meta = [item.publisher, item.publishedAt].filter(Boolean).map(esc).join(" · ");
+    return `
+      <article class="news-item ${tone}">
+        <div>${ticker}<span>${esc(item.sentiment || "neutral")}</span></div>
+        <a href="${url}" target="_blank">${title}</a>
+        <p>${esc(item.summary || "")}</p>
+        <em>${meta}</em>
+      </article>`;
+  }).join("");
+}
+
+function renderSignalStrip() {
+  const nearItems = PERIODS.map(period => {
+    const count = DATA.filter(row => row[`near_${period}`]).length;
+    return `<div><span>MA${period}</span><strong>${count}</strong></div>`;
+  }).join("");
+  const multi = DATA.filter(row => (row.nearCount || 0) >= 2).length;
+  const avgRsiValues = DATA.map(row => Number(row.rsi)).filter(value => !Number.isNaN(value));
+  const avgRsi = avgRsiValues.length ? avgRsiValues.reduce((a, b) => a + b, 0) / avgRsiValues.length : null;
+  const bulls = DATA.filter(row => trendPoint(row) > 0).length;
+  const bears = DATA.filter(row => trendPoint(row) < 0).length;
+  const breadth = bulls + bears ? bulls / (bulls + bears) * 100 : null;
+  const vixText = FEAR.available ? `${FEAR.label} ${fmt(FEAR.level, 1)}` : "VIX N/A";
+  document.getElementById("signalStrip").innerHTML = `
+    ${nearItems}
+    <div><span>Multi</span><strong>${multi}</strong></div>
+    <div><span>Avg RSI</span><strong>${avgRsi == null ? "-" : avgRsi.toFixed(1)}</strong></div>
+    <div><span>Bull Breadth</span><strong>${breadth == null ? "-" : breadth.toFixed(0) + "%"}</strong></div>
+    <div><span>Fear</span><strong>${esc(vixText)}</strong></div>
+  `;
+}
+
+function changeColor(changePct) {
+  const value = Math.max(-6, Math.min(6, Number(changePct) || 0));
+  if (value > 0) {
+    const alpha = 0.22 + Math.abs(value) / 6 * 0.68;
+    return `rgba(40, 209, 124, ${alpha})`;
+  }
+  if (value < 0) {
+    const alpha = 0.22 + Math.abs(value) / 6 * 0.68;
+    return `rgba(244, 91, 105, ${alpha})`;
+  }
+  return "rgba(216, 169, 74, .34)";
+}
+
+function renderSectorHeatmap() {
+  const sectorMap = new Map();
+  DATA.forEach(row => {
+    const sector = row.sector || "Unknown";
+    const change = Number(row.changePct);
+    if (!sectorMap.has(sector)) sectorMap.set(sector, []);
+    if (!Number.isNaN(change)) sectorMap.get(sector).push({ ...row, change });
+  });
+
+  const sectors = [...sectorMap.entries()].map(([sector, rows]) => {
+    const sorted = [...rows].sort((a, b) => a.change - b.change);
+    const count = sorted.length;
+    const avg = count ? sorted.reduce((sum, row) => sum + row.change, 0) / count : 0;
+    const median = count ? sorted[Math.floor(count / 2)].change : 0;
+    const upRatio = count ? sorted.filter(row => row.change > 0).length / count * 100 : 0;
+    const leader = count ? sorted[sorted.length - 1] : null;
+    const laggard = count ? sorted[0] : null;
+    return { sector, rows: sorted, count, avg, median, upRatio, leader, laggard };
+  }).filter(item => item.count > 0).sort((a, b) => b.avg - a.avg);
+
+  const heatRows = sectors.length ? sectors : [{ sector: "No data", count: 0, avg: 0, median: 0, upRatio: 0, leader: null, laggard: null }];
+  document.getElementById("sectorHeatmap").innerHTML = heatRows.map(item => {
+    const encodedSector = encodeURIComponent(item.sector);
+    const flex = Math.min(5, Math.max(1.2, Math.sqrt(Math.max(item.count, 1)) + Math.min(2, Math.abs(item.avg || 0) / 2)));
+    const leader = item.leader ? `${item.leader.displayTicker || item.leader.ticker} ${(item.leader.change >= 0 ? "+" : "") + item.leader.change.toFixed(2)}%` : "-";
+    const laggard = item.laggard ? `${item.laggard.displayTicker || item.laggard.ticker} ${(item.laggard.change >= 0 ? "+" : "") + item.laggard.change.toFixed(2)}%` : "-";
+    return `
+      <button class="heat-tile sector-tile" style="--tile-flex:${flex};background:${changeColor(item.avg)}" onclick="setSectorFilter(decodeURIComponent('${encodedSector}'))" title="${esc(item.sector)} · 평균 ${item.avg.toFixed(2)}% · 중앙값 ${item.median.toFixed(2)}% · 상승비율 ${item.upRatio.toFixed(0)}% · 강세 ${esc(leader)} · 약세 ${esc(laggard)}">
+        <strong>${esc(item.sector)}</strong>
+        <span>${item.avg >= 0 ? "+" : ""}${item.avg.toFixed(2)}%</span>
+        <em>${item.count}종목 · 상승 ${item.upRatio.toFixed(0)}% · 중앙 ${item.median >= 0 ? "+" : ""}${item.median.toFixed(2)}%</em>
+      </button>`;
+  }).join("");
+}
+
+function setSectorFilter(value) {
+  sectorFilter.value = value;
+  applyFilter();
+}
+
+function clearSectorFilter() {
+  sectorFilter.value = "";
+  applyFilter();
+}
+
+function renderFearPanel() {
+  const level = FEAR.available ? fmt(FEAR.level, 2) : "-";
+  const trend = FEAR.trend === "rising" ? "상승" : FEAR.trend === "falling" ? "하락" : "확인 불가";
+  const tone = FEAR.label === "Stress" || FEAR.label === "Elevated" ? "danger" : FEAR.label === "Calm" ? "calm" : "normal";
+  document.getElementById("fearPanel").innerHTML = `
+    <div class="panel-head">
+      <div><span>Fear & Volatility</span><h3>공포지수 해석</h3></div>
+      <b class="fear-badge ${tone}">${esc(FEAR.label || "N/A")}</b>
+    </div>
+    <div class="fear-grid">
+      <div><span>VIX</span><strong>${level}</strong></div>
+      <div><span>${esc(FEAR.vsLabel || "20D 대비")}</span><strong>${FEAR.vs20Pct == null ? "-" : fmt(FEAR.vs20Pct, 1, "%")}</strong></div>
+      <div><span>방향</span><strong>${trend}</strong></div>
+    </div>
+    <p>${esc(FEAR.note || "")}</p>
+  `;
+}
+
+function renderSetupBuckets() {
+  const bucketOrder = ["trend-pullback", "oversold-bounce", "strong-momentum", "overheated", "bearish"];
+  const grouped = Object.fromEntries(bucketOrder.map(key => [key, []]));
+  DATA.forEach(row => {
+    const type = setupType(row);
+    if (grouped[type]) grouped[type].push(row);
+  });
+  document.getElementById("setupBuckets").innerHTML = bucketOrder.map(key => {
+    const rows = grouped[key].sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0)).slice(0, 4);
+    return `
+      <button class="bucket ${key}" onclick="document.getElementById('setupFilter').value='${key}'; applyFilter();">
+        <span>${setupLabel(key)}</span>
+        <strong>${grouped[key].length}</strong>
+        <em>${rows.map(row => esc(row.displayTicker || row.ticker)).join(" · ") || "대상 없음"}</em>
+      </button>`;
+  }).join("");
+}
+
+function renderScatterChart() {
+  const groups = {
+    "강세": { color: "#28d17c", rows: [] },
+    "중립": { color: "#d8a94a", rows: [] },
+    "약세": { color: "#f45b69", rows: [] }
+  };
+  DATA.forEach(row => {
+    const x = closestMADiff(row);
+    const y = row.rsi;
+    if (x == null || y == null) return;
+    const point = trendPoint(row);
+    const key = point > 0 ? "강세" : point < 0 ? "약세" : "중립";
+    groups[key].rows.push({ x, y, ticker: row.displayTicker || row.ticker, name: row.kr_name || row.en_name || "", setup: setupLabel(setupType(row)) });
+  });
+  renderScatterCommentary(groups);
+  new Chart(document.getElementById("scatterChart"), {
+    type: "scatter",
+    data: {
+      datasets: Object.entries(groups).map(([label, item]) => ({
+        label,
+        data: item.rows,
+        backgroundColor: item.color + "bb",
+        borderColor: item.color,
+        pointRadius: 5,
+        pointHitRadius: 14,
+        pointHoverRadius: 7
+      }))
+    },
+    options: {
+      interaction: { mode: "nearest", intersect: false },
+      plugins: {
+        legend: { labels: { color: "#b8c6d7", boxWidth: 10, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const raw = ctx.raw;
+              return ` ${raw.ticker}: MA ${raw.x.toFixed(2)}%, RSI ${raw.y.toFixed(1)} · ${raw.setup}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: "Closest MA Distance %", color: "#7f8ea3" },
+          ticks: { color: "#7f8ea3" },
+          grid: { color: "rgba(148,163,184,.12)" }
+        },
+        y: {
+          min: 10,
+          max: 90,
+          title: { display: true, text: "RSI", color: "#7f8ea3" },
+          ticks: { color: "#7f8ea3" },
+          grid: { color: "rgba(148,163,184,.12)" }
+        }
+      },
+      maintainAspectRatio: false
+    }
+  });
+}
+
+function renderScatterCommentary(groups) {
+  const all = Object.values(groups).flatMap(item => item.rows);
+  if (!all.length) {
+    document.getElementById("scatterCommentary").textContent = "이격률/RSI 데이터가 부족해 해석을 만들 수 없습니다.";
+    return;
+  }
+  const nearBalanced = all.filter(row => Math.abs(row.x) <= 2 && row.y >= 40 && row.y <= 65).length;
+  const overheated = all.filter(row => row.y >= 70).length;
+  const oversold = all.filter(row => row.y < 35).length;
+  const extended = all.filter(row => Math.abs(row.x) >= 8).length;
+  let text = `중립 진입 후보 ${nearBalanced}개, 과열 ${overheated}개, 과매도 ${oversold}개입니다.`;
+  if (overheated > nearBalanced) text = `과열 신호가 ${overheated}개로 많아 추격보다 눌림 확인이 유리합니다.`;
+  else if (nearBalanced >= overheated && nearBalanced >= oversold) text = `MA 근처의 정상 RSI 후보가 ${nearBalanced}개로, 선별 진입을 보기 좋은 분포입니다.`;
+  else if (oversold > overheated) text = `과매도 후보가 ${oversold}개로 반등 관찰 대상이 늘어난 상태입니다.`;
+  if (extended > all.length * 0.25) text += ` 다만 MA 이격이 큰 종목도 ${extended}개라 변동성 관리는 필요합니다.`;
+  document.getElementById("scatterCommentary").textContent = text;
+}
+
+renderSignalStrip();
+renderSectorHeatmap();
+renderFearPanel();
+renderSetupBuckets();
+renderScatterChart();
+renderFilter();
+</script>
+</body>
+</html>
