@@ -58,6 +58,7 @@ def main() -> None:
     )
     parser.add_argument("--force", action="store_true", help="Rescan even if CSV already exists.")
     parser.add_argument("--workers", type=int, default=8, help="Parallel workers for scan stage (default: 8).")
+    parser.add_argument("--limit", type=int, default=None, help="Limit scan to the first N symbols for quick validation.")
     parser.add_argument("--news-symbols", type=int, default=50, help="Max symbols for news collection (default: 50).")
     parser.add_argument("--news-items", type=int, default=3, help="Max news items per symbol (default: 3).")
     parser.add_argument("--news-workers", type=int, default=4, help="Parallel workers for news stage (default: 4).")
@@ -96,7 +97,7 @@ def main() -> None:
             _, frame, _ = run_scan_stage_with_settings(
                 market_key,
                 date_str,
-                ScanSettings(output_dir=Path("."), max_workers=max(1, args.workers)),
+                ScanSettings(output_dir=Path("."), max_workers=max(1, args.workers), symbol_limit=args.limit),
             )
         completed.append(str(paths["csv"]))
 

@@ -680,7 +680,10 @@ def output_paths(market: MarketDefinition, settings: ScanSettings, date_str: str
 def scan_market(market_key: str, settings: ScanSettings) -> tuple[MarketDefinition, list[ScanRecord], pd.DataFrame]:
     market = MARKETS[market_key]
     symbols = market.universe_loader()
+    if settings.symbol_limit is not None and settings.symbol_limit > 0:
+        symbols = symbols[: settings.symbol_limit]
     records: list[ScanRecord] = []
+    failed: list[str] = []
 
     total = len(symbols)
     print(f"[scan] {market.label}: {total} symbols")
@@ -692,6 +695,8 @@ def scan_market(market_key: str, settings: ScanSettings) -> tuple[MarketDefiniti
             record = fetch_record(symbol, market, settings)
             if record:
                 records.append(record)
+            else:
+                failed.append(symbol)
     else:
         print(f"[scan] using {worker_count} workers")
         completed = 0
@@ -710,8 +715,14 @@ def scan_market(market_key: str, settings: ScanSettings) -> tuple[MarketDefiniti
                     record = None
                 if record:
                     records.append(record)
+                else:
+                    failed.append(symbol)
     print(" " * 72, end="\r")
     print(f"[scan] completed: {len(records)} rows")
+    if failed:
+        sample = ", ".join(failed[:12])
+        suffix = f" (+{len(failed) - 12} more)" if len(failed) > 12 else ""
+        print(f"[scan] failed: {len(failed)} symbols - {sample}{suffix}")
 
     frame = records_to_frame(records, settings)
     return market, records, frame

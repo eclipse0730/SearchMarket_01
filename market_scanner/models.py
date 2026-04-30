@@ -26,6 +26,7 @@ class ScanSettings:
     history_period: str = "2y"
     min_history_buffer: int = 10
     max_workers: int = 3
+    symbol_limit: int | None = None
     output_dir: Path = Path("refactor_outputs")
 
 

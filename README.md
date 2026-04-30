@@ -38,6 +38,7 @@ python Search.py --market sp500 --stage render        # HTML → reports/Report_
 python Search.py --market nasdaq100 --workers 8       # 병렬 worker 수
 python Search.py --market sp500 --date 20260425       # 대상 날짜 지정
 python Search.py --market nasdaq100 --force           # CSV 있어도 재스캔
+python Search.py --market nasdaq100 --force --limit 5 # 빠른 수집 검증
 python Search.py --market sp500 --stage news --news-symbols 80 --news-items 2
 python Search.py --market nasdaq100 --setup-scheduler # 윈도우 작업 스케줄러 등록
 python Search.py --market sp500 --setup-scheduler --time 08:30
