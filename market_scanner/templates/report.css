@@ -234,6 +234,35 @@ tbody tr:hover{background:rgba(98,199,255,.07)}
 .rsi-green,.up-green,.per-green{color:var(--good);font-weight:800}
 .rsi-red,.up-red,.per-red{color:var(--bad);font-weight:800}
 .ma-warn{color:var(--warn);font-weight:800}
+.candle-mini{
+  position:relative;
+  display:inline-flex;
+  width:18px;
+  height:28px;
+  align-items:stretch;
+  justify-content:center;
+  vertical-align:middle;
+}
+.candle-mini i{
+  position:absolute;
+  top:2px;
+  bottom:2px;
+  left:50%;
+  width:1px;
+  transform:translateX(-50%);
+  background:rgba(226,237,247,.7);
+}
+.candle-mini b{
+  position:absolute;
+  left:4px;
+  right:4px;
+  min-height:5px;
+  border-radius:2px;
+  border:1px solid currentColor;
+  background:currentColor;
+}
+.candle-mini.up{color:var(--good)}
+.candle-mini.down{color:var(--bad)}
 .ma-badge{
   display:inline-flex;
   align-items:center;

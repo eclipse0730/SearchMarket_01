@@ -52,16 +52,37 @@ class ScanRecord:
     name_local: str
     sector: str
     description: str
+    open_price: float | None
+    high_price: float | None
+    low_price: float | None
+    close_price: float | None
+    prev_close: float | None
     price: float | None
     change_pct: float | None
+    gap_pct: float | None
+    candle_body_pct: float | None
+    candle_range_pct: float | None
+    upper_shadow_pct: float | None
+    lower_shadow_pct: float | None
+    candle_type: str
     rsi: float | None
     high_52w: float | None
     low_52w: float | None
     from_high_pct: float | None
     volume_ratio: float | None
     trailing_pe: float | None
+    price_to_book: float | None
+    return_on_equity: float | None
+    revenue_growth: float | None
+    market_cap: float | None
     target_price: float | None
     upside_pct: float | None
+    macd: float | None
+    macd_signal: float | None
+    macd_hist: float | None
+    macd_state: str
+    bollinger_width_pct: float | None
+    bollinger_percent_b: float | None
     trend: str
     trend_score: int
     ma_values: dict[int, float | None] = field(default_factory=dict)

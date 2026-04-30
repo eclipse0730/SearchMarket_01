@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import yfinance as yf
 
-from market_scanner.indicators import calc_rsi, calc_trend
+from market_scanner.indicators import calc_bollinger, calc_macd, calc_rsi, calc_trend
 from market_scanner.markets import MARKETS
 from market_scanner.models import MarketDefinition, ScanRecord, ScanSettings
 
@@ -154,6 +154,43 @@ def enrich_metadata_frame(frame: pd.DataFrame, market: MarketDefinition) -> pd.D
     return enriched
 
 
+def _candle_type(
+    open_price: float | None,
+    high_price: float | None,
+    low_price: float | None,
+    close_price: float | None,
+) -> str:
+    if open_price is None or high_price is None or low_price is None or close_price is None:
+        return "Unknown"
+    candle_range = high_price - low_price
+    if candle_range <= 0:
+        return "Flat"
+
+    body = close_price - open_price
+    body_abs = abs(body)
+    upper_shadow = high_price - max(open_price, close_price)
+    lower_shadow = min(open_price, close_price) - low_price
+    body_ratio = body_abs / candle_range
+    upper_ratio = upper_shadow / candle_range
+    lower_ratio = lower_shadow / candle_range
+
+    if body_ratio <= 0.12:
+        if lower_ratio >= 0.45:
+            return "Long Lower Doji"
+        if upper_ratio >= 0.45:
+            return "Long Upper Doji"
+        return "Doji"
+    if body > 0 and lower_ratio >= 0.45:
+        return "Bullish Reversal"
+    if body < 0 and upper_ratio >= 0.45:
+        return "Bearish Rejection"
+    if body > 0 and body_ratio >= 0.65:
+        return "Strong Bullish"
+    if body < 0 and body_ratio >= 0.65:
+        return "Strong Bearish"
+    return "Bullish" if body > 0 else "Bearish"
+
+
 def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) -> ScanRecord | None:
     min_history = max(settings.ma_periods) + settings.min_history_buffer
     hist = pd.DataFrame()
@@ -171,15 +208,36 @@ def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) 
     else:
         return None
 
+    open_series = hist["Open"]
+    high_series = hist["High"]
+    low_series = hist["Low"]
     close = hist["Close"]
     volume = hist["Volume"]
     current_price = _safe_number(close.iloc[-1], market.price_decimals)
     if current_price is None:
         return None
+    open_price = _safe_number(open_series.iloc[-1], market.price_decimals)
+    high_price = _safe_number(high_series.iloc[-1], market.price_decimals)
+    low_price = _safe_number(low_series.iloc[-1], market.price_decimals)
+    close_price = current_price
     previous_close = _safe_number(close.iloc[-2], market.price_decimals) if len(close) >= 2 else None
     change_pct = None
     if previous_close:
         change_pct = round((current_price - previous_close) / previous_close * 100, 2)
+    gap_pct = round((open_price - previous_close) / previous_close * 100, 2) if open_price is not None and previous_close else None
+    candle_body_pct = round((close_price - open_price) / open_price * 100, 2) if open_price else None
+    candle_range_pct = round((high_price - low_price) / open_price * 100, 2) if open_price and high_price is not None and low_price is not None else None
+    upper_shadow_pct = (
+        round((high_price - max(open_price, close_price)) / open_price * 100, 2)
+        if open_price and high_price is not None
+        else None
+    )
+    lower_shadow_pct = (
+        round((min(open_price, close_price) - low_price) / open_price * 100, 2)
+        if open_price and low_price is not None
+        else None
+    )
+    candle_type = _candle_type(open_price, high_price, low_price, close_price)
 
     info: dict = {}
     try:
@@ -226,8 +284,16 @@ def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) 
             near_flags[period] = False
 
     trend_score, trend = calc_trend(close, ma_values, ma_series, settings.ma_periods)
+    macd, macd_signal, macd_hist, macd_state = calc_macd(close)
+    bollinger_width_pct, bollinger_percent_b = calc_bollinger(close)
     target_price = _safe_number(info.get("targetMeanPrice"), market.price_decimals)
     trailing_pe = _safe_number(info.get("trailingPE"), 1)
+    price_to_book = _safe_number(info.get("priceToBook"), 2)
+    roe_raw = _safe_number(info.get("returnOnEquity"), 4)
+    growth_raw = _safe_number(info.get("revenueGrowth"), 4)
+    return_on_equity = round(roe_raw * 100, 1) if roe_raw is not None else None
+    revenue_growth = round(growth_raw * 100, 1) if growth_raw is not None else None
+    market_cap = _safe_number(info.get("marketCap"))
     upside_pct = None
     if target_price and current_price:
         upside_pct = round((target_price - current_price) / current_price * 100, 1)
@@ -239,16 +305,37 @@ def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) 
         name_local=name_local,
         sector=sector,
         description=description,
+        open_price=open_price,
+        high_price=high_price,
+        low_price=low_price,
+        close_price=close_price,
+        prev_close=previous_close,
         price=current_price,
         change_pct=change_pct,
+        gap_pct=gap_pct,
+        candle_body_pct=candle_body_pct,
+        candle_range_pct=candle_range_pct,
+        upper_shadow_pct=upper_shadow_pct,
+        lower_shadow_pct=lower_shadow_pct,
+        candle_type=candle_type,
         rsi=rsi,
         high_52w=high_52w,
         low_52w=low_52w,
         from_high_pct=from_high_pct,
         volume_ratio=volume_ratio,
         trailing_pe=trailing_pe,
+        price_to_book=price_to_book,
+        return_on_equity=return_on_equity,
+        revenue_growth=revenue_growth,
+        market_cap=market_cap,
         target_price=target_price,
         upside_pct=upside_pct,
+        macd=macd,
+        macd_signal=macd_signal,
+        macd_hist=macd_hist,
+        macd_state=macd_state,
+        bollinger_width_pct=bollinger_width_pct,
+        bollinger_percent_b=bollinger_percent_b,
         trend=trend,
         trend_score=trend_score,
         ma_values=ma_values,
@@ -257,71 +344,269 @@ def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) 
     )
 
 
-def score_record(row: pd.Series, settings: ScanSettings) -> float:
-    score = 0.0
+def _clamp_score(value: float) -> float:
+    return round(max(0.0, min(100.0, value)), 2)
 
-    # 방향성 (최대 30점) — 필터 통과 후 가장 중요한 신호
+
+def _score_chart(row: pd.Series, settings: ScanSettings) -> float:
     trend_score = float(row.get("trend_score") or 0)
-    score += trend_score * 6
+    near_count = sum(1 for period in settings.ma_periods if bool(row.get(f"near_{period}", False)))
+    near_ratio = near_count / max(len(settings.ma_periods), 1)
+    diffs = [
+        abs(float(row.get(f"diff_{period}")))
+        for period in settings.ma_periods
+        if pd.notna(row.get(f"diff_{period}"))
+    ]
+    closest = min(diffs) if diffs else None
+    from_high = row.get("from_high_pct")
 
-    # RSI 진입 타이밍 — 황금구간 보상, 과열 적극 감점
+    score = trend_score * 12 + near_ratio * 20
+    if closest is not None:
+        if closest <= 2:
+            score += 12
+        elif closest <= 5:
+            score += 7
+    if pd.notna(from_high):
+        value = float(from_high)
+        if -30 <= value <= -5:
+            score += 8
+        elif value > -5:
+            score += 5
+        elif value < -45:
+            score -= 8
+    return _clamp_score(score)
+
+
+def _score_technical(row: pd.Series) -> float:
+    parts: list[float] = []
+
     rsi = row.get("rsi")
     if pd.notna(rsi):
-        if rsi >= 70:
-            score -= 15
-        elif rsi >= 65:
-            score -= 5
-        elif 45 <= rsi < 65:
-            score += 15
-        elif 35 <= rsi < 45:
-            score += 8
+        value = float(rsi)
+        if 40 <= value <= 60:
+            parts.append(100)
+        elif 30 <= value < 40 or 60 < value <= 68:
+            parts.append(75)
+        elif value < 30:
+            parts.append(45)
         else:
-            score += 2  # RSI < 35: 낙도끼 위험, 소폭만
+            parts.append(25)
 
-    # 업사이드 — 음수 목표가는 감점
-    upside = row.get("upside_pct")
-    if pd.notna(upside):
-        if upside < 0:
-            score -= 10
-        elif upside < 5:
-            score -= 3
-        elif upside > 25:
-            score += 20
-        elif upside > 15:
-            score += 12
-        elif upside > 10:
-            score += 6
+    macd_state = str(row.get("macd_state") or "")
+    if macd_state:
+        parts.append({
+            "Bullish": 100,
+            "Positive": 78,
+            "Improving": 68,
+            "Bearish": 25,
+        }.get(macd_state, 50))
 
-    # PER 세분화 — 시장 무관 상대 기준
+    percent_b = row.get("bollinger_percent_b")
+    if pd.notna(percent_b):
+        value = float(percent_b)
+        if 0.2 <= value <= 0.8:
+            parts.append(85)
+        elif 0 <= value < 0.2:
+            parts.append(70)
+        elif 0.8 < value <= 1.0:
+            parts.append(55)
+        else:
+            parts.append(30)
+
+    volume = row.get("volume_ratio")
+    if pd.notna(volume):
+        value = float(volume)
+        if 1.2 <= value <= 4.0:
+            parts.append(85)
+        elif value > 4.0:
+            parts.append(65)
+        elif value >= 0.8:
+            parts.append(55)
+        else:
+            parts.append(40)
+
+    candle_type = str(row.get("candle_type") or "")
+    if candle_type:
+        parts.append({
+            "Strong Bullish": 90,
+            "Bullish Reversal": 88,
+            "Bullish": 72,
+            "Long Lower Doji": 68,
+            "Doji": 55,
+            "Long Upper Doji": 38,
+            "Bearish": 35,
+            "Bearish Rejection": 25,
+            "Strong Bearish": 20,
+        }.get(candle_type, 50))
+
+    return _clamp_score(sum(parts) / len(parts) if parts else 50)
+
+
+def _score_fundamental(row: pd.Series) -> float:
+    parts: list[float] = []
+
     pe = row.get("trailing_pe")
-    if pd.notna(pe) and pe > 0:
-        if pe < 10:
-            score += 10
-        elif pe < 20:
-            score += 7
-        elif pe < 30:
-            score += 3
-        elif pe >= 50:
-            score -= 5
+    if pd.notna(pe) and float(pe) > 0:
+        value = float(pe)
+        if value < 10:
+            parts.append(92)
+        elif value < 20:
+            parts.append(82)
+        elif value < 30:
+            parts.append(65)
+        elif value < 50:
+            parts.append(45)
+        else:
+            parts.append(25)
 
-    # 52주 낙폭 — 적당한 조정은 반등 여지, 과도한 낙폭은 구조 문제
+    pbr = row.get("price_to_book")
+    if pd.notna(pbr) and float(pbr) > 0:
+        value = float(pbr)
+        if value < 1:
+            parts.append(88)
+        elif value < 3:
+            parts.append(75)
+        elif value < 6:
+            parts.append(58)
+        else:
+            parts.append(35)
+
+    roe = row.get("return_on_equity")
+    if pd.notna(roe):
+        value = float(roe)
+        if value >= 20:
+            parts.append(92)
+        elif value >= 10:
+            parts.append(78)
+        elif value > 0:
+            parts.append(58)
+        else:
+            parts.append(25)
+
+    growth = row.get("revenue_growth")
+    if pd.notna(growth):
+        value = float(growth)
+        if value >= 20:
+            parts.append(90)
+        elif value >= 5:
+            parts.append(75)
+        elif value >= 0:
+            parts.append(55)
+        else:
+            parts.append(30)
+
+    return _clamp_score(sum(parts) / len(parts) if parts else 50)
+
+
+def _score_flow(row: pd.Series) -> float:
+    parts: list[float] = []
+
+    volume = row.get("volume_ratio")
+    if pd.notna(volume):
+        value = float(volume)
+        if 1.5 <= value <= 5.0:
+            parts.append(88)
+        elif value > 5.0:
+            parts.append(65)
+        elif value >= 1.0:
+            parts.append(58)
+        else:
+            parts.append(42)
+
     from_high = row.get("from_high_pct")
     if pd.notna(from_high):
-        if -30 <= from_high <= -10:
-            score += 6
-        elif from_high < -40:
-            score -= 4
+        value = float(from_high)
+        if -30 <= value <= -10:
+            parts.append(85)
+        elif -10 < value <= 0:
+            parts.append(62)
+        elif -50 <= value < -30:
+            parts.append(58)
+        else:
+            parts.append(35)
 
-    # 거래량 모멘텀 — 평소보다 1.5~5배 범위 (비정상 폭발 제외)
-    vol = row.get("volume_ratio")
-    if pd.notna(vol) and 1.5 <= vol <= 5.0:
-        score += 5
+    upside = row.get("upside_pct")
+    if pd.notna(upside):
+        value = float(upside)
+        if value >= 25:
+            parts.append(92)
+        elif value >= 15:
+            parts.append(78)
+        elif value >= 5:
+            parts.append(60)
+        elif value >= 0:
+            parts.append(45)
+        else:
+            parts.append(20)
 
-    # MA 수렴 보너스 — 필터와 이중계산 방지, 수렴 자체의 의미만 소폭 반영
-    near_count = sum(1 for p in settings.ma_periods if bool(row.get(f"near_{p}", False)))
-    score += near_count * 4
+    change = row.get("change_pct")
+    if pd.notna(change):
+        value = float(change)
+        if value >= 2:
+            parts.append(75)
+        elif value > 0:
+            parts.append(65)
+        elif value >= -2:
+            parts.append(50)
+        else:
+            parts.append(32)
 
-    return round(score, 2)
+    gap = row.get("gap_pct")
+    candle_type = str(row.get("candle_type") or "")
+    if pd.notna(gap):
+        value = float(gap)
+        if value > 0 and candle_type in {"Strong Bullish", "Bullish", "Bullish Reversal"}:
+            parts.append(78)
+        elif value < 0 and candle_type in {"Bullish Reversal", "Long Lower Doji"}:
+            parts.append(72)
+        elif value > 1.5 and candle_type in {"Bearish Rejection", "Long Upper Doji"}:
+            parts.append(35)
+        else:
+            parts.append(52)
+
+    return _clamp_score(sum(parts) / len(parts) if parts else 50)
+
+
+def _theme_scores(frame: pd.DataFrame) -> pd.Series:
+    if frame.empty or "sector" not in frame.columns:
+        return pd.Series(50.0, index=frame.index)
+
+    working = frame.copy()
+    working["trend_score"] = pd.to_numeric(working.get("trend_score", pd.Series(dtype=float)), errors="coerce")
+    working["change_pct"] = pd.to_numeric(working.get("change_pct", pd.Series(dtype=float)), errors="coerce")
+    grouped = (
+        working.dropna(subset=["sector"])
+        .groupby("sector")
+        .agg(count=("sector", "size"), avg_trend=("trend_score", "mean"), avg_change=("change_pct", "mean"))
+    )
+    if grouped.empty:
+        return pd.Series(50.0, index=frame.index)
+
+    scores = (50 + (grouped["avg_trend"].fillna(2.5) - 2.5) * 12 + grouped["avg_change"].fillna(0) * 7)
+    grouped["theme_score"] = scores.clip(0, 100)
+    return working["sector"].map(grouped["theme_score"]).fillna(50).round(2)
+
+
+def score_record(row: pd.Series, settings: ScanSettings) -> float:
+    chart = float(row.get("chart_score") if pd.notna(row.get("chart_score")) else _score_chart(row, settings))
+    technical = float(row.get("technical_score") if pd.notna(row.get("technical_score")) else _score_technical(row))
+    fundamental = float(row.get("fundamental_score") if pd.notna(row.get("fundamental_score")) else _score_fundamental(row))
+    theme = float(row.get("theme_score") if pd.notna(row.get("theme_score")) else 50)
+    flow = float(row.get("flow_score") if pd.notna(row.get("flow_score")) else _score_flow(row))
+    return round(chart * 0.30 + technical * 0.25 + fundamental * 0.20 + theme * 0.15 + flow * 0.10, 2)
+
+
+def add_scoring_columns(frame: pd.DataFrame, settings: ScanSettings) -> pd.DataFrame:
+    if frame.empty:
+        return frame
+    scored = frame.copy()
+    scored["chart_score"] = scored.apply(_score_chart, axis=1, settings=settings)
+    scored["technical_score"] = scored.apply(_score_technical, axis=1)
+    scored["fundamental_score"] = scored.apply(_score_fundamental, axis=1)
+    scored["theme_score"] = _theme_scores(scored)
+    scored["flow_score"] = scored.apply(_score_flow, axis=1)
+    scored["composite_score"] = scored.apply(score_record, axis=1, settings=settings)
+    return scored
 
 
 def records_to_frame(records: list[ScanRecord], settings: ScanSettings) -> pd.DataFrame:
@@ -334,16 +619,37 @@ def records_to_frame(records: list[ScanRecord], settings: ScanSettings) -> pd.Da
             "name_local": record.name_local,
             "sector": record.sector,
             "description": record.description,
+            "open": record.open_price,
+            "high": record.high_price,
+            "low": record.low_price,
+            "close": record.close_price,
+            "prev_close": record.prev_close,
             "price": record.price,
             "change_pct": record.change_pct,
+            "gap_pct": record.gap_pct,
+            "candle_body_pct": record.candle_body_pct,
+            "candle_range_pct": record.candle_range_pct,
+            "upper_shadow_pct": record.upper_shadow_pct,
+            "lower_shadow_pct": record.lower_shadow_pct,
+            "candle_type": record.candle_type,
             "rsi": record.rsi,
             "high_52w": record.high_52w,
             "low_52w": record.low_52w,
             "from_high_pct": record.from_high_pct,
             "volume_ratio": record.volume_ratio,
             "trailing_pe": record.trailing_pe,
+            "price_to_book": record.price_to_book,
+            "return_on_equity": record.return_on_equity,
+            "revenue_growth": record.revenue_growth,
+            "market_cap": record.market_cap,
             "target_price": record.target_price,
             "upside_pct": record.upside_pct,
+            "macd": record.macd,
+            "macd_signal": record.macd_signal,
+            "macd_hist": record.macd_hist,
+            "macd_state": record.macd_state,
+            "bollinger_width_pct": record.bollinger_width_pct,
+            "bollinger_percent_b": record.bollinger_percent_b,
             "trend": record.trend,
             "trend_score": record.trend_score,
         }
@@ -355,8 +661,8 @@ def records_to_frame(records: list[ScanRecord], settings: ScanSettings) -> pd.Da
 
     frame = pd.DataFrame(rows)
     if not frame.empty:
-        frame["composite_score"] = frame.apply(score_record, axis=1, settings=settings)
         frame["near_count"] = frame[[f"near_{period}" for period in settings.ma_periods]].sum(axis=1)
+        frame = add_scoring_columns(frame, settings)
     return frame
 
 
@@ -417,6 +723,18 @@ def _summary_lines_rich(
     settings: ScanSettings,
     date_str: str,
 ) -> list[str]:
+    frame = frame.copy()
+    near_cols_for_score = [f"near_{period}" for period in settings.ma_periods]
+    if "near_count" not in frame.columns and set(near_cols_for_score).issubset(frame.columns):
+        frame["near_count"] = frame[near_cols_for_score].sum(axis=1)
+    score_columns = {"chart_score", "technical_score", "fundamental_score", "theme_score", "flow_score", "composite_score"}
+    if not score_columns.issubset(frame.columns):
+        frame = add_scoring_columns(frame, settings)
+    if "macd_state" not in frame.columns:
+        frame["macd_state"] = "Unknown"
+    if "candle_type" not in frame.columns:
+        frame["candle_type"] = "Unknown"
+
     def fmt_num(value, digits: int = 1, suffix: str = "") -> str:
         if value is None or pd.isna(value):
             return "-"
@@ -436,22 +754,38 @@ def _summary_lines_rich(
                     parts.append(f"MA{period} {float(diff):+.1f}%")
         return " / ".join(parts) if parts else "-"
 
+    def candle_text(row: pd.Series) -> str:
+        candle = str(row.get("candle_type") or "-")
+        if candle == "Unknown":
+            candle = "-"
+        body = row.get("candle_body_pct")
+        gap = row.get("gap_pct")
+        parts = [candle]
+        if pd.notna(body):
+            parts.append(f"몸통 {float(body):+.1f}%")
+        if pd.notna(gap):
+            parts.append(f"갭 {float(gap):+.1f}%")
+        return " / ".join(parts)
+
     def table_header() -> list[str]:
         return [
-            "| 심볼 | 종목명 | 추세 | 현재가 | RSI | 52주고점대비 | 업사이드 | PER | MA 위치 |",
-            "|---|---|:---:|---:|---:|---:|---:|---:|---|",
+            "| 심볼 | 종목명 | 종합 | 차트 | 기술 | 재무 | 추세 | 현재가 | 등락 | 캔들 | RSI | MA 위치 |",
+            "|---|---|---:|---:|---:|---:|:---:|---:|---:|---|---:|---|",
         ]
 
     def table_row(row: pd.Series) -> str:
         return (
             f"| {row.get('display_symbol', '-')}"
             f" | {str(row.get('name_local', '-'))[:18]}"
+            f" | {fmt_num(row.get('composite_score'), 0)}"
+            f" | {fmt_num(row.get('chart_score'), 0)}"
+            f" | {fmt_num(row.get('technical_score'), 0)}"
+            f" | {fmt_num(row.get('fundamental_score'), 0)}"
             f" | {_trend_badge_html(row.get('trend'))}"
             f" | {fmt_price(row.get('price'))}"
+            f" | {fmt_num(row.get('change_pct'), 2, '%')}"
+            f" | {candle_text(row)}"
             f" | {fmt_num(row.get('rsi'), 0)}"
-            f" | {fmt_num(row.get('from_high_pct'), 1, '%')}"
-            f" | {fmt_num(row.get('upside_pct'), 1, '%')}"
-            f" | {fmt_num(row.get('trailing_pe'), 1)}"
             f" | {ma_tag(row)} |"
         )
 
@@ -474,6 +808,15 @@ def _summary_lines_rich(
         pe_value = row.get("trailing_pe")
         from_high = row.get("from_high_pct")
         trend = row.get("trend", "-")
+        macd_state = row.get("macd_state")
+        candle_type = row.get("candle_type")
+        composite = row.get("composite_score")
+
+        if pd.notna(composite):
+            reasons.append(
+                f"종합 {fmt_num(composite, 0)}점"
+                f"(차트 {fmt_num(row.get('chart_score'), 0)}, 기술 {fmt_num(row.get('technical_score'), 0)}, 재무 {fmt_num(row.get('fundamental_score'), 0)})"
+            )
 
         # 1순위: 추세 방향 (방향성이 핵심)
         trend_score = int(row.get("trend_score") or 0)
@@ -504,6 +847,14 @@ def _summary_lines_rich(
                 reasons.append(f"{rsi_text} 과매도 회복 시도 구간")
             elif r <= 60:
                 reasons.append(f"{rsi_text} 부담 없는 진입 구간")
+
+        if macd_state in {"Bullish", "Positive", "Improving"}:
+            reasons.append(f"MACD {macd_state}")
+
+        if candle_type in {"Strong Bullish", "Bullish Reversal", "Long Lower Doji"}:
+            reasons.append(f"캔들 {candle_type}")
+        elif candle_type in {"Bearish Rejection", "Strong Bearish", "Long Upper Doji"}:
+            reasons.append(f"캔들 {candle_type}, 단기 매물 확인 필요")
 
         # 4순위: 업사이드·PER·낙폭
         if pd.notna(upside):
@@ -556,11 +907,11 @@ def _summary_lines_rich(
         return comments
 
     lines = [
-        f"# {market.label} 이동평균선 근접 종목 분석 리포트",
+        f"# {market.label} 시장 스캐너 분석 리포트",
         "",
         f"**기준일:** {date_str}  ",
         f"**유니버스:** {market.label} ({len(frame)}개 종목)  ",
-        f"**기준:** {', '.join(f'MA{period}' for period in settings.ma_periods)} 기준 ±{settings.threshold_pct:.1f}% 이내",
+        f"**스코어링:** 차트 30% + 기술지표 25% + 재무 20% + 테마 15% + 수급 10%",
         "",
         "---",
         "",
@@ -574,7 +925,7 @@ def _summary_lines_rich(
     near_any = frame[frame[near_cols].any(axis=1)].copy()
     near_multi = frame[frame["near_count"] >= 2].copy()
 
-    lines.extend(["## 요약", "", "| 구분 | 종목 수 |", "|---|---:|"])
+    lines.extend(["## 시장 총평", "", "| 구분 | 값 |", "|---|---:|"])
     for period in settings.ma_periods:
         lines.append(f"| MA{period} 근접 | **{int(frame[f'near_{period}'].sum())}개** |")
     lines.append(f"| 2개 이상 동시 근접 | **{len(near_multi)}개** |")
@@ -589,30 +940,34 @@ def _summary_lines_rich(
     avg_rsi = near_any["rsi"].dropna().mean()
     avg_upside = near_any["upside_pct"].dropna().mean()
     avg_from_high = near_any["from_high_pct"].dropna().mean()
+    avg_score = frame["composite_score"].dropna().mean() if "composite_score" in frame.columns else None
+    avg_chart = frame["chart_score"].dropna().mean() if "chart_score" in frame.columns else None
+    avg_technical = frame["technical_score"].dropna().mean() if "technical_score" in frame.columns else None
+    avg_fundamental = frame["fundamental_score"].dropna().mean() if "fundamental_score" in frame.columns else None
     trend_counts = near_any["trend"].fillna("Unknown").value_counts()
     dominant_trend = trend_counts.index[0] if not trend_counts.empty else "Unknown"
 
     lines.extend(
         [
-            "## 시장 메모",
+            "## 핵심 해석",
             "",
-            f"- 근접 종목은 전체 {total_universe}개 중 {total_near}개로, 스캔 유니버스의 **{near_ratio:.1f}%** 입니다.",
-            f"- 복수 이동평균선이 동시에 겹친 종목은 {len(near_multi)}개로, 근접 종목 내부 비중은 **{multi_ratio:.1f}%** 입니다.",
-            f"- 평균 RSI는 **{fmt_num(avg_rsi, 0)}**, 과매도 후보는 **{oversold_count}개**, 과열 경고 구간은 **{hot_count}개** 입니다.",
-            f"- 평균 업사이드는 **{fmt_num(avg_upside, 1, '%')}**, 52주 고점 대비 평균 괴리는 **{fmt_num(avg_from_high, 1, '%')}** 입니다.",
-            f"- 추세 분포상 가장 많은 그룹은 **{dominant_trend}** 이며, 이번 스캔은 추세 확인형 접근이 유효한 구간으로 보입니다.",
+            f"- 전체 평균 종합점수는 **{fmt_num(avg_score, 0)}점**입니다. 세부 평균은 차트 **{fmt_num(avg_chart, 0)}**, 기술 **{fmt_num(avg_technical, 0)}**, 재무 **{fmt_num(avg_fundamental, 0)}**입니다.",
+            f"- 이동평균선 근접 종목은 전체 {total_universe}개 중 {total_near}개로, 스캔 유니버스의 **{near_ratio:.1f}%** 입니다. 복수 MA 근접 비중은 **{multi_ratio:.1f}%** 입니다.",
+            f"- 근접 종목 평균 RSI는 **{fmt_num(avg_rsi, 0)}**, 과매도 후보는 **{oversold_count}개**, 과열 경고 구간은 **{hot_count}개** 입니다.",
+            f"- 근접 종목 평균 업사이드는 **{fmt_num(avg_upside, 1, '%')}**, 52주 고점 대비 평균 괴리는 **{fmt_num(avg_from_high, 1, '%')}** 입니다.",
+            f"- 근접 종목의 대표 추세는 **{dominant_trend}** 입니다. 추세, 기술지표, 재무/테마/수급 점수를 같이 보며 후보를 선별합니다.",
             "",
             "---",
             "",
         ]
     )
 
-    ranked = near_any.sort_values(["composite_score", "near_count"], ascending=[False, False]).head(10)
+    ranked = frame.sort_values(["composite_score", "near_count"], ascending=[False, False]).head(10)
     lines.extend(
         [
-            "## 1. 상단 추천 종목",
+            "## 1. 오늘의 핵심 후보",
             "",
-            "> 복수 이동평균선 근접, RSI, 업사이드, PER까지 반영한 종합 점수 기준입니다.",
+            "> PRD 기준 복합 스코어링(차트·기술·재무·테마·수급)을 반영한 전체 유니버스 상위 후보입니다.",
             "",
         ]
     )
@@ -625,14 +980,36 @@ def _summary_lines_rich(
         near_any["rsi"].notna()
         & (near_any["rsi"] < 40)
         & (near_any["trend"] != "Strong Downtrend")
-    ].sort_values("rsi")
+    ].sort_values(["technical_score", "rsi"], ascending=[False, True])
+    pullback = near_any[
+        near_any["trend_score"].fillna(0).ge(3)
+        & near_any["rsi"].notna()
+        & near_any["rsi"].between(30, 55)
+    ].sort_values(["composite_score", "chart_score"], ascending=[False, False])
     lines.extend(
         [
-            "## 2. 테마별 분석",
+            "## 2. 전략별 후보",
             "",
-            "### A. 과매도 반등 후보",
+            "### A. 상승추세 눌림 포착",
             "",
-            "> RSI 40 미만이면서 이동평균선에 근접해 있는 종목입니다. Strong Downtrend 종목은 제외(낙도끼 위험).",
+            "> 추세가 유지되면서 이동평균선 근처로 눌린 종목입니다. PRD의 Pullback in Uptrend 관점입니다.",
+            "",
+        ]
+    )
+    section_table(lines, pullback, limit=10)
+    if not pullback.empty:
+        best = pullback.iloc[0]
+        lines.append(
+            f"- 눌림목 관점의 선두는 **{best.get('display_symbol')}** 로, "
+            f"종합 {fmt_num(best.get('composite_score'), 0)}점과 {ma_tag(best)}가 함께 보입니다."
+        )
+        lines.append("")
+
+    lines.extend(
+        [
+            "### B. 과매도 반등 후보",
+            "",
+            "> RSI 40 미만이면서 이동평균선에 근접해 있는 종목입니다. Strong Downtrend 종목은 제외합니다.",
             "",
         ]
     )
@@ -647,7 +1024,7 @@ def _summary_lines_rich(
 
     lines.extend(
         [
-            "### B. 복수 MA 수렴 구간",
+            "### C. 복수 MA 수렴 구간",
             "",
             "> 단기, 중기, 장기 평균선이 가격 근처로 모인 종목입니다.",
             "",
@@ -667,12 +1044,12 @@ def _summary_lines_rich(
         near_any["upside_pct"].notna()
         & (near_any["upside_pct"] >= 20)
         & (near_any["rsi"].isna() | (near_any["rsi"] < 65))
-    ].sort_values("upside_pct", ascending=False)
+    ].sort_values(["flow_score", "upside_pct"], ascending=[False, False])
     lines.extend(
         [
-            "### C. 성장 기대 구간",
+            "### D. 수급·업사이드 개선 구간",
             "",
-            "> 업사이드 20% 이상 + RSI 65 미만 종목입니다. 과열 상태에서의 고업사이드는 제외.",
+            "> 업사이드 20% 이상 + RSI 65 미만 종목입니다. 수급 점수와 목표가 여력을 함께 봅니다.",
             "",
         ]
     )
@@ -685,25 +1062,23 @@ def _summary_lines_rich(
         )
         lines.append("")
 
-    value = near_any[
-        near_any["trailing_pe"].notna()
-        & (near_any["trailing_pe"] > 0)
-        & (near_any["trailing_pe"] <= 15)
-    ].sort_values("trailing_pe")
+    macd_improving = near_any[
+        near_any["macd_state"].isin(["Bullish", "Positive", "Improving"])
+    ].sort_values(["technical_score", "composite_score"], ascending=[False, False])
     lines.extend(
         [
-            "### D. 밸류 후보",
+            "### E. MACD 개선 후보",
             "",
-            "> PER가 낮고 이동평균선 부근에 위치한 종목입니다.",
+            "> MACD 히스토그램이 우호적이거나 개선 중인 종목입니다.",
             "",
         ]
     )
-    section_table(lines, value, limit=8)
-    if not value.empty:
-        leader = value.iloc[0]
+    section_table(lines, macd_improving, limit=8)
+    if not macd_improving.empty:
+        leader = macd_improving.iloc[0]
         lines.append(
-            f"- 밸류 관점에서는 **{leader.get('display_symbol')}** 가 눈에 띄며, "
-            f"PER {fmt_num(leader.get('trailing_pe'), 1)} 수준에서 {ma_tag(leader)}를 확인 중입니다."
+            f"- MACD 개선 후보의 선두는 **{leader.get('display_symbol')}** 로, "
+            f"MACD 상태는 {leader.get('macd_state')}이고 기술점수는 {fmt_num(leader.get('technical_score'), 0)}점입니다."
         )
         lines.append("")
     lines.extend(["---", ""])
@@ -749,7 +1124,7 @@ def _summary_lines_rich(
         lines.extend([f"### MA{period} 근접 ({len(near_df)}개)", ""])
         section_table(lines, near_df)
 
-    lines.append("*이 리포트는 공통 리팩터링 파이프라인에서 생성되었습니다.*")
+    lines.append("*본 리포트는 스캐너 데이터와 규칙 기반 점수로 생성되었으며 투자 조언이 아닙니다. 투자 판단은 본인 책임 하에 이루어져야 합니다.*")
     return lines
 
 
@@ -840,6 +1215,7 @@ def _interactive_table_headers_html(settings: ScanSettings, market: MarketDefini
         '<th data-col="trend">추세</th>',
         f'<th data-col="price">현재가({currency})</th>',
         '<th data-col="changePct">등락률</th>',
+        '<th data-col="candleType">캔들</th>',
         '<th data-col="rsi">RSI</th>',
         '<th data-col="fromHigh">52주고점%</th>',
         '<th data-col="volRatio">거래량비율</th>',
@@ -1073,13 +1449,37 @@ def _interactive_table_data(frame: pd.DataFrame, market: MarketDefinition, setti
             "kr_name": row.get("name_local"),
             "sector": row.get("sector"),
             "desc": row.get("description"),
+            "open": _safe_number(row.get("open"), market.price_decimals),
+            "high": _safe_number(row.get("high"), market.price_decimals),
+            "low": _safe_number(row.get("low"), market.price_decimals),
+            "close": _safe_number(row.get("close"), market.price_decimals),
+            "prevClose": _safe_number(row.get("prev_close"), market.price_decimals),
             "price": _safe_number(row.get("price"), market.price_decimals),
             "changePct": _safe_number(row.get("change_pct"), 2),
+            "gapPct": _safe_number(row.get("gap_pct"), 2),
+            "candleBodyPct": _safe_number(row.get("candle_body_pct"), 2),
+            "candleRangePct": _safe_number(row.get("candle_range_pct"), 2),
+            "upperShadowPct": _safe_number(row.get("upper_shadow_pct"), 2),
+            "lowerShadowPct": _safe_number(row.get("lower_shadow_pct"), 2),
+            "candleType": row.get("candle_type") or "",
             "rsi": _safe_number(row.get("rsi"), 1),
             "fromHigh": _safe_number(row.get("from_high_pct"), 1),
             "volRatio": _safe_number(row.get("volume_ratio"), 2),
             "per": _safe_number(row.get("trailing_pe"), 1),
+            "pbr": _safe_number(row.get("price_to_book"), 2),
+            "roe": _safe_number(row.get("return_on_equity"), 1),
+            "revenueGrowth": _safe_number(row.get("revenue_growth"), 1),
+            "marketCap": _safe_number(row.get("market_cap"), 0),
             "upside": _safe_number(row.get("upside_pct"), 1),
+            "score": _safe_number(row.get("composite_score"), 1),
+            "chartScore": _safe_number(row.get("chart_score"), 1),
+            "technicalScore": _safe_number(row.get("technical_score"), 1),
+            "fundamentalScore": _safe_number(row.get("fundamental_score"), 1),
+            "themeScore": _safe_number(row.get("theme_score"), 1),
+            "flowScore": _safe_number(row.get("flow_score"), 1),
+            "macdState": row.get("macd_state") or "",
+            "bollingerWidth": _safe_number(row.get("bollinger_width_pct"), 2),
+            "bollingerPercentB": _safe_number(row.get("bollinger_percent_b"), 3),
             "trend": row.get("trend") or "",
             "trendScore": int(row.get("trend_score") or 0),
             "nearCount": int(row.get("near_count") or 0),

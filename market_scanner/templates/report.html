@@ -145,8 +145,8 @@ const NEWS = ###NEWS_JSON###;
 const ANALYSIS_MD = ###ANALYSIS_MD_JSON###;
 
 let currentTab = "all";
-let sortCol = "ticker";
-let sortAsc = true;
+let sortCol = "changePct";
+let sortAsc = false;
 let reportRendered = false;
 let newsRendered = false;
 
@@ -317,6 +317,34 @@ function changeCell(value) {
   return `<span class="${klass}">${n >= 0 ? "+" : ""}${n.toFixed(2)}%</span>`;
 }
 
+function candleCell(row) {
+  const open = Number(row.open);
+  const high = Number(row.high);
+  const low = Number(row.low);
+  const close = Number(row.close ?? row.price);
+  const type = row.candleType || "";
+  if (![open, high, low, close].every(Number.isFinite) || high <= low) return "-";
+
+  const isUp = close >= open;
+  const range = high - low;
+  const bodyTop = Math.max(open, close);
+  const bodyBottom = Math.min(open, close);
+  const top = Math.max(0, Math.min(100, (high - bodyTop) / range * 100));
+  const bottom = Math.max(0, Math.min(100, (bodyBottom - low) / range * 100));
+  const bodyHeight = Math.max(16, 100 - top - bottom);
+  const bodyStyle = `top:${top.toFixed(1)}%;height:${bodyHeight.toFixed(1)}%`;
+  const title = [
+    type || "Candle",
+    `O ${fmtPrice(open)}`,
+    `H ${fmtPrice(high)}`,
+    `L ${fmtPrice(low)}`,
+    `C ${fmtPrice(close)}`,
+    row.gapPct == null ? "" : `Gap ${Number(row.gapPct).toFixed(2)}%`,
+    row.candleBodyPct == null ? "" : `Body ${Number(row.candleBodyPct).toFixed(2)}%`
+  ].filter(Boolean).join("\\n");
+  return `<span class="candle-mini ${isUp ? "up" : "down"}" title="${esc(title)}"><i></i><b style="${bodyStyle}"></b></span>`;
+}
+
 function perCell(value) {
   if (value == null) return "-";
   const n = +value;
@@ -403,6 +431,7 @@ function renderFilter() {
       <td>${trendCell(row.trend)}</td>
       <td>${fmtPrice(row.price)}</td>
       <td>${changeCell(row.changePct)}</td>
+      <td>${candleCell(row)}</td>
       <td>${rsiCell(row.rsi)}</td>
       <td>${fmt(row.fromHigh, 1, "%")}</td>
       <td>${fmt(row.volRatio, 2, "x")}</td>
@@ -421,6 +450,7 @@ function sortValue(row, col) {
   if (col === "trend") return trendPoint(row);
   if (col === "ticker") return row.displayTicker || row.ticker;
   if (col === "kr_name") return row.kr_name || row.en_name || "";
+  if (col === "candleType") return row.candleType || "";
   return row[col];
 }
 

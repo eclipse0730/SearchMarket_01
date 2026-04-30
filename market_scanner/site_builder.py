@@ -315,6 +315,19 @@ def _combined_frame(frames: list[pd.DataFrame]) -> pd.DataFrame:
     return combined
 
 
+def _safe_pct_value(value: object, fallback: float = 50.0) -> float:
+    if value is None or pd.isna(value):
+        return fallback
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return fallback
+
+
+def _clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
+    return max(low, min(high, value))
+
+
 def _regime_label(stock_stats: dict[str, float | int | str | None], macro_stats: dict[str, float | int | str | None]) -> tuple[str, str]:
     stock_breadth = stock_stats.get("breadth")
     macro_breadth = macro_stats.get("breadth")
@@ -331,6 +344,25 @@ def _regime_label(stock_stats: dict[str, float | int | str | None], macro_stats:
     if rsi_value >= 65:
         return "Heated", "평균 RSI가 높아 추격 매수보다 속도 조절 확인이 유리합니다."
     return "Balanced", "뚜렷한 한쪽 쏠림보다 시장별 선별이 중요한 중립 구간입니다."
+
+
+def _overall_market_score(
+    stock_stats: dict[str, float | int | str | None],
+    macro_stats: dict[str, float | int | str | None],
+    avg_change: float | None,
+) -> tuple[int, str, str, str]:
+    stock_breadth = _safe_pct_value(stock_stats.get("breadth"))
+    macro_breadth = _safe_pct_value(macro_stats.get("breadth"))
+    avg_rsi = _safe_pct_value(stock_stats.get("avg_rsi"))
+    rsi_balance = _clamp(100 - abs(avg_rsi - 52) * 3.2)
+    change_score = _clamp(50 + (float(avg_change or 0.0) * 12))
+    score = round(stock_breadth * 0.36 + macro_breadth * 0.24 + rsi_balance * 0.22 + change_score * 0.18)
+
+    if score >= 65:
+        return int(score), "강세 우위", "주식 체력과 매크로 흐름이 함께 버티는 구간입니다.", "green"
+    if score <= 42:
+        return int(score), "방어 필요", "강세 종목 비율과 위험자산 흐름이 약해진 구간입니다.", "red"
+    return int(score), "중립 관찰", "방향성은 열려 있지만 시장별 선별이 더 중요한 구간입니다.", "gold"
 
 
 def _pulse_card(title: str, value: str, subtitle: str, tone: str = "info") -> str:
@@ -352,13 +384,63 @@ def _regime_display_label(regime: str) -> str:
     }.get(regime, regime)
 
 
+def _market_change_rank(items: list[tuple[str, pd.DataFrame]]) -> tuple[tuple[str, float] | None, tuple[str, float] | None]:
+    ranked: list[tuple[str, float]] = []
+    for title, frame in items:
+        change = _avg_change(frame)
+        if change is not None:
+            ranked.append((title, change))
+    if not ranked:
+        return None, None
+    ranked.sort(key=lambda item: item[1], reverse=True)
+    return ranked[0], ranked[-1]
+
+
+def _macro_risk_label(macro_stats: dict[str, float | int | str | None], macro_change: float | None) -> tuple[str, str, str]:
+    breadth = _safe_pct_value(macro_stats.get("breadth"))
+    change = float(macro_change or 0.0)
+    if breadth >= 58 and change >= 0:
+        return "완화", "green", f"매크로 강세 비율 {_pct(breadth)}, 평균 등락 {change:+.2f}%"
+    if breadth <= 42 or change <= -0.45:
+        return "위험 확대", "red", f"매크로 강세 비율 {_pct(breadth)}, 평균 등락 {change:+.2f}%"
+    return "중립", "gold", f"매크로 강세 비율 {_pct(breadth)}, 평균 등락 {change:+.2f}%"
+
+
+def _top_candidate_card(frame: pd.DataFrame) -> tuple[str, str, str]:
+    if frame.empty or "symbol" not in frame.columns:
+        return "-", "데이터가 충분하지 않습니다.", "gold"
+
+    working = frame.copy()
+    for column in ("composite_score", "trend_score", "change_pct", "rsi", "volume_ratio"):
+        working[column] = pd.to_numeric(working.get(column, pd.Series(dtype=float)), errors="coerce")
+
+    if "composite_score" in working.columns and working["composite_score"].notna().any():
+        selected = working.sort_values(["composite_score", "change_pct"], ascending=[False, False], na_position="last")
+    else:
+        selected = working.sort_values(["trend_score", "change_pct"], ascending=[False, False], na_position="last")
+
+    row = selected.iloc[0]
+    symbol = str(row.get("display_symbol") or row.get("symbol") or "-")
+    name = _display_name(row)
+    change = row.get("change_pct")
+    rsi = row.get("rsi")
+    detail = f"{name[:18]}"
+    if pd.notna(change):
+        detail += f" · 등락 {float(change):+.2f}%"
+    if pd.notna(rsi):
+        detail += f" · RSI {float(rsi):.1f}"
+    tone = "green" if pd.notna(change) and float(change) >= 0 else "red" if pd.notna(change) else "gold"
+    return symbol, detail, tone
+
+
 def _market_pulse_html(pages: list[BuiltPage], overview_frames: dict[str, pd.DataFrame]) -> str:
-    stock_frames = [
-        _market_frame_for_slug(pages, overview_frames, "nasdaq100", "nasdaq100"),
-        _market_frame_for_slug(pages, overview_frames, "sp500", "sp500"),
-        _market_frame_for_slug(pages, overview_frames, "kospi", "kospi"),
-        _market_frame_for_slug(pages, overview_frames, "kosdaq", "kosdaq"),
+    stock_items = [
+        ("Nasdaq 100", _market_frame_for_slug(pages, overview_frames, "nasdaq100", "nasdaq100")),
+        ("S&P 500", _market_frame_for_slug(pages, overview_frames, "sp500", "sp500")),
+        ("KOSPI", _market_frame_for_slug(pages, overview_frames, "kospi", "kospi")),
+        ("KOSDAQ", _market_frame_for_slug(pages, overview_frames, "kosdaq", "kosdaq")),
     ]
+    stock_frames = [frame for _, frame in stock_items]
     macro_frames = [
         overview_frames.get("global-indices", pd.DataFrame()),
         overview_frames.get("theme-proxies", pd.DataFrame()),
@@ -366,17 +448,21 @@ def _market_pulse_html(pages: list[BuiltPage], overview_frames: dict[str, pd.Dat
     ]
     stock_stats = _market_stats(_combined_frame(stock_frames))
     macro_stats = _market_stats(_combined_frame(macro_frames))
-    regime, regime_note = _regime_label(stock_stats, macro_stats)
-    total_near = int(stock_stats["near_count"] or 0) + int(macro_stats["near_count"] or 0)
-    total_rows = int(stock_stats["total"] or 0) + int(macro_stats["total"] or 0)
-    overbought = int(stock_stats["overbought_count"] or 0) + int(macro_stats["overbought_count"] or 0)
-    oversold = int(stock_stats["oversold_count"] or 0) + int(macro_stats["oversold_count"] or 0)
+    best_market, worst_market = _market_change_rank(stock_items)
+    health_subtitle = f"강세 {stock_stats['up_count']} / 약세 {stock_stats['down_count']}"
+    if best_market and worst_market:
+        health_subtitle = f"최강 {best_market[0]} {best_market[1]:+.2f}% · 최약 {worst_market[0]} {worst_market[1]:+.2f}%"
+
+    macro_combined = _combined_frame(macro_frames)
+    macro_label, macro_tone, macro_subtitle = _macro_risk_label(macro_stats, _avg_change(macro_combined))
+    leading_sector, lagging_sector = _sector_extremes(_combined_frame(stock_frames + [overview_frames.get("theme-proxies", pd.DataFrame())]))
+    candidate_symbol, candidate_detail, candidate_tone = _top_candidate_card(_combined_frame(stock_frames))
 
     cards = [
-        _pulse_card("시장 국면", _regime_display_label(regime), regime_note, "gold" if regime in {"Balanced", "Heated"} else "green" if regime == "Risk-On" else "red"),
-        _pulse_card("주식 강세 비율", _pct(stock_stats["breadth"]), f"강세 {stock_stats['up_count']} / 약세 {stock_stats['down_count']}", "green"),
-        _pulse_card("이동평균 근접도", f"{total_near:,}개", f"전체 {total_rows:,}개 중 이동평균선 근접", "blue"),
-        _pulse_card("RSI 온도", f"{_stat_number(_combined_frame(stock_frames + macro_frames), 'rsi')}", f"과열 {overbought}개 / 과매도 {oversold}개", "red" if overbought > oversold else "green"),
+        _pulse_card("주식 시장 체력", _pct(stock_stats["breadth"]), health_subtitle, "green" if _safe_pct_value(stock_stats.get("breadth")) >= 55 else "red" if _safe_pct_value(stock_stats.get("breadth")) <= 45 else "gold"),
+        _pulse_card("매크로 리스크", macro_label, macro_subtitle, macro_tone),
+        _pulse_card("섹터·테마 히트맵", leading_sector, f"약세 축: {lagging_sector}", "blue"),
+        _pulse_card("오늘의 핵심 후보", candidate_symbol, candidate_detail, candidate_tone),
     ]
     return "".join(cards)
 
@@ -1161,12 +1247,11 @@ def _build_home_preview_page(
     ]
     stock_stats = _market_stats(_combined_frame(stock_frames))
     macro_stats = _market_stats(_combined_frame(macro_frames))
-    regime, regime_note = _regime_label(stock_stats, macro_stats)
-    regime_display = _regime_display_label(regime)
     stock_breadth = float(stock_stats["breadth"]) if stock_stats.get("breadth") is not None else 0.0
     macro_breadth = float(macro_stats["breadth"]) if macro_stats.get("breadth") is not None else 0.0
     avg_change = _avg_change(combined)
     avg_change_text = f"{avg_change:+.2f}%" if avg_change is not None else "-"
+    overall_score, overall_label, overall_note, overall_tone = _overall_market_score(stock_stats, macro_stats, avg_change)
     market_cards = _preview_market_cards_html(pages, overview_frames, depth=depth)
     watchlists = [
         _watchlist_panel("강한 모멘텀", "추세 점수와 당일 등락이 함께 강한 후보", _watchlist_rows(combined, "momentum", depth=depth)),
@@ -1178,7 +1263,7 @@ def _build_home_preview_page(
     ]
     generated_at = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
     page_title = "Market Scanner Preview" if preview else "Market Scanner"
-    eyebrow_text = "시장 펄스 미리보기" if preview else "시장 펄스"
+    eyebrow_text = "종합 시장 점수 미리보기" if preview else "종합 시장 점수"
     nav_html = _site_nav("home", depth)
     preview_bar = (
         '<div class="preview-bar">'
@@ -1263,6 +1348,10 @@ def _build_home_preview_page(
     }}
     h1 {{ margin: 14px 0 12px; font-size: clamp(32px, 5vw, 58px); line-height: 1.05; }}
     .lead {{ margin: 0; max-width: 760px; color: #b9c8d8; font-size: 16px; line-height: 1.7; }}
+    .score-state {{ color: var(--muted); font-size: 24px; font-weight: 900; }}
+    .score-state.tone-green {{ color: var(--good); }}
+    .score-state.tone-red {{ color: var(--bad); }}
+    .score-state.tone-gold {{ color: var(--warn); }}
     .regime {{
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1363,12 +1452,12 @@ def _build_home_preview_page(
     <section class="hero-v2">
       <div class="hero-copy">
         <div class="eyebrow">{escape(eyebrow_text)}</div>
-        <h1>{escape(regime_display)}</h1>
-        <p class="lead">{escape(regime_note)} 주식 강세 비율은 {stock_breadth:.0f}%, 매크로 강세 비율은 {macro_breadth:.0f}%이며 전체 평균 등락률은 {escape(avg_change_text)}입니다.</p>
+        <h1>{overall_score}점 <span class="score-state tone-{escape(overall_tone)}">{escape(overall_label)}</span></h1>
+        <p class="lead">{escape(overall_note)} 주식 강세 비율은 {stock_breadth:.0f}%, 매크로 강세 비율은 {macro_breadth:.0f}%이며 전체 평균 등락률은 {escape(avg_change_text)}입니다.</p>
         <div class="regime">
-          <div><span>주식 강세 비율</span><strong>{escape(_pct(stock_stats["breadth"]))}</strong></div>
-          <div><span>매크로 강세 비율</span><strong>{escape(_pct(macro_stats["breadth"]))}</strong></div>
-          <div><span>평균 등락률</span><strong>{escape(avg_change_text)}</strong></div>
+          <div><span>주식 시장 체력</span><strong>{escape(_pct(stock_stats["breadth"]))}</strong></div>
+          <div><span>매크로 강도</span><strong>{escape(_pct(macro_stats["breadth"]))}</strong></div>
+          <div><span>전체 평균 등락</span><strong>{escape(avg_change_text)}</strong></div>
         </div>
       </div>
       <div class="pulse-grid">
