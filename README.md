@@ -22,6 +22,8 @@ python Search.py --market nasdaq100
 python Search.py --market sp500
 python Search.py --market kospi
 python Search.py --market kosdaq
+python Search.py --market kospi-all       # KOSPI 전체 유니버스
+python Search.py --market kosdaq-all      # KOSDAQ 전체 유니버스
 python Search.py --market global-indices
 python Search.py --market theme-proxies
 python Search.py --market commodities
@@ -53,6 +55,8 @@ python Search.py --market sp500 --setup-scheduler --time 08:30
 | us | `data/Data_YYYYMMDD.csv` | `analysis/Analysis_YYYYMMDD.md` | `reports/Report_YYYYMMDD.html` |
 | kospi | `data/Data_Kospi_YYYYMMDD.csv` | `analysis/Analysis_Kospi_YYYYMMDD.md` | `reports/Report_Kospi_YYYYMMDD.html` |
 | kosdaq | `data/Data_Kosdaq_YYYYMMDD.csv` | `analysis/Analysis_Kosdaq_YYYYMMDD.md` | `reports/Report_Kosdaq_YYYYMMDD.html` |
+| kospi-all | `data/Data_KospiAll_YYYYMMDD.csv` | `analysis/Analysis_KospiAll_YYYYMMDD.md` | `reports/Report_KospiAll_YYYYMMDD.html` |
+| kosdaq-all | `data/Data_KosdaqAll_YYYYMMDD.csv` | `analysis/Analysis_KosdaqAll_YYYYMMDD.md` | `reports/Report_KosdaqAll_YYYYMMDD.html` |
 | global-indices | `data/Data_GlobalIndices_YYYYMMDD.csv` | `analysis/Analysis_GlobalIndices_YYYYMMDD.md` | `reports/Report_GlobalIndices_YYYYMMDD.html` |
 | theme-proxies | `data/Data_ThemeProxies_YYYYMMDD.csv` | `analysis/Analysis_ThemeProxies_YYYYMMDD.md` | `reports/Report_ThemeProxies_YYYYMMDD.html` |
 | commodities | `data/Data_Commodities_YYYYMMDD.csv` | `analysis/Analysis_Commodities_YYYYMMDD.md` | `reports/Report_Commodities_YYYYMMDD.html` |

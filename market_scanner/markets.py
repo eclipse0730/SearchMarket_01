@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import json
 import re
+from contextlib import redirect_stdout
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
@@ -299,7 +300,8 @@ def _fetch_sp500_tickers() -> list[str]:
 def _fetch_fdr_listing(market: str):
     import FinanceDataReader as fdr
 
-    return fdr.StockListing(market)
+    with redirect_stdout(io.StringIO()):
+        return fdr.StockListing(market)
 
 
 def _fdr_market_meta(market: str, suffix: str, label: str) -> dict[str, StaticTickerMeta]:
@@ -345,12 +347,12 @@ def _kosdaq_metadata() -> dict[str, StaticTickerMeta]:
     return _merge_metadata(_fdr_market_meta("KOSDAQ", ".KQ", "KOSDAQ"), _kosdaq_static_meta())
 
 
-def _fetch_fdr_market(market: str, suffix: str, top_n: int, label: str) -> list[str]:
+def _fetch_fdr_market(market: str, suffix: str, top_n: int | None, label: str) -> list[str]:
     try:
         import pandas as pd
         df = _fetch_fdr_listing(market)
         df["Marcap"] = pd.to_numeric(df["Marcap"], errors="coerce")
-        top = df.nlargest(top_n, "Marcap")
+        top = df.sort_values("Marcap", ascending=False) if top_n is None else df.nlargest(top_n, "Marcap")
         tickers = [
             f"{str(code).strip().zfill(6) if str(code).strip().isdigit() else str(code).strip()}{suffix}"
             for code in top["Code"].tolist()
@@ -368,6 +370,14 @@ def _fetch_krx_kospi200() -> list[str]:
 
 def _fetch_krx_kosdaq150() -> list[str]:
     return _fetch_fdr_market("KOSDAQ", ".KQ", 150, "KOSDAQ150")
+
+
+def _fetch_krx_kospi_all() -> list[str]:
+    return _fetch_fdr_market("KOSPI", ".KS", None, "KOSPI all")
+
+
+def _fetch_krx_kosdaq_all() -> list[str]:
+    return _fetch_fdr_market("KOSDAQ", ".KQ", None, "KOSDAQ all")
 
 
 def _load_sp500_members_cache() -> list[str]:
@@ -489,6 +499,24 @@ def _kosdaq_universe() -> list[str]:
             static.append(t)
             seen.add(t)
     return static
+
+
+def _merge_static_with_live(static: list[str], live: list[str]) -> list[str]:
+    merged = list(static)
+    seen = set(merged)
+    for ticker in live:
+        if ticker not in seen:
+            merged.append(ticker)
+            seen.add(ticker)
+    return merged
+
+
+def _kospi_all_universe() -> list[str]:
+    return _merge_static_with_live(list(_kospi_static_meta().keys()), _fetch_krx_kospi_all())
+
+
+def _kosdaq_all_universe() -> list[str]:
+    return _merge_static_with_live(list(_kosdaq_static_meta().keys()), _fetch_krx_kosdaq_all())
 
 
 def _static_symbols(meta: dict[str, StaticTickerMeta]) -> list[str]:
@@ -744,6 +772,32 @@ MARKETS: dict[str, MarketDefinition] = {
         display_symbol_builder=_display_strip_kr,
         sector_aliases=_SECTOR_KO,
         notes="Static JSON + KOSDAQ150 (KRX API, live).",
+    ),
+    "kospi-all": MarketDefinition(
+        key="kospi-all",
+        label="KOSPI All Stocks",
+        output_prefix="kospi-all",
+        currency_symbol="KRW ",
+        price_decimals=0,
+        universe_loader=_kospi_all_universe,
+        metadata_loader=_kospi_metadata,
+        quote_url_builder=_quote_url_investing_detail,
+        display_symbol_builder=_display_strip_kr,
+        sector_aliases=_SECTOR_KO,
+        notes="Full KOSPI universe from FDR/KRX when available, with static metadata fallback.",
+    ),
+    "kosdaq-all": MarketDefinition(
+        key="kosdaq-all",
+        label="KOSDAQ All Stocks",
+        output_prefix="kosdaq-all",
+        currency_symbol="KRW ",
+        price_decimals=0,
+        universe_loader=_kosdaq_all_universe,
+        metadata_loader=_kosdaq_metadata,
+        quote_url_builder=_quote_url_investing_detail,
+        display_symbol_builder=_display_strip_kr,
+        sector_aliases=_SECTOR_KO,
+        notes="Full KOSDAQ universe from FDR/KRX when available, with static metadata fallback.",
     ),
     "global-indices": MarketDefinition(
         key="global-indices",
