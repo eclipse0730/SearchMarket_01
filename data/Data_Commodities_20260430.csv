@@ -1,0 +1,12 @@
+﻿symbol,display_symbol,name_en,name_local,sector,description,price,change_pct,rsi,high_52w,low_52w,from_high_pct,volume_ratio,trailing_pe,target_price,upside_pct,trend,trend_score,ma_60,diff_60,near_60,ma_120,diff_120,near_120,ma_240,diff_240,near_240,composite_score,near_count
+NG=F,NG,Natural Gas Futures,천연가스,에너지,Natural gas energy benchmark.,2.63,2.73,42.3,7.46,2.52,-64.7,0.01,,,,Strong Downtrend,1,2.94,-10.54,False,3.65,-27.95,False,3.46,-23.99,False,10.0,0
+CL=F,CL,Crude Oil Futures,WTI 원유,에너지,WTI crude oil energy benchmark.,107.02,7.09,61.7,112.95,55.27,-5.3,0.02,,,,Strong Uptrend,5,85.33,25.42,False,72.24,48.15,False,68.17,56.99,False,45.0,0
+ZC=F,ZC,Corn Futures,옥수수 선물,농산물,Agriculture grain proxy.,475.75,2.26,73.3,475.75,371.5,0.0,0.01,,,,Strong Uptrend,5,445.43,6.81,False,439.79,8.18,False,427.56,11.27,False,15.0,0
+HG=F,HG,Copper Futures,구리 선물,산업금속,Industrial metals proxy.,5.95,0.68,54.0,6.18,4.33,-3.7,0.66,,,,Strong Uptrend,5,5.8,2.59,False,5.63,5.68,False,5.25,13.33,False,45.0,0
+BZ=F,BZ,Brent Crude Oil Futures,브렌트 원유,에너지,Brent crude oil international benchmark.,110.57,-0.62,59.8,118.35,58.92,-6.6,0.03,,,,Strong Uptrend,5,91.23,21.2,False,77.27,43.1,False,72.24,53.06,False,45.0,0
+SI=F,SI,Silver Futures,은 선물,귀금속,Precious metals proxy.,72.49,-0.98,42.3,115.08,31.99,-37.0,6.53,,,,Neutral,3,78.52,-7.68,False,74.0,-2.04,False,57.11,26.93,False,26.0,0
+PL=F,PL,Platinum Futures,백금 선물,귀금속,Platinum precious metals proxy.,1904.2,-1.96,39.1,2852.4,957.5,-33.2,11.76,,,,Neutral,3,2068.16,-7.93,False,2023.17,-5.88,False,1703.42,11.79,False,26.0,0
+GC=F,GC,Gold Futures,금 선물,귀금속,Precious metals proxy.,4575.1,-0.36,39.9,5318.4,3181.4,-14.0,2.88,,,,Neutral,3,4866.62,-5.99,False,4630.77,-1.2,True,4089.8,11.87,False,41.0,1
+KC=F,KC,Coffee Futures,커피 선물,농산물,Soft commodities proxy.,290.7,-5.12,44.1,432.35,280.05,-32.8,,,,,Strong Downtrend,0,297.66,-2.34,False,337.78,-13.94,False,345.16,-15.78,False,8.0,0
+ZW=F,ZW,Wheat Futures,밀 선물,농산물,Agriculture grain proxy.,649.5,0.08,70.9,649.5,495.0,0.0,0.03,,,,Strong Uptrend,5,583.42,11.33,False,554.14,17.21,False,539.2,20.46,False,15.0,0
+SB=F,SB,Sugar Futures,설탕 선물,농산물,Soft commodities proxy.,14.75,4.54,59.4,18.22,13.31,-19.0,,,,,Strong Downtrend,1,14.37,2.64,False,14.57,1.24,True,15.35,-3.91,False,31.0,1
