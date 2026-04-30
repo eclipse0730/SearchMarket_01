@@ -2789,6 +2789,16 @@
     "source": "static",
     "updated_at": "2026-04-29"
   },
+  "252990.KQ": {
+    "description": "샘씨엔에스 (KOSDAQ)",
+    "display_symbol": "252990",
+    "market_key": "kosdaq",
+    "name_en": "샘씨엔에스",
+    "name_local": "샘씨엔에스",
+    "sector": "Unknown",
+    "source": "csv",
+    "updated_at": "2026-04-30"
+  },
   "253450.KQ": {
     "description": "Studio Dragon Corporation, a drama studio, produces and provides drama contents worldwide. The company was founded in 20",
     "display_symbol": "253450",
@@ -3169,6 +3179,16 @@
     "source": "static",
     "updated_at": "2026-04-29"
   },
+  "356860.KQ": {
+    "description": "티엘비 (KOSDAQ)",
+    "display_symbol": "356860",
+    "market_key": "kosdaq",
+    "name_en": "티엘비",
+    "name_local": "티엘비",
+    "sector": "Unknown",
+    "source": "csv",
+    "updated_at": "2026-04-30"
+  },
   "357780.KQ": {
     "description": "반도체·디스플레이용 화학 소재, 식각액·CMP슬러리",
     "display_symbol": "357780",
@@ -3297,7 +3317,7 @@
     "name_local": "인벤티지랩",
     "sector": "Unknown",
     "source": "csv",
-    "updated_at": "2026-04-29"
+    "updated_at": "2026-04-30"
   },
   "397030.KQ": {
     "description": "AprilBio Co., Ltd. develops long-acting type biobetter and antibody biologics. The company develops antibody drugs, doub",
