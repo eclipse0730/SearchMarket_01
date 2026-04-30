@@ -8,3 +8,4 @@ refactor_outputs/
 site/
 archive/
 market_scanner/assets/.yfinance_cache/
+.postgres-data/

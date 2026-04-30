@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
+from contextlib import redirect_stdout
+from datetime import datetime, timedelta
 from functools import lru_cache
 from html import escape
+import io
 import json
 from pathlib import Path
 import time
@@ -145,7 +147,7 @@ def enrich_metadata_frame(frame: pd.DataFrame, market: MarketDefinition) -> pd.D
             if _is_placeholder_text(row.get("description")) and not _is_placeholder_text(meta.description):
                 enriched.at[index, "description"] = meta.description
 
-        if market.key in {"kospi", "kosdaq"}:
+        if market.key in {"kospi", "kosdaq", "kospi-all", "kosdaq-all"}:
             enriched.at[index, "display_symbol"] = _display_symbol_name(row, symbol)
             local_name = enriched.at[index, "name_local"]
             if _is_placeholder_name(local_name, symbol) or _looks_like_english_company_name(local_name, symbol):
@@ -191,8 +193,73 @@ def _candle_type(
     return "Bullish" if body > 0 else "Bearish"
 
 
-def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) -> ScanRecord | None:
-    min_history = max(settings.ma_periods) + settings.min_history_buffer
+def _is_korea_market(market: MarketDefinition) -> bool:
+    return market.key in {"kospi", "kosdaq", "kospi-all", "kosdaq-all"}
+
+
+def _history_start_date(period: str) -> str:
+    today = datetime.today().date()
+    text = str(period or "").strip().lower()
+    try:
+        if text.endswith("y"):
+            return (today - timedelta(days=int(text[:-1]) * 365 + 30)).isoformat()
+        if text.endswith("mo"):
+            return (today - timedelta(days=int(text[:-2]) * 31 + 10)).isoformat()
+        if text.endswith("d"):
+            return (today - timedelta(days=int(text[:-1]) + 10)).isoformat()
+    except ValueError:
+        pass
+    return (today - timedelta(days=760)).isoformat()
+
+
+def _normalize_history_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    if frame.empty:
+        return pd.DataFrame()
+    normalized = frame.rename(
+        columns={
+            "open": "Open",
+            "high": "High",
+            "low": "Low",
+            "close": "Close",
+            "volume": "Volume",
+        }
+    ).copy()
+    required = ["Open", "High", "Low", "Close", "Volume"]
+    if any(column not in normalized.columns for column in required):
+        return pd.DataFrame()
+    normalized = normalized[required].apply(pd.to_numeric, errors="coerce")
+    normalized = normalized.dropna(subset=["Open", "High", "Low", "Close"])
+    return normalized.sort_index()
+
+
+def _korea_symbol_code(symbol: str) -> str:
+    return symbol.replace(".KS", "").replace(".KQ", "").zfill(6)
+
+
+def _fetch_fdr_history(symbol: str, settings: ScanSettings) -> pd.DataFrame:
+    try:
+        import FinanceDataReader as fdr
+    except Exception:
+        return pd.DataFrame()
+
+    code = _korea_symbol_code(symbol)
+    start = _history_start_date(settings.history_period)
+    end = datetime.today().date().isoformat()
+    for attempt in range(2):
+        if attempt:
+            time.sleep(1)
+        try:
+            with redirect_stdout(io.StringIO()):
+                hist = fdr.DataReader(code, start, end)
+        except Exception:
+            continue
+        hist = _normalize_history_frame(hist)
+        if not hist.empty:
+            return hist
+    return pd.DataFrame()
+
+
+def _fetch_yfinance_history(symbol: str, settings: ScanSettings) -> tuple[pd.DataFrame, yf.Ticker | None]:
     hist = pd.DataFrame()
     ticker: yf.Ticker | None = None
     for attempt in range(3):
@@ -200,12 +267,34 @@ def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) 
             time.sleep(attempt * 2)
         try:
             ticker = yf.Ticker(symbol)
-            hist = ticker.history(period=settings.history_period)
+            hist = _normalize_history_frame(ticker.history(period=settings.history_period))
         except Exception:
             continue
-        if not hist.empty and len(hist) >= min_history:
+        if not hist.empty:
             break
-    else:
+    return hist, ticker
+
+
+def _fetch_price_history(
+    symbol: str,
+    market: MarketDefinition,
+    settings: ScanSettings,
+    min_history: int,
+) -> tuple[pd.DataFrame, yf.Ticker | None]:
+    if _is_korea_market(market):
+        hist = _fetch_fdr_history(symbol, settings)
+        if not hist.empty and len(hist) >= min_history:
+            return hist, None
+    hist, ticker = _fetch_yfinance_history(symbol, settings)
+    if not hist.empty and len(hist) >= min_history:
+        return hist, ticker
+    return pd.DataFrame(), ticker
+
+
+def fetch_record(symbol: str, market: MarketDefinition, settings: ScanSettings) -> ScanRecord | None:
+    min_history = max(settings.ma_periods) + settings.min_history_buffer
+    hist, ticker = _fetch_price_history(symbol, market, settings, min_history)
+    if hist.empty:
         return None
 
     open_series = hist["Open"]

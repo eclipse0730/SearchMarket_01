@@ -18,7 +18,7 @@ from market_scanner.compat import (
 from market_scanner.markets import MARKETS
 from market_scanner.models import ScanSettings
 
-_TRANSLATABLE = {"us", "nasdaq100", "sp500"}
+_TRANSLATABLE = {"us", "us-all", "nasdaq100", "sp500"}
 
 
 def main() -> None:
@@ -30,6 +30,7 @@ def main() -> None:
             "Examples:\n"
             "  python Search.py --market nasdaq100\n"
             "  python Search.py --market sp500\n"
+            "  python Search.py --market us-all --stage scan --limit 20\n"
             "  python Search.py --market kospi\n"
             "  python Search.py --market kosdaq\n"
             "  python Search.py --market nasdaq100 --stage scan --force\n"

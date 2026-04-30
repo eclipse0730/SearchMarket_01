@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import csv
 import io
 import json
 import re
 from contextlib import redirect_stdout
 from datetime import datetime, timezone
 from functools import lru_cache
+from html import unescape
 from pathlib import Path
 from urllib.parse import quote_plus, urljoin, urlparse, urlunparse
 
@@ -24,6 +26,14 @@ _SP500_CACHE_PATH = ASSET_DIR / "sp500_members_cache.json"
 _SP500_MANUAL_PATH = ASSET_DIR / "sp500_members_manual.json"
 _SP500_SOURCE_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
 _SP500_STALE_DAYS = 45
+_US_LISTED_CACHE_PATH = ASSET_DIR / "us_listed_symbols_cache.json"
+_US_LISTED_SOURCE_URLS = (
+    "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
+    "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
+)
+_US_LISTED_STALE_DAYS = 14
+_NAVER_MARKET_SUM_URL = "https://finance.naver.com/sise/sise_market_sum.naver"
+_NAVER_MARKET_SUM_MAX_PAGES = 90
 _INVESTING_SEARCH_HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; stock-scanner/1.0)",
     "Accept-Language": "en-US,en;q=0.9",
@@ -296,12 +306,193 @@ def _fetch_sp500_tickers() -> list[str]:
         return _apply_sp500_manual_overrides(_load_sp500_members_cache())
 
 
+def _normalize_us_listed_symbol(value: object) -> str | None:
+    symbol = str(value or "").strip().upper().replace(".", "-")
+    if not symbol or symbol in {"N/A", "NA"}:
+        return None
+    if not re.fullmatch(r"[A-Z0-9][A-Z0-9.-]*", symbol):
+        return None
+    return symbol
+
+
+def _is_non_common_us_security(name: object) -> bool:
+    text = str(name or "").casefold()
+    if not text:
+        return False
+    non_common_patterns = (
+        r"\bwarrants?\b",
+        r"\brights?\b",
+        r"\bunits?\b",
+        r"\bpreferred\b",
+        r"\bpreference\b",
+        r"\bdepositary shares?\b",
+        r"\bdepository shares?\b",
+        r"\bnotes?\b",
+        r"\bbonds?\b",
+        r"\bdebentures?\b",
+    )
+    return any(re.search(pattern, text) for pattern in non_common_patterns)
+
+
+def _parse_us_listed_symbol_dir(text: str) -> list[str]:
+    lines = [
+        line
+        for line in text.splitlines()
+        if "|" in line and not line.startswith("File Creation Time")
+    ]
+    reader = csv.DictReader(lines, delimiter="|")
+    symbols: list[str] = []
+    for row in reader:
+        if str(row.get("Test Issue") or "").strip().upper() == "Y":
+            continue
+        if str(row.get("ETF") or "").strip().upper() == "Y":
+            continue
+        if _is_non_common_us_security(row.get("Security Name")):
+            continue
+        symbol = _normalize_us_listed_symbol(row.get("Symbol") or row.get("ACT Symbol"))
+        if symbol:
+            symbols.append(symbol)
+    return symbols
+
+
+def _load_us_listed_symbols_cache() -> list[str]:
+    if not _US_LISTED_CACHE_PATH.exists():
+        return []
+    try:
+        payload = json.loads(_US_LISTED_CACHE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    if isinstance(payload, list):
+        return [str(item) for item in payload if item]
+    if not isinstance(payload, dict):
+        return []
+
+    updated_at = str(payload.get("updated_at") or "")
+    if updated_at and _is_iso_cache_stale(updated_at, _US_LISTED_STALE_DAYS):
+        print(f"  US listed symbols cache is older than {_US_LISTED_STALE_DAYS} days: {updated_at}")
+
+    tickers = payload.get("tickers")
+    if not isinstance(tickers, list):
+        return []
+    return [str(item) for item in tickers if item]
+
+
+def _save_us_listed_symbols_cache(tickers: list[str]) -> None:
+    if not tickers:
+        return
+    unique = sorted({str(ticker) for ticker in tickers if ticker})
+    payload = {
+        "source": list(_US_LISTED_SOURCE_URLS),
+        "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "count": len(unique),
+        "tickers": unique,
+    }
+    _US_LISTED_CACHE_PATH.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _fetch_us_listed_symbols() -> list[str]:
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; stock-scanner/1.0)"}
+    symbols: list[str] = []
+    errors: list[str] = []
+    for url in _US_LISTED_SOURCE_URLS:
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            response.raise_for_status()
+        except Exception as exc:
+            errors.append(f"{url}: {exc}")
+            continue
+        symbols.extend(_parse_us_listed_symbol_dir(response.text))
+
+    unique = sorted({symbol for symbol in symbols if symbol})
+    if unique:
+        _save_us_listed_symbols_cache(unique)
+        print(f"  US all stocks: loaded {len(unique)} listed symbols")
+        return unique
+
+    if errors:
+        print(f"  US all stocks load failed: {'; '.join(errors)}")
+    return _load_us_listed_symbols_cache()
+
+
 @lru_cache(maxsize=None)
 def _fetch_fdr_listing(market: str):
     import FinanceDataReader as fdr
 
     with redirect_stdout(io.StringIO()):
         return fdr.StockListing(market)
+
+
+def _clean_html_text(value: str) -> str:
+    return re.sub(r"\s+", " ", unescape(value)).strip()
+
+
+def _naver_market_label(sosok: str) -> str:
+    return "KOSPI" if sosok == "0" else "KOSDAQ" if sosok == "1" else f"Naver market {sosok}"
+
+
+@lru_cache(maxsize=None)
+def _fetch_naver_market_sum_rows(sosok: str) -> tuple[tuple[str, str], ...]:
+    label = _naver_market_label(sosok)
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; stock-scanner/1.0)"}
+    rows: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for page in range(1, _NAVER_MARKET_SUM_MAX_PAGES + 1):
+        try:
+            response = requests.get(
+                _NAVER_MARKET_SUM_URL,
+                params={"sosok": sosok, "page": page},
+                headers=headers,
+                timeout=12,
+            )
+            response.raise_for_status()
+        except Exception as exc:
+            if page == 1:
+                print(f"  {label} Naver listing load failed: {exc}")
+            break
+        html = response.content.decode(response.encoding or "euc-kr", errors="ignore")
+        matches = re.findall(
+            r'href="/item/main\.naver\?code=(\d{6})"[^>]*>(.*?)</a>',
+            html,
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+        added = 0
+        for code, raw_name in matches:
+            if code in seen:
+                continue
+            name = _clean_html_text(raw_name)
+            if not name:
+                continue
+            rows.append((code, name))
+            seen.add(code)
+            added += 1
+        if added == 0:
+            break
+    if rows:
+        print(f"  {label} (Naver): loaded {len(rows)} tickers")
+    return tuple(rows)
+
+
+def _naver_market_symbols(sosok: str, suffix: str, label: str) -> list[str]:
+    rows = _fetch_naver_market_sum_rows(sosok)
+    if rows:
+        print(f"  {label} (Naver fallback): using {len(rows)} tickers")
+    return [f"{code}{suffix}" for code, _ in rows]
+
+
+def _naver_market_meta(sosok: str, suffix: str, label: str) -> dict[str, StaticTickerMeta]:
+    metadata: dict[str, StaticTickerMeta] = {}
+    for code, name in _fetch_naver_market_sum_rows(sosok):
+        symbol = f"{code}{suffix}"
+        metadata[symbol] = StaticTickerMeta(
+            name_en=name,
+            name_local=name,
+            sector="Unknown",
+            description=f"{name} ({label})",
+        )
+    return metadata
 
 
 def _fdr_market_meta(market: str, suffix: str, label: str) -> dict[str, StaticTickerMeta]:
@@ -339,12 +530,20 @@ def _merge_metadata(*sources: dict[str, StaticTickerMeta]) -> dict[str, StaticTi
 
 @lru_cache(maxsize=None)
 def _kospi_metadata() -> dict[str, StaticTickerMeta]:
-    return _merge_metadata(_fdr_market_meta("KOSPI", ".KS", "KOSPI"), _kospi_static_meta())
+    return _merge_metadata(
+        _naver_market_meta("0", ".KS", "KOSPI"),
+        _fdr_market_meta("KOSPI", ".KS", "KOSPI"),
+        _kospi_static_meta(),
+    )
 
 
 @lru_cache(maxsize=None)
 def _kosdaq_metadata() -> dict[str, StaticTickerMeta]:
-    return _merge_metadata(_fdr_market_meta("KOSDAQ", ".KQ", "KOSDAQ"), _kosdaq_static_meta())
+    return _merge_metadata(
+        _naver_market_meta("1", ".KQ", "KOSDAQ"),
+        _fdr_market_meta("KOSDAQ", ".KQ", "KOSDAQ"),
+        _kosdaq_static_meta(),
+    )
 
 
 def _fetch_fdr_market(market: str, suffix: str, top_n: int | None, label: str) -> list[str]:
@@ -360,7 +559,7 @@ def _fetch_fdr_market(market: str, suffix: str, top_n: int | None, label: str) -
         print(f"  {label} (FDR): loaded {len(tickers)} tickers")
         return tickers
     except Exception as exc:
-        print(f"  {label} FDR load failed ({type(exc).__name__}) - using static list only")
+        print(f"  {label} FDR load failed ({type(exc).__name__}) - using fallback list")
         return []
 
 
@@ -373,11 +572,11 @@ def _fetch_krx_kosdaq150() -> list[str]:
 
 
 def _fetch_krx_kospi_all() -> list[str]:
-    return _fetch_fdr_market("KOSPI", ".KS", None, "KOSPI all")
+    return _fetch_fdr_market("KOSPI", ".KS", None, "KOSPI all") or _naver_market_symbols("0", ".KS", "KOSPI all")
 
 
 def _fetch_krx_kosdaq_all() -> list[str]:
-    return _fetch_fdr_market("KOSDAQ", ".KQ", None, "KOSDAQ all")
+    return _fetch_fdr_market("KOSDAQ", ".KQ", None, "KOSDAQ all") or _naver_market_symbols("1", ".KQ", "KOSDAQ all")
 
 
 def _load_sp500_members_cache() -> list[str]:
@@ -402,7 +601,7 @@ def _load_sp500_members_cache() -> list[str]:
     return [str(item) for item in tickers if item]
 
 
-def _is_sp500_cache_stale(updated_at: str) -> bool:
+def _is_iso_cache_stale(updated_at: str, stale_days: int) -> bool:
     try:
         cached_at = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
     except ValueError:
@@ -410,7 +609,11 @@ def _is_sp500_cache_stale(updated_at: str) -> bool:
     if cached_at.tzinfo is None:
         cached_at = cached_at.replace(tzinfo=timezone.utc)
     age = datetime.now(timezone.utc) - cached_at
-    return age.days > _SP500_STALE_DAYS
+    return age.days > stale_days
+
+
+def _is_sp500_cache_stale(updated_at: str) -> bool:
+    return _is_iso_cache_stale(updated_at, _SP500_STALE_DAYS)
 
 
 def _save_sp500_members_cache(tickers: list[str], source_url: str) -> None:
@@ -477,6 +680,11 @@ def _sp500_universe() -> list[str]:
     return _fetch_sp500_tickers()
 
 
+def _us_all_universe() -> list[str]:
+    curated = _merge_static_with_live(list(_nasdaq100_static_meta().keys()), _fetch_sp500_tickers())
+    return _merge_static_with_live(curated, _fetch_us_listed_symbols())
+
+
 def _kospi_universe() -> list[str]:
     static = list(_kospi_static_meta().keys())
     if len(static) >= 200:
@@ -512,11 +720,15 @@ def _merge_static_with_live(static: list[str], live: list[str]) -> list[str]:
 
 
 def _kospi_all_universe() -> list[str]:
-    return _merge_static_with_live(list(_kospi_static_meta().keys()), _fetch_krx_kospi_all())
+    live = _fetch_krx_kospi_all()
+    static = list(_kospi_static_meta().keys())
+    return _merge_static_with_live(live, static) if live else static
 
 
 def _kosdaq_all_universe() -> list[str]:
-    return _merge_static_with_live(list(_kosdaq_static_meta().keys()), _fetch_krx_kosdaq_all())
+    live = _fetch_krx_kosdaq_all()
+    static = list(_kosdaq_static_meta().keys())
+    return _merge_static_with_live(live, static) if live else static
 
 
 def _static_symbols(meta: dict[str, StaticTickerMeta]) -> list[str]:
@@ -746,6 +958,18 @@ MARKETS: dict[str, MarketDefinition] = {
         quote_url_builder=_quote_url_investing_detail,
         sector_aliases=_SECTOR_KO,
         notes="Standalone S&P 500 scan based on Wikipedia live members with cache fallback.",
+    ),
+    "us-all": MarketDefinition(
+        key="us-all",
+        label="US All Stocks",
+        output_prefix="us-all",
+        currency_symbol="$",
+        price_decimals=2,
+        universe_loader=_us_all_universe,
+        metadata_loader=_us_static_meta,
+        quote_url_builder=_quote_url_investing_detail,
+        sector_aliases=_SECTOR_KO,
+        notes="Optional full US listed-stock scan from NASDAQ Trader symbol directories with cache fallback.",
     ),
     "kospi": MarketDefinition(
         key="kospi",

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: searchmarket-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: searchmarket
+      POSTGRES_USER: searchmarket
+      POSTGRES_PASSWORD: searchmarket
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U searchmarket -d searchmarket"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+

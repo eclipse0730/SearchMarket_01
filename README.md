@@ -20,6 +20,7 @@ python Search.py
 # 시장 선택
 python Search.py --market nasdaq100
 python Search.py --market sp500
+python Search.py --market us-all          # 미국 전체 상장 보통주 유니버스
 python Search.py --market kospi
 python Search.py --market kosdaq
 python Search.py --market kospi-all       # KOSPI 전체 유니버스
@@ -52,6 +53,7 @@ python Search.py --market sp500 --setup-scheduler --time 08:30
 |---|---|---|---|
 | nasdaq100 | `data/Data_Nasdaq100_YYYYMMDD.csv` | `analysis/Analysis_Nasdaq100_YYYYMMDD.md` | `reports/Report_Nasdaq100_YYYYMMDD.html` |
 | sp500 | `data/Data_Sp500_YYYYMMDD.csv` | `analysis/Analysis_Sp500_YYYYMMDD.md` | `reports/Report_Sp500_YYYYMMDD.html` |
+| us-all | `data/Data_UsAll_YYYYMMDD.csv` | `analysis/Analysis_UsAll_YYYYMMDD.md` | `reports/Report_UsAll_YYYYMMDD.html` |
 | us | `data/Data_YYYYMMDD.csv` | `analysis/Analysis_YYYYMMDD.md` | `reports/Report_YYYYMMDD.html` |
 | kospi | `data/Data_Kospi_YYYYMMDD.csv` | `analysis/Analysis_Kospi_YYYYMMDD.md` | `reports/Report_Kospi_YYYYMMDD.html` |
 | kosdaq | `data/Data_Kosdaq_YYYYMMDD.csv` | `analysis/Analysis_Kosdaq_YYYYMMDD.md` | `reports/Report_Kosdaq_YYYYMMDD.html` |
@@ -74,6 +76,20 @@ python -m market_scanner.site_builder --no-open
 ```
 
 메인페이지는 preview-home v2 디자인을 반영해 `site/index.html`에 생성됩니다. `site/preview-home/index.html`은 같은 디자인을 확인하는 보조 미리보기 페이지입니다.
+
+## PostgreSQL 저장소
+
+CSV는 호환 산출물로 유지하되, 전체 시장 스캔 이력은 PostgreSQL에 저장할 수 있습니다.
+
+```bash
+docker compose up -d postgres
+python -m market_scanner.db init
+python Search.py --market kospi --stage scan --force --date 20260430
+python -m market_scanner.db load-csv --market kospi --date 20260430
+python -m market_scanner.db counts
+```
+
+기본 접속 문자열은 `.env.example`의 `DATABASE_URL`입니다.
 
 메인 페이지는 최신 CSV/리포트 데이터를 기반으로 다음 통합 지표를 보여줍니다.
 
@@ -125,6 +141,7 @@ market_scanner/
     kospi_static_meta.json
     kosdaq_static_meta.json
     sp500_members_cache.json
+    us_listed_symbols_cache.json
     global_indices_meta.json
     theme_proxies_meta.json
     commodities_meta.json
@@ -135,7 +152,7 @@ market_scanner/
 
 ## Metadata Notes
 
-KOSPI/KOSDAQ 종목명과 섹터는 정적 메타데이터와 FinanceDataReader 한국 종목명을 우선 사용하고, 동적 편입 종목은 스캔 단계에서 yfinance `Ticker.info`도 함께 사용합니다. 이미 생성된 CSV에 티커 문자열이나 `Unknown`이 남아 있어도 사이트 렌더링 단계에서 가능한 범위의 표시값을 보정합니다. 한국 시장 화면은 한글 종목명을 우선 표시하고, 한글명을 확보하지 못한 경우 영어 회사명 대신 종목코드를 표시합니다.
+KOSPI/KOSDAQ 종목명과 섹터는 정적 메타데이터, FinanceDataReader 한국 종목명, 네이버 시가총액 목록을 우선 사용합니다. 한국 시장의 가격 히스토리는 FinanceDataReader를 먼저 사용하고, 실패하거나 히스토리가 부족하면 yfinance로 fallback합니다. 이미 생성된 CSV에 티커 문자열이나 `Unknown`이 남아 있어도 사이트 렌더링 단계에서 가능한 범위의 표시값을 보정합니다. 한국 시장 화면은 한글 종목명을 우선 표시하고, 한글명을 확보하지 못한 경우 영어 회사명 대신 종목코드를 표시합니다.
 
 `market_scanner/assets/instruments.json` is the shared instrument master for all markets. Fixed metadata such as `symbol`, `display_symbol`, `name_en`, `name_local`, `sector`, and `description` is read from this file first, while `Data_*.csv` remains the daily scan output. Scan runs append newly observed metadata to `instruments.json`, but `static`/`manual` records are not overwritten by automatic scan values.
 
@@ -143,7 +160,7 @@ KOSPI metadata is maintained against the KOSPI 200 component set. When the stati
 
 ## US Market Split
 
-`nasdaq100` and `sp500` are standalone scan markets. New US scans write `data/Data_Nasdaq100_YYYYMMDD.csv` and `data/Data_Sp500_YYYYMMDD.csv` instead of relying on the legacy combined `us` CSV. The `us` market remains available for backward compatibility, and the site builder can still derive NASDAQ 100, S&P 500, and Dow 30 pages from an old combined US CSV when standalone files are missing.
+`nasdaq100` and `sp500` are standalone scan markets. New US scans write `data/Data_Nasdaq100_YYYYMMDD.csv` and `data/Data_Sp500_YYYYMMDD.csv` instead of relying on the legacy combined `us` CSV. `us-all` is an optional broad US listed-stock scan using NASDAQ Trader symbol directories with cache/fallback behavior. The `us` market remains available for backward compatibility, and the site builder can still derive NASDAQ 100, S&P 500, and Dow 30 pages from an old combined US CSV when standalone files are missing.
 
 ## GitHub Actions
 

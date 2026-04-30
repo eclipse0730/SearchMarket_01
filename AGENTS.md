@@ -22,7 +22,7 @@
 
 네트워크가 필요한 명령은 실행 환경에 따라 실패할 수 있습니다.
 
-- `Search.py --stage scan`: yfinance, Wikipedia, FinanceDataReader, Investing 검색 요청을 사용할 수 있습니다.
+- `Search.py --stage scan`: yfinance, Wikipedia, FinanceDataReader, Naver Finance, Investing 검색 요청을 사용할 수 있습니다.
 - `Search.py --stage translate`: deep-translator/GoogleTranslator 요청을 사용할 수 있습니다.
 - `Search.py --stage news`: 최신 CSV 기반으로 yfinance `Ticker.news` 요청을 사용해 `market_scanner/assets/news_cache.json`을 갱신합니다. 실행 시간과 요청량 때문에 `all`에는 포함하지 않습니다.
 - `python -m market_scanner.site_builder`: 로컬 파일 기반 사이트 빌드입니다. 로컬 실행은 빌드 후 기본 브라우저로 `site/index.html`을 열며, `--no-open`으로 자동 열기를 끌 수 있습니다. S&P 500 파생 페이지 생성 시 유니버스 로더가 네트워크/캐시를 사용할 수 있습니다.
@@ -71,6 +71,7 @@
 - `market_scanner/assets/investing_url_cache.json`
 - `market_scanner/assets/instruments.json`은 공통 종목 마스터입니다. 고정 메타데이터를 누적하지만 자동 스캔값이 `static`/`manual` 출처 레코드를 덮어쓰지 않게 관리합니다.
 - `market_scanner/assets/sp500_members_cache.json`
+- `market_scanner/assets/us_listed_symbols_cache.json`
 - `market_scanner/assets/.yfinance_cache/`는 로컬 yfinance SQLite 캐시이며 Git 추적 대상이 아닙니다.
 
 주의:
@@ -96,7 +97,7 @@
 - 상세페이지 헤더는 제목 아래 기준일/행 수와 KST 기준 갱신시간을 표시함
 - 모든 시장의 Investing 링크는 한국 사용자 UX를 위해 `kr.investing.com` 도메인으로 출력함
 - KOSPI/KOSDAQ 상세페이지 링크도 NASDAQ 100과 같이 Investing 상세 URL 캐시를 우선 사용하고, 실패 시 검색 링크로 fallback함
-- KOSPI/KOSDAQ 동적 편입 종목은 스캔 시 yfinance `Ticker.info`와 FinanceDataReader 한국 종목명으로 이름/섹터를 보강하고, 렌더링 시 정적/FDR 메타데이터로 placeholder 이름/섹터를 보정함. 한국 시장 화면은 한글 종목명 우선이며, 한글명을 확보하지 못하면 영어 회사명 대신 종목코드를 표시함
+- KOSPI/KOSDAQ 계열 가격 히스토리는 스캔 시 FinanceDataReader를 우선 사용하고, 실패 또는 히스토리 부족 시 yfinance로 fallback함. 한국 전체 유니버스는 FDR/KRX listing 실패 시 Naver Finance 시가총액 목록으로 보강함. 한국 종목명/섹터는 FinanceDataReader, Naver Finance, 정적 메타데이터로 보강하고, 렌더링 시 placeholder 이름/섹터를 보정함. 한국 시장 화면은 한글 종목명 우선이며, 한글명을 확보하지 못하면 영어 회사명 대신 종목코드를 표시함
 - 모든 시장의 고정 종목 메타데이터는 `market_scanner/assets/instruments.json`을 우선 사용하고, 기존 시장별 `*_static_meta.json`은 호환 fallback으로 유지함
 - 상세페이지 종목 리스트의 추세 정렬은 표시 문자열이 아니라 숫자 추세 점수 기준으로 처리함
 - 상세페이지 Heatmap은 섹터별 `change_pct` 평균 상승률 강도 기준으로 표시함. 타일에는 평균, 중앙값, 상승 종목 비율, 종목 수를 함께 표시함
