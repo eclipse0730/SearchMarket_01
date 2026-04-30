@@ -91,6 +91,18 @@ python -m market_scanner.db counts
 
 기본 접속 문자열은 `.env.example`의 `DATABASE_URL`입니다.
 
+Docker Desktop을 쓰지 않고 로컬 Postgres 바이너리로 임시 DB를 띄운 경우:
+
+```bash
+initdb -D .postgres-data --auth=trust --username=searchmarket
+pg_ctl -D .postgres-data -o "-p 5433" -l .postgres-data/postgres.log start
+createdb -h localhost -p 5433 -U searchmarket searchmarket
+pg_ctl -D .postgres-data status
+pg_ctl -D .postgres-data stop
+```
+
+`.postgres-data/`는 로컬 DB 데이터 디렉터리이며 Git 추적 대상이 아닙니다.
+
 메인 페이지는 최신 CSV/리포트 데이터를 기반으로 다음 통합 지표를 보여줍니다.
 
 - 종합 시장 점수: 주식 강세 비율, 매크로 강도, RSI 균형, 전체 평균 등락을 결합한 0-100점 요약

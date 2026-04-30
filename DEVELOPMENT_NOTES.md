@@ -79,6 +79,16 @@ PostgreSQL 저장 흐름:
 4. `python -m market_scanner.db load-csv --market kospi --date YYYYMMDD`로 CSV 결과를 DB에 upsert합니다.
 5. `python -m market_scanner.db counts`로 핵심 테이블 적재 건수를 확인합니다.
 
+Docker Desktop을 사용할 수 없을 때는 로컬 Postgres 바이너리로 임시 DB를 띄울 수 있습니다. `.postgres-data/`는 `.gitignore`에 포함된 로컬 데이터 디렉터리입니다.
+
+```bash
+initdb -D .postgres-data --auth=trust --username=searchmarket
+pg_ctl -D .postgres-data -o "-p 5433" -l .postgres-data/postgres.log start
+createdb -h localhost -p 5433 -U searchmarket searchmarket
+pg_ctl -D .postgres-data status
+pg_ctl -D .postgres-data stop
+```
+
 기존 파일명 규칙:
 
 - NASDAQ 100: `data/Data_Nasdaq100_YYYYMMDD.csv`, `analysis/Analysis_Nasdaq100_YYYYMMDD.md`, `reports/Report_Nasdaq100_YYYYMMDD.html`
