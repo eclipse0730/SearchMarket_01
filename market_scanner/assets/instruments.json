@@ -3547,7 +3547,7 @@
     "name_local": "A",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AAPL": {
     "description": "아이폰·맥·서비스 생태계",
@@ -3567,7 +3567,7 @@
     "name_local": "ABBV",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ABNB": {
     "description": "글로벌 숙박 공유 플랫폼",
@@ -3587,7 +3587,7 @@
     "name_local": "ABT",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ACGL": {
     "description": "Arch Capital Group Ltd., together with its subsidiaries, provides insurance, reinsurance, and mortgage insurance product",
@@ -3597,7 +3597,7 @@
     "name_local": "ACGL",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ACN": {
     "description": "Accenture plc provides strategy and consulting, industry X, song, and technology and operation services in the Americas,",
@@ -3607,7 +3607,7 @@
     "name_local": "ACN",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ADBE": {
     "description": "포토샵·Acrobat·Creative Cloud",
@@ -3637,7 +3637,7 @@
     "name_local": "ADM",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ADP": {
     "description": "기업 급여·인사 아웃소싱",
@@ -3657,7 +3657,7 @@
     "name_local": "ADSK",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AEE": {
     "description": "Ameren Corporation, together with its subsidiaries, operates as a public utility holding company in the United States. T",
@@ -3667,7 +3667,7 @@
     "name_local": "AEE",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AEP": {
     "description": "미국 중부·남부 전력 공급",
@@ -3687,7 +3687,7 @@
     "name_local": "AES",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AFL": {
     "description": "Aflac Incorporated, through its subsidiaries, provides supplemental health and life insurance products. It operates in t",
@@ -3697,7 +3697,7 @@
     "name_local": "AFL",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AIG": {
     "description": "American International Group, Inc. provides insurance products for commercial, institutional, and individual customers i",
@@ -3707,7 +3707,7 @@
     "name_local": "AIG",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AIZ": {
     "description": "Assurant, Inc. provides protection services to connected devices, homes, and automobiles in North America, Latin America",
@@ -3717,7 +3717,7 @@
     "name_local": "AIZ",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AJG": {
     "description": "Arthur J. Gallagher & Co., together with its subsidiaries, provides insurance and reinsurance brokerage, consulting, and",
@@ -3727,7 +3727,7 @@
     "name_local": "AJG",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AKAM": {
     "description": "Akamai Technologies, Inc. engages in the provision of security, delivery, and cloud computing solutions in the United St",
@@ -3737,7 +3737,7 @@
     "name_local": "AKAM",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ALB": {
     "description": "Albemarle Corporation provides energy storage solutions worldwide. It operates through three segments: Energy Storage, S",
@@ -3747,7 +3747,7 @@
     "name_local": "ALB",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ALGN": {
     "description": "인비절라인 투명 치아교정기",
@@ -3767,7 +3767,7 @@
     "name_local": "ALL",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ALLE": {
     "description": "Allegion plc engages in the provision of security products and solutions worldwide. It is operating through two segments",
@@ -3777,7 +3777,7 @@
     "name_local": "ALLE",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AMAT": {
     "description": "반도체 식각·증착 장비",
@@ -3797,7 +3797,7 @@
     "name_local": "AMCR",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AMD": {
     "description": "CPU·GPU·AI 가속기",
@@ -3817,7 +3817,7 @@
     "name_local": "AME",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AMGN": {
     "description": "Amgen Inc. discovers, develops, manufactures, and delivers human therapeutics worldwide. The company's principal product",
@@ -3827,7 +3827,7 @@
     "name_local": "AMGN",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AMP": {
     "description": "Ameriprise Financial, Inc., together with its subsidiaries, operates as a diversified financial services company in the",
@@ -3837,7 +3837,7 @@
     "name_local": "AMP",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AMT": {
     "description": "American Tower Corporation is one of the largest global real estate investment trusts. It is a leading independent owner",
@@ -3847,7 +3847,7 @@
     "name_local": "AMT",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AMZN": {
     "description": "온라인 쇼핑·AWS 클라우드",
@@ -3867,7 +3867,7 @@
     "name_local": "ANET",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ANSS": {
     "description": "엔지니어링 CAE 시뮬레이션",
@@ -3887,7 +3887,7 @@
     "name_local": "AON",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AOS": {
     "description": "A. O. Smith Corporation manufactures and markets residential and commercial gas and electric water heaters, boilers, hea",
@@ -3897,7 +3897,7 @@
     "name_local": "AOS",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "APA": {
     "description": "APA Corporation, an independent energy company, explores for, develops, and produces natural gas, crude oil, and natural",
@@ -3907,7 +3907,7 @@
     "name_local": "APA",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "APD": {
     "description": "Air Products and Chemicals, Inc. provides atmospheric gases, process and specialty gases, equipment, and related service",
@@ -3917,7 +3917,7 @@
     "name_local": "APD",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "APH": {
     "description": "Amphenol Corporation, together with its subsidiaries, designs, manufactures, and markets electrical, electronic, and fib",
@@ -3927,7 +3927,7 @@
     "name_local": "APH",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "APO": {
     "description": "Apollo Global Management, Inc. is a private equity firm specializing in investments in credit, private equity, infrastru",
@@ -3937,7 +3937,7 @@
     "name_local": "APO",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "APP": {
     "description": "AI 기반 모바일 광고 플랫폼",
@@ -3957,7 +3957,7 @@
     "name_local": "APTV",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ARE": {
     "description": "Alexandria Real Estate Equities, Inc. an S&P 500 company, is a best-in-class, mission-driven life science REIT making a",
@@ -3967,7 +3967,7 @@
     "name_local": "ARE",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ARES": {
     "description": "Ares Management Corporation operates as an alternative asset manager. Its Direct Lending Group segment provides financin",
@@ -3977,7 +3977,7 @@
     "name_local": "ARES",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ARKK": {
     "description": "High-beta innovation proxy.",
@@ -4017,7 +4017,7 @@
     "name_local": "ATO",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AVB": {
     "description": "AvalonBay Communities, Inc., a member of the S&P 500, is an equity REIT. The firm develops, redevelops, acquires and man",
@@ -4027,7 +4027,7 @@
     "name_local": "AVB",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AVGO": {
     "description": "네트워크·스토리지·AI 맞춤칩",
@@ -4047,7 +4047,7 @@
     "name_local": "AVY",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AWK": {
     "description": "American Water Works Company, Inc., through its subsidiaries, provides water and wastewater services in the United State",
@@ -4057,7 +4057,7 @@
     "name_local": "AWK",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AXON": {
     "description": "Axon Enterprise, Inc. provides public safety technology solutions in the United States and internationally. The company",
@@ -4067,7 +4067,7 @@
     "name_local": "AXON",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AXP": {
     "description": "American Express Company, together with its subsidiaries, operates as an integrated payments company in the United State",
@@ -4077,7 +4077,7 @@
     "name_local": "AXP",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "AZO": {
     "description": "AutoZone, Inc. operates as a retailer and distributor of automotive replacement parts and accessories in the United Stat",
@@ -4087,7 +4087,7 @@
     "name_local": "AZO",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BA": {
     "description": "The Boeing Company, together with its subsidiaries, designs, develops, manufactures, sells, services, and supports comme",
@@ -4097,7 +4097,7 @@
     "name_local": "BA",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BAC": {
     "description": "Bank of America Corporation, through its subsidiaries, provides various financial products and services for individual c",
@@ -4107,7 +4107,7 @@
     "name_local": "BAC",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BALL": {
     "description": "Ball Corporation supplies aluminum packaging products for the beverage, personal care, and household products industries",
@@ -4117,7 +4117,7 @@
     "name_local": "BALL",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BAX": {
     "description": "Baxter International Inc., through its subsidiaries, provides a portfolio of healthcare products in the United States. T",
@@ -4127,7 +4127,7 @@
     "name_local": "BAX",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BBY": {
     "description": "Best Buy Co., Inc. offers technology products and solutions in the United States, Canada, and internationally. The compa",
@@ -4137,7 +4137,7 @@
     "name_local": "BBY",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BDX": {
     "description": "Becton, Dickinson and Company develops, manufactures, and sells medical supplies, devices, laboratory equipment, and dia",
@@ -4147,7 +4147,7 @@
     "name_local": "BDX",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BEN": {
     "description": "Franklin Resources, Inc. is a publicly owned asset investment manager. Through its subsidiaries, the firm provides its s",
@@ -4157,7 +4157,7 @@
     "name_local": "BEN",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BF-B": {
     "description": "Brown-Forman Corporation, together with its subsidiaries, manufactures, distills, bottles, imports, exports, markets, an",
@@ -4167,7 +4167,7 @@
     "name_local": "BF-B",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BG": {
     "description": "Bunge Global SA operates as an agribusiness and food company worldwide. It operates through four segments: Soybean Proce",
@@ -4177,7 +4177,7 @@
     "name_local": "BG",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BIIB": {
     "description": "알츠하이머·MS 신경계 치료제",
@@ -4197,7 +4197,7 @@
     "name_local": "BK",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BKNG": {
     "description": "부킹닷컴·프라이스라인·카약",
@@ -4227,7 +4227,7 @@
     "name_local": "BLDR",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BLK": {
     "description": "BlackRock, Inc. is a publicly owned investment manager. The firm primarily provides its services to institutional, inter",
@@ -4237,7 +4237,7 @@
     "name_local": "BLK",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BMY": {
     "description": "Bristol-Myers Squibb Company discovers, develops, licenses, manufactures, markets, distributes, and sells biopharmaceuti",
@@ -4247,7 +4247,7 @@
     "name_local": "BMY",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BOTZ": {
     "description": "Robotics and AI proxy.",
@@ -4267,7 +4267,7 @@
     "name_local": "BR",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BRK-B": {
     "description": "Berkshire Hathaway Inc., together with its subsidiaries, engages in the insurance, freight rail transportation, and util",
@@ -4277,7 +4277,7 @@
     "name_local": "BRK-B",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BRO": {
     "description": "Brown & Brown, Inc. markets and sells insurance products and services in the United States, the United Kingdom, and inte",
@@ -4287,7 +4287,7 @@
     "name_local": "BRO",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BSX": {
     "description": "Boston Scientific Corporation develops, manufactures, and markets medical devices for use in various interventional medi",
@@ -4297,7 +4297,7 @@
     "name_local": "BSX",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BX": {
     "description": "Blackstone Inc. is an alternative asset management firm specializing in private equity, venture capital, real estate, he",
@@ -4307,7 +4307,7 @@
     "name_local": "BX",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BXP": {
     "description": "BXP, Inc. is the largest publicly traded developer, owner, and manager of premier workplaces in the United States, conce",
@@ -4317,7 +4317,7 @@
     "name_local": "BXP",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "BZ=F": {
     "description": "Brent crude oil international benchmark.",
@@ -4337,7 +4337,7 @@
     "name_local": "C",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CAG": {
     "description": "Conagra Brands, Inc., together with its subsidiaries, operates as a consumer packaged goods food company primarily in th",
@@ -4347,7 +4347,7 @@
     "name_local": "CAG",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CAH": {
     "description": "Cardinal Health, Inc. operates as a healthcare services and products company in the United States and internationally. I",
@@ -4357,7 +4357,7 @@
     "name_local": "CAH",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CARR": {
     "description": "Carrier Global Corporation provides intelligent climate and energy solutions in the United States, Europe, the Asia Paci",
@@ -4367,7 +4367,7 @@
     "name_local": "CARR",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CASY": {
     "description": "Casey's General Stores, Inc., together with its subsidiaries, operates convenience stores under the Casey's and Casey's",
@@ -4377,7 +4377,7 @@
     "name_local": "CASY",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CAT": {
     "description": "Caterpillar Inc. provides construction and mining equipment, off-highway diesel and natural gas engines, industrial gas",
@@ -4387,7 +4387,7 @@
     "name_local": "CAT",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CB": {
     "description": "Chubb Limited provides insurance and reinsurance products worldwide. It operates in six segments: North America Commerci",
@@ -4397,7 +4397,7 @@
     "name_local": "CB",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CBOE": {
     "description": "Cboe Global Markets, Inc., through its subsidiaries, operates as a derivatives and securities exchange network that deli",
@@ -4407,7 +4407,7 @@
     "name_local": "CBOE",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CBRE": {
     "description": "CBRE Group, Inc. operates as a commercial real estate services and investment company in the United States, the United K",
@@ -4417,7 +4417,7 @@
     "name_local": "CBRE",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CCEP": {
     "description": "코카콜라 유럽·아태 병입·유통",
@@ -4437,7 +4437,7 @@
     "name_local": "CCI",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CCL": {
     "description": "Carnival Corporation & plc, a cruise company, provides leisure travel services in North America, Australia, Europe, and",
@@ -4447,7 +4447,7 @@
     "name_local": "CCL",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CDNS": {
     "description": "반도체 설계 자동화(EDA) 툴",
@@ -4487,7 +4487,7 @@
     "name_local": "CF",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CFG": {
     "description": "Citizens Financial Group, Inc. operates as the bank holding company that provides retail and commercial banking products",
@@ -4497,7 +4497,7 @@
     "name_local": "CFG",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CHD": {
     "description": "Church & Dwight Co., Inc. develops, manufactures, and markets household, personal care, and specialty products. It opera",
@@ -4507,7 +4507,7 @@
     "name_local": "CHD",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CHRW": {
     "description": "C.H. Robinson Worldwide, Inc., together with its subsidiaries, provides freight transportation and related logistics and",
@@ -4517,7 +4517,7 @@
     "name_local": "CHRW",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CHTR": {
     "description": "케이블 TV·인터넷 서비스",
@@ -4537,7 +4537,7 @@
     "name_local": "CI",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CIEN": {
     "description": "Ciena Corporation, a network technology company, provides hardware, software, and services for various network operators",
@@ -4547,7 +4547,7 @@
     "name_local": "CIEN",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CINF": {
     "description": "Cincinnati Financial Corporation provides property casualty insurance products in the United States. The company operate",
@@ -4557,7 +4557,7 @@
     "name_local": "CINF",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CL": {
     "description": "Colgate-Palmolive Company, together with its subsidiaries, manufactures and sells consumer products in the United States",
@@ -4567,7 +4567,7 @@
     "name_local": "CL",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CL=F": {
     "description": "WTI crude oil energy benchmark.",
@@ -4587,7 +4587,7 @@
     "name_local": "CLX",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CMCSA": {
     "description": "Comcast Corporation operates as a media and technology company worldwide. The company operates through Residential Conne",
@@ -4597,7 +4597,7 @@
     "name_local": "CMCSA",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CME": {
     "description": "CME Group Inc., together with its subsidiaries, operates contract markets for the trading of futures and options on futu",
@@ -4607,7 +4607,7 @@
     "name_local": "CME",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CMG": {
     "description": "Chipotle Mexican Grill, Inc., together with its subsidiaries, owns and operates Chipotle Mexican Grill restaurants. It s",
@@ -4617,7 +4617,7 @@
     "name_local": "CMG",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CMI": {
     "description": "Cummins Inc. offers various power solutions worldwide. The company operates through five segments: Engine, Distribution,",
@@ -4627,7 +4627,7 @@
     "name_local": "CMI",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CMS": {
     "description": "CMS Energy Corporation operates as an energy company primarily in Michigan. The company operates through three segments:",
@@ -4637,7 +4637,7 @@
     "name_local": "CMS",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CNC": {
     "description": "Centene Corporation operates as a managed care company that provides programs and services to under-insured families, an",
@@ -4647,7 +4647,7 @@
     "name_local": "CNC",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CNP": {
     "description": "CenterPoint Energy, Inc. operates as a public utility holding company in the United States. The company operates through",
@@ -4657,7 +4657,7 @@
     "name_local": "CNP",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "COF": {
     "description": "Capital One Financial Corporation operates as the financial services holding company for the Capital One, National Assoc",
@@ -4667,7 +4667,7 @@
     "name_local": "COF",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "COHR": {
     "description": "Coherent Corp. develops, manufactures, and markets engineered materials, optoelectronic components and devices, and lase",
@@ -4677,7 +4677,7 @@
     "name_local": "COHR",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "COIN": {
     "description": "Coinbase Global, Inc. operates platform for crypto assets in the United States and internationally. It provides the prim",
@@ -4687,7 +4687,7 @@
     "name_local": "COIN",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "COO": {
     "description": "The Cooper Companies, Inc., together with its subsidiaries, develops, manufactures, and markets contact lens wearers. Th",
@@ -4697,7 +4697,7 @@
     "name_local": "COO",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "COP": {
     "description": "ConocoPhillips explores for, produces, transports, and markets crude oil, bitumen, natural gas, liquefied natural gas (L",
@@ -4707,7 +4707,7 @@
     "name_local": "COP",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "COR": {
     "description": "Cencora, Inc. sources and distributes pharmaceutical products in the United States and internationally. The company's U.",
@@ -4717,7 +4717,7 @@
     "name_local": "COR",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "COST": {
     "description": "창고형 멤버십 할인마트",
@@ -4737,7 +4737,7 @@
     "name_local": "CPAY",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CPB": {
     "description": "The Campbell's Company, together with its subsidiaries, manufactures and markets food and beverage products in the Unite",
@@ -4747,7 +4747,7 @@
     "name_local": "CPB",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CPRT": {
     "description": "폐차·중고차 온라인 경매 플랫폼",
@@ -4767,7 +4767,7 @@
     "name_local": "CPT",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CRH": {
     "description": "CRH plc, together with its subsidiaries, provides building materials solutions in Ireland, the United States, the United",
@@ -4777,7 +4777,7 @@
     "name_local": "CRH",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CRL": {
     "description": "Charles River Laboratories International, Inc. provides drug discovery, non-clinical development, and safety testing ser",
@@ -4787,7 +4787,7 @@
     "name_local": "CRL",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CRM": {
     "description": "Salesforce, Inc. provides customer relationship management technology services that connect companies and customers together in the United States, Europe, and t",
@@ -4797,7 +4797,7 @@
     "name_local": "CRM",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CRWD": {
     "description": "클라우드 기반 엔드포인트 보안",
@@ -4817,7 +4817,7 @@
     "name_local": "CSCO",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CSGP": {
     "description": "CoStar Group, Inc. provides information, analytics, and online marketplace services to real estate and related business",
@@ -4827,7 +4827,7 @@
     "name_local": "CSGP",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CSX": {
     "description": "미국 동부 화물 철도 운영",
@@ -4857,7 +4857,7 @@
     "name_local": "CTRA",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CTSH": {
     "description": "Cognizant Technology Solutions Corporation, a professional services company, provides consulting and technology, and out",
@@ -4867,7 +4867,7 @@
     "name_local": "CTSH",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CTVA": {
     "description": "Corteva, Inc. operates in the agriculture business. The company operates through two segments, Seed and Crop Protection.",
@@ -4877,7 +4877,7 @@
     "name_local": "CTVA",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CVNA": {
     "description": "Carvana Co., together with its subsidiaries, operates an e-commerce platform for buying and selling used cars. It provid",
@@ -4887,7 +4887,7 @@
     "name_local": "CVNA",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CVS": {
     "description": "CVS Health Corporation provides health solutions in the United States. The company operates through Health Care Benefits",
@@ -4897,7 +4897,7 @@
     "name_local": "CVS",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "CVX": {
     "description": "Chevron Corporation, through its subsidiaries, engages in the integrated energy and chemicals operations in the United S",
@@ -4907,7 +4907,7 @@
     "name_local": "CVX",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "D": {
     "description": "Dominion Energy, Inc. provides regulated electricity and natural gas services in the United States. It operates through",
@@ -4917,7 +4917,7 @@
     "name_local": "D",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DAL": {
     "description": "Delta Air Lines, Inc. provides scheduled air transportation for passengers and cargo in the United States and internatio",
@@ -4927,7 +4927,7 @@
     "name_local": "DAL",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DASH": {
     "description": "DoorDash, Inc., together with its subsidiaries, operates a commerce platform that connects merchants, consumers, and das",
@@ -4937,7 +4937,7 @@
     "name_local": "DASH",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DD": {
     "description": "DuPont de Nemours, Inc. provides technology-based materials and solutions in the United States, Canada, the Asia Pacific",
@@ -4947,7 +4947,7 @@
     "name_local": "DD",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DDOG": {
     "description": "클라우드 인프라·앱 모니터링",
@@ -4967,7 +4967,7 @@
     "name_local": "DE",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DECK": {
     "description": "Deckers Outdoor Corporation, together with its subsidiaries, designs, markets, and distributes footwear, apparel, and ac",
@@ -4977,7 +4977,7 @@
     "name_local": "DECK",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DELL": {
     "description": "Dell Technologies Inc. designs, develops, manufactures, markets, sells, and supports various comprehensive and integrate",
@@ -4987,7 +4987,7 @@
     "name_local": "DELL",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DG": {
     "description": "Dollar General Corporation, a discount retailer, provides various merchandise products in the southern, southwestern, mi",
@@ -4997,7 +4997,7 @@
     "name_local": "DG",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DGX": {
     "description": "Quest Diagnostics Incorporated provides diagnostic testing and services in the United States. The company develops and delivers diagnostic information services,",
@@ -5007,7 +5007,7 @@
     "name_local": "DGX",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DHI": {
     "description": "D.R. Horton, Inc. operates as a homebuilding company in East, North, Southeast, South Central, Southwest, and Northwest",
@@ -5017,7 +5017,7 @@
     "name_local": "DHI",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DHR": {
     "description": "Danaher Corporation designs, manufactures, and markets professional, medical, research, and industrial products and serv",
@@ -5027,7 +5027,7 @@
     "name_local": "DHR",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DIS": {
     "description": "The Walt Disney Company operates as an entertainment company in Americas, Europe, and the Asia Pacific. It operates in three segments: Entertainment, Sports, an",
@@ -5047,7 +5047,7 @@
     "name_local": "DLR",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DLTR": {
     "description": "균일가 소매점 체인",
@@ -5067,7 +5067,7 @@
     "name_local": "DOC",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DOV": {
     "description": "Dover Corporation provides equipment and components, consumable supplies, aftermarket parts, software and digital soluti",
@@ -5077,7 +5077,7 @@
     "name_local": "DOV",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DOW": {
     "description": "Dow Inc., through its subsidiaries, provides various materials science solutions for packaging, infrastructure, mobility",
@@ -5087,7 +5087,7 @@
     "name_local": "DOW",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DPZ": {
     "description": "Domino's Pizza, Inc. operates as a pizza company worldwide. The company operates through three segments: U.S. Stores, In",
@@ -5097,7 +5097,7 @@
     "name_local": "DPZ",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DRI": {
     "description": "Darden Restaurants, Inc., together with its subsidiaries, owns and operates full-service restaurants in the United State",
@@ -5107,7 +5107,7 @@
     "name_local": "DRI",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DTE": {
     "description": "DTE Energy Company engages in energy-related businesses and services. The company operates through four segments: Electr",
@@ -5117,7 +5117,7 @@
     "name_local": "DTE",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DUK": {
     "description": "Duke Energy Corporation, through its subsidiaries, operates as an energy company in the United States. The company opera",
@@ -5127,7 +5127,7 @@
     "name_local": "DUK",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DVA": {
     "description": "DaVita Inc. provides kidney dialysis services for patients suffering from chronic kidney failure in the United States. T",
@@ -5137,7 +5137,7 @@
     "name_local": "DVA",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DVN": {
     "description": "Devon Energy Corporation, an independent energy company, engages in the exploration, development, and production of oil,",
@@ -5147,7 +5147,7 @@
     "name_local": "DVN",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "DXCM": {
     "description": "연속혈당측정기(CGM) 시스템",
@@ -5177,7 +5177,7 @@
     "name_local": "EBAY",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ECL": {
     "description": "Ecolab Inc. provides water, hygiene, and infection prevention solutions and services in the United States and internatio",
@@ -5187,7 +5187,7 @@
     "name_local": "ECL",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ED": {
     "description": "Consolidated Edison, Inc., through its subsidiaries, engages in the regulated electric, gas, and steam delivery business",
@@ -5197,7 +5197,7 @@
     "name_local": "ED",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EFX": {
     "description": "Equifax Inc. operates as a data, analytics, and technology company. The company operates through three segments: Workfor",
@@ -5207,7 +5207,7 @@
     "name_local": "EFX",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EG": {
     "description": "Everest Group, Ltd., together with subsidiaries, provides reinsurance and insurance products in the United States, Europ",
@@ -5217,7 +5217,7 @@
     "name_local": "EG",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EIX": {
     "description": "Edison International, through its subsidiaries, engages in the generation and distribution of electric power. The compan",
@@ -5227,7 +5227,7 @@
     "name_local": "EIX",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EL": {
     "description": "The Estée Lauder Companies Inc. manufactures, markets, and sells skin care, makeup, fragrance, and hair care products wo",
@@ -5237,7 +5237,7 @@
     "name_local": "EL",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ELV": {
     "description": "Elevance Health, Inc., together with its subsidiaries, operates as a health benefits company in the United States. The c",
@@ -5247,7 +5247,7 @@
     "name_local": "ELV",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EME": {
     "description": "EMCOR Group, Inc. provides electrical and mechanical construction and facilities, building, and industrial services in t",
@@ -5257,7 +5257,7 @@
     "name_local": "EME",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EMR": {
     "description": "Emerson Electric Co., a technology and software company, provides various solutions in the Americas, Asia, the Middle Ea",
@@ -5267,7 +5267,7 @@
     "name_local": "EMR",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ENPH": {
     "description": "마이크로인버터·가정용 에너지",
@@ -5287,7 +5287,7 @@
     "name_local": "EOG",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EPAM": {
     "description": "EPAM Systems, Inc. provides digital platform engineering and software development services worldwide. The company offers",
@@ -5297,7 +5297,7 @@
     "name_local": "EPAM",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EQIX": {
     "description": "Equinix, Inc. shortens the path to boundless connectivity anywhere in the world. Its digital infrastructure, data center",
@@ -5307,7 +5307,7 @@
     "name_local": "EQIX",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EQR": {
     "description": "Equity Residential is committed to creating communities where people thrive. The Company, a member of the S&P 500, owns",
@@ -5317,7 +5317,7 @@
     "name_local": "EQR",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EQT": {
     "description": "EQT Corporation engages in the exploration, production, gathering, and transmission of hydrocarbons and natural gas. The",
@@ -5327,7 +5327,7 @@
     "name_local": "EQT",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ERIE": {
     "description": "Erie Indemnity Company operates as a managing attorney-in-fact for the subscribers at the Erie Insurance Exchange in the",
@@ -5337,7 +5337,7 @@
     "name_local": "ERIE",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ES": {
     "description": "Eversource Energy, a public utility holding company, engages in the energy delivery business. The company operates throu",
@@ -5347,7 +5347,7 @@
     "name_local": "ES",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ESS": {
     "description": "Essex Property Trust, Inc., an S&P 500 company, is a fully integrated real estate investment trust. The firm acquires, d",
@@ -5357,7 +5357,7 @@
     "name_local": "ESS",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ETN": {
     "description": "Eaton Corporation plc operates as a power management company in the United States, Canada, Latin America, Europe, and th",
@@ -5367,7 +5367,7 @@
     "name_local": "ETN",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ETR": {
     "description": "Entergy Corporation, together with its subsidiaries, engages in the production and retail distribution of electricity in",
@@ -5377,7 +5377,7 @@
     "name_local": "ETR",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EVRG": {
     "description": "Evergy, Inc., together with its subsidiaries, engages in the generation, transmission, distribution, and sale of electri",
@@ -5387,7 +5387,7 @@
     "name_local": "EVRG",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EW": {
     "description": "Edwards Lifesciences Corporation provides products and technologies to treat advanced cardiovascular diseases in the Uni",
@@ -5397,7 +5397,7 @@
     "name_local": "EW",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EXC": {
     "description": "미국 북동부·중서부 전력 공급",
@@ -5417,7 +5417,7 @@
     "name_local": "EXE",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EXPD": {
     "description": "Expeditors International of Washington, Inc., together with its subsidiaries, provides logistics services in the America",
@@ -5427,7 +5427,7 @@
     "name_local": "EXPD",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "EXPE": {
     "description": "온라인 여행 예약 플랫폼",
@@ -5447,7 +5447,7 @@
     "name_local": "EXR",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "F": {
     "description": "Ford Motor Company develops, delivers, and services Ford trucks, sport utility vehicles, commercial vans and cars, and L",
@@ -5457,7 +5457,7 @@
     "name_local": "F",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FANG": {
     "description": "퍼미안 분지 원유 개발·생산",
@@ -5487,7 +5487,7 @@
     "name_local": "FCX",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FDS": {
     "description": "FactSet Research Systems Inc., together with its subsidiaries, operates as a financial digital platform and enterprise s",
@@ -5497,7 +5497,7 @@
     "name_local": "FDS",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FDX": {
     "description": "FedEx Corporation, together with its subsidiaries, provides transportation, e-commerce, and business services in the Uni",
@@ -5507,7 +5507,7 @@
     "name_local": "FDX",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FE": {
     "description": "FirstEnergy Corp., together with its subsidiaries, engages in the generation, distribution, and transmission of electric",
@@ -5517,7 +5517,7 @@
     "name_local": "FE",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FFIV": {
     "description": "F5, Inc. provides multicloud application security and delivery solutions in the United States, Europe, the Middle East,",
@@ -5527,7 +5527,7 @@
     "name_local": "FFIV",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FICO": {
     "description": "Fair Isaac Corporation provides analytics software in the Americas, Europe, the Middle East, Africa, and the Asia Pacifi",
@@ -5537,7 +5537,7 @@
     "name_local": "FICO",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FIS": {
     "description": "Fidelity National Information Services, Inc. provides solutions to financial institutions, businesses, and developers wo",
@@ -5547,7 +5547,7 @@
     "name_local": "FIS",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FISV": {
     "description": "No description",
@@ -5557,7 +5557,7 @@
     "name_local": "FISV",
     "sector": "Unknown",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FITB": {
     "description": "Fifth Third Bancorp operates as the bank holding company for Fifth Third Bank, National Association that provides a rang",
@@ -5567,7 +5567,7 @@
     "name_local": "FITB",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FIX": {
     "description": "Comfort Systems USA, Inc., together with its subsidiaries, provides mechanical and electrical installation, renovation,",
@@ -5577,7 +5577,7 @@
     "name_local": "FIX",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FOX": {
     "description": "Fox Corporation operates as a news, sports, and entertainment company in the United States. It operates in four segments",
@@ -5587,7 +5587,7 @@
     "name_local": "FOX",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FOXA": {
     "description": "Fox Corporation operates as a news, sports, and entertainment company in the United States. It operates in four segments",
@@ -5597,7 +5597,7 @@
     "name_local": "FOXA",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FRT": {
     "description": "Federal Realty Investment Trust is a recognized leader in the ownership, operation and redevelopment of high-quality ret",
@@ -5607,7 +5607,7 @@
     "name_local": "FRT",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FSLR": {
     "description": "First Solar, Inc., a solar technology company, provides photovoltaic (PV) solar energy solutions in the United States, F",
@@ -5617,7 +5617,7 @@
     "name_local": "FSLR",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FTNT": {
     "description": "FortiGate 네트워크 보안",
@@ -5637,7 +5637,7 @@
     "name_local": "FTV",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "FWONK": {
     "description": "F1 레이싱 미디어 권리",
@@ -5667,7 +5667,7 @@
     "name_local": "GD",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GDDY": {
     "description": "GoDaddy Inc. engages in the design and development of cloud-based products in the United States and internationally. It",
@@ -5677,7 +5677,7 @@
     "name_local": "GDDY",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GE": {
     "description": "General Electric Company, doing business as GE Aerospace, designs and produces commercial and defense aircraft engines,",
@@ -5687,7 +5687,7 @@
     "name_local": "GE",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GEHC": {
     "description": "MRI·CT 등 의료 영상 장비",
@@ -5707,7 +5707,7 @@
     "name_local": "GEN",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GEV": {
     "description": "GE Vernova Inc., an energy company, engages in the provision of various products and services that generate, transfer, o",
@@ -5717,7 +5717,7 @@
     "name_local": "GEV",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GFS": {
     "description": "반도체 위탁생산(파운드리)",
@@ -5747,7 +5747,7 @@
     "name_local": "GIS",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GL": {
     "description": "Globe Life Inc., through its subsidiaries, provides various life and supplemental health insurance products to lower mid",
@@ -5757,7 +5757,7 @@
     "name_local": "GL",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GLD": {
     "description": "Physical gold price proxy.",
@@ -5777,7 +5777,7 @@
     "name_local": "GLW",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GM": {
     "description": "General Motors Company designs, builds, and sells trucks, crossovers, cars, and automobile parts worldwide. It operates",
@@ -5787,7 +5787,7 @@
     "name_local": "GM",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GNRC": {
     "description": "Generac Holdings Inc. designs, manufactures, and distributes energy technology products and solutions worldwide. The com",
@@ -5797,7 +5797,7 @@
     "name_local": "GNRC",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GOOG": {
     "description": "구글 검색·YouTube·GCP",
@@ -5827,7 +5827,7 @@
     "name_local": "GPC",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GPN": {
     "description": "Global Payments Inc. provides payment technology and software solutions for card, check, and digital-based payments in t",
@@ -5837,7 +5837,7 @@
     "name_local": "GPN",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GRMN": {
     "description": "Garmin Ltd. designs, develops, manufactures, markets, and distributes a diverse range of GPS-enabled products and naviga",
@@ -5847,7 +5847,7 @@
     "name_local": "GRMN",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GS": {
     "description": "The Goldman Sachs Group, Inc., a financial institution, provides a range of financial services for corporations, financi",
@@ -5857,7 +5857,7 @@
     "name_local": "GS",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "GWW": {
     "description": "W.W. Grainger, Inc., together with its subsidiaries, distributes maintenance, repair, and operating products and services primarily in North America, Japan, and",
@@ -5887,7 +5887,7 @@
     "name_local": "HAL",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HAS": {
     "description": "Hasbro, Inc. operates as a toy and game company in the United States, Europe, Canada, Mexico, Latin America, Australia,",
@@ -5897,7 +5897,7 @@
     "name_local": "HAS",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HBAN": {
     "description": "Huntington Bancshares Incorporated operates as the bank holding company for The Huntington National Bank that provides c",
@@ -5907,7 +5907,7 @@
     "name_local": "HBAN",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HCA": {
     "description": "HCA Healthcare, Inc., through its subsidiaries, provides health care services in the United States. The company owns, ma",
@@ -5917,7 +5917,7 @@
     "name_local": "HCA",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HD": {
     "description": "The Home Depot, Inc. operates as a home improvement retailer in the United States and internationally. It sells various",
@@ -5927,7 +5927,7 @@
     "name_local": "HD",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HG=F": {
     "description": "Industrial metals proxy.",
@@ -5947,7 +5947,7 @@
     "name_local": "HIG",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HII": {
     "description": "Huntington Ingalls Industries, Inc. designs, builds, overhauls, and repairs military ships in the United States. It oper",
@@ -5957,7 +5957,7 @@
     "name_local": "HII",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HLT": {
     "description": "Hilton Worldwide Holdings Inc., a hospitality company, engages in managing, franchising, and leasing hotels and resorts.",
@@ -5967,7 +5967,7 @@
     "name_local": "HLT",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HON": {
     "description": "Honeywell International Inc. engages in the aerospace technologies, industrial automation, building automation, and ener",
@@ -5977,7 +5977,7 @@
     "name_local": "HON",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HOOD": {
     "description": "Robinhood Markets, Inc. operates financial services platform in the United States. The company's platform allows users to invest in stocks, exchange-traded fund",
@@ -5987,7 +5987,7 @@
     "name_local": "HOOD",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HPE": {
     "description": "Hewlett Packard Enterprise Company, together with its subsidiaries, develops intelligent solutions in the United States,",
@@ -5997,7 +5997,7 @@
     "name_local": "HPE",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HPQ": {
     "description": "HP Inc. provides personal computing, printing, 3D printing, hybrid work, gaming, and other related technologies in the U",
@@ -6007,7 +6007,7 @@
     "name_local": "HPQ",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HRL": {
     "description": "Hormel Foods Corporation develops, processes, and distributes various meat, nuts, and other food products to foodservice",
@@ -6017,7 +6017,7 @@
     "name_local": "HRL",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HSIC": {
     "description": "Henry Schein, Inc. provides health care products and services to office-based dental and medical practitioners worldwide",
@@ -6027,7 +6027,7 @@
     "name_local": "HSIC",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HST": {
     "description": "Host Hotels & Resorts, Inc., herein referred to as we, Host Inc., or the Company, is a self-managed and self-administere",
@@ -6037,7 +6037,7 @@
     "name_local": "HST",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HSY": {
     "description": "The Hershey Company, together with its subsidiaries, engages in the manufacture and sale of confectionery products and p",
@@ -6047,7 +6047,7 @@
     "name_local": "HSY",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HUBB": {
     "description": "Hubbell Incorporated, together with its subsidiaries, manufactures and sells electrical and utility solutions in the Uni",
@@ -6057,7 +6057,7 @@
     "name_local": "HUBB",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HUM": {
     "description": "Humana Inc. provides medical and specialty insurance products in the United States. It operates in two segments, Insuran",
@@ -6067,7 +6067,7 @@
     "name_local": "HUM",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "HWM": {
     "description": "Howmet Aerospace Inc. provides advanced engineered solutions for the aerospace and transportation industries in the Unit",
@@ -6077,7 +6077,7 @@
     "name_local": "HWM",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "IBB": {
     "description": "Biotechnology proxy.",
@@ -6097,7 +6097,7 @@
     "name_local": "IBKR",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "IBM": {
     "description": "International Business Machines Corporation, together with its subsidiaries, provides integrated solutions and services",
@@ -6107,7 +6107,7 @@
     "name_local": "IBM",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ICE": {
     "description": "Intercontinental Exchange, Inc., together with its subsidiaries, provides technology and data to financial institutions,",
@@ -6117,7 +6117,7 @@
     "name_local": "ICE",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ICLN": {
     "description": "Clean energy proxy.",
@@ -6147,7 +6147,7 @@
     "name_local": "IEX",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "IFF": {
     "description": "International Flavors & Fragrances Inc., together with its subsidiaries, manufactures and markets food, beverage, health",
@@ -6157,7 +6157,7 @@
     "name_local": "IFF",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ILMN": {
     "description": "유전자 염기서열 분석(NGS) 장비",
@@ -6177,7 +6177,7 @@
     "name_local": "INCY",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "INTC": {
     "description": "Intel Corporation designs, develops, manufactures, markets, sells, and services computing and related end products and s",
@@ -6187,7 +6187,7 @@
     "name_local": "INTC",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "INTU": {
     "description": "TurboTax·QuickBooks·Mint",
@@ -6207,7 +6207,7 @@
     "name_local": "INVH",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "IP": {
     "description": "International Paper Company produces and sells renewable fiber-based packaging in North America, Latin America, Europe,",
@@ -6217,7 +6217,7 @@
     "name_local": "IP",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "IQV": {
     "description": "IQVIA Holdings Inc. provides clinical research services, commercial insights, and healthcare intelligence to the life sc",
@@ -6227,7 +6227,7 @@
     "name_local": "IQV",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "IR": {
     "description": "Ingersoll Rand Inc. provides various mission-critical air, fluid, clean energy, and medical technologies services and so",
@@ -6237,7 +6237,7 @@
     "name_local": "IR",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "IRM": {
     "description": "Iron Mountain Incorporated is a global leader in information management services, and is trusted by more than 240,000 cu",
@@ -6247,7 +6247,7 @@
     "name_local": "IRM",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ISRG": {
     "description": "다빈치 수술 로봇 시스템",
@@ -6267,7 +6267,7 @@
     "name_local": "IT",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ITA": {
     "description": "US aerospace and defense sector proxy.",
@@ -6287,7 +6287,7 @@
     "name_local": "ITW",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "IVZ": {
     "description": "Invesco Ltd. is a publicly owned investment manager. The firm provides its services to retail clients, institutional cli",
@@ -6297,7 +6297,7 @@
     "name_local": "IVZ",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "J": {
     "description": "Jacobs Solutions Inc. engages in the infrastructure and advanced facilities, and consulting businesses in the United Sta",
@@ -6307,7 +6307,7 @@
     "name_local": "J",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "JBHT": {
     "description": "J.B. Hunt Transport Services, Inc. provides surface transportation, delivery, and logistic services in the United States",
@@ -6317,7 +6317,7 @@
     "name_local": "JBHT",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "JBL": {
     "description": "Jabil Inc. provides engineering, manufacturing, and supply chain solutions worldwide. It operates in three segments: Reg",
@@ -6327,7 +6327,7 @@
     "name_local": "JBL",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "JCI": {
     "description": "Johnson Controls International plc, together with its subsidiaries, engages in engineering, manufacturing, commissioning",
@@ -6337,7 +6337,7 @@
     "name_local": "JCI",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "JKHY": {
     "description": "Jack Henry & Associates, Inc. operates as a financial technology company that connects people and financial institutions",
@@ -6347,7 +6347,7 @@
     "name_local": "JKHY",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "JNJ": {
     "description": "Johnson & Johnson, together with its subsidiaries, engages in the research and development, manufacture, and sale of a r",
@@ -6357,7 +6357,7 @@
     "name_local": "JNJ",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "JPM": {
     "description": "JPMorgan Chase & Co. operates as a bank and financial holding company in the United States, rest of North America, Europ",
@@ -6367,7 +6367,7 @@
     "name_local": "JPM",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "KC=F": {
     "description": "Soft commodities proxy.",
@@ -6397,7 +6397,7 @@
     "name_local": "KEY",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "KEYS": {
     "description": "Keysight Technologies, Inc. provides electronic design and test solutions worldwide. The company operates through Commun",
@@ -6407,7 +6407,7 @@
     "name_local": "KEYS",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "KHC": {
     "description": "케첩·마카로니치즈 등 포장 식품",
@@ -6427,7 +6427,7 @@
     "name_local": "KIM",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "KKR": {
     "description": "KKR & Co. Inc. is a private equity and real estate investment firm specializing in direct and fund of fund investments.",
@@ -6437,7 +6437,7 @@
     "name_local": "KKR",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "KLAC": {
     "description": "반도체 공정 검사·계측 장비",
@@ -6457,7 +6457,7 @@
     "name_local": "KMB",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "KMI": {
     "description": "Kinder Morgan, Inc. operates as an energy infrastructure company primarily in North America. It operates through Natural",
@@ -6467,7 +6467,7 @@
     "name_local": "KMI",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "KO": {
     "description": "The Coca-Cola Company, a beverage company, manufactures and sells various nonalcoholic beverages in the United States an",
@@ -6477,7 +6477,7 @@
     "name_local": "KO",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "KR": {
     "description": "The Kroger Co. operates as a food and drug retailer in the United States. The company operates combination food and drug",
@@ -6487,7 +6487,7 @@
     "name_local": "KR",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "KVUE": {
     "description": "Kenvue Inc. operates as a consumer health company in the United States, rest of North America, Europe, the Middle East,",
@@ -6497,7 +6497,7 @@
     "name_local": "KVUE",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "L": {
     "description": "Loews Corporation, through its subsidiaries, provides commercial property and casualty insurance in the United States an",
@@ -6507,7 +6507,7 @@
     "name_local": "L",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LCID": {
     "description": "프리미엄 전기 세단 제조",
@@ -6527,7 +6527,7 @@
     "name_local": "LDOS",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LEN": {
     "description": "Lennar Corporation, together with its subsidiaries, operates as a homebuilder primarily under the Lennar brand in the Un",
@@ -6537,7 +6537,7 @@
     "name_local": "LEN",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LH": {
     "description": "Labcorp Holdings Inc. provides laboratory services. It operates through two segments, Diagnostics Laboratories and Bioph",
@@ -6547,7 +6547,7 @@
     "name_local": "LH",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LHX": {
     "description": "L3Harris Technologies, Inc. provides mission-critical solutions for government and commercial customers worldwide. It op",
@@ -6557,7 +6557,7 @@
     "name_local": "LHX",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LII": {
     "description": "Lennox International Inc., together with its subsidiaries, designs, manufactures, and markets products for the heating,",
@@ -6567,7 +6567,7 @@
     "name_local": "LII",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LIN": {
     "description": "산소·질소·수소 등 산업 가스",
@@ -6587,7 +6587,7 @@
     "name_local": "LITE",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LLY": {
     "description": "Eli Lilly and Company discovers, develops, manufactures, and markets human pharmaceutical products in the United States,",
@@ -6597,7 +6597,7 @@
     "name_local": "LLY",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LMT": {
     "description": "Lockheed Martin Corporation, an aerospace and defense company, engages in the research, design, development, manufacture",
@@ -6607,7 +6607,7 @@
     "name_local": "LMT",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LNT": {
     "description": "Alliant Energy Corporation operates as a utility holding company that provides regulated electric and natural gas servic",
@@ -6617,7 +6617,7 @@
     "name_local": "LNT",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LOW": {
     "description": "Lowe's Companies, Inc., together with its subsidiaries, operates as a home improvement retailer in the United States and",
@@ -6627,7 +6627,7 @@
     "name_local": "LOW",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LRCX": {
     "description": "반도체 식각·증착 장비",
@@ -6657,7 +6657,7 @@
     "name_local": "LUV",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LVS": {
     "description": "Las Vegas Sands Corp., together with its subsidiaries, owns, develops, and operates integrated resorts in Macao and Sing",
@@ -6667,7 +6667,7 @@
     "name_local": "LVS",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LYB": {
     "description": "LyondellBasell Industries N.V. operates as a chemical company in the United States, Germany, China, Mexico, Italy, Japan",
@@ -6677,7 +6677,7 @@
     "name_local": "LYB",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "LYV": {
     "description": "Live Nation Entertainment, Inc. operates as a live entertainment company worldwide. The company operates through Concert",
@@ -6687,7 +6687,7 @@
     "name_local": "LYV",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MA": {
     "description": "Mastercard Incorporated, a technology company, provides transaction processing and other payment-related products and se",
@@ -6697,7 +6697,7 @@
     "name_local": "MA",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MAA": {
     "description": "Mid-America Apartment Communities, Inc.is a S&P 500 company. It is a real estate investment trust (REIT) focused on deli",
@@ -6707,7 +6707,7 @@
     "name_local": "MAA",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MAR": {
     "description": "글로벌 호텔 체인",
@@ -6727,7 +6727,7 @@
     "name_local": "MAS",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MCD": {
     "description": "McDonald's Corporation owns, operates, and franchises restaurants under the McDonald's brand in the United States and in",
@@ -6737,7 +6737,7 @@
     "name_local": "MCD",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MCHI": {
     "description": "China large-cap equity proxy.",
@@ -6757,7 +6757,7 @@
     "name_local": "MCHP",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MCK": {
     "description": "McKesson Corporation provides healthcare services in the United States and internationally. It operates through four seg",
@@ -6767,7 +6767,7 @@
     "name_local": "MCK",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MCO": {
     "description": "Moody's Corporation, together with its subsidiaries, operates as an integrated risk assessment firm in the United States",
@@ -6777,7 +6777,7 @@
     "name_local": "MCO",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MDB": {
     "description": "클라우드 NoSQL 데이터베이스",
@@ -6807,7 +6807,7 @@
     "name_local": "MDT",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MELI": {
     "description": "중남미 최대 전자상거래·결제",
@@ -6827,7 +6827,7 @@
     "name_local": "MET",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "META": {
     "description": "페이스북·인스타그램·왓츠앱",
@@ -6847,7 +6847,7 @@
     "name_local": "MGM",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MKC": {
     "description": "McCormick & Company, Incorporated manufactures, markets, and distributes herbs, spices, seasoning mixes, condiments, and",
@@ -6857,7 +6857,7 @@
     "name_local": "MKC",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MLM": {
     "description": "Martin Marietta Materials, Inc., a natural resource-based building materials company, supplies aggregates and heavy-side",
@@ -6867,7 +6867,7 @@
     "name_local": "MLM",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MMM": {
     "description": "3M Company provides diversified technology services in the America, the Asia Pacific, Europe, the Middle East, Africa, a",
@@ -6877,7 +6877,7 @@
     "name_local": "MMM",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MNST": {
     "description": "에너지 음료 브랜드",
@@ -6897,7 +6897,7 @@
     "name_local": "MO",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MOS": {
     "description": "The Mosaic Company, through its subsidiaries, produces and markets concentrated phosphate and potash crop nutrients. It",
@@ -6907,7 +6907,7 @@
     "name_local": "MOS",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MPC": {
     "description": "Marathon Petroleum Corporation, together with its subsidiaries, operates as an integrated downstream energy company in t",
@@ -6917,7 +6917,7 @@
     "name_local": "MPC",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MPWR": {
     "description": "Monolithic Power Systems, Inc. provides semiconductor-based power electronics solutions in China, Taiwan, South Korea, S",
@@ -6927,7 +6927,7 @@
     "name_local": "MPWR",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MRK": {
     "description": "Merck & Co., Inc. operates as a healthcare company worldwide. It offers human health pharmaceutical for various areas un",
@@ -6937,7 +6937,7 @@
     "name_local": "MRK",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MRNA": {
     "description": "mRNA 기반 백신·치료제",
@@ -6957,7 +6957,7 @@
     "name_local": "MRSH",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MRVL": {
     "description": "데이터센터·5G 반도체",
@@ -6977,7 +6977,7 @@
     "name_local": "MS",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MSCI": {
     "description": "MSCI Inc., together with its subsidiaries, provides research-based data, analytics, and indexes, supported by advanced technology worldwide. The Index segment p",
@@ -6987,7 +6987,7 @@
     "name_local": "MSCI",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MSFT": {
     "description": "윈도우·Azure·Office 365",
@@ -7007,7 +7007,7 @@
     "name_local": "MSI",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MTB": {
     "description": "M&T Bank Corporation operates as a bank holding company for Manufacturers and Traders Trust Company and Wilmington Trust",
@@ -7017,7 +7017,7 @@
     "name_local": "MTB",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MTCH": {
     "description": "틴더·OkCupid 등 데이팅 앱",
@@ -7037,7 +7037,7 @@
     "name_local": "MTD",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "MU": {
     "description": "DRAM·NAND 플래시 메모리",
@@ -7067,7 +7067,7 @@
     "name_local": "NDAQ",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NDSN": {
     "description": "Nordson Corporation engineers, manufactures, and markets products and systems to dispense, apply, and control adhesives, coatings, polymers, sealants, biomateri",
@@ -7077,7 +7077,7 @@
     "name_local": "NDSN",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NEE": {
     "description": "NextEra Energy, Inc., through its subsidiaries, generates, stores, transmits, distributes, and sells electric power to retail and wholesale customers in North A",
@@ -7087,7 +7087,7 @@
     "name_local": "NEE",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NEM": {
     "description": "Newmont Corporation operates as a gold producer. It also explores for copper, silver, lead, zinc, and other metals. It has operations and/or assets in the Unite",
@@ -7097,7 +7097,7 @@
     "name_local": "NEM",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NFLX": {
     "description": "글로벌 OTT 동영상 스트리밍",
@@ -7127,7 +7127,7 @@
     "name_local": "NI",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NKE": {
     "description": "NIKE, Inc., together with its subsidiaries, designs, develops, markets, and sells athletic and casual footwear, apparel, equipment, accessories, and services fo",
@@ -7137,7 +7137,7 @@
     "name_local": "NKE",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NOC": {
     "description": "Northrop Grumman Corporation operates as an aerospace and defense technology company in the United States, Asia/Pacific, Europe, and internationally. It operate",
@@ -7147,7 +7147,7 @@
     "name_local": "NOC",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NOW": {
     "description": "ServiceNow, Inc. provides cloud-based solution for digital workflows in the North America, Europe, the Middle East and Africa, Asia Pacific, and internationally",
@@ -7157,7 +7157,7 @@
     "name_local": "NOW",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NRG": {
     "description": "NRG Energy, Inc., together with its subsidiaries, operates as an energy and home services company in the United States and Canada. It operates through the Texas",
@@ -7167,7 +7167,7 @@
     "name_local": "NRG",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NSC": {
     "description": "Norfolk Southern Corporation, together with its subsidiaries, engages in the rail transportation of raw materials, intermediate products, and finished goods in",
@@ -7177,7 +7177,7 @@
     "name_local": "NSC",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NTAP": {
     "description": "NetApp, Inc. provides a range of enterprise software, systems, and services that customers use to transform their data infrastructures in the United States, Can",
@@ -7187,7 +7187,7 @@
     "name_local": "NTAP",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NTRS": {
     "description": "Northern Trust Corporation, a financial holding company, provides wealth management, asset servicing, asset management, and banking solutions for corporations,",
@@ -7197,7 +7197,7 @@
     "name_local": "NTRS",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NUE": {
     "description": "Nucor Corporation engages in the manufacture and sale of steel and steel products. The company operates in three segments: Steel Mills, Steel Products, and Raw",
@@ -7207,7 +7207,7 @@
     "name_local": "NUE",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NVDA": {
     "description": "GPU·데이터센터·AI 가속기",
@@ -7227,7 +7227,7 @@
     "name_local": "NVR",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NWS": {
     "description": "News Corporation, a media and information services company, creates and distributes authoritative and engaging content, and other products and services for cons",
@@ -7237,7 +7237,7 @@
     "name_local": "NWS",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NWSA": {
     "description": "News Corporation, a media and information services company, creates and distributes authoritative and engaging content, and other products and services for cons",
@@ -7247,7 +7247,7 @@
     "name_local": "NWSA",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "NXPI": {
     "description": "자동차·IoT 반도체",
@@ -7267,7 +7267,7 @@
     "name_local": "O",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ODFL": {
     "description": "미국 LTL 화물 운송",
@@ -7287,7 +7287,7 @@
     "name_local": "OKE",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "OKTA": {
     "description": "클라우드 ID·접근 관리(IAM)",
@@ -7307,7 +7307,7 @@
     "name_local": "OMC",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ON": {
     "description": "전력·전기차용 SiC 반도체",
@@ -7327,7 +7327,7 @@
     "name_local": "ORCL",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ORLY": {
     "description": "자동차 부품·액세서리 소매",
@@ -7347,7 +7347,7 @@
     "name_local": "OTIS",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "OXY": {
     "description": "Occidental Petroleum Corporation, together with its subsidiaries, engages in the acquisition, exploration, and development of oil and gas properties in the Unit",
@@ -7357,7 +7357,7 @@
     "name_local": "OXY",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PANW": {
     "description": "차세대 방화벽·클라우드 보안",
@@ -7397,7 +7397,7 @@
     "name_local": "PCG",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PCVX": {
     "description": "폐렴구균 백신 개발",
@@ -7417,7 +7417,7 @@
     "name_local": "PEG",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PEP": {
     "description": "펩시·게토레이·프리토레이 스낵",
@@ -7437,7 +7437,7 @@
     "name_local": "PFE",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PFG": {
     "description": "Principal Financial Group, Inc. provides retirement, asset management, and insurance products and services to businesses, individuals, and institutional clients",
@@ -7447,7 +7447,7 @@
     "name_local": "PFG",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PG": {
     "description": "The Procter & Gamble Company provides branded consumer packaged goods worldwide. It operates through Beauty; Grooming; Health Care; Fabric & Home Care; and Baby",
@@ -7457,7 +7457,7 @@
     "name_local": "PG",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PGR": {
     "description": "The Progressive Corporation operates as an insurance company in the United States. It writes insurance for personal autos and special lines products, including",
@@ -7467,7 +7467,7 @@
     "name_local": "PGR",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PH": {
     "description": "Parker-Hannifin Corporation manufactures and sells motion and control technologies and systems for aerospace and defense, in-plant and industrial equipment, tra",
@@ -7477,7 +7477,7 @@
     "name_local": "PH",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PHM": {
     "description": "PulteGroup, Inc., through its subsidiaries, engages in the homebuilding business in the United States. The company is involved in the acquisition and developmen",
@@ -7487,7 +7487,7 @@
     "name_local": "PHM",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PKG": {
     "description": "Packaging Corporation of America manufactures and sells containerboard and uncoated freesheet (UFS) paper products in North America. The company operates throug",
@@ -7497,7 +7497,7 @@
     "name_local": "PKG",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PL=F": {
     "description": "Platinum precious metals proxy.",
@@ -7517,7 +7517,7 @@
     "name_local": "PLD",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PLTR": {
     "description": "Palantir Technologies Inc. builds and deploys software platforms for the intelligence community to assist in counterterrorism investigations and operations in t",
@@ -7527,7 +7527,7 @@
     "name_local": "PLTR",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PM": {
     "description": "Philip Morris International Inc. operates as a tobacco company. The company offers cigarettes and smoke-free products, including heat-not-burn, e-vapor, and ora",
@@ -7537,7 +7537,7 @@
     "name_local": "PM",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PNC": {
     "description": "The PNC Financial Services Group, Inc. operates as a diversified financial services company in the United States. It operates through three segments: Retail Ban",
@@ -7547,7 +7547,7 @@
     "name_local": "PNC",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PNR": {
     "description": "Pentair plc provides various water solutions in the United States, Western Europe, China, Latin America, the Middle East, Southeast Asia, Australia, and Canada.",
@@ -7557,7 +7557,7 @@
     "name_local": "PNR",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PNW": {
     "description": "Pinnacle West Capital Corporation, through its subsidiary, provides retail and wholesale electric services in the state of Arizona. The company engages in the g",
@@ -7567,7 +7567,7 @@
     "name_local": "PNW",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PODD": {
     "description": "Insulet Corporation develops, manufactures, and sells insulin delivery systems for people with insulin-dependent diabete",
@@ -7577,7 +7577,7 @@
     "name_local": "PODD",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "POOL": {
     "description": "Pool Corporation distributes swimming pool supplies, equipment, related leisure, irrigation, and landscape maintenance products in the United States and interna",
@@ -7587,7 +7587,7 @@
     "name_local": "POOL",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PPG": {
     "description": "PPG Industries, Inc. manufactures and distributes paints, coatings, and specialty materials in the United States, Canada, the Asia Pacific, Latin America, Europ",
@@ -7597,7 +7597,7 @@
     "name_local": "PPG",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PPL": {
     "description": "PPL Corporation provides electricity and natural gas to approximately 3.6 million customers in the United States. It operates in three segments: Kentucky Regula",
@@ -7607,7 +7607,7 @@
     "name_local": "PPL",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PRU": {
     "description": "Prudential Financial, Inc., together with its subsidiaries, provides financial products and services in the United States, Japan and internationally. It operate",
@@ -7617,7 +7617,7 @@
     "name_local": "PRU",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PSA": {
     "description": "Public Storage, a member of the S&P 500, is a REIT that primarily acquires, develops, owns, and operates self-storage facilities. At December 31, 2025, we: (i)",
@@ -7627,7 +7627,7 @@
     "name_local": "PSA",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PSKY": {
     "description": "Paramount Skydance Corporation operates as a media and entertainment company worldwide. It operates in three segments: Studios, Direct-to-Consumer, and TV Media",
@@ -7637,7 +7637,7 @@
     "name_local": "PSKY",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PSX": {
     "description": "Phillips 66 operates as an integrated downstream energy provider in the United States, the United Kingdom, Germany, and internationally. It operates through fiv",
@@ -7647,7 +7647,7 @@
     "name_local": "PSX",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PTC": {
     "description": "PTC Inc. operates as software company in the Americas, Europe, and the Asia Pacific. The company provides Windchill, a suite that manages all aspects of the pro",
@@ -7657,7 +7657,7 @@
     "name_local": "PTC",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PWR": {
     "description": "Quanta Services, Inc. offers infrastructure solutions for the electric and gas utility, power generation, load center, manufacturing, communications, pipeline,",
@@ -7667,7 +7667,7 @@
     "name_local": "PWR",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "PYPL": {
     "description": "온라인 결제·Venmo",
@@ -7697,7 +7697,7 @@
     "name_local": "RCL",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "REG": {
     "description": "Regency Centers Corporation is a fully integrated real estate company and self-administered and self-managed real estate investment trust that began its operati",
@@ -7707,7 +7707,7 @@
     "name_local": "REG",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "REGN": {
     "description": "아일리아·두필루맙 항체 치료제",
@@ -7727,7 +7727,7 @@
     "name_local": "RF",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "RIVN": {
     "description": "전기 픽업트럭·SUV 제조",
@@ -7747,7 +7747,7 @@
     "name_local": "RJF",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "RL": {
     "description": "Ralph Lauren Corporation designs, markets, and distributes lifestyle products in North America, Europe, Asia, and internationally. It offers apparel, including",
@@ -7757,7 +7757,7 @@
     "name_local": "RL",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "RMD": {
     "description": "ResMed Inc. develops, manufactures, distributes, and markets medical devices and cloud-based software applications to diagnose, treat, and manage respiratory di",
@@ -7767,7 +7767,7 @@
     "name_local": "RMD",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ROK": {
     "description": "Rockwell Automation, Inc., together with its subsidiaries, provides industrial automation and digital transformation solutions in North America, Europe, the Mid",
@@ -7777,7 +7777,7 @@
     "name_local": "ROK",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ROL": {
     "description": "Rollins, Inc., through its subsidiaries, provides pest and wildlife control services and protection to residential and commercial customers in the United States",
@@ -7787,7 +7787,7 @@
     "name_local": "ROL",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ROP": {
     "description": "Roper Technologies, Inc. designs and develops vertical software and technology enabled products in the United States, Canada, Europe, Asia, and internationally.",
@@ -7797,7 +7797,7 @@
     "name_local": "ROP",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "ROST": {
     "description": "오프프라이스 의류·생활용품",
@@ -7817,7 +7817,7 @@
     "name_local": "RSG",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "RTX": {
     "description": "RTX Corporation, an aerospace and defense company, provides systems and services for commercial, military, and government customers worldwide. It operates throu",
@@ -7827,7 +7827,7 @@
     "name_local": "RTX",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "RVTY": {
     "description": "Revvity, Inc. provides health sciences solutions, technologies, and services. The company offers instruments, reagents, software, subscriptions, detection and i",
@@ -7837,7 +7837,7 @@
     "name_local": "RVTY",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SATS": {
     "description": "EchoStar Corporation provides pay-tv services in the United States, Mexico, Canada, South and Central America, Asia, Afr",
@@ -7847,7 +7847,7 @@
     "name_local": "SATS",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SB=F": {
     "description": "Soft commodities proxy.",
@@ -7867,7 +7867,7 @@
     "name_local": "SBAC",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SBUX": {
     "description": "글로벌 커피 프랜차이즈",
@@ -7887,7 +7887,7 @@
     "name_local": "SCHW",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SHW": {
     "description": "The Sherwin-Williams Company engages in the development, manufacture, distribution, and sale of paint, coatings, and related products to professional, industria",
@@ -7897,7 +7897,7 @@
     "name_local": "SHW",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SI=F": {
     "description": "Precious metals proxy.",
@@ -7927,7 +7927,7 @@
     "name_local": "SJM",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SLB": {
     "description": "SLB N.V. engages in the provision of technology for the energy industry worldwide. The company operates through four divisions: Digital & Integration, Reservoir",
@@ -7937,7 +7937,7 @@
     "name_local": "SLB",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SMCI": {
     "description": "AI·데이터센터용 고성능 서버",
@@ -7957,7 +7957,7 @@
     "name_local": "SNA",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SNDK": {
     "description": "Sandisk Corporation develops, manufactures, and sells data storage devices and solutions using NAND flash technology in the United States, Europe, the Middle Ea",
@@ -7967,7 +7967,7 @@
     "name_local": "SNDK",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SNPS": {
     "description": "반도체 설계 자동화(EDA) 툴",
@@ -7987,7 +7987,7 @@
     "name_local": "SO",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SOLV": {
     "description": "Solventum Corporation, a healthcare company, develops, manufactures, and commercializes a portfolio of solutions to address critical customer and patient needs",
@@ -7997,7 +7997,7 @@
     "name_local": "SOLV",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SOXX": {
     "description": "Semiconductor cycle proxy.",
@@ -8017,7 +8017,7 @@
     "name_local": "SPG",
     "sector": "부동산·리츠",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SPGI": {
     "description": "S&P Global Inc., together with its subsidiaries, provides benchmarks, data, analytics, and workflow solutions in the global capital, energy and commodity, and a",
@@ -8027,7 +8027,7 @@
     "name_local": "SPGI",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SRE": {
     "description": "Sempra engages in the regulated utilities business in the United States and Mexico. It operates through three segments: Sempra California, Sempra Texas Utilitie",
@@ -8037,7 +8037,7 @@
     "name_local": "SRE",
     "sector": "유틸리티",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "STE": {
     "description": "STERIS plc provides infection prevention products and services worldwide. It operates in three segments: Healthcare, Applied Sterilization Technologies (AST), a",
@@ -8047,7 +8047,7 @@
     "name_local": "STE",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "STLD": {
     "description": "Steel Dynamics, Inc., together with its subsidiaries, operates as a steel producer and metal recycler in the United States. It operates through four segments: S",
@@ -8057,7 +8057,7 @@
     "name_local": "STLD",
     "sector": "원자재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "STT": {
     "description": "State Street Corporation provides various financial products and services to institutional investors. It offers custody, accounting, and fund administration ser",
@@ -8067,7 +8067,7 @@
     "name_local": "STT",
     "sector": "금융 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "STX": {
     "description": "Seagate Technology Holdings plc engages in the provision of data storage technology and infrastructure solutions in Singapore, the United States, the Netherland",
@@ -8077,7 +8077,7 @@
     "name_local": "STX",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "STZ": {
     "description": "Constellation Brands, Inc., together with its subsidiaries, produces, imports, markets, and sells beer, wine, and spirit",
@@ -8087,7 +8087,7 @@
     "name_local": "STZ",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SW": {
     "description": "Smurfit Westrock Plc, together with its subsidiaries, manufactures, distributes, and sells containerboard, corrugated containers, and other paper-based packagin",
@@ -8097,7 +8097,7 @@
     "name_local": "SW",
     "sector": "경기 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SWK": {
     "description": "Stanley Black & Decker, Inc. provides hand tools, power tools, outdoor products, and related accessories in the United States, Canada, Other Americas, Europe, a",
@@ -8107,7 +8107,7 @@
     "name_local": "SWK",
     "sector": "산업재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SWKS": {
     "description": "Skyworks Solutions, Inc., together with its subsidiaries, develops, manufactures, and markets analog and mixed-signal semiconductor products and solutions in th",
@@ -8117,7 +8117,7 @@
     "name_local": "SWKS",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SYF": {
     "description": "Synchrony Financial, together with its subsidiaries, operates as a consumer financial services company in the United States. The company provides credit product",
@@ -8137,7 +8137,7 @@
     "name_local": "SYK",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "SYY": {
     "description": "Sysco Corporation, through its subsidiaries, engages in the marketing and distribution of various food and related products to the foodservice or food-away-from",
@@ -8157,7 +8157,7 @@
     "name_local": "T",
     "sector": "커뮤니케이션 서비스",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "TAP": {
     "description": "Molson Coors Beverage Company manufactures, markets, distributes, and sells beer and other malt beverage products in the",
@@ -8167,7 +8167,7 @@
     "name_local": "TAP",
     "sector": "필수 소비재",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "TDG": {
     "description": "TransDigm Group Incorporated designs, produces, and supplies aircraft components in the United States and internationally. The Power & Control segment offers me",
@@ -8207,7 +8207,7 @@
     "name_local": "TECH",
     "sector": "헬스케어",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "TEL": {
     "description": "TE Connectivity plc, together with its subsidiaries, manufactures and sells connectivity and sensor solutions in Europe, the Middle East, Africa, the AsiaPacif",
@@ -8307,7 +8307,7 @@
     "name_local": "TPL",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "TPR": {
     "description": "Tapestry, Inc. provides accessories and lifestyle brand products in North America, Greater China, rest of Asia, and internationally. The company operates in thr",
@@ -8897,7 +8897,7 @@
     "name_local": "XOM",
     "sector": "에너지",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "XYL": {
     "description": "Xylem Inc., together with its subsidiaries, engages in the design, manufacture, and servicing of engineered products and solutions for utility, industrial, and",
@@ -8917,7 +8917,7 @@
     "name_local": "XYZ",
     "sector": "기술",
     "source": "csv",
-    "updated_at": "2026-04-28"
+    "updated_at": "2026-04-30"
   },
   "YUM": {
     "description": "Yum! Brands, Inc., together with its subsidiaries, develops, operates, and franchises traditional and non-traditional quick service restaurants in the United St",
