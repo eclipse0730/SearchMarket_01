@@ -4,3 +4,4 @@ lxml
 requests
 deep-translator
 finance-datareader
+psycopg[binary]

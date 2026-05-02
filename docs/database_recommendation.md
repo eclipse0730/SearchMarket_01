@@ -1,6 +1,6 @@
 # SearchMarket Database Recommendation
 
-Last updated: 2026-04-30
+Last updated: 2026-05-02
 
 ## 결론
 
@@ -14,7 +14,7 @@ CSV는 당분간 유지하되, 역할을 다음처럼 낮춥니다.
 
 ## 왜 Postgres인가
 
-현재 스캐너는 NASDAQ 100, S&P 500, KOSPI/KOSDAQ 대형주 중심에서는 CSV로 충분했습니다. 하지만 `us-all`, `kospi-all`, `kosdaq-all`을 다루기 시작하면 데이터량과 갱신 방식이 달라집니다.
+현재 스캐너는 NASDAQ 100, S&P 500, KOSPI/KOSDAQ 대형주 중심에서는 CSV로 충분했습니다. 하지만 `us`, `kospi`, `kosdaq` 같은 시장 전체 스캔을 기본으로 다루기 시작하면 데이터량과 갱신 방식이 달라집니다.
 
 - 일봉 가격은 종목 수 x 거래일 수만큼 계속 증가합니다.
 - 같은 종목을 여러 시장/유니버스에서 재사용합니다.
@@ -76,7 +76,7 @@ volumes:
 주의:
 
 - Naver 시가총액 페이지에는 보통주 외에 우선주, ETF, ETN, 리츠, 스팩, 기타 상품이 섞일 수 있습니다.
-- 따라서 `instruments.asset_type`에 분류를 저장하고, `kospi-all` 기본 스캔 유니버스는 `common_stock` 중심으로 제한하는 것을 권장합니다.
+- 따라서 `instruments.asset_type`에 분류를 저장하고, `kospi`/`kosdaq` 기본 스캔 유니버스는 `common_stock` 중심으로 제한하는 것을 권장합니다.
 
 ### 미국 시장
 
@@ -101,7 +101,8 @@ volumes:
 ### Phase 2: 한국 전체 시장 안정화
 
 - Naver fallback 목록을 `asset_type` 기준으로 분류 저장
-- `kospi-all`/`kosdaq-all` 기본 스캔은 `common_stock`만 사용
+- `kospi`/`kosdaq` 기본 스캔은 시장 전체 `common_stock`을 사용
+- `kospi200`/`kosdaq150`은 선택 유니버스 멤버십으로 관리
 - 우선주/ETF/ETN은 별도 유니버스로 분리
 
 ### Phase 3: DB 기반 조회 전환

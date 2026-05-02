@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import os
 import re
 from contextlib import redirect_stdout
 from datetime import datetime, timezone
@@ -13,7 +14,7 @@ from urllib.parse import quote_plus, urljoin, urlparse, urlunparse
 
 import requests
 
-from market_scanner.models import MarketDefinition, StaticTickerMeta
+from market_scanner.models import MarketDefinition, StaticTickerMeta, UniverseLoader
 
 
 ASSET_DIR = Path(__file__).with_name("assets")
@@ -92,6 +93,11 @@ _STATIC_META_ASSETS: dict[str, str] = {
 
 _PROTECTED_INSTRUMENT_SOURCES = {"manual", "static"}
 _INSTRUMENT_META_FIELDS = ("name_en", "name_local", "sector", "description")
+_DEFAULT_DATABASE_URL = "postgresql://searchmarket:searchmarket@localhost:5433/searchmarket"
+
+
+def _database_url() -> str:
+    return os.getenv("DATABASE_URL") or _DEFAULT_DATABASE_URL
 
 
 def _load_meta_asset(filename: str) -> dict[str, StaticTickerMeta]:
@@ -192,6 +198,48 @@ def _instrument_meta(market_key: str, legacy_filename: str) -> dict[str, StaticT
     return merged
 
 
+@lru_cache(maxsize=None)
+def _db_instrument_meta(market_key: str) -> dict[str, StaticTickerMeta]:
+    try:
+        import psycopg
+    except Exception:
+        return {}
+
+    try:
+        with psycopg.connect(_database_url(), connect_timeout=3) as conn:
+            rows = conn.execute(
+                """
+                SELECT symbol, name_en, name_local, sector, description
+                FROM instruments
+                WHERE market_key = %s
+                  AND is_active = TRUE
+                """,
+                (market_key,),
+            ).fetchall()
+    except Exception:
+        return {}
+
+    metadata: dict[str, StaticTickerMeta] = {}
+    for symbol, name_en, name_local, sector, description in rows:
+        symbol_text = _clean_instrument_value(symbol)
+        if not symbol_text:
+            continue
+        metadata[symbol_text] = StaticTickerMeta(
+            name_en=_clean_instrument_value(name_en) or symbol_text,
+            name_local=_clean_instrument_value(name_local) or _clean_instrument_value(name_en) or symbol_text,
+            sector=_clean_instrument_value(sector) or "Unknown",
+            description=_clean_instrument_value(description) or "No description",
+        )
+    return metadata
+
+
+def _instrument_meta_db_first(market_key: str, legacy_filename: str) -> dict[str, StaticTickerMeta]:
+    db_meta = _db_instrument_meta(market_key)
+    if db_meta:
+        return db_meta
+    return _instrument_meta(market_key, legacy_filename)
+
+
 def _write_instruments_payload(payload: dict[str, dict[str, str]]) -> None:
     _INSTRUMENTS_PATH.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
@@ -261,32 +309,32 @@ def _nasdaq100_static_meta() -> dict[str, StaticTickerMeta]:
 
 @lru_cache(maxsize=None)
 def _us_static_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta("us", _STATIC_META_ASSETS["us"])
+    return _instrument_meta_db_first("us", _STATIC_META_ASSETS["us"])
 
 
 @lru_cache(maxsize=None)
 def _kospi_static_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta("kospi", _STATIC_META_ASSETS["kospi"])
+    return _instrument_meta_db_first("kospi", _STATIC_META_ASSETS["kospi"])
 
 
 @lru_cache(maxsize=None)
 def _kosdaq_static_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta("kosdaq", _STATIC_META_ASSETS["kosdaq"])
+    return _instrument_meta_db_first("kosdaq", _STATIC_META_ASSETS["kosdaq"])
 
 
 @lru_cache(maxsize=None)
 def _global_index_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta("global-indices", _STATIC_META_ASSETS["global-indices"])
+    return _instrument_meta_db_first("global-indices", _STATIC_META_ASSETS["global-indices"])
 
 
 @lru_cache(maxsize=None)
 def _theme_proxy_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta("theme-proxies", _STATIC_META_ASSETS["theme-proxies"])
+    return _instrument_meta_db_first("theme-proxies", _STATIC_META_ASSETS["theme-proxies"])
 
 
 @lru_cache(maxsize=None)
 def _commodity_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta("commodities", _STATIC_META_ASSETS["commodities"])
+    return _instrument_meta_db_first("commodities", _STATIC_META_ASSETS["commodities"])
 
 
 def _fetch_sp500_tickers() -> list[str]:
@@ -530,19 +578,25 @@ def _merge_metadata(*sources: dict[str, StaticTickerMeta]) -> dict[str, StaticTi
 
 @lru_cache(maxsize=None)
 def _kospi_metadata() -> dict[str, StaticTickerMeta]:
+    db_meta = _db_instrument_meta("kospi")
+    if db_meta:
+        return db_meta
     return _merge_metadata(
         _naver_market_meta("0", ".KS", "KOSPI"),
         _fdr_market_meta("KOSPI", ".KS", "KOSPI"),
-        _kospi_static_meta(),
+        _instrument_meta("kospi", _STATIC_META_ASSETS["kospi"]),
     )
 
 
 @lru_cache(maxsize=None)
 def _kosdaq_metadata() -> dict[str, StaticTickerMeta]:
+    db_meta = _db_instrument_meta("kosdaq")
+    if db_meta:
+        return db_meta
     return _merge_metadata(
         _naver_market_meta("1", ".KQ", "KOSDAQ"),
         _fdr_market_meta("KOSDAQ", ".KQ", "KOSDAQ"),
-        _kosdaq_static_meta(),
+        _instrument_meta("kosdaq", _STATIC_META_ASSETS["kosdaq"]),
     )
 
 
@@ -565,6 +619,10 @@ def _fetch_fdr_market(market: str, suffix: str, top_n: int | None, label: str) -
 
 def _fetch_krx_kospi200() -> list[str]:
     return _fetch_fdr_market("KOSPI", ".KS", 200, "KOSPI200")
+
+
+def _fetch_krx_kospi100() -> list[str]:
+    return _fetch_fdr_market("KOSPI", ".KS", 100, "KOSPI100")
 
 
 def _fetch_krx_kosdaq150() -> list[str]:
@@ -685,8 +743,8 @@ def _us_all_universe() -> list[str]:
     return _merge_static_with_live(curated, _fetch_us_listed_symbols())
 
 
-def _kospi_universe() -> list[str]:
-    static = list(_kospi_static_meta().keys())
+def _kospi200_universe() -> list[str]:
+    static = list(_instrument_meta("kospi", _STATIC_META_ASSETS["kospi"]).keys())
     if len(static) >= 200:
         return static
     krx = _fetch_krx_kospi200()
@@ -698,8 +756,15 @@ def _kospi_universe() -> list[str]:
     return static
 
 
-def _kosdaq_universe() -> list[str]:
-    static = list(_kosdaq_static_meta().keys())
+def _kospi100_universe() -> list[str]:
+    krx = _fetch_krx_kospi100()
+    if krx:
+        return krx
+    return list(_instrument_meta("kospi", _STATIC_META_ASSETS["kospi"]).keys())[:100]
+
+
+def _kosdaq150_universe() -> list[str]:
+    static = list(_instrument_meta("kosdaq", _STATIC_META_ASSETS["kosdaq"]).keys())
     krx = _fetch_krx_kosdaq150()
     seen = set(static)
     for t in krx:
@@ -719,13 +784,13 @@ def _merge_static_with_live(static: list[str], live: list[str]) -> list[str]:
     return merged
 
 
-def _kospi_all_universe() -> list[str]:
+def _kospi_universe() -> list[str]:
     live = _fetch_krx_kospi_all()
     static = list(_kospi_static_meta().keys())
     return _merge_static_with_live(live, static) if live else static
 
 
-def _kosdaq_all_universe() -> list[str]:
+def _kosdaq_universe() -> list[str]:
     live = _fetch_krx_kosdaq_all()
     static = list(_kosdaq_static_meta().keys())
     return _merge_static_with_live(live, static) if live else static
@@ -922,6 +987,13 @@ def _display_commodity(symbol: str) -> str:
     return symbol.replace("=F", "")
 
 
+REPRESENTATIVE_UNIVERSE_LOADERS: dict[str, UniverseLoader] = {
+    "kospi100": _kospi100_universe,
+    "kospi200": _kospi200_universe,
+    "kosdaq150": _kosdaq150_universe,
+}
+
+
 MARKETS: dict[str, MarketDefinition] = {
     "us": MarketDefinition(
         key="us",
@@ -982,7 +1054,7 @@ MARKETS: dict[str, MarketDefinition] = {
         quote_url_builder=_quote_url_investing_detail,
         display_symbol_builder=_display_strip_kr,
         sector_aliases=_SECTOR_KO,
-        notes="Static JSON + KOSPI200 (KRX API, live).",
+        notes="Full KOSPI universe from FDR/KRX when available, with static metadata fallback.",
     ),
     "kosdaq": MarketDefinition(
         key="kosdaq",
@@ -991,32 +1063,6 @@ MARKETS: dict[str, MarketDefinition] = {
         currency_symbol="KRW ",
         price_decimals=0,
         universe_loader=_kosdaq_universe,
-        metadata_loader=_kosdaq_metadata,
-        quote_url_builder=_quote_url_investing_detail,
-        display_symbol_builder=_display_strip_kr,
-        sector_aliases=_SECTOR_KO,
-        notes="Static JSON + KOSDAQ150 (KRX API, live).",
-    ),
-    "kospi-all": MarketDefinition(
-        key="kospi-all",
-        label="KOSPI All Stocks",
-        output_prefix="kospi-all",
-        currency_symbol="KRW ",
-        price_decimals=0,
-        universe_loader=_kospi_all_universe,
-        metadata_loader=_kospi_metadata,
-        quote_url_builder=_quote_url_investing_detail,
-        display_symbol_builder=_display_strip_kr,
-        sector_aliases=_SECTOR_KO,
-        notes="Full KOSPI universe from FDR/KRX when available, with static metadata fallback.",
-    ),
-    "kosdaq-all": MarketDefinition(
-        key="kosdaq-all",
-        label="KOSDAQ All Stocks",
-        output_prefix="kosdaq-all",
-        currency_symbol="KRW ",
-        price_decimals=0,
-        universe_loader=_kosdaq_all_universe,
         metadata_loader=_kosdaq_metadata,
         quote_url_builder=_quote_url_investing_detail,
         display_symbol_builder=_display_strip_kr,

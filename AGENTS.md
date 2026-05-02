@@ -12,12 +12,12 @@
 
 ## Local Commands
 
-현재 로컬 기본 `python` 명령은 신뢰하지 않습니다. 검증에는 가상환경 Python을 명시합니다.
+현재 로컬 기본 `python`/`python3` 명령은 OS별로 다를 수 있습니다. 검증에는 `uv run python`으로 프로젝트 `.venv`를 사용합니다.
 
 ```powershell
-.\.venv\Scripts\python.exe --version
-.\.venv\Scripts\python.exe -m compileall Search.py market_scanner
-.\.venv\Scripts\python.exe Search.py --help
+uv run python --version
+uv run python -m compileall Search.py market_scanner
+uv run python Search.py --help
 ```
 
 네트워크가 필요한 명령은 실행 환경에 따라 실패할 수 있습니다.
@@ -25,7 +25,7 @@
 - `Search.py --stage scan`: yfinance, Wikipedia, FinanceDataReader, Naver Finance, Investing 검색 요청을 사용할 수 있습니다.
 - `Search.py --stage translate`: deep-translator/GoogleTranslator 요청을 사용할 수 있습니다.
 - `Search.py --stage news`: 최신 CSV 기반으로 yfinance `Ticker.news` 요청을 사용해 `market_scanner/assets/news_cache.json`을 갱신합니다. 실행 시간과 요청량 때문에 `all`에는 포함하지 않습니다.
-- `python -m market_scanner.site_builder`: 로컬 파일 기반 사이트 빌드입니다. 로컬 실행은 빌드 후 기본 브라우저로 `site/index.html`을 열며, `--no-open`으로 자동 열기를 끌 수 있습니다. S&P 500 파생 페이지 생성 시 유니버스 로더가 네트워크/캐시를 사용할 수 있습니다.
+- `uv run python -m market_scanner.site_builder`: 로컬 파일 기반 사이트 빌드입니다. 로컬 실행은 빌드 후 기본 브라우저로 `site/index.html`을 열며, `--no-open`으로 자동 열기를 끌 수 있습니다. S&P 500 파생 페이지 생성 시 유니버스 로더가 네트워크/캐시를 사용할 수 있습니다.
 
 ## Important Files
 
@@ -69,7 +69,7 @@
 - `reports/Report_*.html`
 - `site/**`
 - `market_scanner/assets/investing_url_cache.json`
-- `market_scanner/assets/instruments.json`은 공통 종목 마스터입니다. 고정 메타데이터를 누적하지만 자동 스캔값이 `static`/`manual` 출처 레코드를 덮어쓰지 않게 관리합니다.
+- `market_scanner/assets/instruments.json`은 공통 종목 마스터 seed/fallback입니다. PostgreSQL `instruments` 테이블을 우선 원천으로 사용하며, 스캔 단계는 이 JSON을 자동 갱신하지 않습니다.
 - `market_scanner/assets/sp500_members_cache.json`
 - `market_scanner/assets/us_listed_symbols_cache.json`
 - `market_scanner/assets/.yfinance_cache/`는 로컬 yfinance SQLite 캐시이며 Git 추적 대상이 아닙니다.
@@ -84,12 +84,12 @@
 
 ## Current Known State
 
-2026-04-28 기준:
+2026-05-02 기준:
 
-- `nasdaq100`과 `sp500`은 독립 CLI 시장이며, 기존 `us` 결합 스캔은 호환용으로 유지함. 사이트 빌더는 독립 CSV가 없을 때만 기존 US CSV에서 NASDAQ 100/S&P 500/Dow 30 페이지를 fallback 생성함
+- 권장 CLI 구조는 시장 단위 `--market`과 선택적 멤버십 필터 `--universe`임. 예: `uv run python Search.py --market us --universe sp500`, `uv run python Search.py --market kospi --universe kospi100`, `uv run python Search.py --market kospi --universe kospi200`
 - `site_builder.py`는 빈 최신 CSV를 건너뛰고 이전 정상 CSV를 찾아 Pages 빌드를 계속함
-- `.\.venv\Scripts\python.exe -m compileall Search.py market_scanner` 통과
-- `.\.venv\Scripts\python.exe Search.py --help` 통과
+- `uv run python -m compileall Search.py market_scanner` 통과
+- `uv run python Search.py --help` 통과
 - 최신 CSV 샘플은 정상 로드됨
 - `site_builder.py`는 최신 CSV 기반 페이지 fallback을 지원함
 - 메인페이지는 preview-home v2 디자인을 반영해 `site/index.html`에 생성하며, `site/preview-home/index.html`은 같은 디자인의 보조 미리보기 페이지임
@@ -98,7 +98,12 @@
 - 모든 시장의 Investing 링크는 한국 사용자 UX를 위해 `kr.investing.com` 도메인으로 출력함
 - KOSPI/KOSDAQ 상세페이지 링크도 NASDAQ 100과 같이 Investing 상세 URL 캐시를 우선 사용하고, 실패 시 검색 링크로 fallback함
 - KOSPI/KOSDAQ 계열 가격 히스토리는 스캔 시 FinanceDataReader를 우선 사용하고, 실패 또는 히스토리 부족 시 yfinance로 fallback함. 한국 전체 유니버스는 FDR/KRX listing 실패 시 Naver Finance 시가총액 목록으로 보강함. 한국 종목명/섹터는 FinanceDataReader, Naver Finance, 정적 메타데이터로 보강하고, 렌더링 시 placeholder 이름/섹터를 보정함. 한국 시장 화면은 한글 종목명 우선이며, 한글명을 확보하지 못하면 영어 회사명 대신 종목코드를 표시함
-- 모든 시장의 고정 종목 메타데이터는 `market_scanner/assets/instruments.json`을 우선 사용하고, 기존 시장별 `*_static_meta.json`은 호환 fallback으로 유지함
+- 모든 시장의 고정 종목 메타데이터는 PostgreSQL `instruments` 테이블을 우선 사용하고, DB가 비어 있거나 연결되지 않을 때 `market_scanner/assets/instruments.json`과 기존 시장별 `*_static_meta.json`을 seed/fallback으로 사용함
+- 종목마스터 신규 갱신 기준은 `uv run python -m market_scanner.db refresh-master`이며, `--market kospi`는 KOSPI 전체만 갱신하고 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`처럼 명시했을 때 대표 유니버스를 갱신함. `--reset`은 기존 적재 마스터/스캔 데이터를 비운 뒤 유니버스 로더 기반으로 다시 구성함. `--market`과 함께 쓰면 해당 시장만 reset하고, `--universe`와 함께 쓰면 해당 유니버스 멤버십/산출물만 reset하며 종목마스터는 보존함. `collection_runs` 로그는 계속 누적함. `load-master`는 JSON seed 복구용 호환 명령으로 유지함
+- 스캔 기본값은 DB `instruments`의 시장 전체 활성 종목이며, `uv run python Search.py --market kospi --universe kospi200`처럼 `--universe`를 지정하면 `universe_memberships`의 해당 현재 편입 종목만 스캔함. 시장과 universe가 맞지 않으면 오류로 중단함
+- `kospi`, `kosdaq`은 시장 전체가 기본이며, `kospi100`, `kospi200`, `kosdaq150`은 `--universe` 옵션값으로만 사용함
+- `refresh-master`는 기존 멤버십과 새 수집 목록을 비교해 일치/불일치, 추가/삭제, 순위 변경, 신규 instrument 샘플을 로그와 `collection_runs.params`에 남기며, 멤버십 목록과 순서가 같으면 `universe_memberships` 재작성을 건너뜀
+- `uv run python -m market_scanner.db init`은 기준 market/universe row를 최신 코드 기준으로 upsert하고, 현재 코드에 없는 기준 row는 삭제 대신 `is_active = false`로 비활성화함
 - 상세페이지 종목 리스트의 추세 정렬은 표시 문자열이 아니라 숫자 추세 점수 기준으로 처리함
 - 상세페이지 Heatmap은 섹터별 `change_pct` 평균 상승률 강도 기준으로 표시함. 타일에는 평균, 중앙값, 상승 종목 비율, 종목 수를 함께 표시함
 - 상세페이지 종목 리스트에서는 MA60/120/240 차이율 컬럼을 숨기고, 해당 값은 Scatter/Setup 계산용 DATA에는 유지함

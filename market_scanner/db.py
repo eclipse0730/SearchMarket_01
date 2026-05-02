@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from datetime import datetime
 from pathlib import Path
@@ -11,12 +12,23 @@ import psycopg
 from psycopg.types.json import Jsonb
 
 from market_scanner.compat import load_frame
-from market_scanner.markets import MARKETS
+from market_scanner.markets import MARKETS, REPRESENTATIVE_UNIVERSE_LOADERS
 from market_scanner.models import MarketDefinition
 
 
 DEFAULT_DATABASE_URL = "postgresql://searchmarket:searchmarket@localhost:5433/searchmarket"
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "docs" / "database_schema_v1.sql"
+INSTRUMENTS_PATH = Path(__file__).resolve().parent / "assets" / "instruments.json"
+REFRESH_LOG_SAMPLE_LIMIT = 30
+DEPRECATED_MARKET_KEYS = ["kospi-all", "kosdaq-all"]
+DEPRECATED_UNIVERSE_KEYS = ["kospi-all", "kosdaq-all"]
+UNIVERSE_MARKET_ALIASES = {
+    "kospi100": "kospi",
+    "kospi200": "kospi",
+    "kosdaq150": "kosdaq",
+    "nasdaq100": "us",
+    "sp500": "us",
+}
 
 
 def database_url(explicit_url: str | None = None) -> str:
@@ -35,12 +47,10 @@ def init_db(explicit_url: str | None = None) -> None:
 
 
 def home_market_key(market_key: str) -> str:
-    if market_key in {"nasdaq100", "sp500", "us-all"}:
+    if market_key in UNIVERSE_MARKET_ALIASES:
+        return UNIVERSE_MARKET_ALIASES[market_key]
+    if market_key in {"us-all"}:
         return "us"
-    if market_key == "kospi-all":
-        return "kospi"
-    if market_key == "kosdaq-all":
-        return "kosdaq"
     return market_key
 
 
@@ -69,9 +79,77 @@ def price_source_for_market(market_key: str) -> str:
     return "yfinance"
 
 
+def cleanup_deprecated_reference_data(conn: psycopg.Connection) -> None:
+    conn.execute("DELETE FROM generated_reports WHERE market_key = ANY(%s) OR universe_key = ANY(%s)", (DEPRECATED_MARKET_KEYS, DEPRECATED_UNIVERSE_KEYS))
+    conn.execute("DELETE FROM sector_snapshots WHERE market_key = ANY(%s) OR universe_key = ANY(%s)", (DEPRECATED_MARKET_KEYS, DEPRECATED_UNIVERSE_KEYS))
+    conn.execute("DELETE FROM market_snapshots WHERE market_key = ANY(%s) OR universe_key = ANY(%s)", (DEPRECATED_MARKET_KEYS, DEPRECATED_UNIVERSE_KEYS))
+    conn.execute("DELETE FROM scan_results WHERE market_key = ANY(%s) OR universe_key = ANY(%s)", (DEPRECATED_MARKET_KEYS, DEPRECATED_UNIVERSE_KEYS))
+    conn.execute("DELETE FROM universe_memberships WHERE universe_key = ANY(%s)", (DEPRECATED_UNIVERSE_KEYS,))
+    conn.execute("UPDATE collection_runs SET universe_key = NULL WHERE universe_key = ANY(%s)", (DEPRECATED_UNIVERSE_KEYS,))
+    conn.execute("UPDATE collection_runs SET market_key = NULL WHERE market_key = ANY(%s)", (DEPRECATED_MARKET_KEYS,))
+
+    conn.execute(
+        """
+        DELETE FROM instrument_news
+        WHERE instrument_id IN (
+            SELECT instrument_id FROM instruments WHERE market_key = ANY(%s)
+        )
+        """,
+        (DEPRECATED_MARKET_KEYS,),
+    )
+    for table in ["instrument_fundamentals", "daily_indicators", "daily_prices"]:
+        conn.execute(
+            f"""
+            DELETE FROM {table}
+            WHERE instrument_id IN (
+                SELECT instrument_id FROM instruments WHERE market_key = ANY(%s)
+            )
+            """,
+            (DEPRECATED_MARKET_KEYS,),
+        )
+    conn.execute("DELETE FROM instruments WHERE market_key = ANY(%s)", (DEPRECATED_MARKET_KEYS,))
+    conn.execute("DELETE FROM universe_definitions WHERE universe_key = ANY(%s)", (DEPRECATED_UNIVERSE_KEYS,))
+    conn.execute("DELETE FROM markets WHERE market_key = ANY(%s)", (DEPRECATED_MARKET_KEYS,))
+    conn.execute(
+        """
+        DELETE FROM news_items
+        WHERE NOT EXISTS (
+            SELECT 1 FROM instrument_news
+            WHERE instrument_news.news_id = news_items.news_id
+        )
+        """
+    )
+
+
 def seed_reference_data(conn: psycopg.Connection) -> None:
     home_keys = {home_market_key(key) for key in MARKETS}
-    for key in sorted(set(MARKETS) | home_keys):
+    active_market_keys = sorted(set(MARKETS) | home_keys)
+    extra_universes = {
+        "kospi100": ("kospi", "KOSPI 100", "KOSPI 100 component universe."),
+        "kospi200": ("kospi", "KOSPI 200", "KOSPI 200 component universe."),
+        "kosdaq150": ("kosdaq", "KOSDAQ 150", "KOSDAQ 150 component universe."),
+    }
+    active_universe_keys = sorted(set(MARKETS) | set(extra_universes))
+    cleanup_deprecated_reference_data(conn)
+
+    conn.execute(
+        """
+        UPDATE markets
+        SET is_active = FALSE
+        WHERE NOT (market_key = ANY(%s))
+        """,
+        (active_market_keys,),
+    )
+    conn.execute(
+        """
+        UPDATE universe_definitions
+        SET is_active = FALSE
+        WHERE NOT (universe_key = ANY(%s))
+        """,
+        (active_universe_keys,),
+    )
+
+    for key in active_market_keys:
         market = MARKETS.get(key)
         label = market.label if market else key.upper()
         country_code, currency_code, timezone = country_currency_for_market(key)
@@ -90,6 +168,31 @@ def seed_reference_data(conn: psycopg.Connection) -> None:
                 is_active = TRUE
             """,
             (key, label, country_code, currency_code, timezone, market.notes if market else None),
+        )
+
+    for universe_key, (market_key, label, description) in extra_universes.items():
+        conn.execute(
+            """
+            INSERT INTO universe_definitions (
+                universe_key, market_key, label, description, source_policy, default_asset_type_filter, is_active
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, TRUE)
+            ON CONFLICT (universe_key) DO UPDATE SET
+                market_key = EXCLUDED.market_key,
+                label = EXCLUDED.label,
+                description = EXCLUDED.description,
+                source_policy = EXCLUDED.source_policy,
+                default_asset_type_filter = EXCLUDED.default_asset_type_filter,
+                is_active = TRUE
+            """,
+            (
+                universe_key,
+                market_key,
+                label,
+                description,
+                description,
+                default_asset_filter(universe_key),
+            ),
         )
 
     for universe_key, market in MARKETS.items():
@@ -210,6 +313,9 @@ def upsert_instrument(
     conn: psycopg.Connection,
     market: MarketDefinition,
     row: pd.Series,
+    *,
+    source_provider: str = "csv",
+    source_rank: int = 80,
 ) -> int:
     symbol = _clean_text(row.get("symbol"))
     if not symbol:
@@ -255,12 +361,76 @@ def upsert_instrument(
             _clean_text(row.get("name_local")),
             _clean_text(row.get("sector")),
             _clean_text(row.get("description")),
-            "csv",
-            80,
+            source_provider,
+            source_rank,
             Jsonb(raw_metadata),
         ),
     ).fetchone()
     return int(result[0])
+
+
+def _source_rank(source_provider: str | None) -> int:
+    source = (source_provider or "").lower()
+    if source == "manual":
+        return 10
+    if source == "static":
+        return 20
+    if source in {"fdr", "naver", "yfinance"}:
+        return 60
+    if source == "csv":
+        return 80
+    return 100
+
+
+def _load_master_payload() -> dict[str, dict[str, Any]]:
+    if not INSTRUMENTS_PATH.exists():
+        return {}
+    payload = json.loads(INSTRUMENTS_PATH.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"Expected object payload in {INSTRUMENTS_PATH}")
+    return {
+        str(symbol).strip(): values
+        for symbol, values in payload.items()
+        if str(symbol).strip() and isinstance(values, dict)
+    }
+
+
+def _master_row(symbol: str, values: dict[str, Any]) -> pd.Series:
+    return pd.Series(
+        {
+            "symbol": symbol,
+            "display_symbol": values.get("display_symbol"),
+            "name_en": values.get("name_en"),
+            "name_local": values.get("name_local"),
+            "sector": values.get("sector"),
+            "description": values.get("description"),
+        }
+    )
+
+
+def load_master(market_key: str | None = None, explicit_url: str | None = None) -> int:
+    payload = _load_master_payload()
+    loaded = 0
+    with connect(explicit_url) as conn:
+        seed_reference_data(conn)
+        for symbol, values in sorted(payload.items()):
+            record_market_key = _clean_text(values.get("market_key"))
+            if not record_market_key:
+                continue
+            if market_key and record_market_key != market_key:
+                continue
+            if record_market_key not in MARKETS:
+                continue
+            source_provider = _clean_text(values.get("source")) or "static"
+            upsert_instrument(
+                conn,
+                MARKETS[record_market_key],
+                _master_row(symbol, values),
+                source_provider=source_provider,
+                source_rank=_source_rank(source_provider),
+            )
+            loaded += 1
+    return loaded
 
 
 def create_run(
@@ -299,6 +469,9 @@ def finish_run(
     success_count: int,
     failed_count: int = 0,
     skipped_count: int = 0,
+    params: dict[str, Any] | None = None,
+    error_samples: list[Any] | None = None,
+    notes: str | None = None,
 ) -> None:
     conn.execute(
         """
@@ -307,10 +480,22 @@ def finish_run(
             finished_at = now(),
             success_count = %s,
             failed_count = %s,
-            skipped_count = %s
+            skipped_count = %s,
+            params = params || %s,
+            error_samples = %s,
+            notes = COALESCE(%s, notes)
         WHERE run_id = %s
         """,
-        (status, success_count, failed_count, skipped_count, run_id),
+        (
+            status,
+            success_count,
+            failed_count,
+            skipped_count,
+            Jsonb(params or {}),
+            Jsonb(error_samples or []),
+            notes,
+            run_id,
+        ),
     )
 
 
@@ -320,20 +505,505 @@ def upsert_universe_membership(
     instrument_id: int,
     trade_date: datetime.date,
     rank_no: int,
+    *,
+    source_provider: str = "csv",
 ) -> None:
     conn.execute(
         """
         INSERT INTO universe_memberships (
             universe_key, instrument_id, effective_from, effective_to, rank_no, source_provider
         )
-        VALUES (%s, %s, %s, NULL, %s, 'csv')
+        VALUES (%s, %s, %s, NULL, %s, %s)
         ON CONFLICT (universe_key, instrument_id, effective_from) DO UPDATE SET
             effective_to = NULL,
             rank_no = EXCLUDED.rank_no,
             source_provider = EXCLUDED.source_provider
         """,
-        (universe_key, instrument_id, trade_date, rank_no),
+        (universe_key, instrument_id, trade_date, rank_no, source_provider),
     )
+
+
+def create_universe_run(
+    conn: psycopg.Connection,
+    market_key: str,
+    universe_key: str,
+    trade_date: datetime.date,
+    requested_count: int,
+    *,
+    params: dict[str, Any] | None = None,
+) -> str:
+    run_params = {"loaded_from": "universe_loader", "scan_market_key": market_key}
+    if params:
+        run_params.update(params)
+    result = conn.execute(
+        """
+        INSERT INTO collection_runs (
+            run_type, market_key, universe_key, trade_date, source_provider, status,
+            requested_count, params
+        )
+        VALUES ('universe', %s, %s, %s, 'market_scanner', 'running', %s, %s)
+        RETURNING run_id
+        """,
+        (
+            home_market_key(market_key),
+            universe_key,
+            trade_date,
+            requested_count,
+            Jsonb(run_params),
+        ),
+    ).fetchone()
+    return str(result[0])
+
+
+def _market_universe_keys(conn: psycopg.Connection, market_key: str) -> list[str]:
+    home_key = home_market_key(market_key)
+    rows = conn.execute(
+        "SELECT universe_key FROM universe_definitions WHERE market_key = %s ORDER BY universe_key",
+        (home_key,),
+    ).fetchall()
+    keys = [str(row[0]) for row in rows]
+    return keys or [home_key]
+
+
+def reset_loaded_data(
+    conn: psycopg.Connection,
+    market_key: str | None = None,
+    universe_keys: list[str] | None = None,
+) -> None:
+    if market_key:
+        home_key = home_market_key(market_key)
+        market_wide_reset = universe_keys is None
+        universe_keys = universe_keys or _market_universe_keys(conn, home_key)
+        print(f"  reset scope: market={home_key}, universes={', '.join(universe_keys)}")
+        conn.execute("DELETE FROM generated_reports WHERE market_key = %s OR universe_key = ANY(%s)", (home_key, universe_keys))
+        conn.execute("DELETE FROM sector_snapshots WHERE market_key = %s OR universe_key = ANY(%s)", (home_key, universe_keys))
+        conn.execute("DELETE FROM market_snapshots WHERE market_key = %s OR universe_key = ANY(%s)", (home_key, universe_keys))
+        conn.execute("DELETE FROM scan_results WHERE market_key = %s OR universe_key = ANY(%s)", (home_key, universe_keys))
+        conn.execute("DELETE FROM universe_memberships WHERE universe_key = ANY(%s)", (universe_keys,))
+        if not market_wide_reset:
+            return
+
+        conn.execute(
+            """
+            DELETE FROM instrument_news
+            WHERE instrument_id IN (
+                SELECT instrument_id FROM instruments WHERE market_key = %s
+            )
+            """,
+            (home_key,),
+        )
+        for table in ["instrument_fundamentals", "daily_indicators", "daily_prices"]:
+            conn.execute(
+                f"""
+                DELETE FROM {table}
+                WHERE instrument_id IN (
+                    SELECT instrument_id FROM instruments WHERE market_key = %s
+                )
+                """,
+                (home_key,),
+            )
+        conn.execute("DELETE FROM instruments WHERE market_key = %s", (home_key,))
+        conn.execute(
+            """
+            DELETE FROM news_items
+            WHERE NOT EXISTS (
+                SELECT 1 FROM instrument_news
+                WHERE instrument_news.news_id = news_items.news_id
+            )
+            """
+        )
+        return
+
+    print("  reset scope: all loaded data; collection_runs retained")
+    for table in [
+        "instrument_news",
+        "generated_reports",
+        "sector_snapshots",
+        "market_snapshots",
+        "scan_results",
+        "instrument_fundamentals",
+        "daily_indicators",
+        "daily_prices",
+        "universe_memberships",
+        "news_items",
+        "instruments",
+    ]:
+        conn.execute(f"DELETE FROM {table}")
+
+
+def _dedupe_symbols(symbols: list[str]) -> list[str]:
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for symbol in symbols:
+        text = _clean_text(symbol)
+        if not text or text in seen:
+            continue
+        deduped.append(text)
+        seen.add(text)
+    return deduped
+
+
+def _master_row_from_universe(
+    market: MarketDefinition,
+    symbol: str,
+    metadata: dict[str, Any],
+) -> pd.Series:
+    meta = metadata.get(symbol)
+    return pd.Series(
+        {
+            "symbol": symbol,
+            "display_symbol": market.display_symbol_builder(symbol),
+            "name_en": getattr(meta, "name_en", None) or symbol,
+            "name_local": getattr(meta, "name_local", None) or getattr(meta, "name_en", None) or symbol,
+            "sector": getattr(meta, "sector", None) or "Unknown",
+            "description": getattr(meta, "description", None) or "No description",
+        }
+    )
+
+
+def _default_refresh_market_keys() -> list[str]:
+    return sorted(MARKETS.keys())
+
+
+def _universe_market_key(universe_key: str) -> str:
+    return UNIVERSE_MARKET_ALIASES.get(universe_key, home_market_key(universe_key))
+
+
+def _sample_symbols(symbols: list[str], limit: int = REFRESH_LOG_SAMPLE_LIMIT) -> list[str]:
+    return symbols[:limit]
+
+
+def _current_universe_membership(conn: psycopg.Connection, universe_key: str) -> list[dict[str, Any]]:
+    rows = conn.execute(
+        """
+        SELECT i.symbol, um.rank_no
+        FROM universe_memberships um
+        JOIN instruments i ON i.instrument_id = um.instrument_id
+        WHERE um.universe_key = %s
+          AND um.effective_to IS NULL
+          AND i.is_active = TRUE
+        ORDER BY um.rank_no NULLS LAST, i.symbol
+        """,
+        (universe_key,),
+    ).fetchall()
+    return [{"symbol": str(row[0]), "rank_no": row[1]} for row in rows]
+
+
+def _current_instrument_symbols(conn: psycopg.Connection, market_key: str) -> set[str]:
+    rows = conn.execute(
+        """
+        SELECT symbol
+        FROM instruments
+        WHERE market_key = %s
+          AND is_active = TRUE
+        """,
+        (home_market_key(market_key),),
+    ).fetchall()
+    return {str(row[0]) for row in rows}
+
+
+def _membership_compare(current: list[dict[str, Any]], symbols: list[str]) -> dict[str, Any]:
+    current_symbols = [str(row["symbol"]) for row in current]
+    current_set = set(current_symbols)
+    new_set = set(symbols)
+    matched = sorted(current_set & new_set)
+    added = [symbol for symbol in symbols if symbol not in current_set]
+    removed = [symbol for symbol in current_symbols if symbol not in new_set]
+
+    current_rank = {str(row["symbol"]): row.get("rank_no") for row in current}
+    new_rank = {symbol: index for index, symbol in enumerate(symbols, start=1)}
+    rank_changed = [
+        {
+            "symbol": symbol,
+            "old_rank": current_rank.get(symbol),
+            "new_rank": new_rank[symbol],
+        }
+        for symbol in symbols
+        if symbol in current_rank and current_rank.get(symbol) != new_rank[symbol]
+    ]
+
+    return {
+        "previous_count": len(current_symbols),
+        "fetched_count": len(symbols),
+        "matched_count": len(matched),
+        "mismatch_count": len(added) + len(removed),
+        "added_count": len(added),
+        "removed_count": len(removed),
+        "rank_changed_count": len(rank_changed),
+        "membership_unchanged": current_symbols == symbols,
+        "added_symbols": added,
+        "removed_symbols": removed,
+        "rank_changed": rank_changed,
+    }
+
+
+def _refresh_log_params(
+    compare: dict[str, Any],
+    instrument_added: list[str],
+    membership_rewritten: bool,
+    instrument_upserted: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "comparison": {
+            "previous_count": compare["previous_count"],
+            "fetched_count": compare["fetched_count"],
+            "matched_count": compare["matched_count"],
+            "mismatch_count": compare["mismatch_count"],
+            "added_count": compare["added_count"],
+            "removed_count": compare["removed_count"],
+            "rank_changed_count": compare["rank_changed_count"],
+            "membership_unchanged": compare["membership_unchanged"],
+            "membership_rewritten": membership_rewritten,
+        },
+        "samples": {
+            "added_symbols": _sample_symbols(compare["added_symbols"]),
+            "removed_symbols": _sample_symbols(compare["removed_symbols"]),
+            "rank_changed": compare["rank_changed"][:REFRESH_LOG_SAMPLE_LIMIT],
+            "instrument_added": _sample_symbols(instrument_added),
+            "instrument_upserted": _sample_symbols(instrument_upserted or []),
+        },
+    }
+
+
+def _print_refresh_log(universe_key: str, summary: dict[str, Any]) -> None:
+    comparison = summary["comparison"]
+    print(
+        "  refresh-master "
+        f"[{universe_key}] previous={comparison['previous_count']} "
+        f"fetched={comparison['fetched_count']} "
+        f"matched={comparison['matched_count']} "
+        f"mismatch={comparison['mismatch_count']} "
+        f"added={comparison['added_count']} "
+        f"removed={comparison['removed_count']} "
+        f"rank_changed={comparison['rank_changed_count']}"
+    )
+    if comparison["membership_rewritten"]:
+        print(f"    membership: rewritten ({summary['membership_upserted_count']} rows)")
+    else:
+        print("    membership: unchanged, rewrite skipped")
+    print(
+        f"    instruments: upserted={summary['instrument_upserted_count']} "
+        f"new={summary['instrument_added_count']} "
+        f"existing={summary['instrument_existing_count']}"
+    )
+
+    samples = summary["samples"]
+    if samples["added_symbols"]:
+        print(f"    added sample: {', '.join(samples['added_symbols'])}")
+    if samples["removed_symbols"]:
+        print(f"    removed sample: {', '.join(samples['removed_symbols'])}")
+    if samples["rank_changed"]:
+        rank_sample = ", ".join(
+            f"{item['symbol']}:{item['old_rank']}->{item['new_rank']}"
+            for item in samples["rank_changed"]
+        )
+        print(f"    rank changed sample: {rank_sample}")
+    if samples["instrument_added"]:
+        print(f"    new instrument sample: {', '.join(samples['instrument_added'])}")
+    if samples["instrument_upserted"]:
+        print(f"    upserted instrument sample: {', '.join(samples['instrument_upserted'])}")
+
+
+def _refresh_universe_membership(
+    conn: psycopg.Connection,
+    market_key: str,
+    universe_key: str,
+    symbols: list[str],
+    metadata: dict[str, Any],
+    trade_date,
+    *,
+    current_membership: list[dict[str, Any]] | None = None,
+    existing_instruments: set[str] | None = None,
+    force_rewrite: bool = False,
+) -> dict[str, Any]:
+    market = MARKETS[market_key]
+    if current_membership is None:
+        current_membership = _current_universe_membership(conn, universe_key)
+    comparison = _membership_compare(current_membership, symbols)
+    membership_rewritten = force_rewrite or not comparison["membership_unchanged"]
+    if existing_instruments is None:
+        existing_instruments = _current_instrument_symbols(conn, market_key)
+    instrument_added = [symbol for symbol in symbols if symbol not in existing_instruments]
+    instrument_upserted_symbols: list[str] = []
+
+    run_id = create_universe_run(
+        conn,
+        market_key,
+        universe_key,
+        trade_date,
+        len(symbols),
+        params=_refresh_log_params(comparison, instrument_added, membership_rewritten),
+    )
+    if membership_rewritten:
+        conn.execute("DELETE FROM universe_memberships WHERE universe_key = %s", (universe_key,))
+
+    instrument_upserted = 0
+    membership_upserted = 0
+    for rank_no, symbol in enumerate(symbols, start=1):
+        instrument_id = upsert_instrument(
+            conn,
+            market,
+            _master_row_from_universe(market, symbol, metadata),
+            source_provider="market_scanner",
+            source_rank=50,
+        )
+        instrument_upserted += 1
+        instrument_upserted_symbols.append(symbol)
+        if membership_rewritten:
+            upsert_universe_membership(
+                conn,
+                universe_key,
+                instrument_id,
+                trade_date,
+                rank_no,
+                source_provider="market_scanner",
+            )
+            membership_upserted += 1
+
+    summary = {
+        **_refresh_log_params(
+            comparison,
+            instrument_added,
+            membership_rewritten,
+            instrument_upserted_symbols,
+        ),
+        "run_id": run_id,
+        "instrument_upserted_count": instrument_upserted,
+        "instrument_added_count": len(instrument_added),
+        "instrument_existing_count": instrument_upserted - len(instrument_added),
+        "membership_upserted_count": membership_upserted,
+    }
+    finish_run(
+        conn,
+        run_id,
+        status="success",
+        success_count=instrument_upserted,
+        skipped_count=0 if membership_rewritten else len(symbols),
+        params={
+            "samples": summary["samples"],
+            "instrument_upserted_count": instrument_upserted,
+            "instrument_added_count": len(instrument_added),
+            "instrument_existing_count": instrument_upserted - len(instrument_added),
+            "membership_upserted_count": membership_upserted,
+        },
+        notes="membership rewritten" if membership_rewritten else "membership unchanged; rewrite skipped",
+    )
+    _print_refresh_log(universe_key, summary)
+    return summary
+
+
+def refresh_master(
+    market_key: str | None = None,
+    universe_key: str | None = None,
+    date_str: str | None = None,
+    explicit_url: str | None = None,
+    *,
+    reset: bool = False,
+) -> dict[str, dict[str, Any]]:
+    trade_date = datetime.strptime(date_str, "%Y%m%d").date() if date_str else datetime.today().date()
+    if universe_key:
+        universe_market_key = _universe_market_key(universe_key)
+        if market_key and market_key != universe_market_key:
+            raise ValueError(f"Universe '{universe_key}' belongs to market '{universe_market_key}', not '{market_key}'")
+        if universe_key in REPRESENTATIVE_UNIVERSE_LOADERS:
+            refresh_targets = [(universe_market_key, universe_key)]
+        elif universe_key in MARKETS and universe_key == universe_market_key:
+            refresh_targets = [(universe_market_key, universe_key)]
+        else:
+            raise ValueError(f"Unsupported refresh universe: {universe_key}")
+    else:
+        market_keys = [market_key] if market_key else _default_refresh_market_keys()
+        refresh_targets = [(key, key) for key in market_keys]
+    summaries: dict[str, dict[str, Any]] = {}
+
+    with connect(explicit_url) as conn:
+        seed_reference_data(conn)
+        market_keys = sorted({key for key, _ in refresh_targets})
+        universe_keys_by_market: dict[str, list[str]] = {}
+        for key, target_universe in refresh_targets:
+            universe_keys_by_market.setdefault(key, []).append(target_universe)
+        current_memberships: dict[str, list[dict[str, Any]]] = {}
+        existing_instruments: dict[str, set[str]] = {}
+        if reset:
+            for key, universe_keys in universe_keys_by_market.items():
+                existing_instruments[key] = _current_instrument_symbols(conn, key)
+                for universe_key in universe_keys:
+                    current_memberships[universe_key] = _current_universe_membership(conn, universe_key)
+            if universe_key:
+                for key, target_universes in universe_keys_by_market.items():
+                    reset_loaded_data(conn, key, target_universes)
+            else:
+                reset_loaded_data(conn, market_key if market_key else None)
+        for key, target_universe in refresh_targets:
+            market = MARKETS[key]
+            if target_universe in REPRESENTATIVE_UNIVERSE_LOADERS:
+                symbols = _dedupe_symbols(REPRESENTATIVE_UNIVERSE_LOADERS[target_universe]())
+            else:
+                symbols = _dedupe_symbols(market.universe_loader())
+            metadata = market.metadata_loader()
+            summaries[target_universe] = _refresh_universe_membership(
+                conn,
+                key,
+                target_universe,
+                symbols,
+                metadata,
+                trade_date,
+                current_membership=current_memberships.get(target_universe),
+                existing_instruments=existing_instruments.get(key),
+                force_rewrite=reset,
+            )
+    return summaries
+
+
+def scan_symbols_for_scope(
+    market_key: str,
+    universe_key: str | None = None,
+    explicit_url: str | None = None,
+) -> tuple[list[str], str | None]:
+    base_market_key = home_market_key(market_key)
+    effective_universe_key = universe_key
+    if effective_universe_key is None and base_market_key != market_key:
+        effective_universe_key = market_key
+
+    with connect(explicit_url) as conn:
+        if effective_universe_key:
+            row = conn.execute(
+                "SELECT market_key FROM universe_definitions WHERE universe_key = %s",
+                (effective_universe_key,),
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"Unknown universe: {effective_universe_key}")
+            universe_market_key = str(row[0])
+            if universe_market_key != base_market_key:
+                raise ValueError(
+                    f"Universe '{effective_universe_key}' belongs to market '{universe_market_key}', "
+                    f"not '{base_market_key}'"
+                )
+            rows = conn.execute(
+                """
+                SELECT i.symbol
+                FROM universe_memberships um
+                JOIN instruments i ON i.instrument_id = um.instrument_id
+                WHERE um.universe_key = %s
+                  AND um.effective_to IS NULL
+                  AND i.market_key = %s
+                  AND i.is_active = TRUE
+                ORDER BY um.rank_no NULLS LAST, i.symbol
+                """,
+                (effective_universe_key, base_market_key),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT symbol
+                FROM instruments
+                WHERE market_key = %s
+                  AND is_active = TRUE
+                ORDER BY symbol
+                """,
+                (base_market_key,),
+            ).fetchall()
+    return [str(row[0]) for row in rows], effective_universe_key
 
 
 def upsert_daily_price(
@@ -754,9 +1424,15 @@ def load_scan_frame(
         return run_id
 
 
-def load_csv(market_key: str, date_str: str, explicit_url: str | None = None) -> str:
-    _, frame, _ = load_frame(market_key, date_str)
-    return load_scan_frame(market_key, date_str, frame, explicit_url)
+def load_csv(
+    market_key: str,
+    date_str: str,
+    explicit_url: str | None = None,
+    universe_key: str | None = None,
+) -> str:
+    path_key = universe_key or market_key
+    _, frame, _ = load_frame(market_key, date_str, path_key=path_key)
+    return load_scan_frame(market_key, date_str, frame, explicit_url, universe_key=universe_key)
 
 
 def print_counts(explicit_url: str | None = None) -> None:
@@ -786,8 +1462,22 @@ def main() -> None:
 
     subparsers.add_parser("init", help="Apply schema and seed reference tables.")
 
+    master_parser = subparsers.add_parser("load-master", help="Load assets/instruments.json into instruments.")
+    master_parser.add_argument("--market", choices=sorted(MARKETS.keys()), help="Only load one market's instrument master.")
+
+    refresh_parser = subparsers.add_parser("refresh-master", help="Refresh instruments and universe memberships from market loaders.")
+    refresh_parser.add_argument("--market", help="Only refresh one base market, for example us, kospi, kosdaq.")
+    refresh_parser.add_argument("--universe", help="Only refresh one universe membership, for example kospi200 or sp500.")
+    refresh_parser.add_argument("--date", default=None, help="Membership effective date YYYYMMDD (default: today).")
+    refresh_parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Clear loaded instruments, memberships, scan results, prices, and news links before refreshing. With --market, only that market is reset. Run logs are retained.",
+    )
+
     load_parser = subparsers.add_parser("load-csv", help="Load an existing scan CSV into Postgres.")
     load_parser.add_argument("--market", required=True, choices=sorted(MARKETS.keys()))
+    load_parser.add_argument("--universe", default=None, help="Universe key used for the CSV path and DB membership.")
     load_parser.add_argument("--date", required=True, help="YYYYMMDD")
 
     subparsers.add_parser("counts", help="Print core table row counts.")
@@ -796,8 +1486,27 @@ def main() -> None:
     if args.command == "init":
         init_db(args.database_url)
         print("database initialized")
+    elif args.command == "load-master":
+        count = load_master(args.market, args.database_url)
+        scope = args.market or "all markets"
+        print(f"loaded instrument master for {scope}: {count}")
+    elif args.command == "refresh-master":
+        if args.market and args.market not in MARKETS:
+            parser.error(f"unsupported market '{args.market}'. Supported markets: {', '.join(_default_refresh_market_keys())}")
+        try:
+            summaries = refresh_master(args.market, args.universe, args.date, args.database_url, reset=args.reset)
+        except ValueError as exc:
+            parser.error(str(exc))
+        total_fetched = sum(summary["comparison"]["fetched_count"] for summary in summaries.values())
+        total_mismatch = sum(summary["comparison"]["mismatch_count"] for summary in summaries.values())
+        total_new_instruments = sum(summary["instrument_added_count"] for summary in summaries.values())
+        print(
+            "refresh-master completed: "
+            f"universes={len(summaries)} fetched={total_fetched} "
+            f"mismatch={total_mismatch} new_instruments={total_new_instruments}"
+        )
     elif args.command == "load-csv":
-        run_id = load_csv(args.market, args.date, args.database_url)
+        run_id = load_csv(args.market, args.date, args.database_url, universe_key=args.universe)
         print(f"loaded {args.market} {args.date}: run_id={run_id}")
     elif args.command == "counts":
         print_counts(args.database_url)

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from market_scanner.markets import MARKETS, upsert_instruments_from_frame
+from market_scanner.markets import MARKETS
 from market_scanner.models import MarketDefinition, ScanSettings
 from market_scanner.news import collect_news_cache
 from market_scanner.pipeline import scan_market, write_html, write_markdown
@@ -75,25 +75,38 @@ def run_scan_stage_with_settings(
     market_key: str,
     date_str: str,
     settings: ScanSettings,
+    *,
+    symbols: list[str] | None = None,
+    path_key: str | None = None,
 ) -> tuple[MarketDefinition, pd.DataFrame, dict[str, Path]]:
-    market, _, frame = scan_market(market_key, settings)
-    upsert_instruments_from_frame(frame, market_key)
-    paths = compat_paths(market_key, date_str)
+    market, _, frame = scan_market(market_key, settings, symbols=symbols)
+    paths = compat_paths(path_key or market_key, date_str)
     paths["csv"].parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(paths["csv"], index=False, encoding="utf-8-sig")
     return market, frame, paths
 
 
-def load_frame(market_key: str, date_str: str) -> tuple[MarketDefinition, pd.DataFrame, dict[str, Path]]:
+def load_frame(
+    market_key: str,
+    date_str: str,
+    *,
+    path_key: str | None = None,
+) -> tuple[MarketDefinition, pd.DataFrame, dict[str, Path]]:
     market = compat_market(market_key)
-    paths = compat_paths(market_key, date_str)
+    paths = compat_paths(path_key or market_key, date_str)
     frame = pd.read_csv(_existing_csv_path(paths["csv"]), encoding="utf-8-sig")
     return market, frame, paths
 
 
-def run_analysis_stage(market_key: str, date_str: str, frame: pd.DataFrame | None = None) -> tuple[str, dict[str, Path]]:
+def run_analysis_stage(
+    market_key: str,
+    date_str: str,
+    frame: pd.DataFrame | None = None,
+    *,
+    path_key: str | None = None,
+) -> tuple[str, dict[str, Path]]:
     market = compat_market(market_key)
-    paths = compat_paths(market_key, date_str)
+    paths = compat_paths(path_key or market_key, date_str)
     settings = ScanSettings(output_dir=Path("."))
     if frame is None:
         frame = pd.read_csv(_existing_csv_path(paths["csv"]), encoding="utf-8-sig")
@@ -107,9 +120,11 @@ def run_render_stage(
     date_str: str,
     frame: pd.DataFrame | None = None,
     markdown: str | None = None,
+    *,
+    path_key: str | None = None,
 ) -> dict[str, Path]:
     market = compat_market(market_key)
-    paths = compat_paths(market_key, date_str)
+    paths = compat_paths(path_key or market_key, date_str)
     settings = ScanSettings(output_dir=Path("."))
     if frame is None:
         frame = pd.read_csv(_existing_csv_path(paths["csv"]), encoding="utf-8-sig")
@@ -121,9 +136,9 @@ def run_render_stage(
     return paths
 
 
-def run_translate_stage(market_key: str, date_str: str) -> bool:
+def run_translate_stage(market_key: str, date_str: str, *, path_key: str | None = None) -> bool:
     market = compat_market(market_key)
-    paths = compat_paths(market_key, date_str)
+    paths = compat_paths(path_key or market_key, date_str)
     return translate_scan_csv(_existing_csv_path(paths["csv"]), market.sector_aliases)
 
 
@@ -131,11 +146,12 @@ def run_news_stage(
     market_key: str,
     date_str: str,
     *,
+    path_key: str | None = None,
     max_symbols: int = 50,
     items_per_symbol: int = 3,
     max_workers: int = 4,
 ) -> tuple[int, Path]:
-    _, frame, _ = load_frame(market_key, date_str)
+    _, frame, _ = load_frame(market_key, date_str, path_key=path_key)
     return collect_news_cache(
         frame,
         market_key,
@@ -146,8 +162,8 @@ def run_news_stage(
     )
 
 
-def ensure_csv_exists(market_key: str, date_str: str) -> Path:
-    path = compat_paths(market_key, date_str)["csv"]
+def ensure_csv_exists(market_key: str, date_str: str, *, path_key: str | None = None) -> Path:
+    path = compat_paths(path_key or market_key, date_str)["csv"]
     existing_path = _existing_csv_path(path)
     if not existing_path.exists():
         raise FileNotFoundError(f"Missing scan output: {path}")

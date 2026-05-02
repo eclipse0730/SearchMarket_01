@@ -147,7 +147,7 @@ def enrich_metadata_frame(frame: pd.DataFrame, market: MarketDefinition) -> pd.D
             if _is_placeholder_text(row.get("description")) and not _is_placeholder_text(meta.description):
                 enriched.at[index, "description"] = meta.description
 
-        if market.key in {"kospi", "kosdaq", "kospi-all", "kosdaq-all"}:
+        if market.key in {"kospi", "kosdaq"}:
             enriched.at[index, "display_symbol"] = _display_symbol_name(row, symbol)
             local_name = enriched.at[index, "name_local"]
             if _is_placeholder_name(local_name, symbol) or _looks_like_english_company_name(local_name, symbol):
@@ -194,7 +194,7 @@ def _candle_type(
 
 
 def _is_korea_market(market: MarketDefinition) -> bool:
-    return market.key in {"kospi", "kosdaq", "kospi-all", "kosdaq-all"}
+    return market.key in {"kospi", "kosdaq"}
 
 
 def _history_start_date(period: str) -> str:
@@ -766,9 +766,13 @@ def output_paths(market: MarketDefinition, settings: ScanSettings, date_str: str
     }
 
 
-def scan_market(market_key: str, settings: ScanSettings) -> tuple[MarketDefinition, list[ScanRecord], pd.DataFrame]:
+def scan_market(
+    market_key: str,
+    settings: ScanSettings,
+    symbols: list[str] | None = None,
+) -> tuple[MarketDefinition, list[ScanRecord], pd.DataFrame]:
     market = MARKETS[market_key]
-    symbols = market.universe_loader()
+    symbols = list(symbols) if symbols is not None else market.universe_loader()
     if settings.symbol_limit is not None and settings.symbol_limit > 0:
         symbols = symbols[: settings.symbol_limit]
     records: list[ScanRecord] = []

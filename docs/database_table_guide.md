@@ -28,9 +28,7 @@ Last updated: 2026-04-30
 - `sp500`
 - `us-all`
 - `kospi`
-- `kospi-all`
 - `kosdaq`
-- `kosdaq-all`
 - `global-indices`
 - `theme-proxies`
 - `commodities`
@@ -86,7 +84,7 @@ Last updated: 2026-04-30
 | `commodity` | 원자재 |
 | `other` | 분류 보류 |
 
-한국 전체 시장에서는 이 컬럼이 중요합니다. Naver Finance fallback 목록에는 보통주 외 상품이 섞일 수 있으므로, `kospi-all` 기본 스캔은 `asset_type = 'common_stock'` 중심으로 제한하는 것을 권장합니다.
+한국 전체 시장에서는 이 컬럼이 중요합니다. Naver Finance fallback 목록에는 보통주 외 상품이 섞일 수 있으므로, `kospi`/`kosdaq` 기본 스캔은 `asset_type = 'common_stock'` 중심으로 제한하는 것을 권장합니다.
 
 ## universe_definitions
 
@@ -94,8 +92,9 @@ Last updated: 2026-04-30
 
 시장과 유니버스는 다릅니다. 예를 들어 `KOSPI`라는 시장 안에 다음 유니버스가 있을 수 있습니다.
 
-- `kospi`: 대형주 또는 KOSPI200 중심
-- `kospi-all`: KOSPI 보통주 전체
+- `kospi`: KOSPI 보통주 전체
+- `kospi100`: KOSPI 100 대표 유니버스
+- `kospi200`: KOSPI 200 대표 유니버스
 - `kospi-etf`: KOSPI ETF
 - `kospi-preferred`: KOSPI 우선주
 
@@ -111,7 +110,7 @@ Last updated: 2026-04-30
 | `default_asset_type_filter` | 기본 포함 자산 타입 |
 | `is_active` | 사용 여부 |
 
-시장 전체를 의미하는 요약도 `NULL` 대신 명시적인 유니버스 키를 사용합니다. 예를 들어 KOSPI 전체 보통주는 `kospi-all`, KOSPI 시장 전체 스냅샷은 `kospi:all`처럼 별도 유니버스를 만들어 참조합니다. PostgreSQL primary key에서는 nullable 컬럼이 중복 방지 의미를 흐릴 수 있으므로, snapshot 계열 테이블의 `universe_key`는 `NOT NULL`입니다.
+시장 전체를 의미하는 요약도 `NULL` 대신 명시적인 유니버스 키를 사용합니다. 예를 들어 KOSPI 전체 보통주는 `kospi`, KOSPI 100/200 대표 유니버스는 `kospi100`, `kospi200`처럼 별도 유니버스를 만들어 참조합니다. PostgreSQL primary key에서는 nullable 컬럼이 중복 방지 의미를 흐릴 수 있으므로, snapshot 계열 테이블의 `universe_key`는 `NOT NULL`입니다.
 
 ## universe_memberships
 
@@ -151,11 +150,11 @@ Last updated: 2026-04-30
 | `success_count` | 성공 수 |
 | `failed_count` | 실패 수 |
 | `skipped_count` | 스킵 수 |
-| `params` | 실행 파라미터 |
+| `params` | 실행 파라미터. `refresh-master`는 멤버십 비교 요약과 추가/삭제/순위 변경 샘플도 저장 |
 | `error_samples` | 실패 샘플 |
 | `git_sha` | 실행 코드 버전 |
 
-예: `kospi-all` 900개 중 890개 성공, 10개 실패 같은 정보를 이 테이블에 남깁니다.
+예: `kospi` 900개 중 890개 성공, 10개 실패 같은 정보를 이 테이블에 남깁니다.
 
 ## daily_prices
 

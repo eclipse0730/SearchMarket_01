@@ -1,99 +1,129 @@
 # Stock MA Scanner
 
-미국 주식·코스피·코스닥·글로벌 지수·테마 ETF·원자재를 대상으로
-60/120/240일 이동평균선 근접 종목을 스캔하고 분석 Markdown·HTML 리포트를 생성하는 프로젝트입니다.
+미국 주식, KOSPI, KOSDAQ, 글로벌 지수, 테마 ETF, 원자재를 대상으로 60/120/240일 이동평균선 근접 여부와 기술/재무/수급 점수를 계산하고 CSV, Markdown, HTML 리포트와 GitHub Pages 대시보드를 생성합니다.
 
 ## 설치
 
+아래 예시는 Windows와 macOS 터미널에서 같은 형태로 사용할 수 있습니다. `uv`는 사전에 설치되어 있어야 하며, 설치 이후 실행 명령은 `uv run python`이 현재 프로젝트의 `.venv`를 사용합니다.
+
 ```bash
 uv venv
-.venv\Scripts\activate
 uv pip install -r requirements.txt
 ```
 
-## 사용법
+## 권장 실행 흐름
+
+PostgreSQL의 `instruments`가 종목마스터의 우선 원천입니다. 먼저 DB를 띄우고 종목마스터와 유니버스 멤버십을 갱신한 뒤 스캔합니다.
 
 ```bash
-# 기본 (legacy combined US 파이프라인)
-python Search.py
+docker compose up -d postgres
+uv run python -m market_scanner.db init
+uv run python -m market_scanner.db refresh-master --reset
+uv run python Search.py --market kospi --stage scan --force
+uv run python -m market_scanner.db load-csv --market kospi --date YYYYMMDD
+uv run python -m market_scanner.db counts
+```
 
-# 시장 선택
-python Search.py --market nasdaq100
-python Search.py --market sp500
-python Search.py --market us-all          # 미국 전체 상장 보통주 유니버스
-python Search.py --market kospi
-python Search.py --market kosdaq
-python Search.py --market kospi-all       # KOSPI 전체 유니버스
-python Search.py --market kosdaq-all      # KOSDAQ 전체 유니버스
-python Search.py --market global-indices
-python Search.py --market theme-proxies
-python Search.py --market commodities
-python Search.py --market us              # legacy combined US scan
+`init`은 DB 스키마와 기준 데이터를 준비하는 단계입니다. 새 DB를 처음 만들었을 때, Docker volume을 새로 만들었을 때, 스키마나 시장/유니버스 기준 키가 바뀐 뒤에는 실행해야 합니다. 이미 초기화된 DB에서 일반 스캔만 반복할 때는 매번 실행할 필요가 없습니다. 현재 코드에 없는 market/universe 기준 row는 삭제하지 않고 `is_active = false`로 비활성화합니다.
 
-# 단계 선택 (기본: all)
-python Search.py --market nasdaq100 --stage scan      # 스캔 → data/Data_Nasdaq100_YYYYMMDD.csv
-python Search.py --market nasdaq100 --stage analyze   # 분석 → analysis/Analysis_Nasdaq100_YYYYMMDD.md
-python Search.py --market nasdaq100 --stage translate # 번역 (US 계열)
-python Search.py --market sp500 --stage news          # 뉴스 캐시 → market_scanner/assets/news_cache.json
-python Search.py --market sp500 --stage render        # HTML → reports/Report_Sp500_YYYYMMDD.html
+`refresh-master`는 가격/지표를 수집하지 않고 시장 유니버스 로더로 종목 목록을 받아 `instruments`, `universe_memberships`, `collection_runs`만 갱신합니다. `--market kospi`는 KOSPI 전체만 갱신하고, KOSPI100/KOSPI200은 필요할 때 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`으로 별도 갱신합니다. 실행 시 기존 멤버십과 새 목록의 일치/불일치 수, 추가/삭제/순위 변경 샘플, 신규/upsert instrument 샘플을 로그로 출력하고 `collection_runs.params`에도 저장합니다. 멤버십 목록과 순서가 같으면 `universe_memberships` 재작성은 건너뜁니다. `--reset`은 기존 적재 마스터, 스캔, 가격, 뉴스 연결 데이터를 비우고 다시 구성하므로 초기 전환이나 재구성 때만 사용합니다. `--market`과 함께 쓰면 해당 시장만 reset하며, `--universe`와 함께 쓰면 해당 유니버스의 멤버십/산출물만 reset하고 종목마스터는 보존합니다. `collection_runs` 실행 로그는 계속 누적합니다.
 
-# 기타 옵션
-python Search.py --market nasdaq100 --workers 8       # 병렬 worker 수
-python Search.py --market sp500 --date 20260425       # 대상 날짜 지정
-python Search.py --market nasdaq100 --force           # CSV 있어도 재스캔
-python Search.py --market nasdaq100 --force --limit 5 # 빠른 수집 검증
-python Search.py --market sp500 --stage news --news-symbols 80 --news-items 2
-python Search.py --market nasdaq100 --setup-scheduler # 윈도우 작업 스케줄러 등록
-python Search.py --market sp500 --setup-scheduler --time 08:30
+## 스캔
+
+기본 스캔은 DB `instruments`에서 해당 시장의 전체 활성 종목을 읽습니다.
+
+```bash
+uv run python Search.py --market us
+uv run python Search.py --market kospi
+uv run python Search.py --market kosdaq
+uv run python Search.py --market global-indices
+uv run python Search.py --market theme-proxies
+uv run python Search.py --market commodities
+```
+
+필요할 때만 `--universe`로 멤버십 필터를 겁니다. universe가 다른 시장에 속하면 오류로 중단합니다.
+
+```bash
+uv run python Search.py --market us --universe sp500
+uv run python Search.py --market us --universe nasdaq100
+uv run python Search.py --market kospi --universe kospi100
+uv run python Search.py --market kospi --universe kospi200
+uv run python Search.py --market kosdaq --universe kosdaq150
+```
+
+단계별 실행:
+
+```bash
+uv run python Search.py --market kospi --stage scan
+uv run python Search.py --market kospi --stage analyze
+uv run python Search.py --market us --universe sp500 --stage translate
+uv run python Search.py --market us --universe sp500 --stage news
+uv run python Search.py --market kospi --stage render
+```
+
+유용한 옵션:
+
+```bash
+uv run python Search.py --market kospi --workers 8
+uv run python Search.py --market kospi --date 20260430
+uv run python Search.py --market kospi --force
+uv run python Search.py --market kospi --limit 5
+uv run python Search.py --market us --universe sp500 --stage news --news-symbols 80 --news-items 2
 ```
 
 ## 출력 파일
 
-| 시장 | CSV | Markdown | HTML |
+시장 전체 스캔은 시장 key 기준 파일을 생성합니다. universe 필터 스캔은 universe key 기준 파일을 생성합니다.
+
+| 실행 예 | CSV | Markdown | HTML |
 |---|---|---|---|
-| nasdaq100 | `data/Data_Nasdaq100_YYYYMMDD.csv` | `analysis/Analysis_Nasdaq100_YYYYMMDD.md` | `reports/Report_Nasdaq100_YYYYMMDD.html` |
-| sp500 | `data/Data_Sp500_YYYYMMDD.csv` | `analysis/Analysis_Sp500_YYYYMMDD.md` | `reports/Report_Sp500_YYYYMMDD.html` |
-| us-all | `data/Data_UsAll_YYYYMMDD.csv` | `analysis/Analysis_UsAll_YYYYMMDD.md` | `reports/Report_UsAll_YYYYMMDD.html` |
-| us | `data/Data_YYYYMMDD.csv` | `analysis/Analysis_YYYYMMDD.md` | `reports/Report_YYYYMMDD.html` |
-| kospi | `data/Data_Kospi_YYYYMMDD.csv` | `analysis/Analysis_Kospi_YYYYMMDD.md` | `reports/Report_Kospi_YYYYMMDD.html` |
-| kosdaq | `data/Data_Kosdaq_YYYYMMDD.csv` | `analysis/Analysis_Kosdaq_YYYYMMDD.md` | `reports/Report_Kosdaq_YYYYMMDD.html` |
-| kospi-all | `data/Data_KospiAll_YYYYMMDD.csv` | `analysis/Analysis_KospiAll_YYYYMMDD.md` | `reports/Report_KospiAll_YYYYMMDD.html` |
-| kosdaq-all | `data/Data_KosdaqAll_YYYYMMDD.csv` | `analysis/Analysis_KosdaqAll_YYYYMMDD.md` | `reports/Report_KosdaqAll_YYYYMMDD.html` |
-| global-indices | `data/Data_GlobalIndices_YYYYMMDD.csv` | `analysis/Analysis_GlobalIndices_YYYYMMDD.md` | `reports/Report_GlobalIndices_YYYYMMDD.html` |
-| theme-proxies | `data/Data_ThemeProxies_YYYYMMDD.csv` | `analysis/Analysis_ThemeProxies_YYYYMMDD.md` | `reports/Report_ThemeProxies_YYYYMMDD.html` |
-| commodities | `data/Data_Commodities_YYYYMMDD.csv` | `analysis/Analysis_Commodities_YYYYMMDD.md` | `reports/Report_Commodities_YYYYMMDD.html` |
+| `--market kospi` | `data/Data_Kospi_YYYYMMDD.csv` | `analysis/Analysis_Kospi_YYYYMMDD.md` | `reports/Report_Kospi_YYYYMMDD.html` |
+| `--market kospi --universe kospi100` | `data/Data_Kospi100_YYYYMMDD.csv` | `analysis/Analysis_Kospi100_YYYYMMDD.md` | `reports/Report_Kospi100_YYYYMMDD.html` |
+| `--market kospi --universe kospi200` | `data/Data_Kospi200_YYYYMMDD.csv` | `analysis/Analysis_Kospi200_YYYYMMDD.md` | `reports/Report_Kospi200_YYYYMMDD.html` |
+| `--market us --universe sp500` | `data/Data_Sp500_YYYYMMDD.csv` | `analysis/Analysis_Sp500_YYYYMMDD.md` | `reports/Report_Sp500_YYYYMMDD.html` |
+| `--market commodities` | `data/Data_Commodities_YYYYMMDD.csv` | `analysis/Analysis_Commodities_YYYYMMDD.md` | `reports/Report_Commodities_YYYYMMDD.html` |
 
-## 사이트 대시보드
-
-```bash
-python -m market_scanner.site_builder
-```
-
-`site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 로컬 실행 시 빌드 완료 후 `site/index.html`이 기본 브라우저로 자동 열립니다. 자동 열기를 건너뛰려면 `--no-open`을 붙입니다.
-
-```bash
-python -m market_scanner.site_builder --no-open
-```
-
-메인페이지는 preview-home v2 디자인을 반영해 `site/index.html`에 생성됩니다. `site/preview-home/index.html`은 같은 디자인을 확인하는 보조 미리보기 페이지입니다.
-
-## PostgreSQL 저장소
-
-CSV는 호환 산출물로 유지하되, 전체 시장 스캔 이력은 PostgreSQL에 저장할 수 있습니다.
-
-```bash
-docker compose up -d postgres
-python -m market_scanner.db init
-python Search.py --market kospi --stage scan --force --date 20260430
-python -m market_scanner.db load-csv --market kospi --date 20260430
-python -m market_scanner.db counts
-```
+## PostgreSQL
 
 기본 접속 문자열은 `.env.example`의 `DATABASE_URL`입니다.
 
-Docker Desktop을 쓰지 않고 로컬 Postgres 바이너리로 임시 DB를 띄운 경우:
+```text
+postgresql://searchmarket:searchmarket@localhost:5433/searchmarket
+```
 
-```bash
+DBeaver 로컬 접속:
+
+```text
+Host: localhost
+Port: 5433
+Database: searchmarket
+Username: searchmarket
+Password: searchmarket
+```
+
+같은 LAN/Wi-Fi의 다른 컴퓨터에서 윈도우 Docker PostgreSQL에 접속하려면 윈도우 PC IP를 Host로 사용합니다.
+
+```powershell
+ipconfig
+```
+
+예를 들어 윈도우 PC IP가 `192.168.0.23`이면:
+
+```text
+DATABASE_URL=postgresql://searchmarket:searchmarket@192.168.0.23:5433/searchmarket
+```
+
+방화벽이 막으면 관리자 권한 터미널에서 Private 네트워크용 인바운드 규칙을 추가합니다.
+
+```powershell
+netsh advfirewall firewall add rule name="SearchMarket PostgreSQL 5433" dir=in action=allow protocol=TCP localport=5433 profile=private
+```
+
+DB 파일이나 Docker volume을 iCloud/Dropbox 같은 파일 동기화 도구로 공유하지 마세요. 여러 컴퓨터가 같은 DB를 보려면 한쪽 PostgreSQL 서버에 네트워크로 접속합니다. 외부 인터넷 접속은 포트포워딩보다 Tailscale/VPN 또는 관리형 PostgreSQL을 권장합니다.
+
+Docker Desktop을 쓰지 않고 로컬 Postgres 바이너리로 임시 DB를 띄울 수도 있습니다.
+
+```powershell
 initdb -D .postgres-data --auth=trust --username=searchmarket
 pg_ctl -D .postgres-data -o "-p 5433" -l .postgres-data/postgres.log start
 createdb -h localhost -p 5433 -U searchmarket searchmarket
@@ -103,83 +133,45 @@ pg_ctl -D .postgres-data stop
 
 `.postgres-data/`는 로컬 DB 데이터 디렉터리이며 Git 추적 대상이 아닙니다.
 
-메인 페이지는 최신 CSV/리포트 데이터를 기반으로 다음 통합 지표를 보여줍니다.
+## 사이트 대시보드
 
-- 종합 시장 점수: 주식 강세 비율, 매크로 강도, RSI 균형, 전체 평균 등락을 결합한 0-100점 요약
-- 주식 시장 체력: NASDAQ 100, S&P 500, KOSPI, KOSDAQ의 강세 비율과 최강/최약 시장
-- 매크로 리스크: 글로벌 지수, 테마 ETF, 원자재 흐름을 묶은 위험자산 환경
-- 섹터·테마 히트맵: 추세와 등락률 기준의 리딩/약세 섹터
-- 오늘의 핵심 후보: 종합점수와 상승률 기준으로 가장 먼저 볼 종목
-- 시장별 스냅샷: NASDAQ 100, S&P 500, Dow 30, KOSPI, KOSDAQ, 글로벌 지수, 테마 ETF, 원자재 비교
-- 섹터 리더십: 추세 점수가 높은 섹터 요약
-- 오늘의 관찰 종목: 모멘텀, 눌림목, 과매도, 과열, 급등, 거래량 관점의 후보를 표시하며 종목 링크는 Investing 한국 상세페이지로 연결
+```bash
+uv run python -m market_scanner.site_builder --no-open
+```
 
-GitHub Pages 사이트는 `data/`의 최신 CSV를 현재 템플릿으로 다시 렌더링합니다. `reports/Report_*.html`은 개별 HTML 리포트 산출물로 보관됩니다.
-자동 스캔 워크플로가 성공적으로 끝나면 `Deploy GitHub Pages`가 이어서 실행되어 Pages artifact를 다시 빌드하고 배포합니다.
+`site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 자동 열기를 원하면 `--no-open`을 빼고 실행합니다.
 
-상세 페이지는 좌측 종목 리스트와 우측 인사이트 패널로 구성됩니다.
+대시보드는 최신 CSV/리포트 데이터를 기반으로 종합 시장 점수, 시장 체력, 매크로 리스크, 섹터/테마 히트맵, 오늘의 핵심 후보, 시장별 스냅샷, 섹터 리더십, 뉴스 브리핑을 표시합니다.
 
-- 헤더 갱신시간: 상세페이지 제목 아래에 생성 시각을 `KST` 기준으로 표시
-- 압축형 Signal Strip: 이동평균선 근접 수, 시장 상태와 리딩/약세 섹터, RSI 온도 분포, 강세 비율, VIX 공포지수 해석
-- 섹터별 상승률 Heatmap: 섹터 평균 등락률, 중앙값, 상승 종목 비율, 종목 수와 전체 상승/하락 종목 수 표시
-- Setup Buckets
-- MA Distance vs RSI Scatter
-- 추세 화살표 표시: `↑↑`, `↑`, `→`, `↓`, `↓↓`
-- 캔들 표시: OHLC 컬럼이 있는 최신 스캔 CSV에서는 종목 리스트에 미니 캔들 모양 표시
-- 뉴스 브리핑 탭: 향후 뉴스 수집 캐시가 있으면 밤새 뉴스 요약 표시
+## 데이터 정책
 
-분석 리포트와 CSV에는 PRD v1.1 기준 복합 점수가 포함됩니다.
-
-- 점수 비중: 차트 30%, 기술지표 25%, 재무 20%, 테마 15%, 수급 10%
-- 추가 지표: 시가/고가/저가/종가, 갭, 캔들 몸통/꼬리, MACD, 볼린저 밴드, PBR, ROE, 매출성장률, 시총
-
-티커 링크는 한국 사용자 기준으로 동작하며, 모든 시장의 Investing 링크는 `kr.investing.com`으로 연결합니다. KOSPI/KOSDAQ도 NASDAQ 100처럼 Investing 상세 URL 캐시를 우선 사용하고, 캐시에 없거나 해석에 실패한 종목만 검색 링크로 fallback합니다.
-
-`news` 단계는 최신 스캔 CSV가 있어야 실행됩니다. 기본적으로 종합점수 상위 50개 종목에서 종목당 최대 3개 뉴스를 수집해 `market_scanner/assets/news_cache.json`에 날짜/시장별로 저장합니다. 실행 시간이 늘 수 있어 `all`에는 자동 포함하지 않습니다.
+- `instruments`: 종목마스터의 우선 원천입니다.
+- `universe_memberships`: `sp500`, `nasdaq100`, `kospi100`, `kospi200`, `kosdaq150` 같은 분석/필터 단위 멤버십입니다.
+- `market_scanner/assets/instruments.json`: DB가 비어 있거나 연결되지 않을 때 쓰는 seed/fallback입니다. 스캔 실행은 이 JSON을 자동 갱신하지 않습니다.
+- 한국 시장 가격 히스토리는 FinanceDataReader를 우선 사용하고, 실패하거나 히스토리가 부족하면 yfinance로 fallback합니다.
+- `news` 단계는 최신 스캔 CSV가 있어야 실행되며, `all`에는 포함하지 않습니다.
 
 ## 패키지 구조
 
-```
+```text
 market_scanner/
-  models.py        # 공통 데이터 모델·설정 (ScanSettings, MarketDefinition)
+  models.py        # 공통 데이터 모델·설정
   indicators.py    # RSI·추세 계산
-  markets.py       # 시장별 설정·유니버스 로더
-  pipeline.py      # 스캔/분석/렌더링 공통 파이프라인
+  markets.py       # 시장 설정·유니버스/메타데이터 로더
+  pipeline.py      # 스캔/분석/렌더링 파이프라인
   compat.py        # 파일명 규칙·stage 흐름 래퍼
+  db.py            # PostgreSQL schema/init/master/load 유틸리티
   translator.py    # US CSV 번역 단계
-  assets/
-    instruments.json
-    nasdaq100_static_meta.json
-    kospi_static_meta.json
-    kosdaq_static_meta.json
-    sp500_members_cache.json
-    us_listed_symbols_cache.json
-    global_indices_meta.json
-    theme_proxies_meta.json
-    commodities_meta.json
-  templates/
-    report.html
-    report.css
+  assets/          # seed/cache 파일
+  templates/       # HTML 리포트 템플릿/CSS
 ```
-
-## Metadata Notes
-
-KOSPI/KOSDAQ 종목명과 섹터는 정적 메타데이터, FinanceDataReader 한국 종목명, 네이버 시가총액 목록을 우선 사용합니다. 한국 시장의 가격 히스토리는 FinanceDataReader를 먼저 사용하고, 실패하거나 히스토리가 부족하면 yfinance로 fallback합니다. 이미 생성된 CSV에 티커 문자열이나 `Unknown`이 남아 있어도 사이트 렌더링 단계에서 가능한 범위의 표시값을 보정합니다. 한국 시장 화면은 한글 종목명을 우선 표시하고, 한글명을 확보하지 못한 경우 영어 회사명 대신 종목코드를 표시합니다.
-
-`market_scanner/assets/instruments.json` is the shared instrument master for all markets. Fixed metadata such as `symbol`, `display_symbol`, `name_en`, `name_local`, `sector`, and `description` is read from this file first, while `Data_*.csv` remains the daily scan output. Scan runs append newly observed metadata to `instruments.json`, but `static`/`manual` records are not overwritten by automatic scan values.
-
-KOSPI metadata is maintained against the KOSPI 200 component set. When the static KOSPI metadata already contains at least 200 symbols, the scanner treats that list as the authoritative KOSPI universe instead of appending the FinanceDataReader market-cap fallback.
-
-## US Market Split
-
-`nasdaq100` and `sp500` are standalone scan markets. New US scans write `data/Data_Nasdaq100_YYYYMMDD.csv` and `data/Data_Sp500_YYYYMMDD.csv` instead of relying on the legacy combined `us` CSV. `us-all` is an optional broad US listed-stock scan using NASDAQ Trader symbol directories with cache/fallback behavior. The `us` market remains available for backward compatibility, and the site builder can still derive NASDAQ 100, S&P 500, and Dow 30 pages from an old combined US CSV when standalone files are missing.
 
 ## GitHub Actions
 
 | 워크플로우 | 실행 시각 | 대상 |
 |---|---|---|
-| `daily-scan.yml` | KST 08:05 (장 마감 후 익일 오전) | US Market |
+| `daily-scan.yml` | KST 08:05 | US Market |
 | `daily-scan-overview.yml` | KST 08:20 | 글로벌 지수·테마 ETF·원자재 |
-| `daily-scan-kospi.yml` | KST 16:05 (코스피 장 마감 직후) | KOSPI |
-| `daily-scan-kosdaq.yml` | KST 16:35 (코스닥 장 마감 직후) | KOSDAQ |
-| `deploy-pages.yml` | 스캔 성공 후 자동, 또는 관련 파일 push/수동 실행 | GitHub Pages 사이트 빌드·배포 |
+| `daily-scan-kospi.yml` | KST 16:05 | KOSPI |
+| `daily-scan-kosdaq.yml` | KST 16:35 | KOSDAQ |
+| `deploy-pages.yml` | 스캔 성공 후 자동, 또는 수동 실행 | GitHub Pages 사이트 빌드·배포 |
