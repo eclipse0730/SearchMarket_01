@@ -24,9 +24,7 @@ Last updated: 2026-04-30
 
 예:
 
-- `nasdaq100`
-- `sp500`
-- `us-all`
+- `us`
 - `kospi`
 - `kosdaq`
 - `global-indices`

@@ -19,7 +19,7 @@ from market_scanner.db import home_market_key, scan_symbols_for_scope
 from market_scanner.markets import MARKETS
 from market_scanner.models import ScanSettings
 
-_TRANSLATABLE = {"us", "us-all", "nasdaq100", "sp500"}
+_TRANSLATABLE = {"us", "nasdaq100", "sp500"}
 
 
 def main() -> None:

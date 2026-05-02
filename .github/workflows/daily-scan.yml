@@ -28,10 +28,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run NASDAQ 100 scanner
-        run: python Search.py --market nasdaq100
+        run: python Search.py --market us --universe nasdaq100
 
       - name: Run S&P 500 scanner
-        run: python Search.py --market sp500
+        run: python Search.py --market us --universe sp500
 
       - name: Commit results
         run: |

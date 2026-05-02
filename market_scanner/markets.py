@@ -719,17 +719,6 @@ def _apply_sp500_manual_overrides(tickers: list[str]) -> list[str]:
     return sorted(merged)
 
 
-def _us_universe() -> list[str]:
-    static = list(_nasdaq100_static_meta().keys())
-    sp500 = _fetch_sp500_tickers()
-    seen = set(static)
-    for t in sp500:
-        if t not in seen:
-            static.append(t)
-            seen.add(t)
-    return static
-
-
 def _nasdaq100_universe() -> list[str]:
     return list(_nasdaq100_static_meta().keys())
 
@@ -988,6 +977,8 @@ def _display_commodity(symbol: str) -> str:
 
 
 REPRESENTATIVE_UNIVERSE_LOADERS: dict[str, UniverseLoader] = {
+    "nasdaq100": _nasdaq100_universe,
+    "sp500": _sp500_universe,
     "kospi100": _kospi100_universe,
     "kospi200": _kospi200_universe,
     "kosdaq150": _kosdaq150_universe,
@@ -1001,47 +992,11 @@ MARKETS: dict[str, MarketDefinition] = {
         output_prefix="us",
         currency_symbol="$",
         price_decimals=2,
-        universe_loader=_us_universe,
-        metadata_loader=_us_static_meta,
-        quote_url_builder=_quote_url_investing_detail,
-        sector_aliases=_SECTOR_KO,
-        notes="Legacy combined US scan: NASDAQ 100 (static JSON) + S&P 500 (Wikipedia, live).",
-    ),
-    "nasdaq100": MarketDefinition(
-        key="nasdaq100",
-        label="NASDAQ 100",
-        output_prefix="nasdaq100",
-        currency_symbol="$",
-        price_decimals=2,
-        universe_loader=_nasdaq100_universe,
-        metadata_loader=_us_static_meta,
-        quote_url_builder=_quote_url_investing_detail,
-        sector_aliases=_SECTOR_KO,
-        notes="Standalone NASDAQ 100 scan based on the curated static universe.",
-    ),
-    "sp500": MarketDefinition(
-        key="sp500",
-        label="S&P 500",
-        output_prefix="sp500",
-        currency_symbol="$",
-        price_decimals=2,
-        universe_loader=_sp500_universe,
-        metadata_loader=_us_static_meta,
-        quote_url_builder=_quote_url_investing_detail,
-        sector_aliases=_SECTOR_KO,
-        notes="Standalone S&P 500 scan based on Wikipedia live members with cache fallback.",
-    ),
-    "us-all": MarketDefinition(
-        key="us-all",
-        label="US All Stocks",
-        output_prefix="us-all",
-        currency_symbol="$",
-        price_decimals=2,
         universe_loader=_us_all_universe,
         metadata_loader=_us_static_meta,
         quote_url_builder=_quote_url_investing_detail,
         sector_aliases=_SECTOR_KO,
-        notes="Optional full US listed-stock scan from NASDAQ Trader symbol directories with cache fallback.",
+        notes="Full US listed-stock universe from NASDAQ Trader symbol directories with cache fallback.",
     ),
     "kospi": MarketDefinition(
         key="kospi",

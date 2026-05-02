@@ -20,8 +20,8 @@ DEFAULT_DATABASE_URL = "postgresql://searchmarket:searchmarket@localhost:5433/se
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "docs" / "database_schema_v1.sql"
 INSTRUMENTS_PATH = Path(__file__).resolve().parent / "assets" / "instruments.json"
 REFRESH_LOG_SAMPLE_LIMIT = 30
-DEPRECATED_MARKET_KEYS = ["kospi-all", "kosdaq-all"]
-DEPRECATED_UNIVERSE_KEYS = ["kospi-all", "kosdaq-all"]
+DEPRECATED_MARKET_KEYS = ["kospi-all", "kosdaq-all", "us-all"]
+DEPRECATED_UNIVERSE_KEYS = ["kospi-all", "kosdaq-all", "us-all"]
 UNIVERSE_MARKET_ALIASES = {
     "kospi100": "kospi",
     "kospi200": "kospi",
@@ -49,8 +49,6 @@ def init_db(explicit_url: str | None = None) -> None:
 def home_market_key(market_key: str) -> str:
     if market_key in UNIVERSE_MARKET_ALIASES:
         return UNIVERSE_MARKET_ALIASES[market_key]
-    if market_key in {"us-all"}:
-        return "us"
     return market_key
 
 
@@ -123,8 +121,10 @@ def cleanup_deprecated_reference_data(conn: psycopg.Connection) -> None:
 
 def seed_reference_data(conn: psycopg.Connection) -> None:
     home_keys = {home_market_key(key) for key in MARKETS}
-    active_market_keys = sorted(set(MARKETS) | home_keys)
+    active_market_keys = sorted((set(MARKETS) | home_keys) - set(UNIVERSE_MARKET_ALIASES))
     extra_universes = {
+        "nasdaq100": ("us", "NASDAQ 100", "NASDAQ 100 component universe."),
+        "sp500": ("us", "S&P 500", "S&P 500 component universe."),
         "kospi100": ("kospi", "KOSPI 100", "KOSPI 100 component universe."),
         "kospi200": ("kospi", "KOSPI 200", "KOSPI 200 component universe."),
         "kosdaq150": ("kosdaq", "KOSDAQ 150", "KOSDAQ 150 component universe."),
@@ -572,63 +572,13 @@ def reset_loaded_data(
 ) -> None:
     if market_key:
         home_key = home_market_key(market_key)
-        market_wide_reset = universe_keys is None
         universe_keys = universe_keys or _market_universe_keys(conn, home_key)
-        print(f"  reset scope: market={home_key}, universes={', '.join(universe_keys)}")
-        conn.execute("DELETE FROM generated_reports WHERE market_key = %s OR universe_key = ANY(%s)", (home_key, universe_keys))
-        conn.execute("DELETE FROM sector_snapshots WHERE market_key = %s OR universe_key = ANY(%s)", (home_key, universe_keys))
-        conn.execute("DELETE FROM market_snapshots WHERE market_key = %s OR universe_key = ANY(%s)", (home_key, universe_keys))
-        conn.execute("DELETE FROM scan_results WHERE market_key = %s OR universe_key = ANY(%s)", (home_key, universe_keys))
+        print(f"  reset scope: membership only, market={home_key}, universes={', '.join(universe_keys)}")
         conn.execute("DELETE FROM universe_memberships WHERE universe_key = ANY(%s)", (universe_keys,))
-        if not market_wide_reset:
-            return
-
-        conn.execute(
-            """
-            DELETE FROM instrument_news
-            WHERE instrument_id IN (
-                SELECT instrument_id FROM instruments WHERE market_key = %s
-            )
-            """,
-            (home_key,),
-        )
-        for table in ["instrument_fundamentals", "daily_indicators", "daily_prices"]:
-            conn.execute(
-                f"""
-                DELETE FROM {table}
-                WHERE instrument_id IN (
-                    SELECT instrument_id FROM instruments WHERE market_key = %s
-                )
-                """,
-                (home_key,),
-            )
-        conn.execute("DELETE FROM instruments WHERE market_key = %s", (home_key,))
-        conn.execute(
-            """
-            DELETE FROM news_items
-            WHERE NOT EXISTS (
-                SELECT 1 FROM instrument_news
-                WHERE instrument_news.news_id = news_items.news_id
-            )
-            """
-        )
         return
 
-    print("  reset scope: all loaded data; collection_runs retained")
-    for table in [
-        "instrument_news",
-        "generated_reports",
-        "sector_snapshots",
-        "market_snapshots",
-        "scan_results",
-        "instrument_fundamentals",
-        "daily_indicators",
-        "daily_prices",
-        "universe_memberships",
-        "news_items",
-        "instruments",
-    ]:
-        conn.execute(f"DELETE FROM {table}")
+    print("  reset scope: membership only, all universes; collection_runs retained")
+    conn.execute("DELETE FROM universe_memberships")
 
 
 def _dedupe_symbols(symbols: list[str]) -> list[str]:
@@ -662,7 +612,7 @@ def _master_row_from_universe(
 
 
 def _default_refresh_market_keys() -> list[str]:
-    return sorted(MARKETS.keys())
+    return sorted(key for key in MARKETS if key not in UNIVERSE_MARKET_ALIASES)
 
 
 def _universe_market_key(universe_key: str) -> str:
@@ -1472,7 +1422,7 @@ def main() -> None:
     refresh_parser.add_argument(
         "--reset",
         action="store_true",
-        help="Clear loaded instruments, memberships, scan results, prices, and news links before refreshing. With --market, only that market is reset. Run logs are retained.",
+        help="Clear only universe_memberships in the requested scope before refreshing. Instruments, prices, scan results, news, reports, and run logs are retained.",
     )
 
     load_parser = subparsers.add_parser("load-csv", help="Load an existing scan CSV into Postgres.")

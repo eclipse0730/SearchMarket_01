@@ -87,6 +87,7 @@ uv run python Search.py --help
 2026-05-02 기준:
 
 - 권장 CLI 구조는 시장 단위 `--market`과 선택적 멤버십 필터 `--universe`임. 예: `uv run python Search.py --market us --universe sp500`, `uv run python Search.py --market kospi --universe kospi100`, `uv run python Search.py --market kospi --universe kospi200`
+- `us`, `kospi`, `kosdaq`은 시장 전체가 기본이며, `nasdaq100`, `sp500`, `kospi100`, `kospi200`, `kosdaq150`은 `--universe` 옵션값으로 사용함. `us-all`, `kospi-all`, `kosdaq-all`은 폐기 키로 정리함
 - `site_builder.py`는 빈 최신 CSV를 건너뛰고 이전 정상 CSV를 찾아 Pages 빌드를 계속함
 - `uv run python -m compileall Search.py market_scanner` 통과
 - `uv run python Search.py --help` 통과
@@ -99,7 +100,7 @@ uv run python Search.py --help
 - KOSPI/KOSDAQ 상세페이지 링크도 NASDAQ 100과 같이 Investing 상세 URL 캐시를 우선 사용하고, 실패 시 검색 링크로 fallback함
 - KOSPI/KOSDAQ 계열 가격 히스토리는 스캔 시 FinanceDataReader를 우선 사용하고, 실패 또는 히스토리 부족 시 yfinance로 fallback함. 한국 전체 유니버스는 FDR/KRX listing 실패 시 Naver Finance 시가총액 목록으로 보강함. 한국 종목명/섹터는 FinanceDataReader, Naver Finance, 정적 메타데이터로 보강하고, 렌더링 시 placeholder 이름/섹터를 보정함. 한국 시장 화면은 한글 종목명 우선이며, 한글명을 확보하지 못하면 영어 회사명 대신 종목코드를 표시함
 - 모든 시장의 고정 종목 메타데이터는 PostgreSQL `instruments` 테이블을 우선 사용하고, DB가 비어 있거나 연결되지 않을 때 `market_scanner/assets/instruments.json`과 기존 시장별 `*_static_meta.json`을 seed/fallback으로 사용함
-- 종목마스터 신규 갱신 기준은 `uv run python -m market_scanner.db refresh-master`이며, `--market kospi`는 KOSPI 전체만 갱신하고 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`처럼 명시했을 때 대표 유니버스를 갱신함. `--reset`은 기존 적재 마스터/스캔 데이터를 비운 뒤 유니버스 로더 기반으로 다시 구성함. `--market`과 함께 쓰면 해당 시장만 reset하고, `--universe`와 함께 쓰면 해당 유니버스 멤버십/산출물만 reset하며 종목마스터는 보존함. `collection_runs` 로그는 계속 누적함. `load-master`는 JSON seed 복구용 호환 명령으로 유지함
+- 종목마스터 신규 갱신 기준은 `uv run python -m market_scanner.db refresh-master`이며, `--market kospi`는 KOSPI 전체만 갱신하고 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`처럼 명시했을 때 대표 유니버스를 갱신함. `--reset`은 `universe_memberships`만 해당 범위에서 삭제 후 재생성하며, `instruments`, 가격, 지표, 스캔 결과, 뉴스, 리포트, `collection_runs` 로그는 보존함. `load-master`는 JSON seed 복구용 호환 명령으로 유지함
 - 스캔 기본값은 DB `instruments`의 시장 전체 활성 종목이며, `uv run python Search.py --market kospi --universe kospi200`처럼 `--universe`를 지정하면 `universe_memberships`의 해당 현재 편입 종목만 스캔함. 시장과 universe가 맞지 않으면 오류로 중단함
 - `kospi`, `kosdaq`은 시장 전체가 기본이며, `kospi100`, `kospi200`, `kosdaq150`은 `--universe` 옵션값으로만 사용함
 - `refresh-master`는 기존 멤버십과 새 수집 목록을 비교해 일치/불일치, 추가/삭제, 순위 변경, 신규 instrument 샘플을 로그와 `collection_runs.params`에 남기며, 멤버십 목록과 순서가 같으면 `universe_memberships` 재작성을 건너뜀

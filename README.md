@@ -24,9 +24,8 @@ uv run python -m market_scanner.db load-csv --market kospi --date YYYYMMDD
 uv run python -m market_scanner.db counts
 ```
 
-`init`은 DB 스키마와 기준 데이터를 준비하는 단계입니다. 새 DB를 처음 만들었을 때, Docker volume을 새로 만들었을 때, 스키마나 시장/유니버스 기준 키가 바뀐 뒤에는 실행해야 합니다. 이미 초기화된 DB에서 일반 스캔만 반복할 때는 매번 실행할 필요가 없습니다. 현재 코드에 없는 market/universe 기준 row는 삭제하지 않고 `is_active = false`로 비활성화합니다.
-
-`refresh-master`는 가격/지표를 수집하지 않고 시장 유니버스 로더로 종목 목록을 받아 `instruments`, `universe_memberships`, `collection_runs`만 갱신합니다. `--market kospi`는 KOSPI 전체만 갱신하고, KOSPI100/KOSPI200은 필요할 때 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`으로 별도 갱신합니다. 실행 시 기존 멤버십과 새 목록의 일치/불일치 수, 추가/삭제/순위 변경 샘플, 신규/upsert instrument 샘플을 로그로 출력하고 `collection_runs.params`에도 저장합니다. 멤버십 목록과 순서가 같으면 `universe_memberships` 재작성은 건너뜁니다. `--reset`은 기존 적재 마스터, 스캔, 가격, 뉴스 연결 데이터를 비우고 다시 구성하므로 초기 전환이나 재구성 때만 사용합니다. `--market`과 함께 쓰면 해당 시장만 reset하며, `--universe`와 함께 쓰면 해당 유니버스의 멤버십/산출물만 reset하고 종목마스터는 보존합니다. `collection_runs` 실행 로그는 계속 누적합니다.
+`init`은 DB 스키마와 기준 데이터를 준비하는 단계입니다. 새 DB를 처음 만들었을 때, Docker volume을 새로 만들었을 때, 스키마나 시장/유니버스 기준 키가 바뀐 뒤에는 실행해야 합니다. 이미 초기화된 DB에서 일반 스캔만 반복할 때는 매번 실행할 필요가 없습니다. 현재 코드에 없는 market/universe 기준 row는 삭제하지 않고 `is_active = false`로 비활성화합니다. 
+`refresh-master`는 가격/지표를 수집하지 않고 시장 유니버스 로더로 종목 목록을 받아 `instruments`, `universe_memberships`, `collection_runs`만 갱신합니다. `--market kospi`는 KOSPI 전체만 갱신하고, KOSPI100/KOSPI200은 필요할 때 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`으로 별도 갱신합니다. 실행 시 기존 멤버십과 새 목록의 일치/불일치 수, 추가/삭제/순위 변경 샘플, 신규/upsert instrument 샘플을 로그로 출력하고 `collection_runs.params`에도 저장합니다. 멤버십 목록과 순서가 같으면 `universe_memberships` 재작성은 건너뜁니다. `--reset`은 `universe_memberships`만 해당 범위에서 삭제 후 재생성합니다. `instruments`, 가격, 지표, 스캔 결과, 뉴스, 리포트, 실행 로그는 보존합니다.
 
 ## 스캔
 
