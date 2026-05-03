@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from psycopg.types.json import Jsonb
+
 from market_scanner.compat import compat_paths
-from market_scanner.db import connect
+from market_scanner.db import connect, home_market_key
 from market_scanner.markets import MARKETS
 from market_scanner.models import ScanSettings
 from market_scanner.pipeline import write_html, write_markdown
@@ -144,11 +146,40 @@ def run_build(
     paths["md"].parent.mkdir(parents=True, exist_ok=True)
     paths["html"].parent.mkdir(parents=True, exist_ok=True)
 
-    markdown = write_markdown(frame, market, settings, date_str_fmt, paths["md"])
-    print(f"  render: {paths['md']}")
+    with connect(explicit_url) as conn:
+        run_result = conn.execute(
+            """
+            INSERT INTO collection_runs (
+                run_type, market_key, universe_key, trade_date, source_provider, status,
+                requested_count, params
+            )
+            VALUES ('render', %s, %s, %s, 'db', 'running', %s, %s)
+            RETURNING run_id
+            """,
+            (
+                home_market_key(market_key),
+                effective_universe,
+                trade_date,
+                len(frame),
+                Jsonb({"universe_key": effective_universe}),
+            ),
+        ).fetchone()
+        run_id = str(run_result[0])
 
-    write_html(frame, market, settings, date_str_fmt, markdown, paths["html"])
-    print(f"  render: {paths['html']}")
+        markdown = write_markdown(frame, market, settings, date_str_fmt, paths["md"])
+        print(f"  render: {paths['md']}")
+
+        write_html(frame, market, settings, date_str_fmt, markdown, paths["html"])
+        print(f"  render: {paths['html']}")
+
+        conn.execute(
+            """
+            UPDATE collection_runs
+            SET status = 'success', finished_at = now(), success_count = %s
+            WHERE run_id = %s
+            """,
+            (len(frame), run_id),
+        )
 
     return paths
 

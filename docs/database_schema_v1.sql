@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS collection_runs (
     notes TEXT,
     git_sha TEXT,
     CONSTRAINT collection_runs_type_check CHECK (
-        run_type IN ('universe', 'prices', 'indicators', 'scan', 'news', 'render', 'backfill')
+        run_type IN ('universe', 'prices', 'indicators', 'scan', 'news', 'render', 'backfill', 'fundamentals')
     ),
     CONSTRAINT collection_runs_status_check CHECK (
         status IN ('running', 'success', 'partial', 'failed', 'cancelled')
@@ -122,6 +122,15 @@ CREATE TABLE IF NOT EXISTS collection_runs (
 
 CREATE INDEX IF NOT EXISTS idx_collection_runs_lookup
     ON collection_runs (market_key, universe_key, trade_date, run_type, started_at DESC);
+
+-- migrate: add 'fundamentals' to run_type check (idempotent)
+DO $$
+BEGIN
+    ALTER TABLE collection_runs DROP CONSTRAINT IF EXISTS collection_runs_type_check;
+    ALTER TABLE collection_runs ADD CONSTRAINT collection_runs_type_check CHECK (
+        run_type IN ('universe', 'prices', 'indicators', 'scan', 'news', 'render', 'backfill', 'fundamentals')
+    );
+END $$;
 
 CREATE TABLE IF NOT EXISTS daily_prices (
     instrument_id BIGINT NOT NULL REFERENCES instruments(instrument_id),

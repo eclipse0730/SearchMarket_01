@@ -40,6 +40,26 @@ uv run python -m market_scanner.db refresh-master --market commodities     # JSO
 uv run python -m market_scanner.db counts
 ```
 
+## 종목 이름·업종 보강 (한국 시장)
+
+FDR/Naver 마켓서머리에서 이름이 누락된 종목(우선주·ETF 등)이나 sector가 `Unknown`인 종목을 Naver Finance 개별 종목 페이지에서 보강합니다. `refresh-master` 이후 한 번 실행하면 됩니다.
+
+```bash
+# 기본: name_local이 비어 있거나 sector='Unknown'인 종목만 업데이트
+uv run python -m market_scanner.db fetch-name --market kospi
+uv run python -m market_scanner.db fetch-name --market kosdaq
+
+# 전체 종목 재조회 (초기 1회 or 데이터 품질 리셋)
+uv run python -m market_scanner.db fetch-name --market kospi --all
+uv run python -m market_scanner.db fetch-name --market kosdaq --all
+
+# 테스트: 10종목만 먼저 확인
+uv run python -m market_scanner.db fetch-name --market kospi --limit 10
+```
+
+- 종목당 Naver Finance 1회 요청, 기본 0.3초 간격 (`--delay` 조정 가능)
+- 업데이트 항목: `name_local`, `sector`, `description` / `name_en`은 placeholder인 경우만 교체
+
 ## v2 파이프라인 (DB-first)
 
 가격 수집 → 지표 계산 → 스크리닝 → 렌더링 4단계로 분리됩니다. 각 단계는 독립적으로 실행하거나 순서대로 이어서 실행합니다.
@@ -240,3 +260,22 @@ market_scanner/
 | `daily-scan-kospi.yml` | KST 16:05 | KOSPI |
 | `daily-scan-kosdaq.yml` | KST 16:35 | KOSDAQ |
 | `deploy-pages.yml` | 스캔 성공 후 자동, 또는 수동 실행 | GitHub Pages 사이트 빌드·배포 |
+
+
+--남은작업
+이번 세션에서 완료한 작업과 남은 작업입니다.
+
+이번 세션 완료
+
+✅ fundamentals.py run_type='indicators' 버그 → 'fundamentals' 수정
+✅ render.py collection_runs 로그 누락 → 추가
+✅ SQL 스키마 'fundamentals' 추가 + 기존 DB 마이그레이션 블록
+✅ fetch-name 명령어 추가 (Naver 개별 종목 페이지로 name_local + sector 보강)
+남은 작업
+
+우선순위	항목	설명
+중	_db_instrument_meta 캐시 버그	DB에 name_en=symbol 같은 placeholder 데이터가 있으면 refresh-master 재실행 시 그 나쁜 데이터를 metadata 캐시로 사용 → 신규 종목도 계속 나쁜 데이터로 upsert됨. fetch-name 으로 수동 보정은 가능하지만 구조적 버그
+중	신규 종목 자동 백필 연동	refresh-master 이후 새로 추가된 종목을 추적해서 prices backfill --new-only 자동 트리거
+낮	v1 레거시 정리	Search.py, compat.py의 CSV 관련 코드 슬림화
+낮	Test/ 디렉토리 처리	untracked 상태로 남아있는 테스트 파일들 정리 or .gitignore
+캐시 버그가 fetch-name 추가로 완화됐긴 한데, 구조적으로는 수정하는 게 깔끔합니다. 어느 것부터 진행할까요?

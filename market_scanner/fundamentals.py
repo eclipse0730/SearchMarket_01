@@ -132,7 +132,7 @@ def run_fetch(
             INSERT INTO collection_runs (
                 run_type, market_key, trade_date, source_provider, status, requested_count, params
             )
-            VALUES ('indicators', %s, %s, 'yfinance', 'running', %s, %s)
+            VALUES ('fundamentals', %s, %s, 'yfinance', 'running', %s, %s)
             RETURNING run_id
             """,
             (

@@ -528,6 +528,64 @@ def _merge_metadata(*sources: dict[str, StaticTickerMeta]) -> dict[str, StaticTi
     return merged
 
 
+_NAVER_ITEM_URL = "https://finance.naver.com/item/main.naver"
+_NAVER_ITEM_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; stock-scanner/1.0)"}
+
+
+def fetch_naver_item_meta(code: str) -> tuple[str | None, str | None]:
+    """Naver Finance 개별 종목 페이지에서 (name_local, sector) 반환.
+
+    code: 6자리 숫자 문자열 (예: "005930", "003545")
+    반환: (name_local, sector) — 취득 실패 시 None
+    """
+    try:
+        resp = requests.get(
+            _NAVER_ITEM_URL,
+            params={"code": code},
+            headers=_NAVER_ITEM_HEADERS,
+            timeout=12,
+        )
+        resp.raise_for_status()
+    except Exception:
+        return None, None
+
+    html = resp.content.decode(resp.encoding or "euc-kr", errors="ignore")
+
+    # 회사명: <title>삼성전자 : 네이버 금융</title>
+    name: str | None = None
+    m = re.search(r"<title>\s*(.+?)\s*[:：]", html)
+    if m:
+        candidate = _clean_html_text(m.group(1))
+        if candidate and len(candidate) > 1 and candidate.lower() not in ("nan", "-"):
+            name = candidate
+
+    # 업종: 여러 HTML 패턴 시도 (Naver 구조 변경에 대비)
+    sector: str | None = None
+    sector_patterns = [
+        # 동종업종비교 섹션: (업종명 : <a ...>반도체와반도체장비</a>)
+        r"업종명\s*:\s*<a[^>]*>([^<]{2,60})</a>",
+        # <dl class="blind"><dt>업종</dt><dd>전기·전자</dd>
+        r"<dt>\s*업종\s*</dt>\s*<dd>\s*([^<\n]{2,40})\s*</dd>",
+        # <em class="industry_img"><a ...>전기·전자</a>
+        r'class="industry_img"[^>]*>.*?<a[^>]*>([^<]{2,40})</a>',
+        # <th>업종</th><td><a ...>전기·전자</a>
+        r"업종\s*</th>\s*<td[^>]*>(?:<a[^>]*>)?\s*([^<\n]{2,40})",
+    ]
+    for pat in sector_patterns:
+        m = re.search(pat, html, re.DOTALL | re.IGNORECASE)
+        if m:
+            candidate = _clean_html_text(m.group(1))
+            if (
+                candidate
+                and len(candidate) > 1
+                and candidate.lower() not in ("nan", "unknown", "-", "n/a")
+            ):
+                sector = candidate
+                break
+
+    return name, sector
+
+
 @lru_cache(maxsize=None)
 def _kospi_metadata() -> dict[str, StaticTickerMeta]:
     db_meta = _db_instrument_meta("kospi")

@@ -1425,6 +1425,110 @@ def print_counts(explicit_url: str | None = None) -> None:
             print(f"{table}: {count}")
 
 
+def run_fetch_name(
+    market_key: str,
+    stale_only: bool = True,
+    limit: int | None = None,
+    explicit_url: str | None = None,
+    delay: float = 0.3,
+) -> None:
+    """Naver Finance 개별 종목 페이지에서 name_local, sector를 가져와 instruments 업데이트."""
+    import time
+
+    from market_scanner.markets import fetch_naver_item_meta
+
+    base_key = home_market_key(market_key)
+
+    with connect(explicit_url) as conn:
+        if stale_only:
+            rows = conn.execute(
+                """
+                SELECT instrument_id, symbol, name_local, name_en, sector
+                FROM instruments
+                WHERE market_key = %s
+                  AND is_active = TRUE
+                  AND (
+                      name_local IS NULL
+                      OR name_local = symbol
+                      OR name_local = display_symbol
+                      OR sector = 'Unknown'
+                      OR sector IS NULL
+                  )
+                ORDER BY symbol
+                """,
+                (base_key,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT instrument_id, symbol, name_local, name_en, sector
+                FROM instruments
+                WHERE market_key = %s AND is_active = TRUE
+                ORDER BY symbol
+                """,
+                (base_key,),
+            ).fetchall()
+
+        if limit:
+            rows = rows[:limit]
+
+        total = len(rows)
+        if not total:
+            print(f"  fetch_name [{market_key}]: 업데이트 대상 없음 (이미 모두 채워져 있음)")
+            return
+
+        print(f"  fetch_name [{market_key}]: {total} 종목 처리 시작")
+
+        success, failed, skipped = 0, 0, 0
+        for instrument_id, symbol, curr_name, curr_name_en, curr_sector in rows:
+            suffix = ".KS" if base_key == "kospi" else ".KQ"
+            code = str(symbol).replace(suffix, "").strip().zfill(6)
+
+            name, sector = fetch_naver_item_meta(code)
+
+            if not name and not sector:
+                failed += 1
+                if failed <= 10:
+                    print(f"    FAIL: {symbol} ({code})")
+                time.sleep(delay)
+                continue
+
+            # name_local: Naver에서 가져온 값 우선, 없으면 기존 유지
+            new_name_local = name or curr_name
+            # name_en: placeholder(symbol 그대로)인 경우만 한국어 이름으로 교체
+            new_name_en = curr_name_en
+            if name and (not curr_name_en or curr_name_en == symbol or curr_name_en == code):
+                new_name_en = name
+            # sector
+            new_sector = sector or curr_sector
+            # description
+            label = "KOSPI" if base_key == "kospi" else "KOSDAQ"
+            new_desc = f"{new_name_local} ({label})" if new_name_local else None
+
+            conn.execute(
+                """
+                UPDATE instruments
+                SET name_local = %s,
+                    name_en    = %s,
+                    sector     = %s,
+                    description = COALESCE(%s, description)
+                WHERE instrument_id = %s
+                """,
+                (new_name_local, new_name_en, new_sector, new_desc, instrument_id),
+            )
+            success += 1
+
+            if success % 100 == 0:
+                print(f"    {success + failed}/{total} 완료 ...")
+
+            time.sleep(delay)
+
+        print(
+            f"  fetch_name [{market_key}] 완료: "
+            f"success={success}  failed={failed}  skipped={skipped}"
+        )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="SearchMarket Postgres utilities.")
     parser.add_argument("--database-url", default=None, help="Postgres DATABASE_URL. Defaults to env or local Docker URL.")
@@ -1451,6 +1555,25 @@ def main() -> None:
     load_parser.add_argument("--date", required=True, help="YYYYMMDD")
 
     subparsers.add_parser("counts", help="Print core table row counts.")
+
+    fetch_name_parser = subparsers.add_parser(
+        "fetch-name",
+        help="Naver Finance 개별 종목 페이지에서 name_local, sector를 가져와 instruments 업데이트.",
+    )
+    fetch_name_parser.add_argument(
+        "--market", required=True, choices=["kospi", "kosdaq"],
+        help="대상 시장 (kospi or kosdaq)",
+    )
+    fetch_name_parser.add_argument(
+        "--all", action="store_true", dest="fetch_all",
+        help="sector='Unknown' 또는 name_local 미설정 종목만이 아닌 전체 종목 업데이트",
+    )
+    fetch_name_parser.add_argument(
+        "--limit", type=int, default=None, help="처리할 최대 종목 수 (테스트용)",
+    )
+    fetch_name_parser.add_argument(
+        "--delay", type=float, default=0.3, help="종목 간 요청 딜레이(초, 기본 0.3)",
+    )
 
     args = parser.parse_args()
     if args.command == "init":
@@ -1482,6 +1605,14 @@ def main() -> None:
         print(f"loaded {args.market} {args.date}: run_id={run_id}")
     elif args.command == "counts":
         print_counts(args.database_url)
+    elif args.command == "fetch-name":
+        run_fetch_name(
+            args.market,
+            stale_only=not args.fetch_all,
+            limit=args.limit,
+            explicit_url=args.database_url,
+            delay=args.delay,
+        )
 
 
 if __name__ == "__main__":
