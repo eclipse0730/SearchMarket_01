@@ -40,7 +40,56 @@ uv run python -m market_scanner.db refresh-master --market commodities     # JSO
 uv run python -m market_scanner.db counts
 ```
 
-## 스캔
+## v2 파이프라인 (DB-first)
+
+가격 수집 → 지표 계산 → 스크리닝 → 렌더링 4단계로 분리됩니다. 각 단계는 독립적으로 실행하거나 순서대로 이어서 실행합니다.
+
+```bash
+# 1. 일일 OHLCV 수집 (증분 — 마지막 적재일 다음부터 오늘까지)
+uv run python -m market_scanner.prices fetch --market kospi
+uv run python -m market_scanner.prices fetch --market kosdaq
+uv run python -m market_scanner.prices fetch --market us
+
+# 2. 기술적 지표 계산 (daily_prices → daily_indicators)
+uv run python -m market_scanner.indicators compute --market kospi
+
+# 3. 스코어링·랭킹·집계 (daily_indicators → scan_results / market_snapshots)
+uv run python -m market_scanner.screener run --market kospi
+uv run python -m market_scanner.screener run --market kospi --universe kospi200
+
+# 4. 리포트 렌더링 (scan_results → analysis/ + reports/)
+uv run python -m market_scanner.render build --market kospi
+```
+
+### 백필 (신규 종목 or 1년치 일괄)
+
+```bash
+# refresh-master로 새 종목이 들어온 뒤
+uv run python -m market_scanner.prices backfill --market kospi --new-only
+# 전체 1년치 재적재
+uv run python -m market_scanner.prices backfill --market kospi --years 1
+# 실패 종목 재시도
+uv run python -m market_scanner.prices retry --market kospi
+```
+
+### 펀더멘탈 수집 (주 1회)
+
+```bash
+uv run python -m market_scanner.fundamentals fetch --market us
+uv run python -m market_scanner.fundamentals fetch --market kospi
+```
+
+### 스케줄러 (docker-compose cron 사이드카)
+
+```bash
+docker compose --profile scheduler up -d
+# 로그 확인
+docker compose logs -f scheduler
+```
+
+---
+
+## 스캔 (v1 레거시)
 기본 스캔은 DB `instruments`에서 해당 시장의 전체 활성 종목을 읽습니다.
 
 ```bash

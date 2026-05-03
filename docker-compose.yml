@@ -16,6 +16,48 @@ services:
       timeout: 5s
       retries: 10
 
+  scheduler:
+    image: python:3.12-slim
+    container_name: searchmarket-scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://searchmarket:searchmarket@postgres:5432/searchmarket
+    volumes:
+      - .:/app
+    working_dir: /app
+    # cron 탭 설명
+    # 16:35 KST(07:35 UTC) — KOSPI 장 마감 +35분
+    # 17:05 KST(08:05 UTC) — KOSDAQ 장 마감 +5분 (screener/render 포함)
+    # 06:30 UTC            — US 장 마감 다음날 KST 15:30 (미국 ET 16:00 = UTC 21:00, 다음날 표시)
+    # 일요일 01:00 UTC     — 주간 펀더멘탈 수집
+    command: >
+      bash -c "
+        pip install -q uv &&
+        uv sync --frozen &&
+        apt-get update -qq && apt-get install -y -qq cron &&
+        echo '35 7 * * 1-5 cd /app && uv run python -m market_scanner.prices fetch --market kospi >> /var/log/cron.log 2>&1' > /etc/cron.d/searchmarket &&
+        echo '40 7 * * 1-5 cd /app && uv run python -m market_scanner.indicators compute --market kospi >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '45 7 * * 1-5 cd /app && uv run python -m market_scanner.screener run --market kospi >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '50 7 * * 1-5 cd /app && uv run python -m market_scanner.render build --market kospi >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '05 8 * * 1-5 cd /app && uv run python -m market_scanner.prices fetch --market kosdaq >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '10 8 * * 1-5 cd /app && uv run python -m market_scanner.indicators compute --market kosdaq >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '15 8 * * 1-5 cd /app && uv run python -m market_scanner.screener run --market kosdaq >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '20 8 * * 1-5 cd /app && uv run python -m market_scanner.render build --market kosdaq >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '30 6 * * 2-6 cd /app && uv run python -m market_scanner.prices fetch --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '40 6 * * 2-6 cd /app && uv run python -m market_scanner.indicators compute --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '50 6 * * 2-6 cd /app && uv run python -m market_scanner.screener run --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '00 7 * * 2-6 cd /app && uv run python -m market_scanner.render build --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '0 1 * * 0 cd /app && uv run python -m market_scanner.fundamentals fetch --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        echo '30 1 * * 0 cd /app && uv run python -m market_scanner.fundamentals fetch --market kospi >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
+        chmod 0644 /etc/cron.d/searchmarket &&
+        cron -f
+      "
+    restart: unless-stopped
+    profiles:
+      - scheduler
+
 volumes:
   postgres_data:
 

@@ -992,12 +992,13 @@ def upsert_daily_price(
             instrument_id, trade_date, source_provider, open_price, high_price, low_price,
             close_price, adj_close_price, volume, currency_code, is_adjusted, run_id, raw_payload
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, NULL, NULL, %s, FALSE, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, NULL, %s, %s, FALSE, %s, %s)
         ON CONFLICT (instrument_id, trade_date, source_provider) DO UPDATE SET
             open_price = EXCLUDED.open_price,
             high_price = EXCLUDED.high_price,
             low_price = EXCLUDED.low_price,
             close_price = EXCLUDED.close_price,
+            volume = EXCLUDED.volume,
             currency_code = EXCLUDED.currency_code,
             run_id = EXCLUDED.run_id,
             raw_payload = EXCLUDED.raw_payload,
@@ -1011,9 +1012,10 @@ def upsert_daily_price(
             _clean_number(row.get("high")),
             _clean_number(row.get("low")),
             close_price,
+            _clean_int(row.get("volume")),
             currency_code,
             run_id,
-            Jsonb(_row_payload(row, ["open", "high", "low", "close", "price", "prev_close"])),
+            Jsonb(_row_payload(row, ["open", "high", "low", "close", "price", "prev_close", "volume"])),
         ),
     )
 
