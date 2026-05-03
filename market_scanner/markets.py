@@ -23,6 +23,7 @@ _INVESTING_KR_BASE_URL = "https://kr.investing.com"
 _INVESTING_SEARCH_URL = f"{_INVESTING_BASE_URL}/search"
 _INVESTING_CACHE_PATH = ASSET_DIR / "investing_url_cache.json"
 _SP500_SOURCE_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+_NASDAQ100_SOURCE_URL = "https://en.wikipedia.org/wiki/Nasdaq-100"
 _NAVER_MARKET_SUM_URL = "https://finance.naver.com/sise/sise_market_sum.naver"
 _NAVER_MARKET_SUM_MAX_PAGES = 90
 _INVESTING_SEARCH_HEADERS = {
@@ -306,10 +307,17 @@ def _global_index_meta() -> dict[str, StaticTickerMeta]:
     return _instrument_meta_db_first("global-indices", _STATIC_META_ASSETS["global-indices"])
 
 
-
 @lru_cache(maxsize=None)
 def _commodity_meta() -> dict[str, StaticTickerMeta]:
     return _instrument_meta_db_first("commodities", _STATIC_META_ASSETS["commodities"])
+
+
+def _global_index_universe() -> list[str]:
+    return _static_symbols(_instrument_meta("global-indices", _STATIC_META_ASSETS["global-indices"]))
+
+
+def _commodity_universe() -> list[str]:
+    return _static_symbols(_instrument_meta("commodities", _STATIC_META_ASSETS["commodities"]))
 
 
 def _fetch_sp500_tickers() -> list[str]:
@@ -326,6 +334,25 @@ def _fetch_sp500_tickers() -> list[str]:
         print(f"  S&P 500 load failed: {exc}")
         return []
 
+
+def _fetch_nasdaq100_tickers() -> list[str]:
+    try:
+        import pandas as pd
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; stock-scanner/1.0)"}
+        resp = requests.get(_NASDAQ100_SOURCE_URL, headers=headers, timeout=15)
+        resp.raise_for_status()
+        tables = pd.read_html(io.StringIO(resp.text))
+        for table in tables:
+            col = next((c for c in ("Ticker", "Symbol", "Code") if c in table.columns), None)
+            if col and len(table) >= 90:
+                tickers = table[col].str.replace(".", "-", regex=False).tolist()
+                print(f"  NASDAQ 100 (Wikipedia): loaded {len(tickers)} tickers")
+                return tickers
+        print("  NASDAQ 100 load failed: no suitable table found")
+        return []
+    except Exception as exc:
+        print(f"  NASDAQ 100 load failed: {exc}")
+        return []
 
 
 @lru_cache(maxsize=None)
@@ -561,12 +588,11 @@ def _fetch_krx_kosdaq_all() -> list[str]:
 
 
 def _nasdaq100_universe() -> list[str]:
-    return _fetch_fdr_us_symbols("NASDAQ100", "NASDAQ100")
+    return _fetch_nasdaq100_tickers()
 
 
 def _sp500_universe() -> list[str]:
-    live = _fetch_fdr_us_symbols("SP500", "S&P500")
-    return live if live else _fetch_sp500_tickers()
+    return _fetch_sp500_tickers()
 
 
 def _nasdaq_universe() -> list[str]:
@@ -866,7 +892,7 @@ MARKETS: dict[str, MarketDefinition] = {
         output_prefix="global-indices",
         currency_symbol="",
         price_decimals=2,
-        universe_loader=lambda: _static_symbols(_global_index_meta()),
+        universe_loader=_global_index_universe,
         metadata_loader=_global_index_meta,
         quote_url_builder=_quote_url_investing_detail,
         display_symbol_builder=_display_index,
@@ -878,7 +904,7 @@ MARKETS: dict[str, MarketDefinition] = {
         output_prefix="commodities",
         currency_symbol="$",
         price_decimals=2,
-        universe_loader=lambda: _static_symbols(_commodity_meta()),
+        universe_loader=_commodity_universe,
         metadata_loader=_commodity_meta,
         quote_url_builder=_quote_url_investing_detail,
         display_symbol_builder=_display_commodity,

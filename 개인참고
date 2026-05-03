@@ -125,3 +125,42 @@ uv run python -m market_scanner.db refresh-master --market kospi
 * 완전히 정리하려면 둘 중 하나가 필요해:
 uv run python -m market_scanner.db refresh-master --reset
 이러면 전체 membership이 비워지고 새 구조로 다시 채워져서 kospi-all은 안 생김.    
+
+
+NASDAQ vs NYSE vs AMEX 차이
+            NASDAQ	                        NYSE	                        AMEX (NYSE American)
+성격	전자 거래소, 기술주 중심	            가장 오래된 거래소, 전통 대형주	    소형·중형주, ETF 많음
+대표 종목	AAPL, MSFT, AMZN, NVDA, META	    BRK, JPM, WMT, KO, XOM	    주로 소형주
+종목 수	    ~3,300개	                     ~2,400개	                        ~500개
+특징	상장 기준 낮음, 성장주 위주	상장 기준 엄격, 배당주 위주	가장 규모 작음, 노이즈 많음
+"나스닥 보통주 전체"가 목적이면 NASDAQ 단독, 미국 전체 보통주이면 NASDAQ + NYSE (AMEX는 노이즈 대비 가치 낮음).
+
+이제 구현 진행합니다. FDR이 StockListing("NASDAQ100"), StockListing("SP500")도 지원하므로 JSON 의존성 3개를 한 번에 정리합니다.
+
+
+
+Q.
+근데 종목마스터 갱신 명령어는
+uv run python -m market_scanner.db refresh-master 
+그 이후 작업 명령어는 uv run python Search.py로 되어있는데 
+차이와 이유가 있어?
+
+A.두 명령의 역할이 다르기 때문에 분리되어 있습니다.
+uv run python -m market_scanner.db
+
+market_scanner/db.py 패키지 모듈을 직접 실행
+DB 관리 전용: 스키마 초기화, 종목 목록 갱신, CSV 로드, 집계 확인
+가격 데이터·지표 계산 없음, 빠름
+-m 플래그는 파이썬 패키지 내 모듈을 실행할 때 쓰는 표준 방식
+uv run python Search.py
+
+프로젝트 루트의 Search.py 스크립트를 실행
+스캔 파이프라인: 가격 히스토리 수집 → 이동평균·지표 계산 → CSV/Markdown/HTML 리포트 생성
+종목 수에 따라 수십 분 걸릴 수 있음
+분리한 이유:
+
+상황	사용 명령
+신규 상장·유니버스 변경 반영	refresh-master만 실행
+매일 정기 스캔	Search.py만 실행 (종목 목록은 이미 DB에 있음)
+DB 새로 구성 후 전체 초기화	refresh-master → Search.py 순서로 실행
+즉, 종목 목록 관리(db.py)와 시세 수집·분석(Search.py)을 독립적으로 실행할 수 있도록 의도적으로 분리된 구조입니다. GitHub Actions 워크플로우도 스캔 전에 refresh-master를 별도로 실행할 필요 없이 스캔만 반복 실행합니다.

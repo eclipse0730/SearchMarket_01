@@ -35,6 +35,8 @@ UNIVERSE_MARKET_ALIASES = {
 
 _MARKET_UNIVERSE_EXPANSION: dict[str, list[str]] = {
     "us": ["nasdaq", "nyse", "amex", "nasdaq100", "sp500"],
+    "kospi": ["kospi", "kospi100", "kospi200"],
+    "kosdaq": ["kosdaq", "kosdaq150"],
 }
 
 
@@ -772,6 +774,11 @@ def _refresh_universe_membership(
     existing_instruments: set[str] | None = None,
     force_rewrite: bool = False,
 ) -> dict[str, Any]:
+    if not symbols:
+        run_id = create_universe_run(conn, market_key, universe_key, trade_date, 0)
+        finish_run(conn, run_id, status="failed", success_count=0, notes="universe loader returned 0 symbols")
+        print(f"  refresh-master [{universe_key}] FAILED: universe loader returned 0 symbols")
+        return {"run_id": run_id, "comparison": {"fetched_count": 0, "mismatch_count": 0}, "instrument_added_count": 0, "instrument_upserted_count": 0, "membership_upserted_count": 0, "samples": {}}
     market = MARKETS[market_key]
     if current_membership is None:
         current_membership = _current_universe_membership(conn, universe_key)
@@ -833,8 +840,8 @@ def _refresh_universe_membership(
         conn,
         run_id,
         status="success",
-        success_count=instrument_upserted,
-        skipped_count=0 if membership_rewritten else len(symbols),
+        success_count=membership_upserted,
+        skipped_count=len(symbols) - membership_upserted,
         params={
             "samples": summary["samples"],
             "instrument_upserted_count": instrument_upserted,
@@ -1461,10 +1468,12 @@ def main() -> None:
         total_fetched = sum(summary["comparison"]["fetched_count"] for summary in summaries.values())
         total_mismatch = sum(summary["comparison"]["mismatch_count"] for summary in summaries.values())
         total_new_instruments = sum(summary["instrument_added_count"] for summary in summaries.values())
+        failed = [u for u, s in summaries.items() if s["comparison"]["fetched_count"] == 0]
+        status_str = f" FAILED={','.join(failed)}" if failed else ""
         print(
             "refresh-master completed: "
             f"universes={len(summaries)} fetched={total_fetched} "
-            f"mismatch={total_mismatch} new_instruments={total_new_instruments}"
+            f"mismatch={total_mismatch} new_instruments={total_new_instruments}{status_str}"
         )
     elif args.command == "load-csv":
         run_id = load_csv(args.market, args.date, args.database_url, universe_key=args.universe)
