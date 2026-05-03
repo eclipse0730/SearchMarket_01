@@ -29,7 +29,6 @@ def main() -> None:
         "kospi",
         "kosdaq",
         "global-indices",
-        "theme-proxies",
         "commodities",
     ]
 

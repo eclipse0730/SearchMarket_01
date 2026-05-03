@@ -23,11 +23,18 @@ REFRESH_LOG_SAMPLE_LIMIT = 30
 DEPRECATED_MARKET_KEYS = ["kospi-all", "kosdaq-all", "us-all"]
 DEPRECATED_UNIVERSE_KEYS = ["kospi-all", "kosdaq-all", "us-all"]
 UNIVERSE_MARKET_ALIASES = {
+    "nasdaq": "us",
+    "nyse": "us",
+    "amex": "us",
+    "nasdaq100": "us",
+    "sp500": "us",
     "kospi100": "kospi",
     "kospi200": "kospi",
     "kosdaq150": "kosdaq",
-    "nasdaq100": "us",
-    "sp500": "us",
+}
+
+_MARKET_UNIVERSE_EXPANSION: dict[str, list[str]] = {
+    "us": ["nasdaq", "nyse", "amex", "nasdaq100", "sp500"],
 }
 
 
@@ -55,8 +62,6 @@ def home_market_key(market_key: str) -> str:
 def default_asset_filter(market_key: str) -> list[str]:
     if market_key in {"global-indices"}:
         return ["index"]
-    if market_key in {"theme-proxies"}:
-        return ["etf"]
     if market_key in {"commodities"}:
         return ["commodity"]
     return ["common_stock"]
@@ -123,6 +128,9 @@ def seed_reference_data(conn: psycopg.Connection) -> None:
     home_keys = {home_market_key(key) for key in MARKETS}
     active_market_keys = sorted((set(MARKETS) | home_keys) - set(UNIVERSE_MARKET_ALIASES))
     extra_universes = {
+        "nasdaq": ("us", "NASDAQ", "All NASDAQ-listed stocks."),
+        "nyse": ("us", "NYSE", "All NYSE-listed stocks."),
+        "amex": ("us", "AMEX", "All AMEX-listed stocks."),
         "nasdaq100": ("us", "NASDAQ 100", "NASDAQ 100 component universe."),
         "sp500": ("us", "S&P 500", "S&P 500 component universe."),
         "kospi100": ("kospi", "KOSPI 100", "KOSPI 100 component universe."),
@@ -280,10 +288,8 @@ def classify_asset_type(row: pd.Series, market_key: str) -> str:
         return "index"
     if home_key in {"commodities"}:
         return "commodity"
-    if market_key == "theme-proxies":
-        return "etf"
 
-    name = (_clean_text(row.get("name_local")) or _clean_text(row.get("name_en")) or "").upper()
+    name =(_clean_text(row.get("name_local")) or _clean_text(row.get("name_en")) or "").upper()
     symbol = (_clean_text(row.get("symbol")) or "").upper()
     if "ETN" in name:
         return "etn"
@@ -863,7 +869,12 @@ def refresh_master(
             raise ValueError(f"Unsupported refresh universe: {universe_key}")
     else:
         market_keys = [market_key] if market_key else _default_refresh_market_keys()
-        refresh_targets = [(key, key) for key in market_keys]
+        refresh_targets = []
+        for key in market_keys:
+            if key in _MARKET_UNIVERSE_EXPANSION:
+                refresh_targets.extend((key, u) for u in _MARKET_UNIVERSE_EXPANSION[key])
+            else:
+                refresh_targets.append((key, key))
     summaries: dict[str, dict[str, Any]] = {}
 
     with connect(explicit_url) as conn:

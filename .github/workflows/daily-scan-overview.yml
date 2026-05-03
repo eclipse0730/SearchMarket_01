@@ -30,7 +30,6 @@ jobs:
       - name: Run overview scanners
         run: |
           python Search.py --market global-indices
-          python Search.py --market theme-proxies
           python Search.py --market commodities
 
       - name: Commit results
@@ -38,9 +37,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add data/Data_GlobalIndices_*.csv analysis/Analysis_GlobalIndices_*.md reports/Report_GlobalIndices_*.html
-          git add data/Data_ThemeProxies_*.csv analysis/Analysis_ThemeProxies_*.md reports/Report_ThemeProxies_*.html
           git add data/Data_Commodities_*.csv analysis/Analysis_Commodities_*.md reports/Report_Commodities_*.html
-          git add market_scanner/assets/instruments.json market_scanner/assets/investing_url_cache.json market_scanner/assets/sp500_members_cache.json
+          git add market_scanner/assets/instruments.json market_scanner/assets/investing_url_cache.json
           git diff --staged --quiet || git commit -m "scan(overview): $(date +'%Y-%m-%d')"
 
       - name: Push

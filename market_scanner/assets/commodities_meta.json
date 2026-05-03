@@ -64,5 +64,23 @@
     "name_local": "커피 선물",
     "sector": "농산물",
     "description": "Soft commodities proxy."
+  },
+  "PA=F": {
+    "name_en": "Palladium Futures",
+    "name_local": "팔라듐 선물",
+    "sector": "귀금속",
+    "description": "Precious metals proxy. Automotive catalytic converter demand driver."
+  },
+  "ZS=F": {
+    "name_en": "Soybean Futures",
+    "name_local": "대두 선물",
+    "sector": "농산물",
+    "description": "Major grain proxy alongside corn and wheat."
+  },
+  "ALI=F": {
+    "name_en": "Aluminum Futures",
+    "name_local": "알루미늄 선물",
+    "sector": "산업금속",
+    "description": "Industrial metals proxy. Key material for EVs and semiconductors."
   }
 }

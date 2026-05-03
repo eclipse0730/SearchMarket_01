@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import io
 import json
 import os
@@ -23,16 +22,7 @@ _INVESTING_BASE_URL = "https://www.investing.com"
 _INVESTING_KR_BASE_URL = "https://kr.investing.com"
 _INVESTING_SEARCH_URL = f"{_INVESTING_BASE_URL}/search"
 _INVESTING_CACHE_PATH = ASSET_DIR / "investing_url_cache.json"
-_SP500_CACHE_PATH = ASSET_DIR / "sp500_members_cache.json"
-_SP500_MANUAL_PATH = ASSET_DIR / "sp500_members_manual.json"
 _SP500_SOURCE_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-_SP500_STALE_DAYS = 45
-_US_LISTED_CACHE_PATH = ASSET_DIR / "us_listed_symbols_cache.json"
-_US_LISTED_SOURCE_URLS = (
-    "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
-    "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
-)
-_US_LISTED_STALE_DAYS = 14
 _NAVER_MARKET_SUM_URL = "https://finance.naver.com/sise/sise_market_sum.naver"
 _NAVER_MARKET_SUM_MAX_PAGES = 90
 _INVESTING_SEARCH_HEADERS = {
@@ -54,6 +44,13 @@ _INVESTING_SPECIAL_QUERIES: dict[str, str] = {
     "^AXJO": "S&P ASX 200",
     "^TWII": "Taiwan Weighted Index",
     "000001.SS": "SSE Composite Index",
+    "000300.SS": "CSI 300",
+    "^KQ11": "KOSDAQ Composite",
+    "^RUT": "Russell 2000",
+    "^BVSP": "Bovespa",
+    "^NSEI": "Nifty 50",
+    "^STI": "Straits Times Index",
+    "^NDX": "NASDAQ 100",
     "GC=F": "Gold Futures",
     "SI=F": "Silver Futures",
     "PL=F": "Platinum Futures",
@@ -82,14 +79,14 @@ _SECTOR_KO: dict[str, str] = {
 }
 
 _STATIC_META_ASSETS: dict[str, str] = {
-    "us": "nasdaq100_static_meta.json",
-    "nasdaq100": "nasdaq100_static_meta.json",
-    "kospi": "kospi_static_meta.json",
-    "kosdaq": "kosdaq_static_meta.json",
     "global-indices": "global_indices_meta.json",
-    "theme-proxies": "theme_proxies_meta.json",
     "commodities": "commodities_meta.json",
 }
+
+_THEME_PROXY_SYMBOLS: frozenset[str] = frozenset({
+    "SOXX", "BOTZ", "IBB", "XLK", "XLE", "XLF", "ICLN",
+    "ARKK", "ITA", "HACK", "MCHI", "GLD", "TLT",
+})
 
 _PROTECTED_INSTRUMENT_SOURCES = {"manual", "static"}
 _INSTRUMENT_META_FIELDS = ("name_en", "name_local", "sector", "description")
@@ -135,6 +132,8 @@ def _default_display_symbol(symbol: str, market_key: str) -> str:
     if market_key == "global-indices":
         if symbol == "000001.SS":
             return "SSE"
+        if symbol == "000300.SS":
+            return "CSI300"
         return symbol.lstrip("^")
     if market_key == "commodities":
         return symbol.replace("=F", "")
@@ -303,33 +302,9 @@ def upsert_instruments_from_frame(frame, market_key: str) -> bool:
 
 
 @lru_cache(maxsize=None)
-def _nasdaq100_static_meta() -> dict[str, StaticTickerMeta]:
-    return _load_meta_asset(_STATIC_META_ASSETS["nasdaq100"])
-
-
-@lru_cache(maxsize=None)
-def _us_static_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta_db_first("us", _STATIC_META_ASSETS["us"])
-
-
-@lru_cache(maxsize=None)
-def _kospi_static_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta_db_first("kospi", _STATIC_META_ASSETS["kospi"])
-
-
-@lru_cache(maxsize=None)
-def _kosdaq_static_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta_db_first("kosdaq", _STATIC_META_ASSETS["kosdaq"])
-
-
-@lru_cache(maxsize=None)
 def _global_index_meta() -> dict[str, StaticTickerMeta]:
     return _instrument_meta_db_first("global-indices", _STATIC_META_ASSETS["global-indices"])
 
-
-@lru_cache(maxsize=None)
-def _theme_proxy_meta() -> dict[str, StaticTickerMeta]:
-    return _instrument_meta_db_first("theme-proxies", _STATIC_META_ASSETS["theme-proxies"])
 
 
 @lru_cache(maxsize=None)
@@ -345,124 +320,12 @@ def _fetch_sp500_tickers() -> list[str]:
         resp.raise_for_status()
         table = pd.read_html(io.StringIO(resp.text))[0]
         tickers = table["Symbol"].str.replace(".", "-", regex=False).tolist()
-        tickers = _apply_sp500_manual_overrides(tickers)
-        _save_sp500_members_cache(tickers, _SP500_SOURCE_URL)
         print(f"  S&P 500: loaded {len(tickers)} tickers")
         return tickers
     except Exception as exc:
         print(f"  S&P 500 load failed: {exc}")
-        return _apply_sp500_manual_overrides(_load_sp500_members_cache())
-
-
-def _normalize_us_listed_symbol(value: object) -> str | None:
-    symbol = str(value or "").strip().upper().replace(".", "-")
-    if not symbol or symbol in {"N/A", "NA"}:
-        return None
-    if not re.fullmatch(r"[A-Z0-9][A-Z0-9.-]*", symbol):
-        return None
-    return symbol
-
-
-def _is_non_common_us_security(name: object) -> bool:
-    text = str(name or "").casefold()
-    if not text:
-        return False
-    non_common_patterns = (
-        r"\bwarrants?\b",
-        r"\brights?\b",
-        r"\bunits?\b",
-        r"\bpreferred\b",
-        r"\bpreference\b",
-        r"\bdepositary shares?\b",
-        r"\bdepository shares?\b",
-        r"\bnotes?\b",
-        r"\bbonds?\b",
-        r"\bdebentures?\b",
-    )
-    return any(re.search(pattern, text) for pattern in non_common_patterns)
-
-
-def _parse_us_listed_symbol_dir(text: str) -> list[str]:
-    lines = [
-        line
-        for line in text.splitlines()
-        if "|" in line and not line.startswith("File Creation Time")
-    ]
-    reader = csv.DictReader(lines, delimiter="|")
-    symbols: list[str] = []
-    for row in reader:
-        if str(row.get("Test Issue") or "").strip().upper() == "Y":
-            continue
-        if str(row.get("ETF") or "").strip().upper() == "Y":
-            continue
-        if _is_non_common_us_security(row.get("Security Name")):
-            continue
-        symbol = _normalize_us_listed_symbol(row.get("Symbol") or row.get("ACT Symbol"))
-        if symbol:
-            symbols.append(symbol)
-    return symbols
-
-
-def _load_us_listed_symbols_cache() -> list[str]:
-    if not _US_LISTED_CACHE_PATH.exists():
-        return []
-    try:
-        payload = json.loads(_US_LISTED_CACHE_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return []
-    if isinstance(payload, list):
-        return [str(item) for item in payload if item]
-    if not isinstance(payload, dict):
         return []
 
-    updated_at = str(payload.get("updated_at") or "")
-    if updated_at and _is_iso_cache_stale(updated_at, _US_LISTED_STALE_DAYS):
-        print(f"  US listed symbols cache is older than {_US_LISTED_STALE_DAYS} days: {updated_at}")
-
-    tickers = payload.get("tickers")
-    if not isinstance(tickers, list):
-        return []
-    return [str(item) for item in tickers if item]
-
-
-def _save_us_listed_symbols_cache(tickers: list[str]) -> None:
-    if not tickers:
-        return
-    unique = sorted({str(ticker) for ticker in tickers if ticker})
-    payload = {
-        "source": list(_US_LISTED_SOURCE_URLS),
-        "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "count": len(unique),
-        "tickers": unique,
-    }
-    _US_LISTED_CACHE_PATH.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-
-def _fetch_us_listed_symbols() -> list[str]:
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; stock-scanner/1.0)"}
-    symbols: list[str] = []
-    errors: list[str] = []
-    for url in _US_LISTED_SOURCE_URLS:
-        try:
-            response = requests.get(url, headers=headers, timeout=15)
-            response.raise_for_status()
-        except Exception as exc:
-            errors.append(f"{url}: {exc}")
-            continue
-        symbols.extend(_parse_us_listed_symbol_dir(response.text))
-
-    unique = sorted({symbol for symbol in symbols if symbol})
-    if unique:
-        _save_us_listed_symbols_cache(unique)
-        print(f"  US all stocks: loaded {len(unique)} listed symbols")
-        return unique
-
-    if errors:
-        print(f"  US all stocks load failed: {'; '.join(errors)}")
-    return _load_us_listed_symbols_cache()
 
 
 @lru_cache(maxsize=None)
@@ -471,6 +334,68 @@ def _fetch_fdr_listing(market: str):
 
     with redirect_stdout(io.StringIO()):
         return fdr.StockListing(market)
+
+
+def _fetch_fdr_us_symbols(exchange: str, label: str) -> list[str]:
+    """Fetch symbols from a US exchange or index via FDR (NASDAQ/NYSE/AMEX/NASDAQ100/SP500)."""
+    try:
+        df = _fetch_fdr_listing(exchange)
+        sym_col = next((c for c in ("Symbol", "Code") if c in df.columns), None)
+        if sym_col is None:
+            print(f"  {label} FDR load failed: no Symbol/Code column (columns={list(df.columns)})")
+            return []
+        symbols: list[str] = []
+        for _, row in df.iterrows():
+            sym = str(row.get(sym_col) or "").strip().upper().replace(".", "-")
+            if not sym or sym in {"N/A", "NA", "NAN"}:
+                continue
+            symbols.append(sym)
+        print(f"  {label} (FDR): loaded {len(symbols)} symbols")
+        return symbols
+    except Exception as exc:
+        print(f"  {label} FDR load failed ({type(exc).__name__})")
+        return []
+
+
+def _fetch_fdr_us_all() -> list[str]:
+    """Fetch all US common stocks from NASDAQ + NYSE via FDR."""
+    seen: set[str] = set()
+    result: list[str] = []
+    for exchange, label in (("NASDAQ", "NASDAQ"), ("NYSE", "NYSE")):
+        for sym in _fetch_fdr_us_symbols(exchange, label):
+            if sym not in seen:
+                seen.add(sym)
+                result.append(sym)
+    return result
+
+
+def _fdr_us_meta(exchange: str, label: str) -> dict[str, StaticTickerMeta]:
+    """Build metadata dict from FDR US exchange or index listing."""
+    try:
+        df = _fetch_fdr_listing(exchange)
+    except Exception as exc:
+        print(f"  {label} FDR metadata load failed ({type(exc).__name__})")
+        return {}
+    sym_col = next((c for c in ("Symbol", "Code") if c in df.columns), None)
+    if sym_col is None:
+        return {}
+    metadata: dict[str, StaticTickerMeta] = {}
+    for _, row in df.iterrows():
+        sym = str(row.get(sym_col) or "").strip().upper().replace(".", "-")
+        if not sym or sym in {"N/A", "NA", "NAN"}:
+            continue
+        name = str(row.get("Name") or "").strip()
+        if not name or name.lower() == "nan":
+            name = sym
+        raw_sector = row.get("Industry") or row.get("Sector") or row.get("SectorName") or "Unknown"
+        sector = str(raw_sector).strip() if str(raw_sector).strip() and str(raw_sector).lower() != "nan" else "Unknown"
+        metadata[sym] = StaticTickerMeta(
+            name_en=name,
+            name_local=name,
+            sector=sector,
+            description=f"{name} ({label})",
+        )
+    return metadata
 
 
 def _clean_html_text(value: str) -> str:
@@ -584,7 +509,6 @@ def _kospi_metadata() -> dict[str, StaticTickerMeta]:
     return _merge_metadata(
         _naver_market_meta("0", ".KS", "KOSPI"),
         _fdr_market_meta("KOSPI", ".KS", "KOSPI"),
-        _instrument_meta("kospi", _STATIC_META_ASSETS["kospi"]),
     )
 
 
@@ -596,7 +520,6 @@ def _kosdaq_metadata() -> dict[str, StaticTickerMeta]:
     return _merge_metadata(
         _naver_market_meta("1", ".KQ", "KOSDAQ"),
         _fdr_market_meta("KOSDAQ", ".KQ", "KOSDAQ"),
-        _instrument_meta("kosdaq", _STATIC_META_ASSETS["kosdaq"]),
     )
 
 
@@ -637,152 +560,60 @@ def _fetch_krx_kosdaq_all() -> list[str]:
     return _fetch_fdr_market("KOSDAQ", ".KQ", None, "KOSDAQ all") or _naver_market_symbols("1", ".KQ", "KOSDAQ all")
 
 
-def _load_sp500_members_cache() -> list[str]:
-    if not _SP500_CACHE_PATH.exists():
-        return []
-    try:
-        payload = json.loads(_SP500_CACHE_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return []
-    if isinstance(payload, list):
-        return [str(item) for item in payload if item]
-    if not isinstance(payload, dict):
-        return []
-
-    updated_at = str(payload.get("updated_at") or "")
-    if updated_at and _is_sp500_cache_stale(updated_at):
-        print(f"  S&P 500 cache is older than {_SP500_STALE_DAYS} days: {updated_at}")
-
-    tickers = payload.get("tickers")
-    if not isinstance(tickers, list):
-        return []
-    return [str(item) for item in tickers if item]
-
-
-def _is_iso_cache_stale(updated_at: str, stale_days: int) -> bool:
-    try:
-        cached_at = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
-    except ValueError:
-        return True
-    if cached_at.tzinfo is None:
-        cached_at = cached_at.replace(tzinfo=timezone.utc)
-    age = datetime.now(timezone.utc) - cached_at
-    return age.days > stale_days
-
-
-def _is_sp500_cache_stale(updated_at: str) -> bool:
-    return _is_iso_cache_stale(updated_at, _SP500_STALE_DAYS)
-
-
-def _save_sp500_members_cache(tickers: list[str], source_url: str) -> None:
-    if not tickers:
-        return
-    unique = sorted({str(ticker) for ticker in tickers if ticker})
-    payload = {
-        "source": source_url,
-        "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "count": len(unique),
-        "tickers": unique,
-    }
-    _SP500_CACHE_PATH.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-
-def _load_sp500_manual_overrides() -> tuple[set[str], set[str]]:
-    if not _SP500_MANUAL_PATH.exists():
-        return set(), set()
-    try:
-        payload = json.loads(_SP500_MANUAL_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return set(), set()
-    if isinstance(payload, list):
-        return {str(item) for item in payload if item}, set()
-    if not isinstance(payload, dict):
-        return set(), set()
-    add = payload.get("add", [])
-    remove = payload.get("remove", [])
-    add_set = {str(item) for item in add if item} if isinstance(add, list) else set()
-    remove_set = {str(item) for item in remove if item} if isinstance(remove, list) else set()
-    return add_set, remove_set
-
-
-def _apply_sp500_manual_overrides(tickers: list[str]) -> list[str]:
-    add, remove = _load_sp500_manual_overrides()
-    if not add and not remove:
-        return tickers
-    merged = {str(ticker) for ticker in tickers if ticker}
-    merged.difference_update(remove)
-    merged.update(add)
-    print(f"  S&P 500 manual overrides: +{len(add)} / -{len(remove)}")
-    return sorted(merged)
-
-
 def _nasdaq100_universe() -> list[str]:
-    return list(_nasdaq100_static_meta().keys())
+    return _fetch_fdr_us_symbols("NASDAQ100", "NASDAQ100")
 
 
 def _sp500_universe() -> list[str]:
-    return _fetch_sp500_tickers()
+    live = _fetch_fdr_us_symbols("SP500", "S&P500")
+    return live if live else _fetch_sp500_tickers()
+
+
+def _nasdaq_universe() -> list[str]:
+    return _fetch_fdr_us_symbols("NASDAQ", "NASDAQ")
+
+
+def _nyse_universe() -> list[str]:
+    return _fetch_fdr_us_symbols("NYSE", "NYSE")
+
+
+def _amex_universe() -> list[str]:
+    return _fetch_fdr_us_symbols("AMEX", "AMEX")
 
 
 def _us_all_universe() -> list[str]:
-    curated = _merge_static_with_live(list(_nasdaq100_static_meta().keys()), _fetch_sp500_tickers())
-    return _merge_static_with_live(curated, _fetch_us_listed_symbols())
+    return _fetch_fdr_us_all()
+
+
+@lru_cache(maxsize=None)
+def _us_metadata() -> dict[str, StaticTickerMeta]:
+    db_meta = _db_instrument_meta("us")
+    if db_meta:
+        return db_meta
+    return _merge_metadata(
+        _fdr_us_meta("NASDAQ", "NASDAQ"),
+        _fdr_us_meta("NYSE", "NYSE"),
+    )
 
 
 def _kospi200_universe() -> list[str]:
-    static = list(_instrument_meta("kospi", _STATIC_META_ASSETS["kospi"]).keys())
-    if len(static) >= 200:
-        return static
-    krx = _fetch_krx_kospi200()
-    seen = set(static)
-    for t in krx:
-        if t not in seen:
-            static.append(t)
-            seen.add(t)
-    return static
+    return _fetch_krx_kospi200()
 
 
 def _kospi100_universe() -> list[str]:
-    krx = _fetch_krx_kospi100()
-    if krx:
-        return krx
-    return list(_instrument_meta("kospi", _STATIC_META_ASSETS["kospi"]).keys())[:100]
+    return _fetch_krx_kospi100()
 
 
 def _kosdaq150_universe() -> list[str]:
-    static = list(_instrument_meta("kosdaq", _STATIC_META_ASSETS["kosdaq"]).keys())
-    krx = _fetch_krx_kosdaq150()
-    seen = set(static)
-    for t in krx:
-        if t not in seen:
-            static.append(t)
-            seen.add(t)
-    return static
-
-
-def _merge_static_with_live(static: list[str], live: list[str]) -> list[str]:
-    merged = list(static)
-    seen = set(merged)
-    for ticker in live:
-        if ticker not in seen:
-            merged.append(ticker)
-            seen.add(ticker)
-    return merged
+    return _fetch_krx_kosdaq150()
 
 
 def _kospi_universe() -> list[str]:
-    live = _fetch_krx_kospi_all()
-    static = list(_kospi_static_meta().keys())
-    return _merge_static_with_live(live, static) if live else static
+    return _fetch_krx_kospi_all()
 
 
 def _kosdaq_universe() -> list[str]:
-    live = _fetch_krx_kosdaq_all()
-    static = list(_kosdaq_static_meta().keys())
-    return _merge_static_with_live(live, static) if live else static
+    return _fetch_krx_kosdaq_all()
 
 
 def _static_symbols(meta: dict[str, StaticTickerMeta]) -> list[str]:
@@ -820,7 +651,7 @@ def _investing_query_for_symbol(symbol: str) -> str:
 def _investing_pair_type_for_symbol(symbol: str) -> str:
     if symbol.endswith("=F"):
         return "commodity"
-    if symbol in _theme_proxy_meta():
+    if symbol in _THEME_PROXY_SYMBOLS:
         return "etf"
     if symbol.startswith("^") or symbol.endswith(".SS"):
         return "indice"
@@ -830,7 +661,7 @@ def _investing_pair_type_for_symbol(symbol: str) -> str:
 def _investing_market_preferences(symbol: str) -> tuple[set[str], set[str]]:
     if symbol.endswith(".KS") or symbol.endswith(".KQ"):
         return {"South_Korea"}, {"Seoul", "KOSDAQ"}
-    if symbol in _theme_proxy_meta():
+    if symbol in _THEME_PROXY_SYMBOLS:
         return {"USA"}, {"NASDAQ", "NYSE", "AMEX", "CBOE"}
     if symbol.endswith("=F"):
         return set(), {"ICE", "CME", "COMEX", "NYMEX"}
@@ -969,6 +800,8 @@ def _display_strip_kr(symbol: str) -> str:
 def _display_index(symbol: str) -> str:
     if symbol == "000001.SS":
         return "SSE"
+    if symbol == "000300.SS":
+        return "CSI300"
     return symbol.lstrip("^")
 
 
@@ -977,6 +810,9 @@ def _display_commodity(symbol: str) -> str:
 
 
 REPRESENTATIVE_UNIVERSE_LOADERS: dict[str, UniverseLoader] = {
+    "nasdaq": _nasdaq_universe,
+    "nyse": _nyse_universe,
+    "amex": _amex_universe,
     "nasdaq100": _nasdaq100_universe,
     "sp500": _sp500_universe,
     "kospi100": _kospi100_universe,
@@ -993,10 +829,10 @@ MARKETS: dict[str, MarketDefinition] = {
         currency_symbol="$",
         price_decimals=2,
         universe_loader=_us_all_universe,
-        metadata_loader=_us_static_meta,
+        metadata_loader=_us_metadata,
         quote_url_builder=_quote_url_investing_detail,
         sector_aliases=_SECTOR_KO,
-        notes="Full US listed-stock universe from NASDAQ Trader symbol directories with cache fallback.",
+        notes="Full US listed-stock universe from FDR (NASDAQ+NYSE) with NASDAQ Trader fallback.",
     ),
     "kospi": MarketDefinition(
         key="kospi",
@@ -1035,17 +871,6 @@ MARKETS: dict[str, MarketDefinition] = {
         quote_url_builder=_quote_url_investing_detail,
         display_symbol_builder=_display_index,
         notes="Curated benchmark watchlist backed by asset files.",
-    ),
-    "theme-proxies": MarketDefinition(
-        key="theme-proxies",
-        label="Theme Proxies",
-        output_prefix="theme-proxies",
-        currency_symbol="$",
-        price_decimals=2,
-        universe_loader=lambda: _static_symbols(_theme_proxy_meta()),
-        metadata_loader=_theme_proxy_meta,
-        quote_url_builder=_quote_url_investing_detail,
-        notes="ETF proxies for theme-level trend tracking.",
     ),
     "commodities": MarketDefinition(
         key="commodities",

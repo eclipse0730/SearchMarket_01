@@ -88,5 +88,47 @@
     "name_local": "대만 가권지수",
     "sector": "TW Index",
     "description": "Taiwan stock market composite benchmark."
+  },
+  "^KQ11": {
+    "name_en": "KOSDAQ Composite",
+    "name_local": "코스닥",
+    "sector": "KR Index",
+    "description": "Korean technology and growth stock market index."
+  },
+  "^RUT": {
+    "name_en": "Russell 2000",
+    "name_local": "러셀 2000",
+    "sector": "US Index",
+    "description": "US small-cap benchmark covering 2000 smaller companies."
+  },
+  "^BVSP": {
+    "name_en": "Bovespa Index",
+    "name_local": "브라질 보베스파",
+    "sector": "BR Index",
+    "description": "Brazilian stock market benchmark."
+  },
+  "^NSEI": {
+    "name_en": "Nifty 50",
+    "name_local": "인도 니프티 50",
+    "sector": "IN Index",
+    "description": "Indian large-cap benchmark of 50 leading companies."
+  },
+  "000300.SS": {
+    "name_en": "CSI 300",
+    "name_local": "중국 CSI 300",
+    "sector": "CN Index",
+    "description": "Top 300 A-share stocks listed on Shanghai and Shenzhen exchanges."
+  },
+  "^STI": {
+    "name_en": "Straits Times Index",
+    "name_local": "싱가포르 STI",
+    "sector": "SG Index",
+    "description": "Singapore benchmark covering 30 largest companies."
+  },
+  "^NDX": {
+    "name_en": "NASDAQ 100",
+    "name_local": "나스닥 100",
+    "sector": "US Index",
+    "description": "Top 100 non-financial NASDAQ-listed companies, tech-heavy benchmark."
   }
 }

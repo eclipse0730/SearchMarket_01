@@ -13,7 +13,7 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
-from market_scanner.markets import MARKETS, _fetch_sp500_tickers, _nasdaq100_static_meta
+from market_scanner.markets import MARKETS, _fetch_sp500_tickers, _nasdaq100_universe, _THEME_PROXY_SYMBOLS
 from market_scanner.models import MarketDefinition, ScanSettings
 from market_scanner.pipeline import enrich_metadata_frame, write_html, write_markdown
 
@@ -1608,7 +1608,7 @@ def _build_derived_us_pages(source_page: BuiltPage, include_keys: set[str] | Non
 
     include_keys = include_keys or {"nasdaq100", "sp500", "dow30"}
 
-    nasdaq_members = set(_nasdaq100_static_meta().keys())
+    nasdaq_members = set(_nasdaq100_universe())
     nasdaq_frame = source_frame[source_frame["symbol"].astype(str).isin(nasdaq_members)].copy()
     if "nasdaq100" in include_keys and not nasdaq_frame.empty:
         nasdaq_market = replace(source_market, key="nasdaq100", label="NASDAQ 100", output_prefix="nasdaq100")
@@ -1672,6 +1672,22 @@ def _build_dow30_from_page(source_page: BuiltPage) -> BuiltPage | None:
     )
 
 
+def _build_theme_page_from_us(source_page: BuiltPage) -> BuiltPage | None:
+    theme_symbols = _THEME_PROXY_SYMBOLS
+    theme_frame = source_page.frame[source_page.frame["symbol"].astype(str).isin(theme_symbols)].copy()
+    if theme_frame.empty:
+        return None
+    theme_market = replace(MARKETS["us"], key="theme-proxies", label="테마 ETF", output_prefix="theme-proxies")
+    return _render_filtered_report(
+        theme_market,
+        theme_frame,
+        "themes",
+        "테마 ETF",
+        "Derived from the US scan",
+        source_page.date_str,
+    )
+
+
 _OVERVIEW_ONLY_MARKETS = {"global-indices", "theme-proxies", "commodities"}
 
 
@@ -1681,7 +1697,7 @@ def build_site() -> list[BuiltPage]:
     overview_frames: dict[str, pd.DataFrame] = {}
 
     for market_key, title, description, slug in _ROOT_PAGES:
-        if market_key == "dow30":
+        if market_key in {"dow30", "theme-proxies"}:
             continue
         if market_key not in MARKETS and market_key not in _OVERVIEW_ONLY_MARKETS:
             continue
@@ -1703,6 +1719,14 @@ def build_site() -> list[BuiltPage]:
                 built_pages.append(dow30_page)
                 overview_frames[dow30_page.key] = dow30_page.frame
                 built_keys.add("dow30")
+
+    if "theme-proxies" not in overview_frames:
+        us_page = next((p for p in built_pages if p.key == "us"), None)
+        if us_page is not None:
+            theme_page = _build_theme_page_from_us(us_page)
+            if theme_page is not None:
+                built_pages.append(theme_page)
+                overview_frames["theme-proxies"] = theme_page.frame
 
     missing_derived = {"nasdaq100", "sp500", "dow30"} - built_keys
     # Legacy fallback: old combined US CSV can still derive pages until standalone CSVs exist.

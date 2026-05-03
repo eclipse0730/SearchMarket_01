@@ -24,8 +24,13 @@ uv run python -m market_scanner.db load-csv --market kospi --date YYYYMMDD
 uv run python -m market_scanner.db counts
 ```
 
-`init`은 DB 스키마와 기준 데이터를 준비하는 단계입니다. 새 DB를 처음 만들었을 때, Docker volume을 새로 만들었을 때, 스키마나 시장/유니버스 기준 키가 바뀐 뒤에는 실행해야 합니다. 이미 초기화된 DB에서 일반 스캔만 반복할 때는 매번 실행할 필요가 없습니다. 현재 코드에 없는 market/universe 기준 row는 삭제하지 않고 `is_active = false`로 비활성화합니다. 
-`refresh-master`는 가격/지표를 수집하지 않고 시장 유니버스 로더로 종목 목록을 받아 `instruments`, `universe_memberships`, `collection_runs`만 갱신합니다. `--market kospi`는 KOSPI 전체만 갱신하고, KOSPI100/KOSPI200은 필요할 때 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`으로 별도 갱신합니다. 실행 시 기존 멤버십과 새 목록의 일치/불일치 수, 추가/삭제/순위 변경 샘플, 신규/upsert instrument 샘플을 로그로 출력하고 `collection_runs.params`에도 저장합니다. 멤버십 목록과 순서가 같으면 `universe_memberships` 재작성은 건너뜁니다. `--reset`은 `universe_memberships`만 해당 범위에서 삭제 후 재생성합니다. `instruments`, 가격, 지표, 스캔 결과, 뉴스, 리포트, 실행 로그는 보존합니다.
+`init`은 DB 스키마와 기준 데이터를 준비하는 단계입니다. 새 DB를 처음 만들었을 때, Docker volume을 새로 만들었을 때, 스키마나 시장/유니버스 기준 키가 바뀐 뒤에는 실행해야 합니다. 이미 초기화된 DB에서 일반 스캔만 반복할 때는 매번 실행할 필요가 없습니다. 현재 코드에 없는 market/universe 기준 row는 삭제하지 않고 `is_active = false`로 비활성화합니다.
+`refresh-master`는 가격/지표를 수집하지 않고 시장 유니버스 로더로 종목 목록을 받아 `instruments`, `universe_memberships`, `collection_runs`만 갱신합니다. `--market us`는 `nasdaq`, `nyse`, `amex`, `nasdaq100`, `sp500` 5개 universe를 한 번에 갱신하며, 심볼 소스는 FinanceDataReader입니다. `--market kospi`는 KOSPI 전체만 갱신하고, KOSPI100/KOSPI200은 필요할 때 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`으로 별도 갱신합니다. 실행 시 기존 멤버십과 새 목록의 일치/불일치 수, 추가/삭제/순위 변경 샘플, 신규/upsert instrument 샘플을 로그로 출력하고 `collection_runs.params`에도 저장합니다. 멤버십 목록과 순서가 같으면 `universe_memberships` 재작성은 건너뜁니다. `--reset`은 `universe_memberships`만 해당 범위에서 삭제 후 재생성합니다. `instruments`, 가격, 지표, 스캔 결과, 뉴스, 리포트, 실행 로그는 보존합니다.
+`load-master`는 `market_scanner/assets/instruments.json`과 글로벌 지수·원자재 JSON seed를 DB에 일괄 반영하는 명령입니다. DB 복구 또는 글로벌 지수·원자재 심볼을 JSON 편집 후 DB에 동기화할 때 사용합니다.
+
+```bash
+uv run python -m market_scanner.db load-master
+```
 
 ## 스캔
 
@@ -36,15 +41,17 @@ uv run python Search.py --market us
 uv run python Search.py --market kospi
 uv run python Search.py --market kosdaq
 uv run python Search.py --market global-indices
-uv run python Search.py --market theme-proxies
 uv run python Search.py --market commodities
 ```
 
 필요할 때만 `--universe`로 멤버십 필터를 겁니다. universe가 다른 시장에 속하면 오류로 중단합니다.
 
 ```bash
-uv run python Search.py --market us --universe sp500
+uv run python Search.py --market us --universe nasdaq
+uv run python Search.py --market us --universe nyse
+uv run python Search.py --market us --universe amex
 uv run python Search.py --market us --universe nasdaq100
+uv run python Search.py --market us --universe sp500
 uv run python Search.py --market kospi --universe kospi100
 uv run python Search.py --market kospi --universe kospi200
 uv run python Search.py --market kosdaq --universe kosdaq150
@@ -145,8 +152,11 @@ uv run python -m market_scanner.site_builder --no-open
 ## 데이터 정책
 
 - `instruments`: 종목마스터의 우선 원천입니다.
-- `universe_memberships`: `sp500`, `nasdaq100`, `kospi100`, `kospi200`, `kosdaq150` 같은 분석/필터 단위 멤버십입니다.
+- `universe_memberships`: `nasdaq`, `nyse`, `amex`(거래소 전체), `nasdaq100`, `sp500`(지수), `kospi100`, `kospi200`, `kosdaq150` 같은 분석/필터 단위 멤버십입니다. US는 `--market us` 한 번으로 5개 universe가 동시 갱신됩니다.
 - `market_scanner/assets/instruments.json`: DB가 비어 있거나 연결되지 않을 때 쓰는 seed/fallback입니다. 스캔 실행은 이 JSON을 자동 갱신하지 않습니다.
+- `market_scanner/assets/global_indices_meta.json`, `commodities_meta.json`: 글로벌 지수·원자재는 FDR 자동 발견이 불가능하므로 JSON이 심볼 정의 원본입니다. 새 심볼 추가 시 JSON 편집 후 `load-master`로 DB에 반영합니다. 현재 글로벌 지수는 22개입니다.
+- 테마 ETF는 별도 스캔 없이 US 스캔 결과에서 파생됩니다. 대상 심볼은 `markets.py`의 `_THEME_PROXY_SYMBOLS` 상수로 관리합니다.
+- 한국 시장 유니버스는 FinanceDataReader를 우선 사용하고, 실패 시 Naver Finance로 fallback합니다. 정적 JSON fallback(`kospi_static_meta.json`, `kosdaq_static_meta.json`)은 제거되었습니다.
 - 한국 시장 가격 히스토리는 FinanceDataReader를 우선 사용하고, 실패하거나 히스토리가 부족하면 yfinance로 fallback합니다.
 - `news` 단계는 최신 스캔 CSV가 있어야 실행되며, `all`에는 포함하지 않습니다.
 

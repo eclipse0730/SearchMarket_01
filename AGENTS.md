@@ -84,10 +84,15 @@ uv run python Search.py --help
 
 ## Current Known State
 
-2026-05-02 기준:
+2026-05-03 기준:
 
-- 권장 CLI 구조는 시장 단위 `--market`과 선택적 멤버십 필터 `--universe`임. 예: `uv run python Search.py --market us --universe sp500`, `uv run python Search.py --market kospi --universe kospi100`, `uv run python Search.py --market kospi --universe kospi200`
-- `us`, `kospi`, `kosdaq`은 시장 전체가 기본이며, `nasdaq100`, `sp500`, `kospi100`, `kospi200`, `kosdaq150`은 `--universe` 옵션값으로 사용함. `us-all`, `kospi-all`, `kosdaq-all`은 폐기 키로 정리함
+- 권장 CLI 구조는 시장 단위 `--market`과 선택적 멤버십 필터 `--universe`임. 예: `uv run python Search.py --market us --universe nasdaq100`, `uv run python Search.py --market kospi --universe kospi100`
+- US universe 구조: `universe_memberships`에 `nasdaq`/`nyse`/`amex`(거래소 전체), `nasdaq100`/`sp500`(지수) 5개 universe 사용. 기존 단일 `us` universe_key는 폐기됨. `--market us` 한 번으로 5개 동시 갱신됨(`_MARKET_UNIVERSE_EXPANSION`)
+- US 심볼 소스: FinanceDataReader `StockListing("NASDAQ"|"NYSE"|"AMEX"|"NASDAQ100"|"SP500")`. 실패 시 Wikipedia(sp500), 정적 JSON(nasdaq100) fallback. NASDAQ/NYSE/AMEX는 FDR 실패 시 빈 목록 반환 (NASDAQ Trader txt fallback 제거됨)
+- `kospi`, `kosdaq`은 시장 전체가 기본이며, `kospi100`, `kospi200`, `kosdaq150`은 `--universe` 옵션값으로만 사용함
+- `kospi_static_meta.json`, `kosdaq_static_meta.json`, `sp500_members_cache.json` 삭제됨. KOSPI/KOSDAQ universe 함수는 FDR/Naver 직접 반환, JSON fallback 없음
+- 글로벌 지수 워치리스트는 `global_indices_meta.json` 원본, 현재 22개 심볼. 새 지수 추가 시 JSON 편집 후 `load-master` 실행. 글로벌 지수/원자재는 FDR 자동 발견 불가 → JSON이 영구 원본
+- 테마 ETF는 별도 시장/JSON/스캔 없이 US 스캔 결과에서 파생됨 (Dow 30과 동일 패턴). 대상 심볼은 `markets.py`의 `_THEME_PROXY_SYMBOLS` 상수로 관리. 추가/삭제 시 상수만 수정
 - `site_builder.py`는 빈 최신 CSV를 건너뛰고 이전 정상 CSV를 찾아 Pages 빌드를 계속함
 - `uv run python -m compileall Search.py market_scanner` 통과
 - `uv run python Search.py --help` 통과
@@ -99,8 +104,8 @@ uv run python Search.py --help
 - 모든 시장의 Investing 링크는 한국 사용자 UX를 위해 `kr.investing.com` 도메인으로 출력함
 - KOSPI/KOSDAQ 상세페이지 링크도 NASDAQ 100과 같이 Investing 상세 URL 캐시를 우선 사용하고, 실패 시 검색 링크로 fallback함
 - KOSPI/KOSDAQ 계열 가격 히스토리는 스캔 시 FinanceDataReader를 우선 사용하고, 실패 또는 히스토리 부족 시 yfinance로 fallback함. 한국 전체 유니버스는 FDR/KRX listing 실패 시 Naver Finance 시가총액 목록으로 보강함. 한국 종목명/섹터는 FinanceDataReader, Naver Finance, 정적 메타데이터로 보강하고, 렌더링 시 placeholder 이름/섹터를 보정함. 한국 시장 화면은 한글 종목명 우선이며, 한글명을 확보하지 못하면 영어 회사명 대신 종목코드를 표시함
-- 모든 시장의 고정 종목 메타데이터는 PostgreSQL `instruments` 테이블을 우선 사용하고, DB가 비어 있거나 연결되지 않을 때 `market_scanner/assets/instruments.json`과 기존 시장별 `*_static_meta.json`을 seed/fallback으로 사용함
-- 종목마스터 신규 갱신 기준은 `uv run python -m market_scanner.db refresh-master`이며, `--market kospi`는 KOSPI 전체만 갱신하고 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`처럼 명시했을 때 대표 유니버스를 갱신함. `--reset`은 `universe_memberships`만 해당 범위에서 삭제 후 재생성하며, `instruments`, 가격, 지표, 스캔 결과, 뉴스, 리포트, `collection_runs` 로그는 보존함. `load-master`는 JSON seed 복구용 호환 명령으로 유지함
+- 모든 시장의 고정 종목 메타데이터는 PostgreSQL `instruments` 테이블을 우선 사용하고, DB가 비어 있거나 연결되지 않을 때 `market_scanner/assets/instruments.json`을 seed/fallback으로 사용함. 시장별 `*_static_meta.json`은 모두 삭제됨. `instruments.json`만 유지
+- 종목마스터 신규 갱신 기준은 `uv run python -m market_scanner.db refresh-master`이며, `--market us`는 `nasdaq`/`nyse`/`amex`/`nasdaq100`/`sp500` 5개 universe를 한 번에 갱신함. `--market kospi`는 KOSPI 전체만 갱신하고 `--market kospi --universe kospi100`, `--market kospi --universe kospi200`처럼 명시했을 때 대표 유니버스를 갱신함. `--reset`은 `universe_memberships`만 해당 범위에서 삭제 후 재생성하며, `instruments`, 가격, 지표, 스캔 결과, 뉴스, 리포트, `collection_runs` 로그는 보존함. `load-master`는 JSON seed 복구용 호환 명령으로 유지함
 - 스캔 기본값은 DB `instruments`의 시장 전체 활성 종목이며, `uv run python Search.py --market kospi --universe kospi200`처럼 `--universe`를 지정하면 `universe_memberships`의 해당 현재 편입 종목만 스캔함. 시장과 universe가 맞지 않으면 오류로 중단함
 - `kospi`, `kosdaq`은 시장 전체가 기본이며, `kospi100`, `kospi200`, `kosdaq150`은 `--universe` 옵션값으로만 사용함
 - `refresh-master`는 기존 멤버십과 새 수집 목록을 비교해 일치/불일치, 추가/삭제, 순위 변경, 신규 instrument 샘플을 로그와 `collection_runs.params`에 남기며, 멤버십 목록과 순서가 같으면 `universe_memberships` 재작성을 건너뜀
@@ -112,7 +117,6 @@ uv run python Search.py --help
 - 뉴스 캐시는 `Search.py --stage news`에서 생성/갱신하며, 기본값은 종합점수 상위 50개 종목 × 종목당 최대 3건임
 - 공포지수는 `yfinance` VIX 조회를 우선 사용하되, 렌더링 환경 네트워크가 막힐 수 있으므로 글로벌 지수 CSV의 `^VIX` fallback을 지원함
 - Dow 30은 별도 CLI 시장이 아니라 US 스캔 결과에서 파생 생성되는 사이트 페이지임
-- S&P 500 캐시는 과거 list 형식과 새 metadata 형식을 모두 읽을 수 있음
 - `Analysis_*.md`와 `Report_*.html`은 루트가 아니라 각각 `analysis/`, `reports/` 폴더에서 관리함.
 
 ## Maintenance Rule

@@ -3982,7 +3982,7 @@
   "ARKK": {
     "description": "High-beta innovation proxy.",
     "display_symbol": "ARKK",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "ARK Innovation ETF",
     "name_local": "혁신성장 ETF",
     "sector": "혁신성장",
@@ -4252,7 +4252,7 @@
   "BOTZ": {
     "description": "Robotics and AI proxy.",
     "display_symbol": "BOTZ",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "Global X Robotics & AI ETF",
     "name_local": "로봇·AI ETF",
     "sector": "로봇·AI",
@@ -5762,7 +5762,7 @@
   "GLD": {
     "description": "Physical gold price proxy.",
     "display_symbol": "GLD",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "SPDR Gold Shares",
     "name_local": "금 ETF",
     "sector": "금",
@@ -5872,7 +5872,7 @@
   "HACK": {
     "description": "Cybersecurity industry proxy.",
     "display_symbol": "HACK",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "ETFMG Prime Cyber Security ETF",
     "name_local": "사이버보안 ETF",
     "sector": "사이버보안",
@@ -6082,7 +6082,7 @@
   "IBB": {
     "description": "Biotechnology proxy.",
     "display_symbol": "IBB",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "iShares Biotechnology ETF",
     "name_local": "바이오테크 ETF",
     "sector": "바이오테크",
@@ -6122,7 +6122,7 @@
   "ICLN": {
     "description": "Clean energy proxy.",
     "display_symbol": "ICLN",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "iShares Global Clean Energy ETF",
     "name_local": "클린에너지 ETF",
     "sector": "클린에너지",
@@ -6272,7 +6272,7 @@
   "ITA": {
     "description": "US aerospace and defense sector proxy.",
     "display_symbol": "ITA",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "iShares U.S. Aerospace & Defense ETF",
     "name_local": "방산·항공 ETF",
     "sector": "방산·항공",
@@ -6742,7 +6742,7 @@
   "MCHI": {
     "description": "China large-cap equity proxy.",
     "display_symbol": "MCHI",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "iShares MSCI China ETF",
     "name_local": "중국 대형주 ETF",
     "sector": "중국",
@@ -8002,7 +8002,7 @@
   "SOXX": {
     "description": "Semiconductor cycle proxy.",
     "display_symbol": "SOXX",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "iShares Semiconductor ETF",
     "name_local": "반도체 ETF",
     "sector": "반도체",
@@ -8272,7 +8272,7 @@
   "TLT": {
     "description": "US long-term Treasury bond proxy.",
     "display_symbol": "TLT",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "iShares 20+ Year Treasury Bond ETF",
     "name_local": "장기채 ETF",
     "sector": "장기채",
@@ -8862,7 +8862,7 @@
   "XLE": {
     "description": "Energy sector proxy.",
     "display_symbol": "XLE",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "Energy Select Sector SPDR",
     "name_local": "에너지 ETF",
     "sector": "에너지",
@@ -8872,7 +8872,7 @@
   "XLF": {
     "description": "Financial sector proxy.",
     "display_symbol": "XLF",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "Financial Select Sector SPDR",
     "name_local": "금융 ETF",
     "sector": "금융",
@@ -8882,7 +8882,7 @@
   "XLK": {
     "description": "Large-cap technology proxy.",
     "display_symbol": "XLK",
-    "market_key": "theme-proxies",
+    "market_key": "us",
     "name_en": "Technology Select Sector SPDR",
     "name_local": "기술 ETF",
     "sector": "기술",
