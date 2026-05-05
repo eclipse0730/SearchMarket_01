@@ -94,9 +94,9 @@ volumes:
 ### Phase 1: DB 저장 레이어 추가
 
 - `docs/database_schema_v1.sql` 기준으로 Postgres 스키마 생성
-- `market_scanner/db.py` 추가
+- `market_scanner/storage/db.py` 추가
 - 스캔 완료 후 CSV 저장과 동시에 DB upsert
-- 기존 사이트 빌드는 CSV 기반 유지
+- 사이트 빌드는 DB 기반으로 전환
 
 ### Phase 2: 한국 전체 시장 안정화
 
@@ -107,7 +107,7 @@ volumes:
 
 ### Phase 3: DB 기반 조회 전환
 
-- 최신 CSV 탐색 대신 DB에서 최신 `scan_results` 조회
+- DB에서 최신 `scan_results` 조회
 - 메인 페이지 시장 요약은 `market_snapshots` 기반으로 생성
 - 상세 페이지는 `scan_results` + `daily_indicators` + `instruments` 조인으로 생성
 

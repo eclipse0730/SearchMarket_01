@@ -551,8 +551,8 @@ function renderSignalStrip() {
   const labelKo = { Calm: "평온", Normal: "보통", Elevated: "경계", Stress: "스트레스", Unavailable: "확인 불가" }[FEAR.label] || "확인 불가";
   const fearLevel = FEAR.available ? fmt(FEAR.level, 2) : "-";
   const fearNote = esc(String(FEAR.note || "")
-    .replace(" VIX 값은 스캔 CSV fallback에서 읽었습니다.", "")
-    .replace("VIX 값은 스캔 CSV fallback에서 읽었습니다.", "")
+    .replace(" VIX 값은 스캔 데이터 fallback에서 읽었습니다.", "")
+    .replace("VIX 값은 스캔 데이터 fallback에서 읽었습니다.", "")
     .replace("VIX data could not be loaded in this environment.", "VIX 데이터를 확인할 수 없습니다.")
     .trim());
   document.getElementById("signalStrip").innerHTML = `

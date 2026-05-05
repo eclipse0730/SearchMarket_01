@@ -5,14 +5,26 @@ on:
     - cron: "5 23 * * *"
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   scan:
     runs-on: ubuntu-latest
     env:
       TZ: Asia/Seoul
+      DATABASE_URL: postgresql://searchmarket:searchmarket@localhost:5432/searchmarket
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: searchmarket
+          POSTGRES_USER: searchmarket
+          POSTGRES_PASSWORD: searchmarket
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U searchmarket -d searchmarket"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Checkout
@@ -27,21 +39,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Prepare database
+        run: |
+          python -m market_scanner.storage.db init
+          python -m market_scanner.storage.db refresh-master --market us
+
       - name: Run NASDAQ 100 scanner
         run: python Search.py --market us --universe nasdaq100
 
       - name: Run S&P 500 scanner
         run: python Search.py --market us --universe sp500
 
-      - name: Commit results
-        run: |
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git add data/Data_*.csv analysis/Analysis_*.md reports/Report_*.html market_scanner/assets/instruments.json market_scanner/assets/investing_url_cache.json market_scanner/assets/sp500_members_cache.json
-          git diff --staged --quiet || git commit -m "scan(US markets): $(date +'%Y-%m-%d')"
-
-      - name: Push
-        uses: ad-m/github-push-action@v0.8.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}

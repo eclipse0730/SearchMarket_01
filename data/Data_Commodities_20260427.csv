@@ -1,9 +1,0 @@
-﻿symbol,display_symbol,name_en,name_local,sector,description,price,rsi,high_52w,low_52w,from_high_pct,volume_ratio,trailing_pe,target_price,upside_pct,trend,trend_score,ma_60,diff_60,near_60,ma_120,diff_120,near_120,ma_240,diff_240,near_240,composite_score,near_count
-CL=F,CL,Crude Oil Futures,WTI 원유,Commodity,Energy benchmark.,94.4,51.1,112.95,55.27,-16.4,0.95,,,,Strong Uptrend,5,83.49,13.07,False,71.24,32.51,False,67.69,39.46,False,51.0,0
-ZW=F,ZW,Wheat Futures,밀 선물,Commodity,Agriculture proxy.,616.75,61.4,618.5,495.0,-0.3,1.1,,,,Strong Uptrend,5,578.35,6.64,False,551.78,11.77,False,537.52,14.74,False,45.0,0
-GC=F,GC,Gold Futures,금 선물,Commodity,Precious metals proxy.,4740.9,48.8,5318.4,3181.4,-10.9,19.9,,,,Uptrend,4,4880.48,-2.86,False,4614.99,2.73,False,4072.38,16.42,False,45.0,0
-NG=F,NG,Natural Gas Futures,천연가스,Commodity,Gas benchmark.,2.68,42.6,7.46,2.6,-64.1,1.06,,,,Strong Downtrend,1,3.01,-10.96,False,3.69,-27.37,False,3.47,-22.77,False,10.0,0
-SB=F,SB,Sugar Futures,설탕 선물,Commodity,Soft commodities proxy.,14.1,48.8,18.22,13.31,-22.6,1.08,,,,Strong Downtrend,0,14.38,-1.95,True,14.58,-3.29,False,15.4,-8.44,False,25.0,1
-ZC=F,ZC,Corn Futures,옥수수 선물,Commodity,Agriculture proxy.,463.5,64.5,478.75,371.5,-3.2,0.79,,,,Strong Uptrend,5,443.62,4.48,False,438.99,5.58,False,427.23,8.49,False,45.0,0
-SI=F,SI,Silver Futures,은 선물,Commodity,Precious metals proxy.,76.41,48.9,115.08,31.99,-33.6,278.42,,,,Neutral,3,79.33,-3.68,False,73.36,4.16,False,56.59,35.02,False,33.0,0
-HG=F,HG,Copper Futures,구리 선물,Commodity,Industrial metals proxy.,6.03,59.3,6.18,4.33,-2.4,32.3,,,,Uptrend,4,5.8,3.97,False,5.61,7.49,False,5.23,15.3,False,39.0,0

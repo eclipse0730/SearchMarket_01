@@ -10,9 +10,6 @@ on:
       - "requirements.txt"
       - "market_scanner/**"
       - ".github/workflows/**"
-      - "data/Data*.csv"
-      - "analysis/Analysis*.md"
-      - "reports/Report*.html"
   workflow_run:
     workflows:
       - Daily Scan US Markets (KST 08:05)
@@ -39,6 +36,23 @@ jobs:
   build:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+      DATABASE_URL: postgresql://searchmarket:searchmarket@localhost:5432/searchmarket
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: searchmarket
+          POSTGRES_USER: searchmarket
+          POSTGRES_PASSWORD: searchmarket
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U searchmarket -d searchmarket"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Checkout
@@ -56,8 +70,26 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Prepare database
+        run: |
+          python -m market_scanner.storage.db init
+          python -m market_scanner.storage.db refresh-master --market us
+          python -m market_scanner.storage.db refresh-master --market kospi
+          python -m market_scanner.storage.db refresh-master --market kosdaq
+          python -m market_scanner.storage.db refresh-master --market global-indices
+          python -m market_scanner.storage.db refresh-master --market commodities
+
+      - name: Populate site database
+        run: |
+          python Search.py --market us --universe nasdaq100
+          python Search.py --market us --universe sp500
+          python Search.py --market kospi
+          python Search.py --market kosdaq
+          python Search.py --market global-indices
+          python Search.py --market commodities
+
       - name: Build static site
-        run: python -m market_scanner.site_builder
+        run: python -m market_scanner.reports.site_builder
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
