@@ -377,7 +377,34 @@ def _fetch_fdr_listing(market: str):
 
 def _is_us_preferred_symbol(symbol: str) -> bool:
     parts = symbol.upper().replace(".", " ").replace("-", " ").split()
-    return len(parts) >= 3 and parts[-2] == "PR"
+    return len(parts) >= 2 and (parts[-1] == "PR" or parts[-2] == "PR")
+
+
+def _is_us_special_right_or_unit_symbol(symbol: str) -> bool:
+    parts = symbol.upper().replace(".", " ").replace("-", " ").split()
+    if not parts:
+        return False
+    return (
+        parts[-1] in {"RT", "WI"}
+        or parts[-2:] == ["RT", "WI"]
+        or symbol.upper().endswith("-U")
+    )
+
+
+def _is_excluded_us_listing_symbol(symbol: str) -> bool:
+    return _is_us_preferred_symbol(symbol) or _is_us_special_right_or_unit_symbol(symbol)
+
+
+def _is_excluded_us_listing_name(name: object) -> bool:
+    text = str(name or "").strip().upper()
+    return bool(text) and (
+        " RIGHTS" in f" {text}"
+        or " RIGHT" in f" {text}"
+        or "UNITS" in text
+        or "WHEN ISSUED" in text
+        or "PREFERRED" in text
+        or " PREF SH" in text
+    )
 
 
 def _fetch_fdr_us_symbols(exchange: str, label: str) -> list[str]:
@@ -393,7 +420,9 @@ def _fetch_fdr_us_symbols(exchange: str, label: str) -> list[str]:
             sym = str(row.get(sym_col) or "").strip().upper().replace(".", "-")
             if not sym or sym in {"N/A", "NA", "NAN"}:
                 continue
-            if _is_us_preferred_symbol(sym):
+            if _is_excluded_us_listing_symbol(sym):
+                continue
+            if _is_excluded_us_listing_name(row.get("Name")):
                 continue
             symbols.append(sym)
         print(f"  {label} (FDR): loaded {len(symbols)} symbols")
@@ -430,9 +459,11 @@ def _fdr_us_meta(exchange: str, label: str) -> dict[str, StaticTickerMeta]:
         sym = str(row.get(sym_col) or "").strip().upper().replace(".", "-")
         if not sym or sym in {"N/A", "NA", "NAN"}:
             continue
-        if _is_us_preferred_symbol(sym):
+        if _is_excluded_us_listing_symbol(sym):
             continue
         name = str(row.get("Name") or "").strip()
+        if _is_excluded_us_listing_name(name):
+            continue
         if not name or name.lower() == "nan":
             name = sym
         raw_sector = row.get("Industry") or row.get("Sector") or row.get("SectorName") or "Unknown"

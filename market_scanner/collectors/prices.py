@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import io
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import date, datetime, timedelta
 from typing import Any
@@ -327,6 +327,13 @@ def _fetch_task(instr: dict[str, Any], market_key: str, start: str, end: str) ->
     }
 
 
+def _progress_bar(completed: int, total: int, width: int = 24) -> str:
+    if total <= 0:
+        return "-" * width
+    filled = min(width, int(width * completed / total))
+    return "#" * filled + "-" * (width - filled)
+
+
 # ── fetch (증분) ──────────────────────────────────────────────────────────────
 
 def run_fetch(
@@ -429,6 +436,7 @@ def run_backfill(
     symbols: list[str] | None = None,
     explicit_url: str | None = None,
     limit: int | None = None,
+    workers: int = _DEFAULT_FETCH_WORKERS,
 ) -> None:
     start = _start_for_years(years)
     end = date.today().isoformat()
@@ -453,33 +461,104 @@ def run_backfill(
         mode = "backfill_new" if new_only else "backfill_all"
         run_id = _create_prices_run(
             conn, market_key, "backfill", date.today(), len(instruments), primary_source,
-            params={"mode": mode, "years": years, "start": start, "end": end},
+            params={"mode": mode, "years": years, "start": start, "end": end, "workers": workers},
         )
+        worker_count = max(1, min(workers, len(instruments)))
         print(
             f"  prices backfill [{market_key}] {len(instruments)} symbols  "
-            f"{start} ~ {end}  run_id={run_id}"
+            f"{start} ~ {end}  workers={worker_count}  run_id={run_id}"
         )
 
         success, failed = 0, 0
+        submitted = 0
         error_samples: list[Any] = []
+        progress_interval = 1
 
-        for instr in instruments:
+        def print_progress(force: bool = False) -> None:
+            processed = success + failed
+            if not force and processed % progress_interval != 0:
+                return
+            pct = processed / len(instruments) * 100
+            bar = _progress_bar(processed, len(instruments))
+            print(
+                f"\r    [{bar}] {processed}/{len(instruments)} "
+                f"{pct:5.1f}% queued={submitted} "
+                f"active={submitted - processed} success={success} failed={failed}",
+                end="",
+                flush=True,
+            )
+
+        def handle_result(result: dict[str, Any]) -> None:
+            nonlocal success, failed
+            instr = result["instrument"]
             instrument_id = instr["instrument_id"]
             symbol = instr["symbol"]
             instr_currency = instr["currency_code"] or currency_code
+            task_start = result["start"]
+            frame = result["frame"]
+            source = result["source"]
 
-            frame, source = fetch_ohlcv(symbol, market_key, start, end)
             if frame.empty:
                 failed += 1
+                print(f"\n    failed {symbol}: no price data ({task_start} -> {end})")
                 if len(error_samples) < 30:
-                    error_samples.append({"symbol": symbol, "reason": "fetch_failed"})
-                continue
+                    error_samples.append({"symbol": symbol, "reason": "fetch_failed", "start": task_start})
+                print_progress(force=True)
+                return
 
             _upsert_ohlcv_frame(conn, instrument_id, frame, source, run_id, instr_currency)
             success += 1
-            if success % 50 == 0:
-                print(f"    {success}/{len(instruments)} backfilled ...")
+            print_progress()
 
+        if worker_count == 1:
+            print_progress(force=True)
+            for instr in instruments:
+                submitted += 1
+                print_progress(force=True)
+                handle_result(_fetch_task(instr, market_key, start, end))
+        else:
+            print_progress(force=True)
+            with ThreadPoolExecutor(max_workers=worker_count) as executor:
+                pending: dict[Any, dict[str, Any]] = {}
+                instrument_iter = iter(instruments)
+
+                def submit_next() -> bool:
+                    nonlocal submitted
+                    try:
+                        instr = next(instrument_iter)
+                    except StopIteration:
+                        return False
+                    future = executor.submit(_fetch_task, instr, market_key, start, end)
+                    pending[future] = instr
+                    submitted += 1
+                    return True
+
+                for _ in range(worker_count):
+                    if not submit_next():
+                        break
+                print_progress(force=True)
+
+                while pending:
+                    done, _ = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
+                    if not done:
+                        print_progress(force=True)
+                        continue
+                    for future in done:
+                        instr = pending.pop(future)
+                        try:
+                            handle_result(future.result())
+                        except Exception as exc:
+                            symbol = instr["symbol"]
+                            failed += 1
+                            print(f"\n    failed {symbol}: {type(exc).__name__} ({start} -> {end})")
+                            if len(error_samples) < 30:
+                                error_samples.append({"symbol": symbol, "reason": type(exc).__name__, "start": start})
+                            print_progress(force=True)
+                        submit_next()
+                        print_progress(force=True)
+
+        print_progress(force=True)
+        print()
         status = "success" if not failed else ("partial" if success else "failed")
         _finish_prices_run(conn, run_id, status, success, failed, 0, error_samples)
         print(
@@ -547,6 +626,7 @@ def main() -> None:
         help="daily_prices가 없는 신규 종목만 대상으로 합니다.",
     )
     backfill_p.add_argument("--limit", type=int, default=None)
+    backfill_p.add_argument("--workers", type=int, default=_DEFAULT_FETCH_WORKERS)
 
     retry_p = sub.add_parser("retry", help="Retry failed symbols from the last prices/backfill run.")
     retry_p.add_argument("--market", required=True, choices=sorted(MARKETS))
@@ -557,7 +637,7 @@ def main() -> None:
     if args.command == "fetch":
         run_fetch(args.market, args.date, args.database_url, args.limit, args.workers)
     elif args.command == "backfill":
-        run_backfill(args.market, args.years, args.new_only, explicit_url=args.database_url, limit=args.limit)
+        run_backfill(args.market, args.years, args.new_only, explicit_url=args.database_url, limit=args.limit, workers=args.workers)
     elif args.command == "retry":
         run_retry(args.market, args.run_id, args.database_url)
 

@@ -77,7 +77,7 @@ uv run python Search.py --help
 
 - 권장 CLI 구조는 시장 단위 `--market`과 선택적 멤버십 필터 `--universe`임. 예: `uv run python Search.py --market us --universe nasdaq100`, `uv run python Search.py --market kospi --universe kospi100`
 - US universe 구조: `universe_memberships`에 `nasdaq`/`nyse`/`amex`(거래소 전체), `nasdaq100`/`sp500`(지수) 5개 universe 사용. 기존 단일 `us` universe_key는 폐기됨. `--market us` 한 번으로 5개 동시 갱신됨(`_MARKET_UNIVERSE_EXPANSION`)
-- US 심볼 소스: FinanceDataReader `StockListing("NASDAQ"|"NYSE"|"AMEX"|"NASDAQ100"|"SP500")`. `ABR PR D`처럼 preferred share 패턴(`... PR ...`)인 심볼은 refresh-master 입력 단계에서 제외. 실패 시 Wikipedia(sp500), 정적 JSON(nasdaq100) fallback. NASDAQ/NYSE/AMEX는 FDR 실패 시 빈 목록 반환 (NASDAQ Trader txt fallback 제거됨)
+- US 심볼 소스: FinanceDataReader `StockListing("NASDAQ"|"NYSE"|"AMEX"|"NASDAQ100"|"SP500")`. `ABR PR D`처럼 preferred share 패턴(`... PR ...`)이거나 `AXIA PR`처럼 `PR`로 끝나는 preferred share 패턴인 심볼, `-U`/`RT`/`RT WI`/`WI` units/rights/when-issued 심볼, 이름에 `Units`/`Rights`/`When Issued`/`Preferred`/`Pref Shs`가 포함된 US listing은 refresh-master 입력 단계에서 제외. 실패 시 Wikipedia(sp500), 정적 JSON(nasdaq100) fallback. NASDAQ/NYSE/AMEX는 FDR 실패 시 빈 목록 반환 (NASDAQ Trader txt fallback 제거됨)
 - `kospi`, `kosdaq`은 시장 전체가 기본이며, `kospi100`, `kospi200`, `kosdaq150`은 `--universe` 옵션값으로만 사용함
 - `kospi_static_meta.json`, `kosdaq_static_meta.json`, `sp500_members_cache.json` 삭제됨. KOSPI/KOSDAQ universe 함수는 FDR/Naver 직접 반환, JSON fallback 없음
 - 글로벌 지수 워치리스트는 `global_indices_meta.json` 원본, 현재 22개 심볼. 새 지수 추가 시 JSON 편집 후 `load-master` 실행. 글로벌 지수/원자재는 FDR 자동 발견 불가 → JSON이 영구 원본

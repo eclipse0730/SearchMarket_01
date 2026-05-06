@@ -1,12 +1,12 @@
 # Search60 Development Notes
 
-Last updated: 2026-05-05
+Last updated: 2026-05-06
 
 이 문서는 프로젝트를 함께 개발하면서 계속 갱신하는 개발/운영 노트입니다. 기능 개발 판단과 코드 구조 이해에 필요한 내용을 이 파일에 모읍니다.
 
 ## Project Summary
 
-Search60은 여러 시장의 종목/지수/ETF/원자재를 대상으로 60/120/240일 이동평균선 근접 여부를 스캔하고, CSV, Markdown, HTML 리포트 및 GitHub Pages 사이트를 생성하는 Python 프로젝트입니다.
+Search60은 여러 시장의 종목/지수/ETF/원자재를 대상으로 5/20/60/120/240일 이동평균선, 기간 수익률, ATR/변동성, 60/120/240일 추세 점수를 계산하고, CSV, Markdown, HTML 리포트 및 GitHub Pages 사이트를 생성하는 Python 프로젝트입니다.
 
 권장 실행 단위:
 
@@ -62,7 +62,7 @@ uv run python Search.py --market us --universe sp500
 
 단계별 흐름:
 
-1. `scan`: `market_scanner.pipeline`이 `collectors.prices.run_fetch` → `analysis.indicators.run_compute` → `analysis.screener.run_screen` 순서로 실행합니다. `--universe`를 지정하면 screener 단계에서 `universe_memberships`의 현재 편입 종목만 스캔합니다. universe가 다른 시장에 속하면 오류로 중단합니다. KOSPI/KOSDAQ/US는 FinanceDataReader OHLCV를 우선 사용하고, 실패 시 yfinance 히스토리로 fallback합니다. 가격 수집은 시장별 목표일 기준으로 이미 가격이 있는 종목을 SQL 단계에서 제외합니다. 기본 목표일은 한국 시장은 실행일, 비한국 시장은 KST 기준 전일이며 `--date`가 있으면 해당 날짜를 사용합니다. 가격 조회는 `--workers`로 병렬 처리하되 DB upsert는 메인 스레드에서 수행합니다. yfinance 조회 실패는 재시도하지 않고 실패 종목 로그만 남긴 뒤 다음 종목으로 진행합니다.
+1. `scan`: `market_scanner.pipeline`이 `collectors.prices.run_fetch` → `analysis.indicators.run_compute` → `analysis.screener.run_screen` 순서로 실행합니다. `--universe`를 지정하면 screener 단계에서 `universe_memberships`의 현재 편입 종목만 스캔합니다. universe가 다른 시장에 속하면 오류로 중단합니다. KOSPI/KOSDAQ/US는 FinanceDataReader OHLCV를 우선 사용하고, 실패 시 yfinance 히스토리로 fallback합니다. 가격 수집은 시장별 목표일 기준으로 이미 가격이 있는 종목을 SQL 단계에서 제외합니다. 기본 목표일은 한국 시장은 실행일, 비한국 시장은 KST 기준 전일이며 `--date`가 있으면 해당 날짜를 사용합니다. 가격 조회는 `fetch`와 `backfill` 모두 `--workers`로 병렬 처리하되 DB upsert는 메인 스레드에서 수행합니다. `backfill`과 `indicators compute`는 완료된 종목 수 기준 진행 바와 success/failed/skipped 카운트를 출력합니다. 지표 계산은 기준일 이하 가격 히스토리만 사용하고, 실패/스킵 샘플을 `collection_runs.error_samples`에 저장합니다. yfinance 조회 실패는 재시도하지 않고 실패 종목 로그만 남긴 뒤 다음 종목으로 진행합니다.
 2. `analyze`: DB의 `daily_indicators`/`daily_prices`를 기반으로 screener를 다시 실행하고 Markdown을 재생성합니다.
 3. `news`: DB의 최신 `scan_results` 상위 종목에서 yfinance 뉴스 항목을 수집해 `market_scanner/assets/news_cache.json`에 날짜/시장별로 저장합니다.
 4. `render`: DB의 `scan_results`를 기반으로 Markdown/HTML 리포트를 렌더링하고 `generated_reports`에 산출물 메타데이터를 기록합니다.
@@ -175,7 +175,7 @@ uv run python Search.py --help
 
 ## Market Membership Caches
 
-US 시장 universe 심볼은 FinanceDataReader `StockListing(exchange)`를 primary source로 사용합니다. FDR 심볼이 `ABR PR D`처럼 preferred share 패턴(`... PR ...`)이면 refresh-master 입력 단계에서 제외합니다.
+US 시장 universe 심볼은 FinanceDataReader `StockListing(exchange)`를 primary source로 사용합니다. FDR 심볼이 `ABR PR D`처럼 preferred share 패턴(`... PR ...`)이거나 `AXIA PR`처럼 `PR`로 끝나는 preferred share 패턴이면 refresh-master 입력 단계에서 제외합니다. `-U`, `RT`, `RT WI`, `WI` 같은 units/rights/when-issued 심볼과 이름에 `Units`, `Rights`, `When Issued`, `Preferred`, `Pref Shs`가 포함된 US listing도 제외합니다.
 
 | Universe | FDR 소스 | Fallback |
 |----------|----------|----------|

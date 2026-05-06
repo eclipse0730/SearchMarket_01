@@ -1033,89 +1033,79 @@ def upsert_daily_indicator(
     row: pd.Series,
     run_id: str,
 ) -> None:
+    values = {
+        "instrument_id": instrument_id,
+        "trade_date": trade_date,
+        "price_source_provider": source_provider,
+        "rsi14": _clean_number(row.get("rsi")),
+        "ma5": _clean_number(row.get("ma_5")),
+        "ma20": _clean_number(row.get("ma_20")),
+        "ma60": _clean_number(row.get("ma_60")),
+        "ma120": _clean_number(row.get("ma_120")),
+        "ma240": _clean_number(row.get("ma_240")),
+        "diff_5_pct": _clean_number(row.get("diff_5")),
+        "diff_20_pct": _clean_number(row.get("diff_20")),
+        "diff_60_pct": _clean_number(row.get("diff_60")),
+        "diff_120_pct": _clean_number(row.get("diff_120")),
+        "diff_240_pct": _clean_number(row.get("diff_240")),
+        "near_5": _clean_bool(row.get("near_5")),
+        "near_20": _clean_bool(row.get("near_20")),
+        "near_60": _clean_bool(row.get("near_60")),
+        "near_120": _clean_bool(row.get("near_120")),
+        "near_240": _clean_bool(row.get("near_240")),
+        "macd": _clean_number(row.get("macd")),
+        "macd_signal": _clean_number(row.get("macd_signal")),
+        "macd_hist": _clean_number(row.get("macd_hist")),
+        "macd_state": _clean_text(row.get("macd_state")) or "Unknown",
+        "bollinger_width_pct": _clean_number(row.get("bollinger_width_pct")),
+        "bollinger_percent_b": _clean_number(row.get("bollinger_percent_b")),
+        "high_52w": _clean_number(row.get("high_52w")),
+        "low_52w": _clean_number(row.get("low_52w")),
+        "from_high_pct": _clean_number(row.get("from_high_pct")),
+        "from_low_pct": _clean_number(row.get("from_low_pct")),
+        "high_20d": _clean_number(row.get("high_20d")),
+        "low_20d": _clean_number(row.get("low_20d")),
+        "high_60d": _clean_number(row.get("high_60d")),
+        "low_60d": _clean_number(row.get("low_60d")),
+        "breakout_20d": _clean_bool(row.get("breakout_20d")),
+        "breakout_60d": _clean_bool(row.get("breakout_60d")),
+        "volume_ratio": _clean_number(row.get("volume_ratio")),
+        "return_5d": _clean_number(row.get("return_5d")),
+        "return_20d": _clean_number(row.get("return_20d")),
+        "return_60d": _clean_number(row.get("return_60d")),
+        "return_120d": _clean_number(row.get("return_120d")),
+        "return_240d": _clean_number(row.get("return_240d")),
+        "atr14": _clean_number(row.get("atr14")),
+        "atr14_pct": _clean_number(row.get("atr14_pct")),
+        "volatility_20d": _clean_number(row.get("volatility_20d")),
+        "volatility_60d": _clean_number(row.get("volatility_60d")),
+        "change_pct": _clean_number(row.get("change_pct")),
+        "gap_pct": _clean_number(row.get("gap_pct")),
+        "candle_body_pct": _clean_number(row.get("candle_body_pct")),
+        "candle_range_pct": _clean_number(row.get("candle_range_pct")),
+        "upper_shadow_pct": _clean_number(row.get("upper_shadow_pct")),
+        "lower_shadow_pct": _clean_number(row.get("lower_shadow_pct")),
+        "candle_type": _clean_text(row.get("candle_type")) or "Unknown",
+        "trend": _clean_text(row.get("trend")),
+        "trend_score": _clean_int(row.get("trend_score")),
+        "run_id": run_id,
+    }
+    columns = list(values)
+    placeholders = ", ".join(["%s"] * len(columns))
+    update_assignments = ",\n            ".join(
+        f"{column} = EXCLUDED.{column}"
+        for column in columns
+        if column not in {"instrument_id", "trade_date"}
+    )
     conn.execute(
-        """
-        INSERT INTO daily_indicators (
-            instrument_id, trade_date, price_source_provider, rsi14, ma60, ma120, ma240,
-            diff_60_pct, diff_120_pct, diff_240_pct, near_60, near_120, near_240,
-            macd, macd_signal, macd_hist, macd_state, bollinger_width_pct,
-            bollinger_percent_b, high_52w, low_52w, from_high_pct, volume_ratio,
-            change_pct, gap_pct, candle_body_pct, candle_range_pct, upper_shadow_pct,
-            lower_shadow_pct, candle_type, trend, trend_score, run_id
-        )
-        VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-        )
+        f"""
+        INSERT INTO daily_indicators ({", ".join(columns)})
+        VALUES ({placeholders})
         ON CONFLICT (instrument_id, trade_date) DO UPDATE SET
-            price_source_provider = EXCLUDED.price_source_provider,
-            rsi14 = EXCLUDED.rsi14,
-            ma60 = EXCLUDED.ma60,
-            ma120 = EXCLUDED.ma120,
-            ma240 = EXCLUDED.ma240,
-            diff_60_pct = EXCLUDED.diff_60_pct,
-            diff_120_pct = EXCLUDED.diff_120_pct,
-            diff_240_pct = EXCLUDED.diff_240_pct,
-            near_60 = EXCLUDED.near_60,
-            near_120 = EXCLUDED.near_120,
-            near_240 = EXCLUDED.near_240,
-            macd = EXCLUDED.macd,
-            macd_signal = EXCLUDED.macd_signal,
-            macd_hist = EXCLUDED.macd_hist,
-            macd_state = EXCLUDED.macd_state,
-            bollinger_width_pct = EXCLUDED.bollinger_width_pct,
-            bollinger_percent_b = EXCLUDED.bollinger_percent_b,
-            high_52w = EXCLUDED.high_52w,
-            low_52w = EXCLUDED.low_52w,
-            from_high_pct = EXCLUDED.from_high_pct,
-            volume_ratio = EXCLUDED.volume_ratio,
-            change_pct = EXCLUDED.change_pct,
-            gap_pct = EXCLUDED.gap_pct,
-            candle_body_pct = EXCLUDED.candle_body_pct,
-            candle_range_pct = EXCLUDED.candle_range_pct,
-            upper_shadow_pct = EXCLUDED.upper_shadow_pct,
-            lower_shadow_pct = EXCLUDED.lower_shadow_pct,
-            candle_type = EXCLUDED.candle_type,
-            trend = EXCLUDED.trend,
-            trend_score = EXCLUDED.trend_score,
-            run_id = EXCLUDED.run_id,
+            {update_assignments},
             calculated_at = now()
         """,
-        (
-            instrument_id,
-            trade_date,
-            source_provider,
-            _clean_number(row.get("rsi")),
-            _clean_number(row.get("ma_60")),
-            _clean_number(row.get("ma_120")),
-            _clean_number(row.get("ma_240")),
-            _clean_number(row.get("diff_60")),
-            _clean_number(row.get("diff_120")),
-            _clean_number(row.get("diff_240")),
-            _clean_bool(row.get("near_60")),
-            _clean_bool(row.get("near_120")),
-            _clean_bool(row.get("near_240")),
-            _clean_number(row.get("macd")),
-            _clean_number(row.get("macd_signal")),
-            _clean_number(row.get("macd_hist")),
-            _clean_text(row.get("macd_state")) or "Unknown",
-            _clean_number(row.get("bollinger_width_pct")),
-            _clean_number(row.get("bollinger_percent_b")),
-            _clean_number(row.get("high_52w")),
-            _clean_number(row.get("low_52w")),
-            _clean_number(row.get("from_high_pct")),
-            _clean_number(row.get("volume_ratio")),
-            _clean_number(row.get("change_pct")),
-            _clean_number(row.get("gap_pct")),
-            _clean_number(row.get("candle_body_pct")),
-            _clean_number(row.get("candle_range_pct")),
-            _clean_number(row.get("upper_shadow_pct")),
-            _clean_number(row.get("lower_shadow_pct")),
-            _clean_text(row.get("candle_type")) or "Unknown",
-            _clean_text(row.get("trend")),
-            _clean_int(row.get("trend_score")),
-            run_id,
-        ),
+        tuple(values[column] for column in columns),
     )
 
 
@@ -1606,4 +1596,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

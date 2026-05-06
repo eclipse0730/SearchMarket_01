@@ -1,6 +1,6 @@
 # Stock MA Scanner
 
-미국 주식, KOSPI, KOSDAQ, 글로벌 지수, 테마 ETF, 원자재를 대상으로 60/120/240일 이동평균선 근접 여부와 기술/재무/수급 점수를 계산하고 PostgreSQL 기반 Markdown/HTML 리포트와 GitHub Pages 대시보드를 생성합니다.
+미국 주식, KOSPI, KOSDAQ, 글로벌 지수, 테마 ETF, 원자재를 대상으로 5/20/60/120/240일 이동평균선, 기간 수익률, ATR/변동성, 기술/재무/수급 점수를 계산하고 PostgreSQL 기반 Markdown/HTML 리포트와 GitHub Pages 대시보드를 생성합니다.
 
 ## 설치
 
@@ -93,6 +93,8 @@ uv run python -m market_scanner.reports.render build --market kospi
 uv run python -m market_scanner.collectors.prices backfill --market kospi --new-only
 # 전체 1년치 재적재
 uv run python -m market_scanner.collectors.prices backfill --market kospi --years 1
+# 2년치 US 가격을 병렬 백필
+uv run python -m market_scanner.collectors.prices backfill --market us --years 2 --workers 8
 # 실패 종목 재시도
 uv run python -m market_scanner.collectors.prices retry --market kospi
 ```

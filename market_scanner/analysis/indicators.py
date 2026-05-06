@@ -16,7 +16,11 @@ TREND_LABELS = {
     0: "Strong Downtrend",
 }
 
-_MA_PERIODS: tuple[int, ...] = (60, 120, 240)
+_MA_PERIODS: tuple[int, ...] = (5, 20, 60, 120, 240)
+_TREND_MA_PERIODS: tuple[int, ...] = (60, 120, 240)
+_RETURN_PERIODS: tuple[int, ...] = (5, 20, 60, 120, 240)
+_RANGE_PERIODS: tuple[int, ...] = (20, 60)
+_VOLATILITY_PERIODS: tuple[int, ...] = (20, 60)
 _MA_THRESHOLD_PCT: float = 3.0
 _MIN_HISTORY: int = 270  # 240일 MA + 여유분
 
@@ -104,6 +108,49 @@ def calc_bollinger(
     return round(width_pct, 2), round(percent_b, 3)
 
 
+def calc_atr(
+    high: pd.Series,
+    low: pd.Series,
+    close: pd.Series,
+    period: int = 14,
+) -> float | None:
+    if len(close) < period + 1:
+        return None
+
+    prev_close = close.shift(1)
+    true_range = pd.concat(
+        [
+            high - low,
+            (high - prev_close).abs(),
+            (low - prev_close).abs(),
+        ],
+        axis=1,
+    ).max(axis=1)
+    atr = true_range.rolling(window=period, min_periods=period).mean()
+    return round(float(atr.iloc[-1]), 4) if pd.notna(atr.iloc[-1]) else None
+
+
+def calc_return(close: pd.Series, period: int) -> float | None:
+    if len(close) <= period:
+        return None
+    base = _safe(close.iloc[-period - 1])
+    current = _safe(close.iloc[-1])
+    if not base or current is None:
+        return None
+    return round((current - base) / base * 100, 2)
+
+
+def calc_annualized_volatility(close: pd.Series, period: int) -> float | None:
+    if len(close) <= period:
+        return None
+    returns = close.pct_change()
+    rolling_std = returns.rolling(window=period, min_periods=period).std()
+    value = rolling_std.iloc[-1]
+    if pd.isna(value):
+        return None
+    return round(float(value) * (252 ** 0.5) * 100, 2)
+
+
 def calc_trend(
     close: pd.Series,
     ma_values: dict[int, float | None],
@@ -189,7 +236,14 @@ def _safe(value: Any, digits: int | None = None) -> float | None:
     return round(f, digits) if digits is not None else f
 
 
-def _load_price_history(conn: Any, instrument_id: int) -> pd.DataFrame:
+def _progress_bar(completed: int, total: int, width: int = 24) -> str:
+    if total <= 0:
+        return "-" * width
+    filled = min(width, int(width * completed / total))
+    return "#" * filled + "-" * (width - filled)
+
+
+def _load_price_history(conn: Any, instrument_id: int, through_date: date) -> pd.DataFrame:
     """DB에서 OHLCV 히스토리를 가져옵니다. (fdr → yfinance 우선순위)"""
     rows = conn.execute(
         """
@@ -197,10 +251,11 @@ def _load_price_history(conn: Any, instrument_id: int) -> pd.DataFrame:
             trade_date, open_price, high_price, low_price, close_price, volume
         FROM daily_prices
         WHERE instrument_id = %s
+          AND trade_date <= %s
         ORDER BY trade_date,
             CASE source_provider WHEN 'fdr' THEN 1 WHEN 'yfinance' THEN 2 ELSE 3 END
         """,
-        (instrument_id,),
+        (instrument_id, through_date),
     ).fetchall()
     if not rows:
         return pd.DataFrame()
@@ -257,6 +312,23 @@ def _compute_from_hist(
     high_52w = _safe(close.iloc[-trailing_window:].max(), price_decimals)
     low_52w = _safe(close.iloc[-trailing_window:].min(), price_decimals)
     from_high_pct = round((current - high_52w) / high_52w * 100, 1) if high_52w else None
+    from_low_pct = round((current - low_52w) / low_52w * 100, 1) if low_52w else None
+
+    range_highs: dict[int, float | None] = {}
+    range_lows: dict[int, float | None] = {}
+    breakouts: dict[int, bool] = {}
+    for period in _RANGE_PERIODS:
+        if len(close) < period:
+            range_highs[period] = None
+            range_lows[period] = None
+            breakouts[period] = False
+            continue
+        range_high = _safe(close.iloc[-period:].max(), price_decimals)
+        range_low = _safe(close.iloc[-period:].min(), price_decimals)
+        prior_high = _safe(close.iloc[-period - 1:-1].max(), price_decimals) if len(close) > period else None
+        range_highs[period] = range_high
+        range_lows[period] = range_low
+        breakouts[period] = bool(prior_high and current > prior_high)
 
     vol_last = _safe(volume_s.iloc[-1]) if volume_s is not None else None
     vol_avg20 = (
@@ -268,6 +340,10 @@ def _compute_from_hist(
     rsi = calc_rsi(close)
     macd, macd_signal, macd_hist, macd_state = calc_macd(close)
     bollinger_width_pct, bollinger_percent_b = calc_bollinger(close)
+    atr14 = calc_atr(high_s, low_s, close)
+    atr14_pct = round(atr14 / current * 100, 2) if atr14 and current else None
+    returns = {period: calc_return(close, period) for period in _RETURN_PERIODS}
+    volatility = {period: calc_annualized_volatility(close, period) for period in _VOLATILITY_PERIODS}
 
     ma_values: dict[int, float | None] = {}
     ma_diff_pct: dict[int, float | None] = {}
@@ -292,16 +368,22 @@ def _compute_from_hist(
             ma_diff_pct[period] = None
             near_flags[period] = False
 
-    trend_score, trend = calc_trend(close, ma_values, ma_series_dict, ma_periods)
+    trend_score, trend = calc_trend(close, ma_values, ma_series_dict, _TREND_MA_PERIODS)
 
     return {
         "rsi": rsi,
+        "ma_5": ma_values.get(5),
+        "ma_20": ma_values.get(20),
         "ma_60": ma_values.get(60),
         "ma_120": ma_values.get(120),
         "ma_240": ma_values.get(240),
+        "diff_5": ma_diff_pct.get(5),
+        "diff_20": ma_diff_pct.get(20),
         "diff_60": ma_diff_pct.get(60),
         "diff_120": ma_diff_pct.get(120),
         "diff_240": ma_diff_pct.get(240),
+        "near_5": near_flags.get(5, False),
+        "near_20": near_flags.get(20, False),
         "near_60": near_flags.get(60, False),
         "near_120": near_flags.get(120, False),
         "near_240": near_flags.get(240, False),
@@ -314,7 +396,23 @@ def _compute_from_hist(
         "high_52w": high_52w,
         "low_52w": low_52w,
         "from_high_pct": from_high_pct,
+        "from_low_pct": from_low_pct,
+        "high_20d": range_highs.get(20),
+        "low_20d": range_lows.get(20),
+        "high_60d": range_highs.get(60),
+        "low_60d": range_lows.get(60),
+        "breakout_20d": breakouts.get(20, False),
+        "breakout_60d": breakouts.get(60, False),
         "volume_ratio": volume_ratio,
+        "return_5d": returns.get(5),
+        "return_20d": returns.get(20),
+        "return_60d": returns.get(60),
+        "return_120d": returns.get(120),
+        "return_240d": returns.get(240),
+        "atr14": atr14,
+        "atr14_pct": atr14_pct,
+        "volatility_20d": volatility.get(20),
+        "volatility_60d": volatility.get(60),
         "change_pct": change_pct,
         "gap_pct": gap_pct,
         "candle_body_pct": candle_body_pct,
@@ -334,21 +432,23 @@ def compute_for_instrument(
     run_id: str,
     source_provider: str = "fdr",
     price_decimals: int = 2,
-) -> bool:
+) -> tuple[bool, str | None]:
     """단일 종목의 daily_indicators를 계산해 upsert합니다."""
     from market_scanner.storage.db import upsert_daily_indicator
 
-    hist = _load_price_history(conn, instrument_id)
-    if hist.empty or len(hist) < _MIN_HISTORY // 2:
-        return False
+    hist = _load_price_history(conn, instrument_id, trade_date)
+    if hist.empty:
+        return False, "empty_price_history"
+    if len(hist) < _MIN_HISTORY // 2:
+        return False, "insufficient_history"
 
     result = _compute_from_hist(hist, price_decimals=price_decimals)
     if not result:
-        return False
+        return False, "compute_empty"
 
     indicator_row = pd.Series(result)
     upsert_daily_indicator(conn, instrument_id, trade_date, source_provider, indicator_row, run_id)
-    return True
+    return True, None
 
 
 def run_compute(
@@ -412,6 +512,22 @@ def run_compute(
         print(f"  indicators compute [{market_key}] {len(instruments)} symbols  run_id={run_id}")
 
         success, failed, skipped = 0, 0, 0
+        error_samples: list[dict[str, Any]] = []
+
+        def print_progress(force: bool = False) -> None:
+            processed = success + failed + skipped
+            if not force and processed < len(instruments):
+                return
+            pct = processed / len(instruments) * 100
+            bar = _progress_bar(processed, len(instruments))
+            print(
+                f"\r    [{bar}] {processed}/{len(instruments)} "
+                f"{pct:5.1f}% success={success} failed={failed} skipped={skipped}",
+                end="",
+                flush=True,
+            )
+
+        print_progress(force=True)
 
         for instr in instruments:
             instrument_id = instr["instrument_id"]
@@ -423,28 +539,36 @@ def run_compute(
             ).fetchone()
             if not has_price:
                 skipped += 1
+                if len(error_samples) < 30:
+                    error_samples.append({"symbol": symbol, "status": "skipped", "reason": "missing_target_price"})
+                print_progress(force=True)
                 continue
 
-            ok = compute_for_instrument(
+            ok, reason = compute_for_instrument(
                 conn, instrument_id, trade_date, run_id, source_provider, price_decimals
             )
             if ok:
                 success += 1
             else:
                 failed += 1
+                if len(error_samples) < 30:
+                    error_samples.append({"symbol": symbol, "status": "failed", "reason": reason or "unknown"})
+            print_progress(force=True)
 
-            if (success + failed) % 100 == 0:
-                print(f"    {success + failed}/{len(instruments)} ...")
-
-        status = "success" if not failed else ("partial" if success else "failed")
+        print()
+        if failed or skipped:
+            status = "partial" if success else "failed"
+        else:
+            status = "success"
         conn.execute(
             """
             UPDATE collection_runs
             SET status = %s, finished_at = now(),
-                success_count = %s, failed_count = %s, skipped_count = %s
+                success_count = %s, failed_count = %s, skipped_count = %s,
+                error_samples = %s
             WHERE run_id = %s
             """,
-            (status, success, failed, skipped, run_id),
+            (status, success, failed, skipped, Jsonb(error_samples), run_id),
         )
         print(
             f"  indicators compute [{market_key}] done: "
