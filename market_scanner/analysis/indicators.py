@@ -6,6 +6,8 @@ from typing import Any
 
 import pandas as pd
 
+from market_scanner.progress import progress_bar
+
 
 TREND_LABELS = {
     5: "Strong Uptrend",
@@ -234,13 +236,6 @@ def _safe(value: Any, digits: int | None = None) -> float | None:
     if pd.isna(f):
         return None
     return round(f, digits) if digits is not None else f
-
-
-def _progress_bar(completed: int, total: int, width: int = 24) -> str:
-    if total <= 0:
-        return "-" * width
-    filled = min(width, int(width * completed / total))
-    return "#" * filled + "-" * (width - filled)
 
 
 def _load_price_history(conn: Any, instrument_id: int, through_date: date) -> pd.DataFrame:
@@ -519,7 +514,7 @@ def run_compute(
             if not force and processed < len(instruments):
                 return
             pct = processed / len(instruments) * 100
-            bar = _progress_bar(processed, len(instruments))
+            bar = progress_bar(processed, len(instruments))
             print(
                 f"\r    [{bar}] {processed}/{len(instruments)} "
                 f"{pct:5.1f}% success={success} failed={failed} skipped={skipped}",

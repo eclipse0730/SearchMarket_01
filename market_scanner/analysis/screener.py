@@ -36,10 +36,10 @@ def _load_screen_frame(
         universe_filter = """
         JOIN universe_memberships um
             ON um.instrument_id = i.instrument_id
-            AND um.universe_key = %(uk)s
+            AND um.universe_key = %s
             AND um.effective_to IS NULL
         """
-        params = [trade_date, trade_date, base_market, universe_key]
+        params = [universe_key, trade_date, trade_date, base_market]
 
     rows = conn.execute(
         f"""
@@ -132,7 +132,15 @@ def _load_screen_frame(
                    revenue_growth_pct, market_cap, target_price
             FROM instrument_fundamentals
             WHERE instrument_id = i.instrument_id
-            ORDER BY as_of_date DESC
+            ORDER BY
+                as_of_date DESC,
+                CASE source_provider
+                    WHEN 'naver' THEN 1
+                    WHEN 'yahoo' THEN 2
+                    WHEN 'yfinance' THEN 3
+                    WHEN 'fdr' THEN 4
+                    ELSE 5
+                END
             LIMIT 1
         ) f ON TRUE
         WHERE i.market_key = %s AND i.is_active = TRUE
@@ -185,12 +193,19 @@ def _load_screen_frame(
 # ── 점수화 (pipeline.py 로직 재사용) ─────────────────────────────────────────
 
 def _clamp(v: float) -> float:
-    return round(max(0.0, min(100.0, v)), 2)
+    if pd.isna(v):
+        return 0.0
+    return round(max(0.0, min(100.0, float(v))), 2)
+
+
+def _is_true(value: Any) -> bool:
+    return bool(value) if pd.notna(value) else False
 
 
 def _score_chart(row: pd.Series, settings: ScanSettings = _DEFAULT_SETTINGS) -> float:
-    trend_score = float(row.get("trend_score") or 0)
-    near_count = sum(1 for p in settings.ma_periods if bool(row.get(f"near_{p}", False)))
+    trend_value = row.get("trend_score")
+    trend_score = float(trend_value) if pd.notna(trend_value) else 0.0
+    near_count = sum(1 for p in settings.ma_periods if _is_true(row.get(f"near_{p}", False)))
     near_ratio = near_count / max(len(settings.ma_periods), 1)
     diffs = [abs(float(row.get(f"diff_{p}"))) for p in settings.ma_periods if pd.notna(row.get(f"diff_{p}"))]
     closest = min(diffs) if diffs else None
@@ -258,7 +273,70 @@ def _score_fundamental(row: pd.Series) -> float:
     return _clamp(sum(parts) / len(parts) if parts else 50)
 
 
-def _score_flow(row: pd.Series) -> float:
+def _sector_relative_fundamental_scores(frame: pd.DataFrame) -> pd.Series:
+    if frame.empty or "sector" not in frame.columns:
+        return pd.Series(50.0, index=frame.index)
+    work = frame.copy()
+
+    def numeric_col(column: str) -> pd.Series:
+        if column not in work.columns:
+            return pd.Series(float("nan"), index=work.index, dtype="float64")
+        return pd.to_numeric(work[column], errors="coerce")
+
+    work["trailing_pe"] = numeric_col("trailing_pe")
+    work["price_to_book"] = numeric_col("price_to_book")
+    work["return_on_equity"] = numeric_col("return_on_equity")
+    work["revenue_growth"] = numeric_col("revenue_growth")
+
+    component_weights = {
+        "pe": 0.25,
+        "pbr": 0.20,
+        "roe": 0.30,
+        "growth": 0.25,
+    }
+
+    def relative_component(
+        column: str,
+        *,
+        higher_is_better: bool,
+        positive_only: bool = False,
+    ) -> pd.Series:
+        scores = pd.Series(float("nan"), index=work.index, dtype="float64")
+        values = work[column]
+        valid = work["sector"].notna() & values.notna()
+        if positive_only:
+            valid &= values > 0
+
+        for _, sector_values in values[valid].groupby(work.loc[valid, "sector"]):
+            count = len(sector_values)
+            if count == 1:
+                scores.loc[sector_values.index] = 50.0
+                continue
+            ranks = sector_values.rank(method="average", ascending=higher_is_better)
+            scores.loc[sector_values.index] = ((ranks - 1) / (count - 1) * 100).clip(0, 100)
+        return scores
+
+    components = pd.DataFrame(index=work.index)
+    components["pe"] = relative_component("trailing_pe", higher_is_better=False, positive_only=True)
+    components["pbr"] = relative_component("price_to_book", higher_is_better=False, positive_only=True)
+    components["roe"] = relative_component("return_on_equity", higher_is_better=True)
+    components["growth"] = relative_component("revenue_growth", higher_is_better=True)
+
+    weighted_sum = pd.Series(0.0, index=work.index, dtype="float64")
+    available_weight = pd.Series(0.0, index=work.index, dtype="float64")
+    for column, weight in component_weights.items():
+        valid = components[column].notna()
+        weighted_sum.loc[valid] += components.loc[valid, column] * weight
+        available_weight.loc[valid] += weight
+
+    relative_score = (weighted_sum / available_weight).where(available_weight > 0, 50.0)
+    has_any_fundamental = components.notna().any(axis=1)
+    valid_counts = has_any_fundamental.groupby(work["sector"]).transform("sum").fillna(0)
+    confidence = (valid_counts / 10).clip(upper=1.0)
+    return (50 + (relative_score - 50) * confidence).fillna(50).round(2)
+
+
+def _score_momentum(row: pd.Series) -> float:
     parts: list[float] = []
     vol = row.get("volume_ratio")
     if pd.notna(vol):
@@ -295,17 +373,65 @@ def _theme_scores(frame: pd.DataFrame) -> pd.Series:
     if frame.empty or "sector" not in frame.columns:
         return pd.Series(50.0, index=frame.index)
     work = frame.copy()
-    work["trend_score"] = pd.to_numeric(work.get("trend_score", pd.Series(dtype=float)), errors="coerce")
-    work["change_pct"] = pd.to_numeric(work.get("change_pct", pd.Series(dtype=float)), errors="coerce")
+
+    def numeric_col(column: str) -> pd.Series:
+        if column not in work.columns:
+            return pd.Series(float("nan"), index=work.index, dtype="float64")
+        return pd.to_numeric(work[column], errors="coerce")
+
+    work["trend_score"] = numeric_col("trend_score")
+    work["return_5d"] = numeric_col("return_5d")
+    work["return_20d"] = numeric_col("return_20d")
+    work["volume_ratio"] = numeric_col("volume_ratio")
+    work["diff_20"] = numeric_col("diff_20")
+    work["above_ma20"] = (work["diff_20"] > 0).where(work["diff_20"].notna(), pd.NA)
+    if "breakout_20d" in work.columns:
+        work["breakout_20d_num"] = work["breakout_20d"].apply(
+            lambda value: 1.0 if _is_true(value) else 0.0 if pd.notna(value) else pd.NA
+        )
+    else:
+        work["breakout_20d_num"] = pd.Series(float("nan"), index=work.index, dtype="float64")
+
     grouped = (
         work.dropna(subset=["sector"])
         .groupby("sector")
-        .agg(avg_trend=("trend_score", "mean"), avg_change=("change_pct", "mean"))
+        .agg(
+            sector_count=("sector", "size"),
+            avg_return_5d=("return_5d", "mean"),
+            avg_return_20d=("return_20d", "mean"),
+            avg_volume_ratio=("volume_ratio", "mean"),
+            above_ma20_ratio=("above_ma20", "mean"),
+            breakout_ratio=("breakout_20d_num", "mean"),
+            avg_trend=("trend_score", "mean"),
+        )
     )
     if grouped.empty:
         return pd.Series(50.0, index=frame.index)
-    grouped["theme_score"] = (50 + (grouped["avg_trend"].fillna(2.5) - 2.5) * 12 + grouped["avg_change"].fillna(0) * 7).clip(0, 100)
-    return work["sector"].map(grouped["theme_score"]).fillna(50).round(2)
+
+    market_return_5d = work["return_5d"].mean()
+    market_return_20d = work["return_20d"].mean()
+    rel_return_5d = grouped["avg_return_5d"] - (0.0 if pd.isna(market_return_5d) else market_return_5d)
+    rel_return_20d = grouped["avg_return_20d"] - (0.0 if pd.isna(market_return_20d) else market_return_20d)
+
+    return_5d_score = (50 + rel_return_5d.fillna(0) * 4.0).clip(0, 100)
+    return_20d_score = (50 + rel_return_20d.fillna(0) * 2.5).clip(0, 100)
+    above_ma20_score = (grouped["above_ma20_ratio"] * 100).where(grouped["above_ma20_ratio"].notna(), 50).clip(0, 100)
+    volume_score = (50 + (grouped["avg_volume_ratio"].fillna(1.0) - 1.0) * 35).clip(0, 100)
+    breakout_score = (45 + grouped["breakout_ratio"] * 125).where(grouped["breakout_ratio"].notna(), 50).clip(0, 100)
+    trend_score = (grouped["avg_trend"].fillna(2.5) * 20).clip(0, 100)
+
+    raw_theme = (
+        return_20d_score * 0.25
+        + return_5d_score * 0.20
+        + above_ma20_score * 0.20
+        + volume_score * 0.15
+        + breakout_score * 0.15
+        + trend_score * 0.05
+    )
+    confidence = (grouped["sector_count"] / 10).clip(upper=1.0)
+    grouped["theme_score"] = (50 + (raw_theme - 50) * confidence).clip(0, 100)
+    mapped = pd.to_numeric(work["sector"].map(grouped["theme_score"]), errors="coerce")
+    return mapped.fillna(50).round(2)
 
 
 def add_scores(frame: pd.DataFrame, settings: ScanSettings = _DEFAULT_SETTINGS) -> pd.DataFrame:
@@ -314,9 +440,13 @@ def add_scores(frame: pd.DataFrame, settings: ScanSettings = _DEFAULT_SETTINGS) 
     scored = frame.copy()
     scored["chart_score"] = scored.apply(_score_chart, axis=1, settings=settings)
     scored["technical_score"] = scored.apply(_score_technical, axis=1)
-    scored["fundamental_score"] = scored.apply(_score_fundamental, axis=1)
+    absolute_fundamental = scored.apply(_score_fundamental, axis=1)
+    relative_fundamental = _sector_relative_fundamental_scores(scored)
+    scored["fundamental_score"] = (absolute_fundamental * 0.55 + relative_fundamental * 0.45).round(2)
     scored["theme_score"] = _theme_scores(scored)
-    scored["flow_score"] = scored.apply(_score_flow, axis=1)
+    momentum_score = scored.apply(_score_momentum, axis=1)
+    scored["momentum_score"] = momentum_score
+    scored["flow_score"] = momentum_score
     scored["composite_score"] = (
         scored["chart_score"] * 0.30
         + scored["technical_score"] * 0.25
@@ -329,17 +459,59 @@ def add_scores(frame: pd.DataFrame, settings: ScanSettings = _DEFAULT_SETTINGS) 
 
 # ── run ───────────────────────────────────────────────────────────────────────
 
+def _latest_indicator_date(
+    conn: Any,
+    market_key: str,
+    universe_key: str | None = None,
+) -> date | None:
+    base_market = home_market_key(market_key)
+    params: list[Any] = [base_market]
+    universe_filter = ""
+    if universe_key:
+        universe_filter = """
+        JOIN universe_memberships um
+            ON um.instrument_id = i.instrument_id
+            AND um.universe_key = %s
+            AND um.effective_to IS NULL
+        """
+        params = [universe_key, base_market]
+
+    row = conn.execute(
+        f"""
+        SELECT MAX(di.trade_date)
+        FROM daily_indicators di
+        JOIN instruments i ON i.instrument_id = di.instrument_id
+        {universe_filter}
+        WHERE i.market_key = %s
+          AND i.is_active = TRUE
+        """,
+        params,
+    ).fetchone()
+    return row[0] if row and row[0] else None
+
 def run_screen(
     market_key: str,
     date_str: str | None = None,
     universe_key: str | None = None,
     explicit_url: str | None = None,
 ) -> pd.DataFrame:
-    trade_date = date.today() if not date_str else datetime.strptime(date_str, "%Y%m%d").date()
     effective_universe = universe_key or market_key
     source_provider = price_source_for_market(market_key)
 
     with connect(explicit_url) as conn:
+        if date_str:
+            trade_date = datetime.strptime(date_str, "%Y%m%d").date()
+        else:
+            latest_date = _latest_indicator_date(conn, market_key, universe_key)
+            if latest_date is None:
+                print(
+                    f"  screener [{market_key}/{effective_universe}]: no indicator data. "
+                    "Run 'prices fetch' and 'indicators compute' first."
+                )
+                return pd.DataFrame()
+            trade_date = latest_date
+            print(f"  screener [{market_key}/{effective_universe}]: using latest indicator date {trade_date}")
+
         frame = _load_screen_frame(conn, market_key, trade_date, universe_key)
         if frame.empty:
             print(

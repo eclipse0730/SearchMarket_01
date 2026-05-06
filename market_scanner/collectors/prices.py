@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import re
 import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from contextlib import redirect_stderr, redirect_stdout
@@ -19,11 +20,13 @@ from market_scanner.storage.db import (
     upsert_daily_price,
 )
 from market_scanner.config.markets import MARKETS
+from market_scanner.progress import progress_bar
 
 _DEFAULT_HISTORY_YEARS = 1
 _DEFAULT_FETCH_WORKERS = 8
 _FDR_RETRY = 2
 _YF_RETRY = 1
+_REQUEST_TIMEOUT = 5
 
 
 # ── OHLCV 정규화 ──────────────────────────────────────────────────────────────
@@ -57,6 +60,9 @@ def _fdr_symbol(symbol: str, market_key: str) -> str:
 
 
 def _fetch_fdr(symbol: str, market_key: str, start: str, end: str) -> pd.DataFrame:
+    if _is_korea(market_key):
+        return _fetch_naver_daily(symbol, start, end)
+
     try:
         import FinanceDataReader as fdr
     except ImportError:
@@ -78,6 +84,39 @@ def _fetch_fdr(symbol: str, market_key: str, start: str, end: str) -> pd.DataFra
     return pd.DataFrame()
 
 
+def _fetch_naver_daily(symbol: str, start: str, end: str) -> pd.DataFrame:
+    try:
+        import requests
+    except ImportError:
+        return pd.DataFrame()
+
+    code = _korea_code(symbol)
+    url = "https://fchart.stock.naver.com/sise.nhn"
+    params = {
+        "timeframe": "day",
+        "count": "6000",
+        "requestType": "0",
+        "symbol": code,
+    }
+    for attempt in range(_FDR_RETRY):
+        if attempt:
+            time.sleep(1)
+        try:
+            response = requests.get(url, params=params, timeout=_REQUEST_TIMEOUT)
+            response.raise_for_status()
+            data_list = re.findall(r'<item data="(.*?)" />', response.text, re.DOTALL)
+            if not data_list:
+                return pd.DataFrame()
+            frame = pd.read_csv(io.StringIO("\n".join(data_list)), delimiter="|", header=None)
+            frame.columns = ["Date", "Open", "High", "Low", "Close", "Volume"]
+            frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
+            frame = frame.set_index("Date").sort_index()
+            return _normalize_ohlcv(frame.loc[start:end])
+        except Exception:
+            continue
+    return pd.DataFrame()
+
+
 # ── yfinance fetch ────────────────────────────────────────────────────────────
 
 def _fetch_yfinance(symbol: str, start: str, end: str) -> pd.DataFrame:
@@ -91,7 +130,12 @@ def _fetch_yfinance(symbol: str, start: str, end: str) -> pd.DataFrame:
             time.sleep(attempt * 2)
         try:
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-                hist = yf.Ticker(symbol).history(start=start, end=end, auto_adjust=True)
+                hist = yf.Ticker(symbol).history(
+                    start=start,
+                    end=end,
+                    auto_adjust=True,
+                    timeout=_REQUEST_TIMEOUT,
+                )
             normalized = _normalize_ohlcv(hist)
             if not normalized.empty:
                 return normalized
@@ -107,7 +151,7 @@ def _is_korea(market_key: str) -> bool:
 
 
 def _uses_fdr_primary(market_key: str) -> bool:
-    return home_market_key(market_key) in {"kospi", "kosdaq", "us"}
+    return home_market_key(market_key) in {"kospi", "kosdaq"}
 
 
 def fetch_ohlcv(symbol: str, market_key: str, start: str, end: str) -> tuple[pd.DataFrame, str]:
@@ -327,13 +371,6 @@ def _fetch_task(instr: dict[str, Any], market_key: str, start: str, end: str) ->
     }
 
 
-def _progress_bar(completed: int, total: int, width: int = 24) -> str:
-    if total <= 0:
-        return "-" * width
-    filled = min(width, int(width * completed / total))
-    return "#" * filled + "-" * (width - filled)
-
-
 # ── fetch (증분) ──────────────────────────────────────────────────────────────
 
 def run_fetch(
@@ -369,7 +406,23 @@ def run_fetch(
         )
 
         success, failed = 0, 0
+        submitted = 0
         error_samples: list[Any] = []
+        progress_interval = max(1, len(instruments) // 100)
+
+        def print_progress(force: bool = False) -> None:
+            processed = success + failed
+            if not force and processed % progress_interval != 0:
+                return
+            pct = processed / len(instruments) * 100
+            bar = progress_bar(processed, len(instruments))
+            print(
+                f"\r    [{bar}] {processed}/{len(instruments)} "
+                f"{pct:5.1f}% queued={submitted} "
+                f"active={submitted - processed} success={success} failed={failed} skipped={skipped}",
+                end="",
+                flush=True,
+            )
 
         tasks: list[tuple[dict[str, Any], str]] = []
         for instr in instruments:
@@ -389,36 +442,64 @@ def run_fetch(
             source = result["source"]
             if frame.empty:
                 failed += 1
-                print(f"    failed {symbol}: no price data ({start} -> {end})")
+                print(f"\n    failed {symbol}: no price data ({start} -> {end})")
                 if len(error_samples) < 30:
                     error_samples.append({"symbol": symbol, "reason": "fetch_failed", "start": start})
+                print_progress(force=True)
                 return
 
             _upsert_ohlcv_frame(conn, instrument_id, frame, source, run_id, instr_currency)
             success += 1
-            if success % 100 == 0:
-                print(f"    {success}/{len(instruments)} ...")
+            print_progress()
 
+        print_progress(force=True)
         if worker_count == 1:
             for instr, start in tasks:
+                submitted += 1
+                print_progress(force=True)
                 handle_result(_fetch_task(instr, market_key, start, end))
         else:
+            task_iter = iter(tasks)
             with ThreadPoolExecutor(max_workers=worker_count) as executor:
-                futures = {
-                    executor.submit(_fetch_task, instr, market_key, start, end): (instr, start)
-                    for instr, start in tasks
-                }
-                for future in as_completed(futures):
-                    try:
-                        handle_result(future.result())
-                    except Exception as exc:
-                        instr, start = futures[future]
-                        symbol = instr["symbol"]
-                        failed += 1
-                        print(f"    failed {symbol}: {type(exc).__name__} ({start} -> {end})")
-                        if len(error_samples) < 30:
-                            error_samples.append({"symbol": symbol, "reason": type(exc).__name__, "start": start})
+                pending: dict[Any, tuple[dict[str, Any], str]] = {}
 
+                def submit_next() -> bool:
+                    nonlocal submitted
+                    try:
+                        instr, start = next(task_iter)
+                    except StopIteration:
+                        return False
+                    future = executor.submit(_fetch_task, instr, market_key, start, end)
+                    pending[future] = (instr, start)
+                    submitted += 1
+                    return True
+
+                for _ in range(worker_count):
+                    if not submit_next():
+                        break
+                print_progress(force=True)
+
+                while pending:
+                    done, _ = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
+                    if not done:
+                        print_progress(force=True)
+                        continue
+                    for future in done:
+                        instr, start = pending.pop(future)
+                        try:
+                            handle_result(future.result())
+                        except Exception as exc:
+                            symbol = instr["symbol"]
+                            failed += 1
+                            print(f"\n    failed {symbol}: {type(exc).__name__} ({start} -> {end})")
+                            if len(error_samples) < 30:
+                                error_samples.append({"symbol": symbol, "reason": type(exc).__name__, "start": start})
+                            print_progress(force=True)
+                        submit_next()
+                        print_progress(force=True)
+
+        print_progress(force=True)
+        print()
         status = "success" if not failed else ("partial" if success else "failed")
         _finish_prices_run(conn, run_id, status, success, failed, skipped, error_samples)
         print(
@@ -479,7 +560,7 @@ def run_backfill(
             if not force and processed % progress_interval != 0:
                 return
             pct = processed / len(instruments) * 100
-            bar = _progress_bar(processed, len(instruments))
+            bar = progress_bar(processed, len(instruments))
             print(
                 f"\r    [{bar}] {processed}/{len(instruments)} "
                 f"{pct:5.1f}% queued={submitted} "

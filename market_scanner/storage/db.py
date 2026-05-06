@@ -13,6 +13,7 @@ from psycopg.types.json import Jsonb
 
 from market_scanner.config.markets import MARKETS, REPRESENTATIVE_UNIVERSE_LOADERS
 from market_scanner.models import MarketDefinition
+from market_scanner.progress import progress_bar
 
 
 DEFAULT_DATABASE_URL = "postgresql://searchmarket:searchmarket@localhost:5433/searchmarket"
@@ -804,6 +805,21 @@ def _refresh_universe_membership(
 
     instrument_upserted = 0
     membership_upserted = 0
+    progress_interval = max(1, len(symbols) // 100)
+
+    def print_progress(force: bool = False) -> None:
+        if not force and instrument_upserted % progress_interval != 0:
+            return
+        pct = instrument_upserted / len(symbols) * 100
+        bar = progress_bar(instrument_upserted, len(symbols))
+        print(
+            f"\r    [{bar}] {instrument_upserted}/{len(symbols)} "
+            f"{pct:5.1f}% instruments={instrument_upserted} memberships={membership_upserted}",
+            end="",
+            flush=True,
+        )
+
+    print_progress(force=True)
     for rank_no, symbol in enumerate(symbols, start=1):
         instrument_id = upsert_instrument(
             conn,
@@ -824,6 +840,10 @@ def _refresh_universe_membership(
                 source_provider="market_scanner",
             )
             membership_upserted += 1
+        print_progress()
+
+    print_progress(force=True)
+    print()
 
     summary = {
         **_refresh_log_params(
@@ -1124,7 +1144,7 @@ def upsert_fundamentals(
             return_on_equity_pct, revenue_growth_pct, market_cap, target_price,
             shares_outstanding, raw_payload, run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (instrument_id, as_of_date, source_provider) DO UPDATE SET
             trailing_pe = EXCLUDED.trailing_pe,
             price_to_book = EXCLUDED.price_to_book,
@@ -1132,6 +1152,7 @@ def upsert_fundamentals(
             revenue_growth_pct = EXCLUDED.revenue_growth_pct,
             market_cap = EXCLUDED.market_cap,
             target_price = EXCLUDED.target_price,
+            shares_outstanding = EXCLUDED.shares_outstanding,
             raw_payload = EXCLUDED.raw_payload,
             run_id = EXCLUDED.run_id,
             collected_at = now()
@@ -1146,10 +1167,20 @@ def upsert_fundamentals(
             _clean_number(row.get("revenue_growth")),
             _clean_number(row.get("market_cap")),
             _clean_number(row.get("target_price")),
+            _clean_number(row.get("shares_outstanding")),
             Jsonb(
                 _row_payload(
                     row,
-                    ["trailing_pe", "price_to_book", "return_on_equity", "revenue_growth", "market_cap", "target_price"],
+                    [
+                        "trailing_pe",
+                        "price_to_book",
+                        "return_on_equity",
+                        "revenue_growth",
+                        "market_cap",
+                        "target_price",
+                        "shares_outstanding",
+                        "raw_sources",
+                    ],
                 )
             ),
             run_id,

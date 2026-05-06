@@ -108,7 +108,15 @@ def _load_render_frame(
                    market_cap, target_price
             FROM instrument_fundamentals
             WHERE instrument_id = sr.instrument_id
-            ORDER BY as_of_date DESC
+            ORDER BY
+                as_of_date DESC,
+                CASE source_provider
+                    WHEN 'naver' THEN 1
+                    WHEN 'yahoo' THEN 2
+                    WHEN 'yfinance' THEN 3
+                    WHEN 'fdr' THEN 4
+                    ELSE 5
+                END
             LIMIT 1
         ) f ON TRUE
         WHERE sr.universe_key = %s AND sr.trade_date = %s

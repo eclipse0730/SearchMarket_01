@@ -327,6 +327,7 @@ def _interactive_table_data(frame: pd.DataFrame, market: MarketDefinition, setti
             "fundamentalScore": _safe_number(row.get("fundamental_score"), 1),
             "themeScore": _safe_number(row.get("theme_score"), 1),
             "flowScore": _safe_number(row.get("flow_score"), 1),
+            "momentumScore": _safe_number(row.get("momentum_score", row.get("flow_score")), 1),
             "macdState": row.get("macd_state") or "",
             "bollingerWidth": _safe_number(row.get("bollinger_width_pct"), 2),
             "bollingerPercentB": _safe_number(row.get("bollinger_percent_b"), 3),
