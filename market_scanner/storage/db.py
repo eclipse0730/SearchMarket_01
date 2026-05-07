@@ -13,7 +13,7 @@ from psycopg.types.json import Jsonb
 
 from market_scanner.config.markets import MARKETS, REPRESENTATIVE_UNIVERSE_LOADERS
 from market_scanner.models import MarketDefinition
-from market_scanner.progress import progress_bar
+from market_scanner.progress import progress_line
 
 
 DEFAULT_DATABASE_URL = "postgresql://searchmarket:searchmarket@localhost:5433/searchmarket"
@@ -810,11 +810,13 @@ def _refresh_universe_membership(
     def print_progress(force: bool = False) -> None:
         if not force and instrument_upserted % progress_interval != 0:
             return
-        pct = instrument_upserted / len(symbols) * 100
-        bar = progress_bar(instrument_upserted, len(symbols))
         print(
-            f"\r    [{bar}] {instrument_upserted}/{len(symbols)} "
-            f"{pct:5.1f}% instruments={instrument_upserted} memberships={membership_upserted}",
+            progress_line(
+                instrument_upserted,
+                len(symbols),
+                instruments=instrument_upserted,
+                memberships=membership_upserted,
+            ),
             end="",
             flush=True,
         )

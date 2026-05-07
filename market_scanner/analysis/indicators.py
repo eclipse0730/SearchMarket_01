@@ -6,7 +6,7 @@ from typing import Any
 
 import pandas as pd
 
-from market_scanner.progress import progress_bar
+from market_scanner.progress import progress_line
 
 
 TREND_LABELS = {
@@ -513,11 +513,14 @@ def run_compute(
             processed = success + failed + skipped
             if not force and processed < len(instruments):
                 return
-            pct = processed / len(instruments) * 100
-            bar = progress_bar(processed, len(instruments))
             print(
-                f"\r    [{bar}] {processed}/{len(instruments)} "
-                f"{pct:5.1f}% success={success} failed={failed} skipped={skipped}",
+                progress_line(
+                    processed,
+                    len(instruments),
+                    success=success,
+                    failed=failed,
+                    skipped=skipped,
+                ),
                 end="",
                 flush=True,
             )

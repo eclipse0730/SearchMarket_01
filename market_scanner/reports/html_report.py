@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from html import escape
 import json
 from pathlib import Path
@@ -9,9 +9,9 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import yfinance as yf
 
-from market_scanner.collectors.news import NEWS_CACHE_PATH
 from market_scanner.models import MarketDefinition, ScanSettings
 from market_scanner.reports._common import _safe_number, enrich_metadata_frame
+from market_scanner.storage.db import connect
 
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
@@ -228,51 +228,62 @@ def _news_briefing_data(frame: pd.DataFrame, market: MarketDefinition, date_str:
     base = {
         "available": False,
         "title": "뉴스 브리핑",
-        "subtitle": "US 밤새 뉴스 수집은 가능하지만, 현재는 뉴스 캐시가 없어서 표시할 항목이 없습니다.",
-        "note": "권장 구조: 별도 news 수집 단계에서 yfinance news/RSS/뉴스 API 결과를 캐시하고, 리포트는 캐시만 읽습니다.",
+        "subtitle": "DB에 저장된 뉴스가 없어서 표시할 항목이 없습니다.",
+        "note": "뉴스는 별도 news 수집 단계가 저장한 news_items/instrument_news 테이블에서 읽습니다.",
         "items": [],
     }
-    if not NEWS_CACHE_PATH.exists():
+
+    symbols = sorted(set(frame.get("symbol", pd.Series(dtype=str)).dropna().astype(str).tolist()))
+    if not symbols:
         return base
+
     try:
-        payload = json.loads(NEWS_CACHE_PATH.read_text(encoding="utf-8"))
+        target_date = datetime.strptime(date_str, "%Y%m%d").date()
+    except Exception:
+        target_date = datetime.now(timezone.utc).date()
+    start_at = datetime.combine(target_date - timedelta(days=7), datetime.min.time(), tzinfo=timezone.utc)
+    end_at = datetime.combine(target_date + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
+
+    try:
+        with connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT i.symbol, ni.title, ni.publisher, ni.summary, ni.url,
+                       ni.source_provider, ni.published_at, inw.relevance_score
+                FROM instrument_news inw
+                JOIN instruments i ON i.instrument_id = inw.instrument_id
+                JOIN news_items ni ON ni.news_id = inw.news_id
+                WHERE i.symbol = ANY(%s)
+                  AND (ni.published_at IS NULL OR (ni.published_at >= %s AND ni.published_at < %s))
+                ORDER BY ni.published_at DESC NULLS LAST,
+                         inw.relevance_score DESC NULLS LAST,
+                         ni.collected_at DESC
+                LIMIT 80
+                """,
+                (symbols, start_at, end_at),
+            ).fetchall()
     except Exception:
         return base
 
-    raw_items: object = []
-    if isinstance(payload, dict):
-        dated = payload.get(date_str, payload)
-        if isinstance(dated, dict):
-            raw_items = dated.get(market.key)
-            if raw_items is None and market.key in {"nasdaq100", "sp500", "dow30"}:
-                raw_items = dated.get("us")
-            if raw_items is None:
-                raw_items = dated.get("items", [])
-        elif isinstance(dated, list):
-            raw_items = dated
-    elif isinstance(payload, list):
-        raw_items = payload
-
-    if not isinstance(raw_items, list):
+    if not rows:
         return base
 
-    symbols = set(frame.get("symbol", pd.Series(dtype=str)).astype(str).tolist())
-    items: list[dict[str, object]] = []
-    for item in raw_items:
-        if not isinstance(item, dict):
-            continue
-        ticker = str(item.get("ticker") or item.get("symbol") or "")
-        if ticker and symbols and ticker not in symbols:
-            continue
+    items = []
+    for row in rows:
+        published_at = row[6]
+        if hasattr(published_at, "astimezone"):
+            published_at = published_at.astimezone(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
+        else:
+            published_at = str(published_at or "")
         items.append(
             {
-                "ticker": ticker,
-                "title": str(item.get("title") or ""),
-                "publisher": str(item.get("publisher") or item.get("source") or ""),
-                "summary": str(item.get("summary") or item.get("text") or ""),
-                "url": str(item.get("url") or item.get("link") or ""),
-                "sentiment": str(item.get("sentiment") or "neutral"),
-                "publishedAt": str(item.get("publishedAt") or item.get("published_at") or ""),
+                "ticker": str(row[0] or ""),
+                "title": str(row[1] or ""),
+                "publisher": str(row[2] or row[5] or ""),
+                "summary": str(row[3] or ""),
+                "url": str(row[4] or ""),
+                "sentiment": "neutral",
+                "publishedAt": published_at,
             }
         )
 
@@ -281,8 +292,8 @@ def _news_briefing_data(frame: pd.DataFrame, market: MarketDefinition, date_str:
     return {
         "available": True,
         "title": "뉴스 브리핑",
-        "subtitle": f"{date_str} 기준 캐시된 뉴스 {len(items)}건",
-        "note": "뉴스는 캐시 파일 기반으로 표시됩니다. 실시간 요청은 렌더링 안정성을 위해 피합니다.",
+        "subtitle": f"{date_str} 기준 DB 저장 뉴스 {len(items)}건",
+        "note": "뉴스는 news 수집 단계가 저장한 DB 데이터를 표시합니다. 실시간 요청은 렌더링 안정성을 위해 피합니다.",
         "items": items[:80],
     }
 

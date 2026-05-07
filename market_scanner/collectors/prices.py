@@ -20,7 +20,7 @@ from market_scanner.storage.db import (
     upsert_daily_price,
 )
 from market_scanner.config.markets import MARKETS
-from market_scanner.progress import progress_bar
+from market_scanner.progress import progress_line
 
 _DEFAULT_HISTORY_YEARS = 1
 _DEFAULT_FETCH_WORKERS = 8
@@ -392,6 +392,12 @@ def run_fetch(
         if limit:
             instruments = instruments[:limit]
         if not instruments:
+            if active_count == 0:
+                print(
+                    f"  prices fetch [{market_key}]: no active instruments found. "
+                    "Run refresh-master for this market first."
+                )
+                return
             print(f"  prices fetch [{market_key}]: all active instruments already have prices through {target_date.isoformat()}")
             return
 
@@ -414,12 +420,16 @@ def run_fetch(
             processed = success + failed
             if not force and processed % progress_interval != 0:
                 return
-            pct = processed / len(instruments) * 100
-            bar = progress_bar(processed, len(instruments))
             print(
-                f"\r    [{bar}] {processed}/{len(instruments)} "
-                f"{pct:5.1f}% queued={submitted} "
-                f"active={submitted - processed} success={success} failed={failed} skipped={skipped}",
+                progress_line(
+                    processed,
+                    len(instruments),
+                    queued=submitted,
+                    active=submitted - processed,
+                    success=success,
+                    failed=failed,
+                    skipped=skipped,
+                ),
                 end="",
                 flush=True,
             )
@@ -442,7 +452,6 @@ def run_fetch(
             source = result["source"]
             if frame.empty:
                 failed += 1
-                print(f"\n    failed {symbol}: no price data ({start} -> {end})")
                 if len(error_samples) < 30:
                     error_samples.append({"symbol": symbol, "reason": "fetch_failed", "start": start})
                 print_progress(force=True)
@@ -491,7 +500,6 @@ def run_fetch(
                         except Exception as exc:
                             symbol = instr["symbol"]
                             failed += 1
-                            print(f"\n    failed {symbol}: {type(exc).__name__} ({start} -> {end})")
                             if len(error_samples) < 30:
                                 error_samples.append({"symbol": symbol, "reason": type(exc).__name__, "start": start})
                             print_progress(force=True)
@@ -506,6 +514,9 @@ def run_fetch(
             f"  prices fetch [{market_key}] done: "
             f"success={success} failed={failed} skipped={skipped} status={status}"
         )
+        if error_samples:
+            sample_text = ", ".join(f"{sample['symbol']}:{sample['reason']}" for sample in error_samples[:5])
+            print(f"  failed samples: {sample_text}")
 
 
 # ── backfill ──────────────────────────────────────────────────────────────────
@@ -559,12 +570,15 @@ def run_backfill(
             processed = success + failed
             if not force and processed % progress_interval != 0:
                 return
-            pct = processed / len(instruments) * 100
-            bar = progress_bar(processed, len(instruments))
             print(
-                f"\r    [{bar}] {processed}/{len(instruments)} "
-                f"{pct:5.1f}% queued={submitted} "
-                f"active={submitted - processed} success={success} failed={failed}",
+                progress_line(
+                    processed,
+                    len(instruments),
+                    queued=submitted,
+                    active=submitted - processed,
+                    success=success,
+                    failed=failed,
+                ),
                 end="",
                 flush=True,
             )
@@ -581,7 +595,6 @@ def run_backfill(
 
             if frame.empty:
                 failed += 1
-                print(f"\n    failed {symbol}: no price data ({task_start} -> {end})")
                 if len(error_samples) < 30:
                     error_samples.append({"symbol": symbol, "reason": "fetch_failed", "start": task_start})
                 print_progress(force=True)
@@ -631,7 +644,6 @@ def run_backfill(
                         except Exception as exc:
                             symbol = instr["symbol"]
                             failed += 1
-                            print(f"\n    failed {symbol}: {type(exc).__name__} ({start} -> {end})")
                             if len(error_samples) < 30:
                                 error_samples.append({"symbol": symbol, "reason": type(exc).__name__, "start": start})
                             print_progress(force=True)
@@ -646,6 +658,9 @@ def run_backfill(
             f"  prices backfill [{market_key}] done: "
             f"success={success} failed={failed} status={status}"
         )
+        if error_samples:
+            sample_text = ", ".join(f"{sample['symbol']}:{sample['reason']}" for sample in error_samples[:5])
+            print(f"  failed samples: {sample_text}")
 
 
 # ── retry ─────────────────────────────────────────────────────────────────────

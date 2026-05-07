@@ -13,12 +13,12 @@ import pandas as pd
 from market_scanner.analysis.indicators import run_compute as compute_indicators
 from market_scanner.analysis.screener import run_screen
 from market_scanner.collectors.fundamentals import run_fetch as fetch_fundamentals
-from market_scanner.collectors.news import collect_news_cache
+from market_scanner.collectors.news import run_fetch as fetch_news
 from market_scanner.collectors.prices import run_fetch as fetch_prices
 from market_scanner.models import MarketDefinition, ScanSettings
-from market_scanner.reports.render import _load_render_frame, report_output_paths, run_build as build_reports
+from market_scanner.reports.render import report_output_paths, run_build as build_reports
 from market_scanner.reports.markdown_report import write_markdown
-from market_scanner.storage.db import connect, scan_symbols_for_scope
+from market_scanner.storage.db import scan_symbols_for_scope
 
 
 def run_scan_stage_with_settings(
@@ -96,18 +96,15 @@ def run_news_stage(
     max_symbols: int = 50,
     items_per_symbol: int = 3,
     max_workers: int = 4,
-) -> tuple[int, Path]:
-    from datetime import datetime
-
+    provider: str = "all",
+) -> int:
     universe_key = path_key if path_key and path_key != market_key else None
-    trade_date = datetime.strptime(date_str, "%Y%m%d").date()
-    with connect() as conn:
-        frame = _load_render_frame(conn, market_key, trade_date, universe_key)
-    return collect_news_cache(
-        frame,
+    return fetch_news(
         market_key,
         date_str,
+        universe_key,
         max_symbols=max_symbols,
         items_per_symbol=items_per_symbol,
-        max_workers=max_workers,
+        workers=max_workers,
+        provider=provider,
     )

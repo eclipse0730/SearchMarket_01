@@ -13,7 +13,7 @@ import pandas as pd
 from psycopg.types.json import Jsonb
 
 from market_scanner.config.markets import MARKETS
-from market_scanner.progress import progress_bar
+from market_scanner.progress import progress_line
 from market_scanner.storage.db import (
     connect,
     home_market_key,
@@ -582,12 +582,16 @@ def run_fetch(
             processed = success + failed + skipped
             if not force and processed < len(instruments):
                 return
-            pct = processed / len(instruments) * 100
-            bar = progress_bar(processed, len(instruments))
             print(
-                f"\r    [{bar}] {processed}/{len(instruments)} "
-                f"{pct:5.1f}% queued={submitted} "
-                f"active={submitted - processed} success={success} failed={failed} skipped={skipped}",
+                progress_line(
+                    processed,
+                    len(instruments),
+                    queued=submitted,
+                    active=submitted - processed,
+                    success=success,
+                    failed=failed,
+                    skipped=skipped,
+                ),
                 end="",
                 flush=True,
             )

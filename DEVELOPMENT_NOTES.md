@@ -1,6 +1,6 @@
 # Search60 Development Notes
 
-Last updated: 2026-05-06
+Last updated: 2026-05-07
 
 이 문서는 프로젝트를 함께 개발하면서 계속 갱신하는 개발/운영 노트입니다. 기능 개발 판단과 코드 구조 이해에 필요한 내용을 이 파일에 모읍니다.
 
@@ -21,7 +21,7 @@ Search60은 여러 시장의 종목/지수/ETF/원자재를 대상으로 5/20/60
 
 ## Main Entry Points
 
-- `Search.py`: CLI 진입점입니다. `--market`, `--universe`, `--stage`, `--date`, `--workers`, `--limit`, `--setup-scheduler` 옵션을 처리합니다.
+- `Search.py`: CLI 진입점입니다. `--market`, `--universe`, `--stage`, `--date`, `--workers`, `--limit`, `--news-provider`, `--setup-scheduler` 옵션을 처리합니다.
 - `AGENTS.md`: Codex가 프로젝트 작업 시 우선 참고하는 지침 문서입니다. 코드 변경 시 함께 갱신해야 하는 주요 문서 관계도를 포함합니다.
 - `docs/database_recommendation.md`: CSV에서 PostgreSQL로 전환하기 위한 권장 구조와 단계별 이전 계획입니다.
 - `docs/database_schema_v1.sql`: PostgreSQL 스키마 초안 DDL입니다.
@@ -42,12 +42,11 @@ Search60은 여러 시장의 종목/지수/ETF/원자재를 대상으로 5/20/60
 
 ## News Briefing Policy
 
-US 기준 밤새 뉴스 수집은 가능합니다. 다만 렌더링 중 종목별 실시간 뉴스 요청을 보내면 느려지고 실패 가능성이 커지므로, 별도 수집 단계에서 캐시를 만든 뒤 리포트는 캐시만 읽는 구조를 기본 방향으로 둡니다.
+US 기준 밤새 뉴스 수집은 가능합니다. 다만 렌더링 중 종목별 실시간 뉴스 요청을 보내면 느려지고 실패 가능성이 커지므로, 별도 수집 단계에서 DB에 저장한 뒤 리포트는 DB만 읽는 구조를 기본 방향으로 둡니다.
 
-- 캐시 위치: `market_scanner/assets/news_cache.json`
 - UI 위치: 상세페이지 상단 `종목 리스트`, `분석 리포트` 옆 `뉴스 브리핑` 탭
-- 현재 동작: `Search.py --stage news`가 DB `scan_results`의 종합점수 상위 종목을 기준으로 yfinance 뉴스를 수집해 캐시를 만들고, 리포트는 캐시가 있으면 뉴스 항목을 표시합니다. 캐시가 없으면 수집 필요 안내를 표시합니다.
-- 후보 데이터 소스: yfinance `Ticker.news`, Yahoo Finance RSS/검색, 유료 뉴스 API. 안정성과 사용 제한을 고려해 수집 단계를 분리하는 것이 안전합니다.
+- 현재 동작: `Search.py --stage news` 또는 `python -m market_scanner.collectors.news fetch`가 DB `scan_results`의 상위 종목을 기준으로 Finnhub company news와 RSS ticker feed를 수집해 `news_items`, `instrument_news`에 저장합니다. `news_items.source_provider`로 `finnhub`, `rss`, 또는 중복 URL의 `finnhub+rss`를 구분합니다.
+- Finnhub 사용 시 `FINNHUB_API_KEY`가 필요합니다. RSS는 기본 Yahoo Finance ticker RSS를 사용하며, `NEWS_RSS_FEED_URLS` 환경변수에 세미콜론 구분 URL 템플릿을 지정할 수 있습니다.
 
 ## Pipeline Flow
 
@@ -69,7 +68,7 @@ uv run python -m market_scanner.storage.db init
 5. 결과 도출: `uv run python -m market_scanner.reports.render build --market us`
    DB의 `scan_results`를 기반으로 Markdown/HTML 리포트를 렌더링하고 `generated_reports`에 산출물 메타데이터를 기록합니다.
 
-뉴스 단계는 기본 5단계에 포함하지 않습니다. 현재는 `Search.py --stage news`가 DB `scan_results`의 종합점수 상위 종목에서 yfinance 뉴스 항목을 수집해 `market_scanner/assets/news_cache.json`에 날짜/시장별로 저장합니다.
+뉴스 단계는 기본 5단계에 포함하지 않습니다. 현재는 `Search.py --stage news`가 DB `scan_results`의 종합점수 상위 종목에서 Finnhub와 RSS 뉴스 항목을 수집해 `news_items`, `instrument_news`에 저장합니다.
 
 `Search.py` 단축 실행:
 
@@ -79,7 +78,7 @@ uv run python Search.py --market kospi --stage scan
 uv run python Search.py --market us --universe sp500 --stage render
 ```
 
-진행률 표시는 `market_scanner.progress.progress_bar`를 공통으로 사용합니다. 기본 폭은 20칸이며 완료 구간은 `■`, 남은 구간은 `□`로 표시합니다. `refresh-master`, `prices fetch`, `prices backfill`, `indicators compute`, `fundamentals fetch`는 같은 형식의 진행 바를 사용합니다. `prices fetch`의 병렬 경로는 worker 수만큼만 pending 작업을 유지하고, 완료가 없을 때도 1초마다 queued/active 상태를 다시 출력합니다.
+진행률 표시는 `market_scanner.progress.progress_line()`을 공통으로 사용합니다. 기본 폭은 20칸이며 완료 구간은 `■`, 남은 구간은 `□`로 표시합니다. `refresh-master`, `prices fetch`, `prices backfill`, `indicators compute`, `fundamentals fetch`, `news fetch`는 같은 형식의 진행 라인을 사용합니다. 병렬 경로는 worker 수만큼만 pending 작업을 유지하고, 완료가 없을 때도 1초마다 queued/active 상태를 다시 출력합니다.
 
 `fundamentals fetch`는 `--source auto` 기준으로 US는 Yahoo Finance, KOSPI/KOSDAQ은 Naver Finance -> FinanceDataReader -> Yahoo Finance 순서로 값을 채웁니다. `--source yahoo/naver/fdr`로 특정 소스만 테스트할 수 있습니다. 요청은 병렬화하고 DB upsert는 메인 스레드에서 수행합니다. `--workers` 기본값은 2이며 US/Yahoo 경로는 최대 4, 한국 Naver/FDR 경로는 최대 8로 제한합니다. Ctrl+C가 들어오면 새 작업 제출을 멈추고 실행 로그를 `cancelled`로 마감합니다.
 
@@ -180,7 +179,7 @@ uv run python Search.py --help
 네트워크 의존성이 있는 명령:
 
 - `scan` 단계는 yfinance, Wikipedia, FinanceDataReader, Naver Finance, Investing 검색 요청을 사용할 수 있습니다. KOSPI/KOSDAQ OHLCV는 timeout이 적용된 Naver 일봉 조회를 우선 사용하고 실패 시 yfinance로 fallback합니다. US OHLCV는 Yahoo 계열 가격 조회를 사용합니다.
-- `news` 단계는 yfinance `Ticker.news` 요청을 사용하며, `--news-symbols`, `--news-items`, `--news-workers`로 수집 범위를 조절합니다.
+- `news` 단계는 US 시장에서 Finnhub company news와 RSS ticker feed를 사용하며, `--news-symbols`, `--news-items`, `--news-workers`로 수집 범위를 조절합니다. Finnhub는 `FINNHUB_API_KEY`가 없으면 실패 샘플에 기록되고, RSS는 기본 Yahoo Finance ticker RSS 또는 `NEWS_RSS_FEED_URLS` 템플릿을 사용합니다.
 - 로컬 sandbox나 네트워크 상태에 따라 재현성이 달라질 수 있습니다.
 
 ## Market Membership Caches
@@ -267,7 +266,7 @@ KOSPI/KOSDAQ은 FDR `StockListing("KOSPI"|"KOSDAQ")`를 사용하며, 실패 시
 - 섹터별 상승률 Heatmap: 전일 종가 대비 `change_pct`를 섹터별로 동일가중 평균해 색상/정렬 기준으로 사용합니다. 타일에는 중앙값, 상승 종목 비율, 종목 수를 함께 표시해 평균이 일부 극단값에 흔들렸는지 확인할 수 있게 합니다.
 - 종목 리스트 컬럼 정리: MA60/120/240 차이율 컬럼은 화면에서 숨기되, Setup Buckets와 MA Distance Scatter 계산을 위해 JSON DATA에는 유지합니다.
 - 공포지수 안정화: VIX는 실시간 yfinance 조회를 우선 사용하고, 글로벌 지수 스캔에 `^VIX`를 포함해 향후 CSV fallback으로도 값을 표시할 수 있게 했습니다.
-- 뉴스 브리핑: 상단 탭을 추가했습니다. 현재는 캐시 기반 표시 구조이며, 실제 밤새 뉴스 수집은 별도 `news` 단계 또는 workflow로 분리하는 방향이 안전합니다.
+- 뉴스 브리핑: 상단 탭을 추가했습니다. 현재는 DB 기반 표시 구조이며, 실제 밤새 뉴스 수집은 별도 `news` 단계 또는 workflow로 분리하는 방향이 안전합니다.
 - 상세 페이지 해석 패널: MA Distance는 현재가와 가장 가까운 MA(60/120/240)의 이격률, RSI는 과열·과매도 온도 지표로 표시합니다.
 - 분석 리포트: 기존 MA 근접 중심 리포트에서 시장 총평, 핵심 후보, 상승추세 눌림, 과매도 반등, 복수 MA 수렴, 가격 흐름·업사이드, MACD 개선, 캔들 신호, 섹터, 리스크 점검 구조로 개편했습니다.
 - 상세 페이지 종목 리스트: 기본 정렬은 종목명/티커순이 아니라 당일 상승률(`change_pct`) 내림차순입니다.

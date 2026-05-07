@@ -105,7 +105,7 @@ screener와 render는 같은 기준일에 여러 소스 row가 있을 때 `naver
 
 ## 진행률
 
-진행률 표시는 공통 `market_scanner.progress.progress_bar`를 사용합니다.
+진행률 표시는 공통 `market_scanner.progress.progress_line()`을 사용합니다.
 
 ```text
 [■■■■□□□□□□□□□□□□□□] 120/500  24.0% queued=124 active=4 success=100 failed=10 skipped=10

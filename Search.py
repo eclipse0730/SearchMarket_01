@@ -70,7 +70,7 @@ def main() -> None:
         "--stage",
         choices=["scan", "analyze", "news", "render", "all"],
         default="all",
-        help="Pipeline stage to run (default: all). 'news' is an opt-in cache collection stage.",
+        help="Pipeline stage to run (default: all). 'news' is an opt-in DB collection stage.",
     )
     parser.add_argument(
         "--universe",
@@ -92,6 +92,12 @@ def main() -> None:
     parser.add_argument("--news-symbols", type=int, default=50, help="Max symbols for news collection (default: 50).")
     parser.add_argument("--news-items", type=int, default=3, help="Max news items per symbol (default: 3).")
     parser.add_argument("--news-workers", type=int, default=4, help="Parallel workers for news stage (default: 4).")
+    parser.add_argument(
+        "--news-provider",
+        choices=["all", "auto", "finnhub", "rss"],
+        default="all",
+        help="News provider for the news stage (default: all).",
+    )
     parser.add_argument(
         "--setup-scheduler",
         action="store_true",
@@ -136,18 +142,22 @@ def main() -> None:
         _, paths = run_analysis_stage(scan_market_key, date_str, frame, path_key=path_key)
         completed.append(str(paths["md"]))
 
-    # news: 외부 뉴스 요청이 느릴 수 있어 all에는 포함하지 않고 명시 실행할 때만 캐시를 갱신합니다.
+    # news: 외부 뉴스 요청이 느릴 수 있어 all에는 포함하지 않고 명시 실행할 때만 DB에 저장합니다.
     if args.stage == "news":
-        news_count, news_path = run_news_stage(
-            scan_market_key,
-            date_str,
-            path_key=path_key,
-            max_symbols=max(0, args.news_symbols),
-            items_per_symbol=max(1, args.news_items),
-            max_workers=max(1, args.news_workers),
-        )
-        print(f"  news cached: {news_count} items -> {news_path}")
-        completed.append(str(news_path))
+        try:
+            news_count = run_news_stage(
+                scan_market_key,
+                date_str,
+                path_key=path_key,
+                max_symbols=max(0, args.news_symbols),
+                items_per_symbol=max(1, args.news_items),
+                max_workers=max(1, args.news_workers),
+                provider=args.news_provider,
+            )
+        except ValueError as exc:
+            parser.error(str(exc))
+        print(f"  news stored: {news_count} items")
+        completed.append("news_items")
 
     # render: DB의 scan_results를 기준으로 Markdown과 HTML 리포트를 생성합니다.
     if run_all or args.stage == "render":

@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import io
 import json
-import os
 import re
 from contextlib import redirect_stdout
-from datetime import datetime, timezone
 from functools import lru_cache
 from html import unescape
 from pathlib import Path
@@ -89,10 +87,6 @@ _THEME_PROXY_SYMBOLS: frozenset[str] = frozenset({
     "ARKK", "ITA", "HACK", "MCHI", "GLD", "TLT",
 })
 
-_PROTECTED_INSTRUMENT_SOURCES = {"manual", "static"}
-_INSTRUMENT_META_FIELDS = ("name_en", "name_local", "sector", "description")
-
-
 def _database_url() -> str:
     from market_scanner.storage.db import database_url
     return database_url()
@@ -115,11 +109,6 @@ def _clean_instrument_value(value: object) -> str:
     if value is None:
         return ""
     return str(value).strip()
-
-
-def _is_placeholder_instrument_value(value: object) -> bool:
-    text = _clean_instrument_value(value)
-    return text.lower() in {"", "-", "nan", "none", "unknown", "no description", "n/a"}
 
 
 def has_hangul(value: object) -> bool:
@@ -250,68 +239,6 @@ def _instrument_meta_db_first(market_key: str, legacy_filename: str) -> dict[str
     if db_meta:
         return db_meta
     return _instrument_meta(market_key, legacy_filename)
-
-
-def _write_instruments_payload(payload: dict[str, dict[str, str]]) -> None:
-    _INSTRUMENTS_PATH.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    _load_instruments_payload.cache_clear()
-
-
-def upsert_instruments_from_frame(frame, market_key: str) -> bool:
-    if frame is None or getattr(frame, "empty", True) or "symbol" not in getattr(frame, "columns", []):
-        return False
-
-    payload = dict(_load_instruments_payload())
-    today = datetime.now(timezone.utc).date().isoformat()
-    changed = False
-
-    for _, row in frame.iterrows():
-        symbol = _clean_instrument_value(row.get("symbol"))
-        if not symbol:
-            continue
-
-        current = dict(payload.get(symbol, {}))
-        source = _clean_instrument_value(current.get("source")) or "csv"
-        protected = source in _PROTECTED_INSTRUMENT_SOURCES
-        record = _normalized_instrument_record(
-            symbol,
-            {
-                **current,
-                "market_key": current.get("market_key") or market_key,
-                "display_symbol": current.get("display_symbol") or row.get("display_symbol") or _default_display_symbol(symbol, market_key),
-                "source": source,
-            },
-        )
-
-        for field in _INSTRUMENT_META_FIELDS:
-            value = row.get(field)
-            if field == "name_local" and market_key in {"kospi", "kosdaq"} and not has_hangul(value):
-                value = row.get("display_symbol") or _default_display_symbol(symbol, market_key)
-            if _is_placeholder_instrument_value(value):
-                continue
-            if protected and not _is_placeholder_instrument_value(record.get(field)):
-                continue
-            cleaned = _clean_instrument_value(value)
-            if record.get(field) != cleaned:
-                record[field] = cleaned
-                changed = True
-
-        if not protected and record.get("source") != "csv":
-            record["source"] = "csv"
-            changed = True
-        if not protected and record.get("updated_at") != today:
-            record["updated_at"] = today
-            changed = True
-        if symbol not in payload:
-            changed = True
-        payload[symbol] = record
-
-    if changed:
-        _write_instruments_payload(payload)
-    return changed
 
 
 @lru_cache(maxsize=None)
@@ -921,11 +848,6 @@ def _quote_url_investing_detail(symbol: str) -> str:
     if resolved_url:
         return _localize_investing_url(resolved_url)
     return _quote_url_investing_search(symbol)
-
-
-def _quote_url_naver(symbol: str) -> str:
-    code = symbol.replace(".KS", "").replace(".KQ", "")
-    return f"https://finance.naver.com/item/main.naver?code={code}"
 
 
 def display_strip_kr(symbol: str) -> str:
