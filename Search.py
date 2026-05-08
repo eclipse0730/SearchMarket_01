@@ -15,7 +15,7 @@ from market_scanner.pipeline import (
     run_render_stage,
     run_scan_stage_with_settings,
 )
-from market_scanner.storage.db import home_market_key
+from market_scanner.storage.common import home_market_key
 
 def setup_scheduler(script_name: str, task_name: str, run_time: str = "08:05") -> None:
     script = os.path.abspath(script_name)

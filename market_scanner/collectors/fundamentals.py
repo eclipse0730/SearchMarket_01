@@ -14,11 +14,9 @@ from psycopg.types.json import Jsonb
 
 from market_scanner.config.markets import MARKETS
 from market_scanner.progress import progress_line
-from market_scanner.storage.db import (
-    connect,
-    home_market_key,
-    upsert_fundamentals,
-)
+from market_scanner.storage.common import home_market_key
+from market_scanner.storage.connection import connect
+from market_scanner.storage.fundamentals import upsert_fundamentals
 
 _YF_RETRY = 2
 _REQUEST_TIMEOUT = 5

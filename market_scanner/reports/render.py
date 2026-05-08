@@ -9,7 +9,8 @@ import pandas as pd
 
 from psycopg.types.json import Jsonb
 
-from market_scanner.storage.db import connect, home_market_key
+from market_scanner.storage.common import home_market_key
+from market_scanner.storage.connection import connect
 from market_scanner.config.markets import MARKETS
 from market_scanner.models import ScanSettings
 from market_scanner.reports.html_report import write_html

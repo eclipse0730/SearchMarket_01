@@ -18,7 +18,8 @@ from market_scanner.reports._common import enrich_metadata_frame
 from market_scanner.reports.html_report import write_html
 from market_scanner.reports.markdown_report import write_markdown
 from market_scanner.reports.render import _load_render_frame
-from market_scanner.storage.db import connect, home_market_key
+from market_scanner.storage.common import home_market_key
+from market_scanner.storage.connection import connect
 
 
 ROOT_DIR = Path(".")

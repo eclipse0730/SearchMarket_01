@@ -11,7 +11,7 @@ import yfinance as yf
 
 from market_scanner.models import MarketDefinition, ScanSettings
 from market_scanner.reports._common import _safe_number, enrich_metadata_frame
-from market_scanner.storage.db import connect
+from market_scanner.storage.connection import connect
 
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"

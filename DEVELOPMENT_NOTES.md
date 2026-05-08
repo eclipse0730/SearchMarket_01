@@ -1,6 +1,6 @@
 # Search60 Development Notes
 
-Last updated: 2026-05-07
+Last updated: 2026-05-08
 
 이 문서는 프로젝트를 함께 개발하면서 계속 갱신하는 개발/운영 노트입니다. 기능 개발 판단과 코드 구조 이해에 필요한 내용을 이 파일에 모읍니다.
 
@@ -26,7 +26,7 @@ Search60은 여러 시장의 종목/지수/ETF/원자재를 대상으로 5/20/60
 - `docs/database_recommendation.md`: CSV에서 PostgreSQL로 전환하기 위한 권장 구조와 단계별 이전 계획입니다.
 - `docs/database_schema_v1.sql`: PostgreSQL 스키마 초안 DDL입니다.
 - `docs/database_table_guide.md`: DB 테이블별 역할과 주요 컬럼 설명서입니다.
-- `market_scanner/storage/db.py`: PostgreSQL 스키마 적용, 기준 데이터 seed, CSV 스캔 결과 적재 유틸리티입니다.
+- `market_scanner/storage/db.py`: 기존 import와 `python -m market_scanner.storage.db` 실행을 유지하는 호환 facade입니다. 실제 구현은 `storage/connection.py`, `storage/common.py`, `storage/runs.py`, `storage/reference.py`, `storage/schema.py`, `storage/instruments.py`, `storage/universe.py`, `storage/scan_loader.py`, `storage/prices.py`, `storage/indicators.py`, `storage/fundamentals.py`, `storage/screener_results.py`, `storage/diagnostics.py`, `storage/cli.py`에 기능별로 둡니다.
 - `market_scanner/config/markets.py`: 시장 정의, 메타데이터 로더, 유니버스 로더, quote URL 생성기를 관리합니다.
 - `market_scanner/pipeline.py`: v2 단계 순서만 제어합니다. 실제 가격 수집, 지표 계산, 스크리닝, 렌더링 로직은 `collectors/`, `analysis/`, `reports/`, `storage/` 하위 모듈에 둡니다.
 - `market_scanner/reports/site_builder.py`: DB의 최신 스캔/시장/섹터 스냅샷을 읽어 GitHub Pages용 `site/` 정적 사이트를 재생성합니다.
@@ -215,6 +215,7 @@ KOSPI/KOSDAQ은 FDR `StockListing("KOSPI"|"KOSDAQ")`를 사용하며, 실패 시
 - 2026-04-28: KOSPI/KOSDAQ 스캔에서 yfinance `Ticker.info`를 실제 조회한 티커 객체에서 읽도록 수정했습니다. 렌더링 단계도 정적 메타데이터와 FinanceDataReader 한국 종목명으로 placeholder 이름/섹터를 보정하므로, 기존 CSV에 `047040.KS`/`Unknown`처럼 저장된 값도 사이트 재생성 시 가능한 범위에서 정상 종목명/섹터로 표시됩니다. 한국 시장 화면의 종목명은 한글 표시를 우선하며, 한글명을 확보하지 못한 경우 영어 회사명 대신 종목코드를 표시합니다.
 - 2026-04-30: KOSPI/KOSDAQ 가격 히스토리 수집은 FinanceDataReader를 먼저 사용합니다. FDR 조회 실패 또는 히스토리 부족 시 기존 yfinance 경로로 fallback합니다. FDR/pykrx listing 엔드포인트가 실패하는 환경에서는 네이버 시가총액 페이지를 파싱해 시장 전체 유니버스를 보강합니다.
 - 2026-05-06: 병렬 가격 수집에서 timeout 없는 한국 일봉 요청이 worker를 붙잡아 진행률이 0에서 멈춰 보이는 문제를 줄이기 위해, KOSPI/KOSDAQ 가격 fetch는 timeout이 적용된 Naver 일봉 조회를 직접 사용하도록 조정했습니다. `prices fetch --workers 2+` 경로는 모든 future를 한 번에 제출하지 않고 worker 수만큼 pending 작업을 유지합니다.
+- 2026-05-08: `market_scanner/storage/db.py`의 책임을 줄이기 위한 리팩터링으로 DB 연결(`connection.py`), 시장/값 정규화 공통 함수(`common.py`), `collection_runs` 실행 로그 함수(`runs.py`), 기준정보/스키마(`reference.py`, `schema.py`), 종목/유니버스 관리(`instruments.py`, `universe.py`), DataFrame 적재(`scan_loader.py`), 테이블별 저장 함수(`prices.py`, `indicators.py`, `fundamentals.py`, `screener_results.py`), CLI/진단(`cli.py`, `diagnostics.py`)을 분리했습니다. 내부 Python import는 새 모듈 경로로 전환했고, 기존 `market_scanner.storage.db` import 경로는 호환용으로 유지합니다.
 - 2026-05-01: 종목마스터 운영 기준을 DB-only 방향으로 전환했습니다. `refresh-master`가 시장 전체 종목을 `instruments`에 저장하고, 대표 지수/그룹은 `universe_memberships` 멤버십으로 관리합니다. 스캔 기본값은 시장 전체이고, 필요한 경우 `--universe`로 필터링합니다.
 - 2026-05-03: US market universe 구조를 전면 개편했습니다. 기존 단일 `us` universe_key를 폐기하고 `nasdaq`(NASDAQ 전체), `nyse`(NYSE 전체), `amex`(AMEX 전체), `nasdaq100`, `sp500` 5개로 분리했습니다. 심볼 소스를 NASDAQ Trader txt 파싱에서 FinanceDataReader `StockListing()`으로 전환했습니다. `--market us` 한 번으로 5개 universe가 모두 갱신됩니다(`_MARKET_UNIVERSE_EXPANSION`). `nasdaq100`/`sp500` universe도 정적 JSON/Wikipedia에서 FDR로 전환하고 기존 방식은 fallback으로 유지합니다. US 메타데이터 로더를 `_us_metadata()`(DB first → FDR NASDAQ/NYSE → nasdaq100 static JSON)로 교체했습니다.
 - 2026-05-03: JSON fallback 코드 정리. `kospi_static_meta.json`, `kosdaq_static_meta.json`, `sp500_members_cache.json` 삭제. `_kospi_static_meta()`, `_kosdaq_static_meta()`, SP500 캐시/수동 오버라이드 6개 함수, `_merge_static_with_live()` 제거. `_kospi_universe()`, `_kosdaq_universe()`는 FDR/Naver 결과를 직접 반환. `_kospi200_universe()`, `_kospi100_universe()`, `_kosdaq150_universe()`는 FDR 단독 호출로 단순화. `_kospi_metadata()`, `_kosdaq_metadata()` DB 미스 fallback도 JSON 없이 Naver+FDR만 사용.

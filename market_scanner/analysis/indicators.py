@@ -429,7 +429,7 @@ def compute_for_instrument(
     price_decimals: int = 2,
 ) -> tuple[bool, str | None]:
     """단일 종목의 daily_indicators를 계산해 upsert합니다."""
-    from market_scanner.storage.db import upsert_daily_indicator
+    from market_scanner.storage.indicators import upsert_daily_indicator
 
     hist = _load_price_history(conn, instrument_id, trade_date)
     if hist.empty:
@@ -454,13 +454,9 @@ def run_compute(
 ) -> None:
     from psycopg.types.json import Jsonb
 
-    from market_scanner.storage.db import (
-        connect,
-        country_currency_for_market,
-        home_market_key,
-        price_source_for_market,
-    )
     from market_scanner.config.markets import MARKETS
+    from market_scanner.storage.common import country_currency_for_market, home_market_key, price_source_for_market
+    from market_scanner.storage.connection import connect
 
     trade_date = date.today() if not date_str else datetime.strptime(date_str, "%Y%m%d").date()
     source_provider = price_source_for_market(market_key)

@@ -19,7 +19,9 @@ from psycopg.types.json import Jsonb
 
 from market_scanner.config.markets import MARKETS
 from market_scanner.progress import progress_line
-from market_scanner.storage.db import connect, finish_run, home_market_key
+from market_scanner.storage.common import home_market_key
+from market_scanner.storage.connection import connect
+from market_scanner.storage.runs import finish_run
 
 
 _DEFAULT_MAX_SYMBOLS = 50

@@ -18,7 +18,7 @@ from market_scanner.collectors.prices import run_fetch as fetch_prices
 from market_scanner.models import MarketDefinition, ScanSettings
 from market_scanner.reports.render import report_output_paths, run_build as build_reports
 from market_scanner.reports.markdown_report import write_markdown
-from market_scanner.storage.db import scan_symbols_for_scope
+from market_scanner.storage.universe import scan_symbols_for_scope
 
 
 def run_scan_stage_with_settings(

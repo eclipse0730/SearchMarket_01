@@ -88,7 +88,7 @@ _THEME_PROXY_SYMBOLS: frozenset[str] = frozenset({
 })
 
 def _database_url() -> str:
-    from market_scanner.storage.db import database_url
+    from market_scanner.storage.connection import database_url
     return database_url()
 
 

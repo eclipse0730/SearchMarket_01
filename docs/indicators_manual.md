@@ -406,7 +406,7 @@ Bearish
 
 ## DB 출력
 
-계산 결과는 `market_scanner.storage.db.upsert_daily_indicator()`를 통해 `daily_indicators`에 저장됩니다.
+계산 결과는 `market_scanner.storage.indicators.upsert_daily_indicator()`를 통해 `daily_indicators`에 저장됩니다.
 
 Primary key:
 

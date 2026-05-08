@@ -13,14 +13,11 @@ import pandas as pd
 import psycopg
 from psycopg.types.json import Jsonb
 
-from market_scanner.storage.db import (
-    connect,
-    country_currency_for_market,
-    home_market_key,
-    upsert_daily_price,
-)
 from market_scanner.config.markets import MARKETS
 from market_scanner.progress import progress_line
+from market_scanner.storage.common import country_currency_for_market, home_market_key
+from market_scanner.storage.connection import connect
+from market_scanner.storage.prices import upsert_daily_price
 
 _DEFAULT_HISTORY_YEARS = 1
 _DEFAULT_FETCH_WORKERS = 8
