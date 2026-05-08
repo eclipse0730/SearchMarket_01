@@ -6,7 +6,12 @@ from typing import Any
 
 import pandas as pd
 
+from market_scanner.config.markets import MARKETS
+from market_scanner.domain.market_policy import home_market_key, price_source_for_market
 from market_scanner.progress import progress_line
+from market_scanner.storage.connection import connect
+from market_scanner.storage.indicators import load_price_history, upsert_daily_indicator
+from market_scanner.storage.runs import create_collection_run, finish_run
 
 
 TREND_LABELS = {
@@ -238,29 +243,6 @@ def _safe(value: Any, digits: int | None = None) -> float | None:
     return round(f, digits) if digits is not None else f
 
 
-def _load_price_history(conn: Any, instrument_id: int, through_date: date) -> pd.DataFrame:
-    """DB에서 OHLCV 히스토리를 가져옵니다. (fdr → yfinance 우선순위)"""
-    rows = conn.execute(
-        """
-        SELECT DISTINCT ON (trade_date)
-            trade_date, open_price, high_price, low_price, close_price, volume
-        FROM daily_prices
-        WHERE instrument_id = %s
-          AND trade_date <= %s
-        ORDER BY trade_date,
-            CASE source_provider WHEN 'fdr' THEN 1 WHEN 'yfinance' THEN 2 ELSE 3 END
-        """,
-        (instrument_id, through_date),
-    ).fetchall()
-    if not rows:
-        return pd.DataFrame()
-    frame = pd.DataFrame(
-        rows, columns=["trade_date", "Open", "High", "Low", "Close", "Volume"]
-    )
-    frame["trade_date"] = pd.to_datetime(frame["trade_date"])
-    frame = frame.set_index("trade_date")
-    return frame.apply(pd.to_numeric, errors="coerce").dropna(subset=["Close"])
-
 
 def _compute_from_hist(
     hist: pd.DataFrame,
@@ -428,10 +410,7 @@ def compute_for_instrument(
     source_provider: str = "fdr",
     price_decimals: int = 2,
 ) -> tuple[bool, str | None]:
-    """단일 종목의 daily_indicators를 계산해 upsert합니다."""
-    from market_scanner.storage.indicators import upsert_daily_indicator
-
-    hist = _load_price_history(conn, instrument_id, trade_date)
+    hist = load_price_history(conn, instrument_id, trade_date)
     if hist.empty:
         return False, "empty_price_history"
     if len(hist) < _MIN_HISTORY // 2:
@@ -452,12 +431,6 @@ def run_compute(
     explicit_url: str | None = None,
     limit: int | None = None,
 ) -> None:
-    from psycopg.types.json import Jsonb
-
-    from market_scanner.config.markets import MARKETS
-    from market_scanner.storage.common import country_currency_for_market, home_market_key, price_source_for_market
-    from market_scanner.storage.connection import connect
-
     trade_date = date.today() if not date_str else datetime.strptime(date_str, "%Y%m%d").date()
     source_provider = price_source_for_market(market_key)
     market = MARKETS[market_key]
@@ -482,23 +455,10 @@ def run_compute(
             print(f"  indicators compute [{market_key}]: no active instruments")
             return
 
-        run_result = conn.execute(
-            """
-            INSERT INTO collection_runs (
-                run_type, market_key, trade_date, source_provider, status, requested_count, params
-            )
-            VALUES ('indicators', %s, %s, %s, 'running', %s, %s)
-            RETURNING run_id
-            """,
-            (
-                home_market_key(market_key),
-                trade_date,
-                source_provider,
-                len(instruments),
-                Jsonb({"mode": "compute"}),
-            ),
-        ).fetchone()
-        run_id = str(run_result[0])
+        run_id = create_collection_run(
+            conn, "indicators", market_key, trade_date, source_provider, len(instruments),
+            params={"mode": "compute"},
+        )
 
         print(f"  indicators compute [{market_key}] {len(instruments)} symbols  run_id={run_id}")
 
@@ -554,16 +514,7 @@ def run_compute(
             status = "partial" if success else "failed"
         else:
             status = "success"
-        conn.execute(
-            """
-            UPDATE collection_runs
-            SET status = %s, finished_at = now(),
-                success_count = %s, failed_count = %s, skipped_count = %s,
-                error_samples = %s
-            WHERE run_id = %s
-            """,
-            (status, success, failed, skipped, Jsonb(error_samples), run_id),
-        )
+        finish_run(conn, run_id, status=status, success_count=success, failed_count=failed, skipped_count=skipped, error_samples=error_samples)
         print(
             f"  indicators compute [{market_key}] done: "
             f"success={success} failed={failed} skipped={skipped} status={status}"

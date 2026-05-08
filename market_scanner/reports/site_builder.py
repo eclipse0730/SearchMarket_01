@@ -13,12 +13,12 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from market_scanner.config.markets import MARKETS, _fetch_sp500_tickers, _nasdaq100_universe, _THEME_PROXY_SYMBOLS
+from market_scanner.domain.market_policy import home_market_key
 from market_scanner.models import MarketDefinition, ScanSettings
 from market_scanner.reports._common import enrich_metadata_frame
 from market_scanner.reports.html_report import write_html
 from market_scanner.reports.markdown_report import write_markdown
 from market_scanner.reports.render import _load_render_frame
-from market_scanner.storage.common import home_market_key
 from market_scanner.storage.connection import connect
 
 

@@ -10,13 +10,17 @@ from datetime import date, datetime
 from typing import Any
 
 import pandas as pd
-from psycopg.types.json import Jsonb
 
 from market_scanner.config.markets import MARKETS
+from market_scanner.domain.market_policy import home_market_key
 from market_scanner.progress import progress_line
-from market_scanner.storage.common import home_market_key
 from market_scanner.storage.connection import connect
-from market_scanner.storage.fundamentals import upsert_fundamentals
+from market_scanner.storage.fundamentals import (
+    instruments_for_market,
+    instruments_stale_fundamentals,
+    upsert_fundamentals,
+)
+from market_scanner.storage.runs import create_collection_run, finish_run
 
 _YF_RETRY = 2
 _REQUEST_TIMEOUT = 5
@@ -473,40 +477,6 @@ def extract_fundamentals(info: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _instruments_for_market(conn: Any, market_key: str) -> list[dict[str, Any]]:
-    rows = conn.execute(
-        """
-        SELECT instrument_id, symbol
-        FROM instruments
-        WHERE market_key = %s AND is_active = TRUE
-        ORDER BY symbol
-        """,
-        (home_market_key(market_key),),
-    ).fetchall()
-    return [{"instrument_id": row[0], "symbol": str(row[1])} for row in rows]
-
-
-def _instruments_stale_fundamentals(
-    conn: Any, market_key: str, stale_days: int = 7
-) -> list[dict[str, Any]]:
-    rows = conn.execute(
-        """
-        SELECT i.instrument_id, i.symbol
-        FROM instruments i
-        LEFT JOIN (
-            SELECT instrument_id, MAX(as_of_date) AS last_date
-            FROM instrument_fundamentals
-            GROUP BY instrument_id
-        ) f ON f.instrument_id = i.instrument_id
-        WHERE i.market_key = %s
-          AND i.is_active = TRUE
-          AND (f.last_date IS NULL OR f.last_date < CURRENT_DATE - %s)
-        ORDER BY i.symbol
-        """,
-        (home_market_key(market_key), stale_days),
-    ).fetchall()
-    return [{"instrument_id": row[0], "symbol": str(row[1])} for row in rows]
-
 
 def run_fetch(
     market_key: str,
@@ -525,9 +495,9 @@ def run_fetch(
 
     with connect(explicit_url) as conn:
         if stale_only:
-            instruments = _instruments_stale_fundamentals(conn, market_key, stale_days)
+            instruments = instruments_stale_fundamentals(conn, market_key, stale_days)
         else:
-            instruments = _instruments_for_market(conn, market_key)
+            instruments = instruments_for_market(conn, market_key)
 
         if limit:
             instruments = instruments[:limit]
@@ -540,30 +510,17 @@ def run_fetch(
             _fdr_listing(market_key)
 
         worker_count = max(1, min(workers, max_workers, len(instruments)))
-        run_result = conn.execute(
-            """
-            INSERT INTO collection_runs (
-                run_type, market_key, trade_date, source_provider, status, requested_count, params
-            )
-            VALUES ('fundamentals', %s, %s, %s, 'running', %s, %s)
-            RETURNING run_id
-            """,
-            (
-                home_market_key(market_key),
-                trade_date,
-                source,
-                len(instruments),
-                Jsonb({
-                    "mode": "fundamentals",
-                    "stale_only": stale_only,
-                    "stale_days": stale_days,
-                    "workers": worker_count,
-                    "source": source,
-                    "source_plan": sources,
-                }),
-            ),
-        ).fetchone()
-        run_id = str(run_result[0])
+        run_id = create_collection_run(
+            conn, "fundamentals", market_key, trade_date, source, len(instruments),
+            params={
+                "mode": "fundamentals",
+                "stale_only": stale_only,
+                "stale_days": stale_days,
+                "workers": worker_count,
+                "source": source,
+                "source_plan": sources,
+            },
+        )
 
         print(
             f"  fundamentals fetch [{market_key}] {len(instruments)} symbols  "
@@ -685,16 +642,7 @@ def run_fetch(
         print_progress(force=True)
         print()
         status = "cancelled" if interrupted else "success" if not failed else ("partial" if success else "failed")
-        conn.execute(
-            """
-            UPDATE collection_runs
-            SET status = %s, finished_at = now(),
-                success_count = %s, failed_count = %s, skipped_count = %s,
-                error_samples = %s
-            WHERE run_id = %s
-            """,
-            (status, success, failed, skipped, Jsonb(error_samples), run_id),
-        )
+        finish_run(conn, run_id, status=status, success_count=success, failed_count=failed, skipped_count=skipped, error_samples=error_samples)
         source_summary = ", ".join(f"{key}={value}" for key, value in sorted(source_counts.items()))
         print(
             f"  fundamentals fetch [{market_key}] done: "

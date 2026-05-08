@@ -9,12 +9,12 @@ import pandas as pd
 
 from psycopg.types.json import Jsonb
 
-from market_scanner.storage.common import home_market_key
-from market_scanner.storage.connection import connect
 from market_scanner.config.markets import MARKETS
+from market_scanner.domain.market_policy import home_market_key
 from market_scanner.models import ScanSettings
 from market_scanner.reports.html_report import write_html
 from market_scanner.reports.markdown_report import write_markdown
+from market_scanner.storage.connection import connect
 
 _DEFAULT_SETTINGS = ScanSettings(output_dir=Path("."))
 REPORT_EXPORT_DIR = Path("site") / "reports"

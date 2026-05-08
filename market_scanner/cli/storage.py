@@ -3,10 +3,11 @@ from __future__ import annotations
 import argparse
 
 from market_scanner.config.markets import MARKETS
-from market_scanner.storage.diagnostics import print_counts
-from market_scanner.storage.instruments import load_master, run_fetch_name
+from market_scanner.services.instrument_master import load_master
+from market_scanner.services.instrument_names import run_fetch_name
+from market_scanner.services.universe_refresh import _default_refresh_market_keys, refresh_master
+from market_scanner.storage.diagnostics import table_counts
 from market_scanner.storage.schema import init_db
-from market_scanner.storage.universe import _default_refresh_market_keys, refresh_master
 
 
 def main() -> None:
@@ -33,21 +34,21 @@ def main() -> None:
 
     fetch_name_parser = subparsers.add_parser(
         "fetch-name",
-        help="Naver Finance 개별 종목 페이지에서 name_local, sector를 가져와 instruments 업데이트.",
+        help="Fetch Korean instrument names and sectors from Naver Finance.",
     )
     fetch_name_parser.add_argument(
         "--market", required=True, choices=["kospi", "kosdaq"],
-        help="대상 시장 (kospi or kosdaq)",
+        help="Target market: kospi or kosdaq.",
     )
     fetch_name_parser.add_argument(
         "--all", action="store_true", dest="fetch_all",
-        help="sector='Unknown' 또는 name_local 미설정 종목만이 아닌 전체 종목 업데이트",
+        help="Update all active instruments instead of only missing or stale names/sectors.",
     )
     fetch_name_parser.add_argument(
-        "--limit", type=int, default=None, help="처리할 최대 종목 수 (테스트용)",
+        "--limit", type=int, default=None, help="Maximum number of instruments to process.",
     )
     fetch_name_parser.add_argument(
-        "--delay", type=float, default=0.3, help="종목 간 요청 딜레이(초, 기본 0.3)",
+        "--delay", type=float, default=0.3, help="Delay between instrument requests in seconds.",
     )
 
     args = parser.parse_args()
@@ -76,7 +77,8 @@ def main() -> None:
             f"mismatch={total_mismatch} new_instruments={total_new_instruments}{status_str}"
         )
     elif args.command == "counts":
-        print_counts(args.database_url)
+        for table, count in table_counts(args.database_url).items():
+            print(f"{table}: {count}")
     elif args.command == "fetch-name":
         run_fetch_name(
             args.market,

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 import pandas as pd
 import psycopg
 from psycopg.types.json import Jsonb
 
-from market_scanner.storage.common import clean_number, home_market_key, row_payload
+from market_scanner.domain.market_policy import home_market_key
+from market_scanner.storage.common import clean_number, row_payload
 
 
 def upsert_scan_result(
@@ -65,13 +67,9 @@ def upsert_market_snapshot(
     market_key: str,
     universe_key: str,
     trade_date: date,
-    frame: pd.DataFrame,
+    snapshot: dict[str, Any],
     run_id: str,
 ) -> None:
-    change = pd.to_numeric(frame.get("change_pct"), errors="coerce") if "change_pct" in frame else pd.Series(dtype=float)
-    rsi = pd.to_numeric(frame.get("rsi"), errors="coerce") if "rsi" in frame else pd.Series(dtype=float)
-    score = pd.to_numeric(frame.get("composite_score"), errors="coerce") if "composite_score" in frame else pd.Series(dtype=float)
-    market_score = round(float(score.dropna().mean()), 4) if not score.dropna().empty else None
     conn.execute(
         """
         INSERT INTO market_snapshots (
@@ -105,43 +103,23 @@ def upsert_market_snapshot(
             universe_key,
             trade_date,
             run_id,
-            len(frame),
-            len(frame),
-            len(frame),
-            int((change > 0).sum()),
-            int((change < 0).sum()),
-            int((change == 0).sum()),
-            round(float(change.dropna().mean()), 4) if not change.dropna().empty else None,
-            round(float(change.dropna().median()), 4) if not change.dropna().empty else None,
-            round(float(rsi.dropna().mean()), 4) if not rsi.dropna().empty else None,
-            round(float((change > 0).sum() / len(frame) * 100), 4) if len(frame) else None,
-            market_score,
-            market_score,
-            regime_for_score(market_score),
-            risk_for_score(market_score),
-            Jsonb({}),
+            snapshot["total_count"],
+            snapshot["scanned_count"],
+            snapshot["success_count"],
+            snapshot["advance_count"],
+            snapshot["decline_count"],
+            snapshot["unchanged_count"],
+            snapshot["avg_change_pct"],
+            snapshot["median_change_pct"],
+            snapshot["avg_rsi14"],
+            snapshot["bullish_breadth_pct"],
+            snapshot["avg_composite_score"],
+            snapshot["market_score"],
+            snapshot["regime"],
+            snapshot["risk_level"],
+            Jsonb(snapshot["macro_payload"]),
         ),
     )
-
-
-def regime_for_score(score: float | None) -> str | None:
-    if score is None:
-        return None
-    if score >= 65:
-        return "bullish"
-    if score <= 40:
-        return "bearish"
-    return "neutral"
-
-
-def risk_for_score(score: float | None) -> str | None:
-    if score is None:
-        return None
-    if score >= 70:
-        return "low"
-    if score <= 40:
-        return "high"
-    return "normal"
 
 
 def upsert_sector_snapshots(
@@ -149,23 +127,10 @@ def upsert_sector_snapshots(
     market_key: str,
     universe_key: str,
     trade_date: date,
-    frame: pd.DataFrame,
+    snapshots: list[dict[str, Any]],
     run_id: str,
 ) -> None:
-    if "sector" not in frame.columns or frame.empty:
-        return
-    for sector, group in frame.groupby("sector", dropna=False):
-        sector_name = str(sector or "Unknown")
-        change = pd.to_numeric(group.get("change_pct"), errors="coerce") if "change_pct" in group else pd.Series(dtype=float)
-        rsi = pd.to_numeric(group.get("rsi"), errors="coerce") if "rsi" in group else pd.Series(dtype=float)
-        score = pd.to_numeric(group.get("composite_score"), errors="coerce") if "composite_score" in group else pd.Series(dtype=float)
-        top = (
-            group.sort_values("composite_score", ascending=False)
-            .head(5)[["symbol", "name_local", "composite_score"]]
-            .to_dict(orient="records")
-            if "composite_score" in group
-            else []
-        )
+    for snapshot in snapshots:
         conn.execute(
             """
             INSERT INTO sector_snapshots (
@@ -190,15 +155,15 @@ def upsert_sector_snapshots(
                 home_market_key(market_key),
                 universe_key,
                 trade_date,
-                sector_name,
+                snapshot["sector"],
                 run_id,
-                len(group),
-                int((change > 0).sum()),
-                int((change < 0).sum()),
-                round(float(change.dropna().mean()), 4) if not change.dropna().empty else None,
-                round(float(change.dropna().median()), 4) if not change.dropna().empty else None,
-                round(float(rsi.dropna().mean()), 4) if not rsi.dropna().empty else None,
-                round(float(score.dropna().mean()), 4) if not score.dropna().empty else None,
-                Jsonb(top),
+                snapshot["instrument_count"],
+                snapshot["advance_count"],
+                snapshot["decline_count"],
+                snapshot["avg_change_pct"],
+                snapshot["median_change_pct"],
+                snapshot["avg_rsi14"],
+                snapshot["avg_composite_score"],
+                Jsonb(snapshot["top_instruments"]),
             ),
         )

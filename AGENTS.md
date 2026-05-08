@@ -77,7 +77,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `market_scanner/templates/report.html`: HTML 리포트 템플릿입니다.
 - `market_scanner/templates/report.css`: HTML 리포트 스타일입니다.
 - `README.md`: 사용자용 설치/실행 설명입니다.
-- `DEVELOPMENT_NOTES.md`: 개발/운영 분석 노트입니다.
 - `.github/workflows/*.yml`: 자동 스캔과 Pages 배포 설정입니다.
 
 ## Documentation Relationship Map
@@ -86,22 +85,21 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 | 변경 대상 | 함께 확인/갱신할 문서와 파일 |
 |---|---|
-| CLI 옵션, 기본값, 실행 단계 변경 | `README.md`, `DEVELOPMENT_NOTES.md`, `.github/workflows/*.yml` |
-| 시장 추가/삭제, 시장 key 변경 | `README.md`, `DEVELOPMENT_NOTES.md`, `market_scanner/reports/site_builder.py`, `.github/workflows/*.yml` |
-| 출력 파일명 규칙 변경 | `README.md`, `DEVELOPMENT_NOTES.md`, `.github/workflows/*.yml` |
-| 스캔 데이터 컬럼 추가/삭제/이름 변경 | `DEVELOPMENT_NOTES.md`, `market_scanner/analysis/screener.py`, `market_scanner/reports/html_report.py`, `market_scanner/templates/report.html`, `market_scanner/reports/site_builder.py` |
-| 점수 산식, RSI, 추세 계산 변경 | `DEVELOPMENT_NOTES.md`, `README.md`의 설명 필요 여부, 관련 테스트가 생기면 테스트 문서 |
-| HTML 리포트 UI/필터/차트 변경 | `DEVELOPMENT_NOTES.md`, `market_scanner/templates/report.html`, `market_scanner/templates/report.css`, `site_builder.py` 영향 여부 |
-| GitHub Pages 구조 변경 | `README.md`, `DEVELOPMENT_NOTES.md`, `.github/workflows/deploy-pages.yml` |
-| GitHub Actions 스케줄/대상 변경 | `README.md`, `DEVELOPMENT_NOTES.md`, 관련 workflow 파일 |
-| 의존성 추가/삭제 | `requirements.txt`, `README.md`, `DEVELOPMENT_NOTES.md`, workflow 설치 단계 |
-| 로컬 실행/검증 방식 변경 | `README.md`, `DEVELOPMENT_NOTES.md`, 이 `AGENTS.md` |
+| CLI 옵션, 기본값, 실행 단계 변경 | `README.md`, `.github/workflows/*.yml` |
+| 시장 추가/삭제, 시장 key 변경 | `README.md`, `market_scanner/reports/site_builder.py`, `.github/workflows/*.yml` |
+| 출력 파일명 규칙 변경 | `README.md`, `.github/workflows/*.yml` |
+| 스캔 데이터 컬럼 추가/삭제/이름 변경 | `market_scanner/analysis/screener.py`, `market_scanner/reports/html_report.py`, `market_scanner/templates/report.html`, `market_scanner/reports/site_builder.py` |
+| 점수 산식, RSI, 추세 계산 변경 | `README.md`의 설명 필요 여부, 관련 테스트가 생기면 테스트 문서 |
+| HTML 리포트 UI/필터/차트 변경 | `market_scanner/templates/report.html`, `market_scanner/templates/report.css`, `site_builder.py` 영향 여부 |
+| GitHub Pages 구조 변경 | `README.md`, `.github/workflows/deploy-pages.yml` |
+| GitHub Actions 스케줄/대상 변경 | `README.md`, 관련 workflow 파일 |
+| 의존성 추가/삭제 | `requirements.txt`, `README.md`, workflow 설치 단계 |
+| 로컬 실행/검증 방식 변경 | `README.md`, 이 `AGENTS.md` |
 
 ## Maintenance Rule
 
 새 기능 개발이나 리팩터링이 끝나면 아래를 점검합니다.
 
 - 코드 변경이 CLI/출력/배포/문서 관계도 중 어디에 영향을 주는지 확인합니다.
-- `DEVELOPMENT_NOTES.md`의 관련 섹션과 `Last updated`를 갱신합니다.
 - 사용자용 실행법이 바뀌면 `README.md`를 갱신합니다.
 - Codex 작업 규칙이나 문서 관계도가 바뀌면 이 `AGENTS.md`를 갱신합니다.

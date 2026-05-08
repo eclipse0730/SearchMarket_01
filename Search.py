@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from market_scanner.config.markets import MARKETS
+from market_scanner.domain.market_policy import home_market_key
 from market_scanner.models import ScanSettings
 from market_scanner.pipeline import (
     run_analysis_stage,
@@ -15,7 +16,6 @@ from market_scanner.pipeline import (
     run_render_stage,
     run_scan_stage_with_settings,
 )
-from market_scanner.storage.common import home_market_key
 
 def setup_scheduler(script_name: str, task_name: str, run_time: str = "08:05") -> None:
     script = os.path.abspath(script_name)

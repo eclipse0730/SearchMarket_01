@@ -11,13 +11,26 @@ from typing import Any
 
 import pandas as pd
 import psycopg
-from psycopg.types.json import Jsonb
 
 from market_scanner.config.markets import MARKETS
+from market_scanner.domain.market_policy import country_currency_for_market, home_market_key
 from market_scanner.progress import progress_line
-from market_scanner.storage.common import country_currency_for_market, home_market_key
 from market_scanner.storage.connection import connect
-from market_scanner.storage.prices import upsert_daily_price
+from market_scanner.storage.prices import (
+    active_instrument_count,
+    instruments_by_symbols,
+    instruments_for_market,
+    instruments_needing_prices,
+    instruments_without_prices,
+    last_price_date_any_source,
+    upsert_daily_price,
+)
+from market_scanner.storage.runs import (
+    create_collection_run,
+    finish_run,
+    last_failed_run_error_samples,
+    run_error_samples,
+)
 
 _DEFAULT_HISTORY_YEARS = 1
 _DEFAULT_FETCH_WORKERS = 8
@@ -163,159 +176,6 @@ def fetch_ohlcv(symbol: str, market_key: str, start: str, end: str) -> tuple[pd.
     return pd.DataFrame(), "none"
 
 
-# ── DB 조회 헬퍼 ──────────────────────────────────────────────────────────────
-
-def _last_price_date(conn: psycopg.Connection, instrument_id: int, source_provider: str) -> date | None:
-    row = conn.execute(
-        "SELECT MAX(trade_date) FROM daily_prices WHERE instrument_id = %s AND source_provider = %s",
-        (instrument_id, source_provider),
-    ).fetchone()
-    return row[0] if row and row[0] else None
-
-
-def _last_price_date_any_source(conn: psycopg.Connection, instrument_id: int) -> date | None:
-    row = conn.execute(
-        "SELECT MAX(trade_date) FROM daily_prices WHERE instrument_id = %s",
-        (instrument_id,),
-    ).fetchone()
-    return row[0] if row and row[0] else None
-
-
-def _instruments_for_market(conn: psycopg.Connection, market_key: str) -> list[dict[str, Any]]:
-    rows = conn.execute(
-        """
-        SELECT instrument_id, symbol, currency_code
-        FROM instruments
-        WHERE market_key = %s AND is_active = TRUE
-        ORDER BY symbol
-        """,
-        (home_market_key(market_key),),
-    ).fetchall()
-    return [{"instrument_id": row[0], "symbol": str(row[1]), "currency_code": row[2]} for row in rows]
-
-
-def _active_instrument_count(conn: psycopg.Connection, market_key: str) -> int:
-    row = conn.execute(
-        """
-        SELECT COUNT(*)
-        FROM instruments
-        WHERE market_key = %s AND is_active = TRUE
-        """,
-        (home_market_key(market_key),),
-    ).fetchone()
-    return int(row[0] or 0)
-
-
-def _instruments_needing_prices(
-    conn: psycopg.Connection,
-    market_key: str,
-    target_date: date,
-) -> list[dict[str, Any]]:
-    rows = conn.execute(
-        """
-        SELECT i.instrument_id, i.symbol, i.currency_code, MAX(dp.trade_date) AS last_price_date
-        FROM instruments i
-        LEFT JOIN daily_prices dp
-          ON dp.instrument_id = i.instrument_id
-        WHERE i.market_key = %s AND i.is_active = TRUE
-        GROUP BY i.instrument_id, i.symbol, i.currency_code
-        HAVING MAX(dp.trade_date) IS NULL OR MAX(dp.trade_date) < %s
-        ORDER BY i.symbol
-        """,
-        (home_market_key(market_key), target_date),
-    ).fetchall()
-    return [
-        {
-            "instrument_id": row[0],
-            "symbol": str(row[1]),
-            "currency_code": row[2],
-            "last_price_date": row[3],
-        }
-        for row in rows
-    ]
-
-
-def _instruments_without_prices(conn: psycopg.Connection, market_key: str) -> list[dict[str, Any]]:
-    rows = conn.execute(
-        """
-        SELECT i.instrument_id, i.symbol, i.currency_code
-        FROM instruments i
-        LEFT JOIN daily_prices dp ON dp.instrument_id = i.instrument_id
-        WHERE i.market_key = %s AND i.is_active = TRUE AND dp.instrument_id IS NULL
-        ORDER BY i.symbol
-        """,
-        (home_market_key(market_key),),
-    ).fetchall()
-    return [{"instrument_id": row[0], "symbol": str(row[1]), "currency_code": row[2]} for row in rows]
-
-
-def _instruments_by_symbols(
-    conn: psycopg.Connection, market_key: str, symbols: list[str]
-) -> list[dict[str, Any]]:
-    rows = conn.execute(
-        """
-        SELECT instrument_id, symbol, currency_code
-        FROM instruments
-        WHERE market_key = %s AND is_active = TRUE AND symbol = ANY(%s)
-        ORDER BY symbol
-        """,
-        (home_market_key(market_key), symbols),
-    ).fetchall()
-    return [{"instrument_id": row[0], "symbol": str(row[1]), "currency_code": row[2]} for row in rows]
-
-
-# ── collection_runs 헬퍼 ──────────────────────────────────────────────────────
-
-def _create_prices_run(
-    conn: psycopg.Connection,
-    market_key: str,
-    run_type: str,
-    trade_date: date,
-    requested_count: int,
-    source_provider: str,
-    params: dict[str, Any] | None = None,
-) -> str:
-    result = conn.execute(
-        """
-        INSERT INTO collection_runs (
-            run_type, market_key, trade_date, source_provider, status, requested_count, params
-        )
-        VALUES (%s, %s, %s, %s, 'running', %s, %s)
-        RETURNING run_id
-        """,
-        (
-            run_type,
-            home_market_key(market_key),
-            trade_date,
-            source_provider,
-            requested_count,
-            Jsonb(params or {}),
-        ),
-    ).fetchone()
-    return str(result[0])
-
-
-def _finish_prices_run(
-    conn: psycopg.Connection,
-    run_id: str,
-    status: str,
-    success_count: int,
-    failed_count: int = 0,
-    skipped_count: int = 0,
-    error_samples: list[Any] | None = None,
-) -> None:
-    conn.execute(
-        """
-        UPDATE collection_runs
-        SET status = %s, finished_at = now(),
-            success_count = %s, failed_count = %s, skipped_count = %s,
-            error_samples = %s
-        WHERE run_id = %s
-        """,
-        (status, success_count, failed_count, skipped_count, Jsonb(error_samples or []), run_id),
-    )
-
-
 # ── 날짜 헬퍼 ─────────────────────────────────────────────────────────────────
 
 def _start_for_years(years: int) -> str:
@@ -383,8 +243,8 @@ def run_fetch(
     primary_source = "fdr" if _uses_fdr_primary(market_key) else "yfinance"
 
     with connect(explicit_url) as conn:
-        active_count = _active_instrument_count(conn, market_key)
-        instruments = _instruments_needing_prices(conn, market_key, target_date)
+        active_count = active_instrument_count(conn, market_key)
+        instruments = instruments_needing_prices(conn, market_key, target_date)
         skipped = max(0, active_count - len(instruments))
         if limit:
             instruments = instruments[:limit]
@@ -398,8 +258,8 @@ def run_fetch(
             print(f"  prices fetch [{market_key}]: all active instruments already have prices through {target_date.isoformat()}")
             return
 
-        run_id = _create_prices_run(
-            conn, market_key, "prices", target_date, len(instruments), primary_source,
+        run_id = create_collection_run(
+            conn, "prices", market_key, target_date, primary_source, len(instruments),
             params={"mode": "incremental", "target_date": target_date.isoformat(), "fetch_end": end},
         )
         worker_count = max(1, min(workers, len(instruments)))
@@ -434,7 +294,7 @@ def run_fetch(
         tasks: list[tuple[dict[str, Any], str]] = []
         for instr in instruments:
             instrument_id = instr["instrument_id"]
-            last = instr.get("last_price_date") or _last_price_date_any_source(conn, instrument_id)
+            last = instr.get("last_price_date") or last_price_date_any_source(conn, instrument_id)
             start = _next_day(last).isoformat() if last else _start_for_years(_DEFAULT_HISTORY_YEARS)
             tasks.append((instr, start))
 
@@ -506,7 +366,7 @@ def run_fetch(
         print_progress(force=True)
         print()
         status = "success" if not failed else ("partial" if success else "failed")
-        _finish_prices_run(conn, run_id, status, success, failed, skipped, error_samples)
+        finish_run(conn, run_id, status=status, success_count=success, failed_count=failed, skipped_count=skipped, error_samples=error_samples)
         print(
             f"  prices fetch [{market_key}] done: "
             f"success={success} failed={failed} skipped={skipped} status={status}"
@@ -534,11 +394,11 @@ def run_backfill(
 
     with connect(explicit_url) as conn:
         if symbols:
-            instruments = _instruments_by_symbols(conn, market_key, symbols)
+            instruments = instruments_by_symbols(conn, market_key, symbols)
         elif new_only:
-            instruments = _instruments_without_prices(conn, market_key)
+            instruments = instruments_without_prices(conn, market_key)
         else:
-            instruments = _instruments_for_market(conn, market_key)
+            instruments = instruments_for_market(conn, market_key)
 
         if limit:
             instruments = instruments[:limit]
@@ -548,8 +408,8 @@ def run_backfill(
             return
 
         mode = "backfill_new" if new_only else "backfill_all"
-        run_id = _create_prices_run(
-            conn, market_key, "backfill", date.today(), len(instruments), primary_source,
+        run_id = create_collection_run(
+            conn, "backfill", market_key, date.today(), primary_source, len(instruments),
             params={"mode": mode, "years": years, "start": start, "end": end, "workers": workers},
         )
         worker_count = max(1, min(workers, len(instruments)))
@@ -650,7 +510,7 @@ def run_backfill(
         print_progress(force=True)
         print()
         status = "success" if not failed else ("partial" if success else "failed")
-        _finish_prices_run(conn, run_id, status, success, failed, 0, error_samples)
+        finish_run(conn, run_id, status=status, success_count=success, failed_count=failed, skipped_count=0, error_samples=error_samples)
         print(
             f"  prices backfill [{market_key}] done: "
             f"success={success} failed={failed} status={status}"
@@ -669,27 +529,15 @@ def run_retry(
 ) -> None:
     with connect(explicit_url) as conn:
         if run_id:
-            row = conn.execute(
-                "SELECT error_samples FROM collection_runs WHERE run_id = %s",
-                (run_id,),
-            ).fetchone()
+            samples = run_error_samples(conn, run_id)
         else:
-            row = conn.execute(
-                """
-                SELECT error_samples FROM collection_runs
-                WHERE market_key = %s AND run_type IN ('prices', 'backfill')
-                  AND status IN ('failed', 'partial')
-                ORDER BY started_at DESC
-                LIMIT 1
-                """,
-                (home_market_key(market_key),),
-            ).fetchone()
+            samples = last_failed_run_error_samples(conn, market_key, ["prices", "backfill"])
 
-    if not row or not row[0]:
+    if not samples:
         print(f"  prices retry [{market_key}]: no failed run found")
         return
 
-    symbols = [s["symbol"] for s in row[0] if isinstance(s, dict) and "symbol" in s]
+    symbols = [s["symbol"] for s in samples if isinstance(s, dict) and "symbol" in s]
     if not symbols:
         print(f"  prices retry [{market_key}]: no symbols in error_samples")
         return

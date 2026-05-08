@@ -3,7 +3,7 @@ from __future__ import annotations
 import psycopg
 
 from market_scanner.config.markets import MARKETS
-from market_scanner.storage.common import (
+from market_scanner.domain.market_policy import (
     UNIVERSE_MARKET_ALIASES,
     country_currency_for_market,
     default_asset_filter,

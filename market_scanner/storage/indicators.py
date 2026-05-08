@@ -1,11 +1,33 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 import pandas as pd
 import psycopg
 
 from market_scanner.storage.common import clean_bool, clean_int, clean_number, clean_text
+
+
+def load_price_history(conn: Any, instrument_id: int, through_date: date) -> pd.DataFrame:
+    rows = conn.execute(
+        """
+        SELECT DISTINCT ON (trade_date)
+            trade_date, open_price, high_price, low_price, close_price, volume
+        FROM daily_prices
+        WHERE instrument_id = %s
+          AND trade_date <= %s
+        ORDER BY trade_date,
+            CASE source_provider WHEN 'fdr' THEN 1 WHEN 'yfinance' THEN 2 ELSE 3 END
+        """,
+        (instrument_id, through_date),
+    ).fetchall()
+    if not rows:
+        return pd.DataFrame()
+    frame = pd.DataFrame(rows, columns=["trade_date", "Open", "High", "Low", "Close", "Volume"])
+    frame["trade_date"] = pd.to_datetime(frame["trade_date"])
+    frame = frame.set_index("trade_date")
+    return frame.apply(pd.to_numeric, errors="coerce").dropna(subset=["Close"])
 
 
 def upsert_daily_indicator(

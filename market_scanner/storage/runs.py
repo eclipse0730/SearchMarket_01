@@ -6,7 +6,7 @@ from typing import Any
 import psycopg
 from psycopg.types.json import Jsonb
 
-from market_scanner.storage.common import home_market_key, price_source_for_market
+from market_scanner.domain.market_policy import home_market_key, price_source_for_market
 
 
 def create_run(
@@ -73,6 +73,64 @@ def finish_run(
             run_id,
         ),
     )
+
+
+def create_collection_run(
+    conn: psycopg.Connection,
+    run_type: str,
+    market_key: str,
+    trade_date: date,
+    source_provider: str,
+    requested_count: int,
+    *,
+    universe_key: str | None = None,
+    params: dict[str, Any] | None = None,
+) -> str:
+    result = conn.execute(
+        """
+        INSERT INTO collection_runs (
+            run_type, market_key, universe_key, trade_date, source_provider, status, requested_count, params
+        )
+        VALUES (%s, %s, %s, %s, %s, 'running', %s, %s)
+        RETURNING run_id
+        """,
+        (
+            run_type,
+            home_market_key(market_key),
+            universe_key,
+            trade_date,
+            source_provider,
+            requested_count,
+            Jsonb(params or {}),
+        ),
+    ).fetchone()
+    return str(result[0])
+
+
+def run_error_samples(conn: psycopg.Connection, run_id: str) -> list[Any] | None:
+    row = conn.execute(
+        "SELECT error_samples FROM collection_runs WHERE run_id = %s",
+        (run_id,),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def last_failed_run_error_samples(
+    conn: psycopg.Connection,
+    market_key: str,
+    run_types: list[str],
+) -> list[Any] | None:
+    row = conn.execute(
+        """
+        SELECT error_samples FROM collection_runs
+        WHERE market_key = %s AND run_type = ANY(%s)
+          AND status IN ('failed', 'partial')
+        ORDER BY started_at DESC
+        LIMIT 1
+        """,
+        (home_market_key(market_key), run_types),
+    ).fetchone()
+    return row[0] if row else None
 
 
 def create_universe_run(
