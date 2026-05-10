@@ -67,7 +67,7 @@ uv run python -m market_scanner.analysis.indicators compute --market kospi  --fr
 
 ## 4단계: 스코어링
 
-`daily_indicators`와 `daily_prices`를 읽어 점수, 순위, 시장/섹터 스냅샷을 저장합니다.
+`daily_indicators`와 `daily_prices`를 읽어 눌림목, 돌파, 박스권, 반전, 추세 품질, 테마, 재무, 수급/거래대금 점수를 계산하고 순위와 시장/섹터 스냅샷을 저장합니다.
 `--date`를 생략하면 해당 시장/유니버스의 최신 `daily_indicators.trade_date`를 자동으로 사용합니다.
 ```bash
 uv run python -m market_scanner.analysis.screener run --market us
@@ -91,16 +91,6 @@ uv run python -m market_scanner.reports.render build --market kospi  --universe 
 전체 사이트 대시보드는 별도 빌드 명령으로 생성합니다.
 ```bash
 uv run python -m market_scanner.reports.site_builder --no-open
-```
-
-## 날짜 기준 예시
-
-US 시장은 KST 기준으로 실행하면 오늘이 아니라 전일 거래일 데이터가 최신일 수 있습니다. 4단계 스코어링은 날짜를 생략하면 최신 지표일을 자동 선택합니다. 2, 3, 5단계 날짜를 명확히 맞추고 싶을 때는 같은 `--date`를 명시하거나 가격 수집/지표 계산에 같은 `--from`/`--to` 범위를 사용합니다.
-```bash
-uv run python -m market_scanner.collectors.prices fetch     --market us --date 20260505
-uv run python -m market_scanner.analysis.indicators compute --market us --date 20260505
-uv run python -m market_scanner.analysis.screener run       --market us --date 20260505
-uv run python -m market_scanner.reports.render build        --market us --date 20260505
 ```
 
 ## 보조 명령

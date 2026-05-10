@@ -66,24 +66,6 @@ def _display_symbol_name(row: pd.Series, symbol: str) -> str:
     return display or display_strip_kr(symbol)
 
 
-def _resolve_metadata(market: MarketDefinition, symbol: str, info: dict) -> tuple[str, str, str, str]:
-    static_meta = market.metadata_loader().get(symbol)
-    if static_meta:
-        return (
-            static_meta.name_en,
-            static_meta.name_local,
-            static_meta.sector,
-            static_meta.description,
-        )
-
-    name_en = info.get("longName") or info.get("shortName") or symbol
-    sector_raw = info.get("sector", "") or "Unknown"
-    sector = market.sector_aliases.get(sector_raw, sector_raw)
-    summary = (info.get("longBusinessSummary") or "").strip()
-    description = summary[:120] if summary else "No description"
-    return name_en, name_en, sector, description
-
-
 def enrich_metadata_frame(frame: pd.DataFrame, market: MarketDefinition) -> pd.DataFrame:
     if frame.empty or "symbol" not in frame.columns:
         return frame

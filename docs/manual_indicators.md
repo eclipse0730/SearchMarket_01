@@ -426,7 +426,7 @@ Primary key:
 
 | 계산 key | DB 컬럼 |
 |---|---|
-| `rsi` | `rsi14` |
+| `rsi14` | `rsi14` |
 | `ma_5` | `ma5` |
 | `ma_20` | `ma20` |
 | `ma_60` | `ma60` |
@@ -574,4 +574,4 @@ python3 -m market_scanner.reports.render build --market us --date 20260505
 - `breakout_20d` and `breakout_60d` are close-price breakouts above the prior 20/60-session High.
 - `breakout_high_20d` and `breakout_high_60d` are intraday High breakouts above the prior 20/60-session High.
 - `atr14` uses Wilder smoothing over True Range instead of a simple rolling average.
-- Added traded value, prior-volume averages, value ratio, MA alignment/slope, RSI previous/change, RSI2/5/30, RSI14 MA5, MACD cross/hist-change, explicit new-high flags, and close position in 20/60-day ranges.
+- Added traded value, prior-volume averages, value ratio, MA alignment/slope, RSI14 previous/change, RSI2/5/30, RSI14 MA5, MACD cross/hist-change, and close position in 20/60-day ranges.

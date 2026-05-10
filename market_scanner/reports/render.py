@@ -28,13 +28,27 @@ def report_output_paths(scope_key: str, date_str: str) -> dict[str, Path]:
     }
 
 
+# scan_results.summary_payload 안에 들어있는 전략별 점수/라벨을 컬럼으로 풀어낼 키 목록.
+# screener.py 가 저장한 row_payload([...]) 와 동기화 필요.
+_PAYLOAD_NUMERIC_KEYS = (
+    "raw_composite_score",
+    "pullback_score", "breakout_score", "box_breakout_score",
+    "trend_quality_score", "reversal_score", "overbought_score",
+    "risk_score", "action_score", "quality_score",
+)
+
+
 def _load_render_frame(
     conn: object,
     market_key: str,
     trade_date: date,
     universe_key: str | None = None,
 ) -> pd.DataFrame:
-    """DB의 scan_results에서 이미 저장된 scored frame을 불러옵니다."""
+    """scan_results + daily_indicators + daily_prices + instrument_fundamentals 통합 조회.
+
+    스크리너가 이미 산출한 점수/태그/전략별 점수를 그대로 사용한다. 렌더 단계에서
+    재스코어링은 하지 않는다.
+    """
     effective_universe = universe_key or market_key
     rows = conn.execute(
         """
@@ -64,6 +78,7 @@ def _load_render_frame(
             sr.rank_no,
             sr.composite_score, sr.chart_score, sr.technical_score,
             sr.fundamental_score, sr.theme_score, sr.flow_score,
+            sr.setup_tags, sr.risk_flags, sr.summary_payload,
             i.symbol, i.display_symbol, i.name_en, i.name_local, i.sector, i.description,
             di.rsi14         AS rsi,
             di.rsi14,
@@ -91,10 +106,7 @@ def _load_render_frame(
             di.volume_avg20, di.volume_avg60,
             di.ma_alignment_score, di.is_ma_bullish_alignment,
             di.ma20_slope_pct, di.ma60_slope_pct,
-            di.rsi_prev, di.rsi_change,
             di.macd_cross, di.macd_hist_change,
-            di.new_high_20d_close, di.new_high_20d_high,
-            di.new_high_60d_close, di.new_high_60d_high,
             di.close_position_in_range_20d, di.close_position_in_range_60d,
             di.return_5d, di.return_20d, di.return_60d, di.return_120d, di.return_240d,
             di.atr14, di.atr14_pct, di.volatility_20d, di.volatility_60d,
@@ -159,6 +171,7 @@ def _load_render_frame(
     columns = [
         "rank_no", "composite_score", "chart_score", "technical_score",
         "fundamental_score", "theme_score", "flow_score",
+        "setup_tags", "risk_flags", "summary_payload",
         "symbol", "display_symbol", "name_en", "name_local", "sector", "description",
         "rsi", "rsi14", "rsi14_prev", "rsi14_change", "rsi14_ma5", "rsi2", "rsi5", "rsi30",
         "ma_5", "ma_20", "ma_60", "ma_120", "ma_240",
@@ -171,8 +184,7 @@ def _load_render_frame(
         "breakout_20d", "breakout_60d", "breakout_high_20d", "breakout_high_60d", "volume_ratio",
         "value_traded", "value_ratio_20d", "volume_avg20", "volume_avg60",
         "ma_alignment_score", "is_ma_bullish_alignment", "ma20_slope_pct", "ma60_slope_pct",
-        "rsi_prev", "rsi_change", "macd_cross", "macd_hist_change",
-        "new_high_20d_close", "new_high_20d_high", "new_high_60d_close", "new_high_60d_high",
+        "macd_cross", "macd_hist_change",
         "close_position_in_range_20d", "close_position_in_range_60d",
         "return_5d", "return_20d", "return_60d", "return_120d", "return_240d",
         "atr14", "atr14_pct", "volatility_20d", "volatility_60d",
@@ -183,13 +195,24 @@ def _load_render_frame(
         "market_cap", "target_price",
     ]
     frame = pd.DataFrame(rows, columns=columns)
+
+    # summary_payload(JSONB) 안의 전략별 점수/라벨을 1차 컬럼으로 풀어 둔다.
+    payloads = frame["summary_payload"].apply(lambda p: p if isinstance(p, dict) else {})
+    frame["setup_label"] = payloads.apply(lambda p: p.get("setup_label") or "")
+    for key in _PAYLOAD_NUMERIC_KEYS:
+        frame[key] = payloads.apply(lambda p, k=key: p.get(k))
+
+    # 태그 배열은 list[str] 로 정규화 (psycopg2/3 모두 list 또는 None 으로 들어옴)
+    frame["setup_tags"] = frame["setup_tags"].apply(lambda v: list(v) if v else [])
+    frame["risk_flags"] = frame["risk_flags"].apply(lambda v: list(v) if v else [])
+
     numeric_cols = [c for c in frame.columns if c not in (
         "symbol", "display_symbol", "name_en", "name_local", "sector", "description",
-        "macd_state", "macd_cross", "candle_type", "trend",
+        "macd_state", "macd_cross", "candle_type", "trend", "setup_label",
         "near_5", "near_20", "near_60", "near_120", "near_240",
         "breakout_20d", "breakout_60d", "breakout_high_20d", "breakout_high_60d",
-        "is_ma_bullish_alignment", "new_high_20d_close", "new_high_20d_high",
-        "new_high_60d_close", "new_high_60d_high",
+        "is_ma_bullish_alignment",
+        "setup_tags", "risk_flags", "summary_payload",
     )]
     frame[numeric_cols] = frame[numeric_cols].apply(pd.to_numeric, errors="coerce")
     return frame

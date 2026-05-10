@@ -35,28 +35,50 @@ _MIN_HISTORY: int = 270  # 240일 MA + 여유분
 # ── 순수 계산 함수 (기존) ─────────────────────────────────────────────────────
 
 def calc_rsi(close: pd.Series, period: int = 14) -> float | None:
-    if len(close) < period + 1:
+    rsi = calc_rsi_series(close, period)
+    clean = rsi.dropna()
+    if clean.empty:
         return None
+    return round(float(clean.iloc[-1]), 1)
+
+
+def calc_rsi_series(close: pd.Series, period: int = 14) -> pd.Series:
+    rsi = pd.Series(float("nan"), index=close.index, dtype="float64")
+    if len(close) < period + 1:
+        return rsi
 
     delta = close.diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
 
-    avg_gain = gain.iloc[1:period + 1].mean()
-    avg_loss = loss.iloc[1:period + 1].mean()
-
-    for i in range(period + 1, len(close)):
-        avg_gain = ((avg_gain * (period - 1)) + gain.iloc[i]) / period
-        avg_loss = ((avg_loss * (period - 1)) + loss.iloc[i]) / period
-
-    if avg_loss == 0:
-        return 100.0
-    if avg_gain == 0:
-        return 0.0
+    avg_gain = _wilder_smooth(gain, period)
+    avg_loss = _wilder_smooth(loss, period)
 
     rs = avg_gain / avg_loss
-    rsi = 100 - (100 / (1 + rs))
-    return round(float(rsi), 1)
+    rsi_vals = 100 - (100 / (1 + rs))
+    # 0/0 인 경우 (가격 완전 횡보) 원본 로직과 동일하게 100 으로 처리
+    both_zero = (avg_gain == 0) & (avg_loss == 0)
+    rsi_vals = rsi_vals.mask(both_zero, 100.0)
+    return rsi_vals.round(1)
+
+
+def _wilder_smooth(series: pd.Series, period: int) -> pd.Series:
+    """Wilder smoothing: SMA(series[1:period+1]) seed, then EMA(α=1/period).
+
+    원본 구현의 첫 RSI/ATR 위치(`period` 인덱스)와 이후 재귀식 ``avg_new =
+    (avg_old*(period-1) + value)/period`` 를 그대로 보존하면서 ``ewm`` 으로
+    벡터화.
+    """
+    result = pd.Series(float("nan"), index=series.index, dtype="float64")
+    if len(series) < period + 1:
+        return result
+
+    seed = float(series.iloc[1:period + 1].mean())
+    tail = series.iloc[period + 1:].reset_index(drop=True)
+    inputs = pd.concat([pd.Series([seed]), tail], ignore_index=True)
+    smoothed = inputs.ewm(alpha=1.0 / period, adjust=False).mean()
+    result.iloc[period:] = smoothed.values
+    return result
 
 
 def calc_macd(
@@ -64,21 +86,23 @@ def calc_macd(
     fast: int = 12,
     slow: int = 26,
     signal: int = 9,
-) -> tuple[float | None, float | None, float | None, str]:
+) -> tuple[float | None, float | None, float | None, str, str, float | None]:
     if len(close) < slow + signal:
-        return None, None, None, "Unknown"
+        return None, None, None, "Unknown", "none", None
 
     ema_fast = close.ewm(span=fast, adjust=False, min_periods=fast).mean()
     ema_slow = close.ewm(span=slow, adjust=False, min_periods=slow).mean()
     macd_line = ema_fast - ema_slow
     signal_line = macd_line.ewm(span=signal, adjust=False, min_periods=signal).mean()
     hist = macd_line - signal_line
-    clean = hist.dropna()
-    if clean.empty:
-        return None, None, None, "Unknown"
+    frame = pd.DataFrame({"macd": macd_line, "signal": signal_line, "hist": hist}).dropna()
+    if frame.empty:
+        return None, None, None, "Unknown", "none", None
 
-    last_hist = float(clean.iloc[-1])
-    prev_hist = float(clean.iloc[-2]) if len(clean) >= 2 else last_hist
+    curr = frame.iloc[-1]
+    prev = frame.iloc[-2] if len(frame) >= 2 else curr
+    last_hist = float(curr["hist"])
+    prev_hist = float(prev["hist"])
     if last_hist > 0 and last_hist >= prev_hist:
         state = "Bullish"
     elif last_hist > 0:
@@ -88,42 +112,23 @@ def calc_macd(
     else:
         state = "Bearish"
 
+    cross = "none"
+    hist_change = None
+    if len(frame) >= 2:
+        if float(prev["macd"]) <= float(prev["signal"]) and float(curr["macd"]) > float(curr["signal"]):
+            cross = "golden"
+        elif float(prev["macd"]) >= float(prev["signal"]) and float(curr["macd"]) < float(curr["signal"]):
+            cross = "dead"
+        hist_change = round(last_hist - prev_hist, 4)
+
     return (
-        round(float(macd_line.iloc[-1]), 4) if pd.notna(macd_line.iloc[-1]) else None,
-        round(float(signal_line.iloc[-1]), 4) if pd.notna(signal_line.iloc[-1]) else None,
+        round(float(curr["macd"]), 4),
+        round(float(curr["signal"]), 4),
         round(last_hist, 4),
         state,
+        cross,
+        hist_change,
     )
-
-
-def calc_macd_cross(
-    close: pd.Series,
-    fast: int = 12,
-    slow: int = 26,
-    signal: int = 9,
-) -> tuple[str, float | None]:
-    if len(close) < slow + signal + 1:
-        return "none", None
-
-    ema_fast = close.ewm(span=fast, adjust=False, min_periods=fast).mean()
-    ema_slow = close.ewm(span=slow, adjust=False, min_periods=slow).mean()
-    macd_line = ema_fast - ema_slow
-    signal_line = macd_line.ewm(span=signal, adjust=False, min_periods=signal).mean()
-    hist = macd_line - signal_line
-    frame = pd.DataFrame({"macd": macd_line, "signal": signal_line, "hist": hist}).dropna()
-    if len(frame) < 2:
-        return "none", None
-
-    prev = frame.iloc[-2]
-    curr = frame.iloc[-1]
-    cross = "none"
-    if float(prev["macd"]) <= float(prev["signal"]) and float(curr["macd"]) > float(curr["signal"]):
-        cross = "golden"
-    elif float(prev["macd"]) >= float(prev["signal"]) and float(curr["macd"]) < float(curr["signal"]):
-        cross = "dead"
-
-    hist_change = float(curr["hist"]) - float(prev["hist"])
-    return cross, round(hist_change, 4)
 
 
 def calc_bollinger(
@@ -314,14 +319,213 @@ def _ma_slope_pct(series: pd.Series | None, lookback: int = 20) -> float | None:
     return round((float(clean.iloc[-1]) - base) / base * 100, 2)
 
 
-def _rsi_ma(close: pd.Series, period: int = 14, ma_period: int = 5) -> float | None:
-    values: list[float] = []
-    for end in range(len(close) - ma_period + 1, len(close) + 1):
-        value = calc_rsi(close.iloc[:end], period)
-        if value is None:
-            return None
-        values.append(value)
-    return round(sum(values) / len(values), 1)
+def _candle_block(
+    current: float,
+    prev_close: float | None,
+    open_price: float | None,
+    high_price: float | None,
+    low_price: float | None,
+) -> dict[str, Any]:
+    change_pct = round((current - prev_close) / prev_close * 100, 2) if prev_close else None
+    gap_pct = (
+        round((open_price - prev_close) / prev_close * 100, 2)
+        if open_price and prev_close else None
+    )
+    candle_body_pct = round((current - open_price) / open_price * 100, 2) if open_price else None
+    candle_range_pct = (
+        round((high_price - low_price) / open_price * 100, 2)
+        if open_price and high_price is not None and low_price is not None else None
+    )
+    upper_shadow_pct = (
+        round((high_price - max(open_price, current)) / open_price * 100, 2)
+        if open_price and high_price is not None else None
+    )
+    lower_shadow_pct = (
+        round((min(open_price, current) - low_price) / open_price * 100, 2)
+        if open_price and low_price is not None else None
+    )
+    return {
+        "change_pct": change_pct,
+        "gap_pct": gap_pct,
+        "candle_body_pct": candle_body_pct,
+        "candle_range_pct": candle_range_pct,
+        "upper_shadow_pct": upper_shadow_pct,
+        "lower_shadow_pct": lower_shadow_pct,
+        "candle_type": calc_candle_type(open_price, high_price, low_price, current),
+    }
+
+
+def _yearly_range_block(
+    close: pd.Series,
+    high_s: pd.Series,
+    low_s: pd.Series,
+    current: float,
+    price_decimals: int,
+) -> dict[str, Any]:
+    trailing_window = min(252, len(close))
+    high_52w = _safe(high_s.iloc[-trailing_window:].max(), price_decimals)
+    low_52w = _safe(low_s.iloc[-trailing_window:].min(), price_decimals)
+    return {
+        "high_52w": high_52w,
+        "low_52w": low_52w,
+        "from_high_pct": round((current - high_52w) / high_52w * 100, 1) if high_52w else None,
+        "from_low_pct": round((current - low_52w) / low_52w * 100, 1) if low_52w else None,
+    }
+
+
+def _short_range_block(
+    close: pd.Series,
+    high_s: pd.Series,
+    low_s: pd.Series,
+    current: float,
+    high_price: float | None,
+    price_decimals: int,
+) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for period in _RANGE_PERIODS:
+        if len(close) < period:
+            out[f"high_{period}d"] = None
+            out[f"low_{period}d"] = None
+            out[f"breakout_{period}d"] = False
+            out[f"breakout_high_{period}d"] = False
+            out[f"close_position_in_range_{period}d"] = None
+            continue
+        range_high = _safe(high_s.iloc[-period:].max(), price_decimals)
+        range_low = _safe(low_s.iloc[-period:].min(), price_decimals)
+        prior_high = (
+            _safe(high_s.iloc[-period - 1:-1].max(), price_decimals)
+            if len(close) > period else None
+        )
+        out[f"high_{period}d"] = range_high
+        out[f"low_{period}d"] = range_low
+        out[f"breakout_{period}d"] = bool(prior_high and current > prior_high)
+        out[f"breakout_high_{period}d"] = bool(
+            prior_high and high_price is not None and high_price > prior_high
+        )
+        out[f"close_position_in_range_{period}d"] = _range_position(current, range_low, range_high)
+    return out
+
+
+def _volume_block(
+    close: pd.Series,
+    volume_s: pd.Series | None,
+    current: float,
+) -> dict[str, Any]:
+    if volume_s is None:
+        return {
+            "volume_ratio": None,
+            "value_traded": None,
+            "value_ratio_20d": None,
+            "volume_avg20": None,
+            "volume_avg60": None,
+        }
+    vol_last = _safe(volume_s.iloc[-1])
+    vol_avg20 = _avg_prior(volume_s, 20)
+    vol_avg60 = _avg_prior(volume_s, 60)
+    volume_ratio = round(vol_last / vol_avg20, 2) if vol_last and vol_avg20 else None
+    value_traded = round(current * vol_last, 2) if vol_last is not None else None
+    value_avg20 = _avg_prior(close * volume_s, 20)
+    value_ratio_20d = round(value_traded / value_avg20, 2) if value_traded and value_avg20 else None
+    return {
+        "volume_ratio": volume_ratio,
+        "value_traded": value_traded,
+        "value_ratio_20d": value_ratio_20d,
+        "volume_avg20": vol_avg20,
+        "volume_avg60": vol_avg60,
+    }
+
+
+def _momentum_block(
+    close: pd.Series,
+    high_s: pd.Series,
+    low_s: pd.Series,
+    current: float,
+) -> dict[str, Any]:
+    rsi14_clean = calc_rsi_series(close, 14).dropna()
+    rsi14 = round(float(rsi14_clean.iloc[-1]), 1) if not rsi14_clean.empty else None
+    rsi14_prev = round(float(rsi14_clean.iloc[-2]), 1) if len(rsi14_clean) >= 2 else None
+    rsi14_change = (
+        round(rsi14 - rsi14_prev, 1) if rsi14 is not None and rsi14_prev is not None else None
+    )
+    rsi14_ma5 = round(float(rsi14_clean.tail(5).mean()), 1) if len(rsi14_clean) >= 5 else None
+
+    macd, macd_signal, macd_hist, macd_state, macd_cross, macd_hist_change = calc_macd(close)
+    bollinger_width_pct, bollinger_percent_b = calc_bollinger(close)
+    atr14 = calc_atr(high_s, low_s, close)
+    atr14_pct = round(atr14 / current * 100, 2) if atr14 and current else None
+
+    return {
+        "rsi14": rsi14,
+        "rsi14_prev": rsi14_prev,
+        "rsi14_change": rsi14_change,
+        "rsi14_ma5": rsi14_ma5,
+        "rsi2": calc_rsi(close, 2),
+        "rsi5": calc_rsi(close, 5),
+        "rsi30": calc_rsi(close, 30),
+        "macd": macd,
+        "macd_signal": macd_signal,
+        "macd_hist": macd_hist,
+        "macd_state": macd_state,
+        "macd_cross": macd_cross,
+        "macd_hist_change": macd_hist_change,
+        "bollinger_width_pct": bollinger_width_pct,
+        "bollinger_percent_b": bollinger_percent_b,
+        "atr14": atr14,
+        "atr14_pct": atr14_pct,
+    }
+
+
+def _return_volatility_block(close: pd.Series) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for period in _RETURN_PERIODS:
+        out[f"return_{period}d"] = calc_return(close, period)
+    for period in _VOLATILITY_PERIODS:
+        out[f"volatility_{period}d"] = calc_annualized_volatility(close, period)
+    return out
+
+
+def _ma_block(
+    close: pd.Series,
+    current: float,
+    ma_periods: tuple[int, ...],
+    threshold_pct: float,
+    price_decimals: int,
+) -> tuple[dict[str, Any], dict[int, pd.Series], dict[int, float | None]]:
+    out: dict[str, Any] = {}
+    ma_series_dict: dict[int, pd.Series] = {}
+    ma_values: dict[int, float | None] = {}
+
+    for period in ma_periods:
+        if len(close) < period:
+            ma_values[period] = None
+            out[f"ma{period}"] = None
+            out[f"diff_{period}_pct"] = None
+            out[f"near_{period}"] = False
+            continue
+        series = close.rolling(window=period).mean()
+        ma_series_dict[period] = series
+        ma_val = _safe(series.iloc[-1], price_decimals)
+        ma_values[period] = ma_val
+        out[f"ma{period}"] = ma_val
+        if ma_val:
+            diff = round((current - ma_val) / ma_val * 100, 2)
+            out[f"diff_{period}_pct"] = diff
+            out[f"near_{period}"] = abs(diff) <= threshold_pct
+        else:
+            out[f"diff_{period}_pct"] = None
+            out[f"near_{period}"] = False
+
+    alignment_pairs = ((5, 20), (20, 60), (60, 120), (120, 240))
+    score = sum(
+        1 for fast, slow in alignment_pairs
+        if ma_values.get(fast) is not None and ma_values.get(slow) is not None
+        and ma_values[fast] > ma_values[slow]  # type: ignore[operator]
+    )
+    out["ma_alignment_score"] = score
+    out["is_ma_bullish_alignment"] = score == len(alignment_pairs)
+    out["ma20_slope_pct"] = _ma_slope_pct(ma_series_dict.get(20))
+    out["ma60_slope_pct"] = _ma_slope_pct(ma_series_dict.get(60))
+    return out, ma_series_dict, ma_values
 
 
 def _compute_from_hist(
@@ -345,196 +549,22 @@ def _compute_from_hist(
     high_price = _safe(high_s.iloc[-1], price_decimals)
     low_price = _safe(low_s.iloc[-1], price_decimals)
 
-    change_pct = round((current - prev_close) / prev_close * 100, 2) if prev_close else None
-    gap_pct = (
-        round((open_price - prev_close) / prev_close * 100, 2)
-        if open_price and prev_close else None
+    result: dict[str, Any] = {}
+    result.update(_candle_block(current, prev_close, open_price, high_price, low_price))
+    result.update(_yearly_range_block(close, high_s, low_s, current, price_decimals))
+    result.update(_short_range_block(close, high_s, low_s, current, high_price, price_decimals))
+    result.update(_volume_block(close, volume_s, current))
+    result.update(_momentum_block(close, high_s, low_s, current))
+    result.update(_return_volatility_block(close))
+    ma_block, ma_series_dict, ma_values = _ma_block(
+        close, current, ma_periods, threshold_pct, price_decimals
     )
-    candle_body_pct = round((current - open_price) / open_price * 100, 2) if open_price else None
-    candle_range_pct = (
-        round((high_price - low_price) / open_price * 100, 2)
-        if open_price and high_price is not None and low_price is not None else None
-    )
-    upper_shadow_pct = (
-        round((high_price - max(open_price, current)) / open_price * 100, 2)
-        if open_price and high_price is not None else None
-    )
-    lower_shadow_pct = (
-        round((min(open_price, current) - low_price) / open_price * 100, 2)
-        if open_price and low_price is not None else None
-    )
-    candle_type = calc_candle_type(open_price, high_price, low_price, current)
-
-    trailing_window = min(252, len(close))
-    high_52w = _safe(high_s.iloc[-trailing_window:].max(), price_decimals)
-    low_52w = _safe(low_s.iloc[-trailing_window:].min(), price_decimals)
-    from_high_pct = round((current - high_52w) / high_52w * 100, 1) if high_52w else None
-    from_low_pct = round((current - low_52w) / low_52w * 100, 1) if low_52w else None
-
-    range_highs: dict[int, float | None] = {}
-    range_lows: dict[int, float | None] = {}
-    breakout_close: dict[int, bool] = {}
-    breakout_high: dict[int, bool] = {}
-    close_position_in_range: dict[int, float | None] = {}
-    for period in _RANGE_PERIODS:
-        if len(close) < period:
-            range_highs[period] = None
-            range_lows[period] = None
-            breakout_close[period] = False
-            breakout_high[period] = False
-            close_position_in_range[period] = None
-            continue
-        range_high = _safe(high_s.iloc[-period:].max(), price_decimals)
-        range_low = _safe(low_s.iloc[-period:].min(), price_decimals)
-        prior_high = _safe(high_s.iloc[-period - 1:-1].max(), price_decimals) if len(close) > period else None
-        range_highs[period] = range_high
-        range_lows[period] = range_low
-        breakout_close[period] = bool(prior_high and current > prior_high)
-        breakout_high[period] = bool(prior_high and high_price is not None and high_price > prior_high)
-        close_position_in_range[period] = _range_position(current, range_low, range_high)
-
-    vol_last = _safe(volume_s.iloc[-1]) if volume_s is not None else None
-    vol_avg20 = _avg_prior(volume_s, 20) if volume_s is not None else None
-    vol_avg60 = _avg_prior(volume_s, 60) if volume_s is not None else None
-    volume_ratio = round(vol_last / vol_avg20, 2) if vol_last and vol_avg20 else None
-    value_traded = round(current * vol_last, 2) if vol_last is not None else None
-    value_ratio_20d = None
-    if volume_s is not None:
-        value_s = close * volume_s
-        value_avg20 = _avg_prior(value_s, 20)
-        value_ratio_20d = round(value_traded / value_avg20, 2) if value_traded and value_avg20 else None
-
-    rsi = calc_rsi(close)
-    rsi_prev = calc_rsi(close.iloc[:-1]) if len(close) > 1 else None
-    rsi_change = round(rsi - rsi_prev, 1) if rsi is not None and rsi_prev is not None else None
-    rsi14_ma5 = _rsi_ma(close, 14, 5)
-    rsi2 = calc_rsi(close, 2)
-    rsi5 = calc_rsi(close, 5)
-    rsi30 = calc_rsi(close, 30)
-    macd, macd_signal, macd_hist, macd_state = calc_macd(close)
-    macd_cross, macd_hist_change = calc_macd_cross(close)
-    bollinger_width_pct, bollinger_percent_b = calc_bollinger(close)
-    atr14 = calc_atr(high_s, low_s, close)
-    atr14_pct = round(atr14 / current * 100, 2) if atr14 and current else None
-    returns = {period: calc_return(close, period) for period in _RETURN_PERIODS}
-    volatility = {period: calc_annualized_volatility(close, period) for period in _VOLATILITY_PERIODS}
-
-    ma_values: dict[int, float | None] = {}
-    ma_diff_pct: dict[int, float | None] = {}
-    near_flags: dict[int, bool] = {}
-    ma_series_dict: dict[int, pd.Series] = {}
-
-    for period in ma_periods:
-        if len(close) < period:
-            ma_values[period] = None
-            ma_diff_pct[period] = None
-            near_flags[period] = False
-            continue
-        series = close.rolling(window=period).mean()
-        ma_series_dict[period] = series
-        ma_val = _safe(series.iloc[-1], price_decimals)
-        ma_values[period] = ma_val
-        if ma_val:
-            diff = round((current - ma_val) / ma_val * 100, 2)
-            ma_diff_pct[period] = diff
-            near_flags[period] = abs(diff) <= threshold_pct
-        else:
-            ma_diff_pct[period] = None
-            near_flags[period] = False
-
-    alignment_pairs = [(5, 20), (20, 60), (60, 120), (120, 240)]
-    ma_alignment_score = 0
-    for fast, slow in alignment_pairs:
-        fast_ma = ma_values.get(fast)
-        slow_ma = ma_values.get(slow)
-        if fast_ma is not None and slow_ma is not None and fast_ma > slow_ma:
-            ma_alignment_score += 1
-    is_ma_bullish_alignment = ma_alignment_score == len(alignment_pairs)
-    ma20_slope_pct = _ma_slope_pct(ma_series_dict.get(20))
-    ma60_slope_pct = _ma_slope_pct(ma_series_dict.get(60))
+    result.update(ma_block)
 
     trend_score, trend = calc_trend(close, ma_values, ma_series_dict, _TREND_MA_PERIODS)
-
-    return {
-        "rsi": rsi,
-        "rsi14": rsi,
-        "ma_5": ma_values.get(5),
-        "ma_20": ma_values.get(20),
-        "ma_60": ma_values.get(60),
-        "ma_120": ma_values.get(120),
-        "ma_240": ma_values.get(240),
-        "diff_5": ma_diff_pct.get(5),
-        "diff_20": ma_diff_pct.get(20),
-        "diff_60": ma_diff_pct.get(60),
-        "diff_120": ma_diff_pct.get(120),
-        "diff_240": ma_diff_pct.get(240),
-        "near_5": near_flags.get(5, False),
-        "near_20": near_flags.get(20, False),
-        "near_60": near_flags.get(60, False),
-        "near_120": near_flags.get(120, False),
-        "near_240": near_flags.get(240, False),
-        "rsi_prev": rsi_prev,
-        "rsi_change": rsi_change,
-        "rsi14_prev": rsi_prev,
-        "rsi14_change": rsi_change,
-        "rsi14_ma5": rsi14_ma5,
-        "rsi2": rsi2,
-        "rsi5": rsi5,
-        "rsi30": rsi30,
-        "macd": macd,
-        "macd_signal": macd_signal,
-        "macd_hist": macd_hist,
-        "macd_state": macd_state,
-        "macd_cross": macd_cross,
-        "macd_hist_change": macd_hist_change,
-        "bollinger_width_pct": bollinger_width_pct,
-        "bollinger_percent_b": bollinger_percent_b,
-        "high_52w": high_52w,
-        "low_52w": low_52w,
-        "from_high_pct": from_high_pct,
-        "from_low_pct": from_low_pct,
-        "high_20d": range_highs.get(20),
-        "low_20d": range_lows.get(20),
-        "high_60d": range_highs.get(60),
-        "low_60d": range_lows.get(60),
-        "breakout_20d": breakout_close.get(20, False),
-        "breakout_60d": breakout_close.get(60, False),
-        "breakout_high_20d": breakout_high.get(20, False),
-        "breakout_high_60d": breakout_high.get(60, False),
-        "new_high_20d_close": breakout_close.get(20, False),
-        "new_high_20d_high": breakout_high.get(20, False),
-        "new_high_60d_close": breakout_close.get(60, False),
-        "new_high_60d_high": breakout_high.get(60, False),
-        "close_position_in_range_20d": close_position_in_range.get(20),
-        "close_position_in_range_60d": close_position_in_range.get(60),
-        "volume_ratio": volume_ratio,
-        "value_traded": value_traded,
-        "value_ratio_20d": value_ratio_20d,
-        "volume_avg20": vol_avg20,
-        "volume_avg60": vol_avg60,
-        "return_5d": returns.get(5),
-        "return_20d": returns.get(20),
-        "return_60d": returns.get(60),
-        "return_120d": returns.get(120),
-        "return_240d": returns.get(240),
-        "atr14": atr14,
-        "atr14_pct": atr14_pct,
-        "volatility_20d": volatility.get(20),
-        "volatility_60d": volatility.get(60),
-        "change_pct": change_pct,
-        "gap_pct": gap_pct,
-        "candle_body_pct": candle_body_pct,
-        "candle_range_pct": candle_range_pct,
-        "upper_shadow_pct": upper_shadow_pct,
-        "lower_shadow_pct": lower_shadow_pct,
-        "candle_type": candle_type,
-        "trend": trend,
-        "trend_score": trend_score,
-        "ma_alignment_score": ma_alignment_score,
-        "is_ma_bullish_alignment": is_ma_bullish_alignment,
-        "ma20_slope_pct": ma20_slope_pct,
-        "ma60_slope_pct": ma60_slope_pct,
-    }
+    result["trend"] = trend
+    result["trend_score"] = trend_score
+    return result
 
 
 def compute_for_instrument(
@@ -572,6 +602,139 @@ def _resolve_date_range(date_from: str | None, date_to: str | None) -> tuple[dat
     return start_date, end_date
 
 
+def _resolve_target_dates(
+    conn: Any,
+    market_key: str,
+    date_str: str | None,
+    date_from: str | None,
+    date_to: str | None,
+) -> list[date]:
+    if date_str:
+        if date_from or date_to:
+            raise ValueError("--date cannot be used with --from/--to")
+        return [_parse_date_arg(date_str)]
+    if not (date_from or date_to):
+        return [date.today()]
+
+    start_date, end_date = _resolve_date_range(date_from, date_to)
+    rows = conn.execute(
+        """
+        SELECT DISTINCT dp.trade_date
+        FROM daily_prices dp
+        JOIN instruments i ON i.instrument_id = dp.instrument_id
+        WHERE i.market_key = %s
+          AND i.is_active = TRUE
+          AND dp.trade_date BETWEEN %s AND %s
+        ORDER BY dp.trade_date
+        """,
+        (home_market_key(market_key), start_date, end_date),
+    ).fetchall()
+    target_dates = [row[0] for row in rows]
+    if not target_dates:
+        print(
+            f"  indicators compute [{market_key}]: no price dates found "
+            f"from {start_date.isoformat()} to {end_date.isoformat()}"
+        )
+    else:
+        print(
+            f"  indicators compute [{market_key}]: {len(target_dates)} date(s) "
+            f"from {start_date.isoformat()} to {end_date.isoformat()}"
+        )
+    return target_dates
+
+
+def _load_active_instruments(
+    conn: Any,
+    market_key: str,
+    limit: int | None,
+) -> list[dict[str, Any]]:
+    rows = conn.execute(
+        """
+        SELECT instrument_id, symbol
+        FROM instruments
+        WHERE market_key = %s AND is_active = TRUE
+        ORDER BY symbol
+        """,
+        (home_market_key(market_key),),
+    ).fetchall()
+    instruments = [{"instrument_id": row[0], "symbol": str(row[1])} for row in rows]
+    if limit:
+        instruments = instruments[:limit]
+    return instruments
+
+
+def _process_date(
+    conn: Any,
+    market_key: str,
+    trade_date: date,
+    source_provider: str,
+    price_decimals: int,
+    instruments: list[dict[str, Any]],
+) -> None:
+    run_id = create_collection_run(
+        conn, "indicators", market_key, trade_date, source_provider, len(instruments),
+        params={"mode": "compute"},
+    )
+    print(f"  indicators compute [{market_key}] {len(instruments)} symbols  run_id={run_id}")
+
+    success, failed, skipped = 0, 0, 0
+    error_samples: list[dict[str, Any]] = []
+
+    def print_progress() -> None:
+        processed = success + failed + skipped
+        print(
+            progress_line(
+                processed, len(instruments),
+                success=success, failed=failed, skipped=skipped,
+            ),
+            end="",
+            flush=True,
+        )
+
+    print_progress()
+
+    for instr in instruments:
+        instrument_id = instr["instrument_id"]
+        symbol = instr["symbol"]
+
+        has_price = conn.execute(
+            "SELECT 1 FROM daily_prices WHERE instrument_id = %s AND trade_date = %s LIMIT 1",
+            (instrument_id, trade_date),
+        ).fetchone()
+        if not has_price:
+            skipped += 1
+            if len(error_samples) < 30:
+                error_samples.append({"symbol": symbol, "status": "skipped", "reason": "missing_target_price"})
+            print_progress()
+            continue
+
+        ok, reason = compute_for_instrument(
+            conn, instrument_id, trade_date, run_id, source_provider, price_decimals
+        )
+        if ok:
+            success += 1
+        else:
+            failed += 1
+            if len(error_samples) < 30:
+                error_samples.append({"symbol": symbol, "status": "failed", "reason": reason or "unknown"})
+        print_progress()
+
+    print()
+    if failed or skipped:
+        status = "partial" if success else "failed"
+    else:
+        status = "success"
+    finish_run(
+        conn, run_id, status=status,
+        success_count=success, failed_count=failed, skipped_count=skipped,
+        error_samples=error_samples,
+    )
+    print(
+        f"  indicators compute [{market_key}] done: "
+        f"success={success} failed={failed} skipped={skipped} status={status}"
+    )
+
+
 def run_compute(
     market_key: str,
     date_str: str | None = None,
@@ -580,138 +743,25 @@ def run_compute(
     date_from: str | None = None,
     date_to: str | None = None,
 ) -> None:
-    if date_str:
-        if date_from or date_to:
-            raise ValueError("--date cannot be used with --from/--to")
-        target_dates = [_parse_date_arg(date_str)]
-    elif date_from or date_to:
-        start_date, end_date = _resolve_date_range(date_from, date_to)
-        target_dates = None
-    else:
-        target_dates = [date.today()]
     source_provider = price_source_for_market(market_key)
-    market = MARKETS[market_key]
-    price_decimals = market.price_decimals
-
-    if target_dates is None:
-        with connect(explicit_url) as conn:
-            rows = conn.execute(
-                """
-                SELECT DISTINCT dp.trade_date
-                FROM daily_prices dp
-                JOIN instruments i ON i.instrument_id = dp.instrument_id
-                WHERE i.market_key = %s
-                  AND i.is_active = TRUE
-                  AND dp.trade_date BETWEEN %s AND %s
-                ORDER BY dp.trade_date
-                """,
-                (home_market_key(market_key), start_date, end_date),
-            ).fetchall()
-        target_dates = [row[0] for row in rows]
-        if not target_dates:
-            print(
-                f"  indicators compute [{market_key}]: no price dates found "
-                f"from {start_date.isoformat()} to {end_date.isoformat()}"
-            )
-            return
-        print(
-            f"  indicators compute [{market_key}]: {len(target_dates)} date(s) "
-            f"from {start_date.isoformat()} to {end_date.isoformat()}"
-        )
-        for target_date in target_dates:
-            run_compute(
-                market_key,
-                target_date.strftime("%Y%m%d"),
-                explicit_url,
-                limit,
-            )
-        return
-
-    trade_date = target_dates[0]
+    price_decimals = MARKETS[market_key].price_decimals
 
     with connect(explicit_url) as conn:
-        rows = conn.execute(
-            """
-            SELECT instrument_id, symbol
-            FROM instruments
-            WHERE market_key = %s AND is_active = TRUE
-            ORDER BY symbol
-            """,
-            (home_market_key(market_key),),
-        ).fetchall()
+        target_dates = _resolve_target_dates(conn, market_key, date_str, date_from, date_to)
+        if not target_dates:
+            return
 
-        instruments = [{"instrument_id": row[0], "symbol": str(row[1])} for row in rows]
-        if limit:
-            instruments = instruments[:limit]
-
+        instruments = _load_active_instruments(conn, market_key, limit)
         if not instruments:
             print(f"  indicators compute [{market_key}]: no active instruments")
             return
 
-        run_id = create_collection_run(
-            conn, "indicators", market_key, trade_date, source_provider, len(instruments),
-            params={"mode": "compute"},
-        )
-
-        print(f"  indicators compute [{market_key}] {len(instruments)} symbols  run_id={run_id}")
-
-        success, failed, skipped = 0, 0, 0
-        error_samples: list[dict[str, Any]] = []
-
-        def print_progress(force: bool = False) -> None:
-            processed = success + failed + skipped
-            if not force and processed < len(instruments):
-                return
-            print(
-                progress_line(
-                    processed,
-                    len(instruments),
-                    success=success,
-                    failed=failed,
-                    skipped=skipped,
-                ),
-                end="",
-                flush=True,
+        for trade_date in target_dates:
+            _process_date(
+                conn, market_key, trade_date, source_provider, price_decimals, instruments,
             )
-
-        print_progress(force=True)
-
-        for instr in instruments:
-            instrument_id = instr["instrument_id"]
-            symbol = instr["symbol"]
-
-            has_price = conn.execute(
-                "SELECT 1 FROM daily_prices WHERE instrument_id = %s AND trade_date = %s LIMIT 1",
-                (instrument_id, trade_date),
-            ).fetchone()
-            if not has_price:
-                skipped += 1
-                if len(error_samples) < 30:
-                    error_samples.append({"symbol": symbol, "status": "skipped", "reason": "missing_target_price"})
-                print_progress(force=True)
-                continue
-
-            ok, reason = compute_for_instrument(
-                conn, instrument_id, trade_date, run_id, source_provider, price_decimals
-            )
-            if ok:
-                success += 1
-            else:
-                failed += 1
-                if len(error_samples) < 30:
-                    error_samples.append({"symbol": symbol, "status": "failed", "reason": reason or "unknown"})
-            print_progress(force=True)
-
-        print()
-        if failed or skipped:
-            status = "partial" if success else "failed"
-        else:
-            status = "success"
-        finish_run(conn, run_id, status=status, success_count=success, failed_count=failed, skipped_count=skipped, error_samples=error_samples)
-        print(
-            f"  indicators compute [{market_key}] done: "
-            f"success={success} failed={failed} skipped={skipped} status={status}"
-        )
+            # 날짜 단위 커밋 경계 유지 — 중간 실패 시 이전 날짜는 보존
+            conn.commit()
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

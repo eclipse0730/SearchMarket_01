@@ -30,6 +30,39 @@ def load_price_history(conn: Any, instrument_id: int, through_date: date) -> pd.
     return frame.apply(pd.to_numeric, errors="coerce").dropna(subset=["Close"])
 
 
+# `_compute_from_hist()` 결과 dict 의 키와 daily_indicators 컬럼명이 1:1 일치한다.
+# 각 컬럼의 타입에 맞는 cleaner 만 매핑.
+_NUMERIC_COLUMNS: tuple[str, ...] = (
+    "rsi14", "rsi14_prev", "rsi14_change", "rsi14_ma5", "rsi2", "rsi5", "rsi30",
+    "ma5", "ma20", "ma60", "ma120", "ma240",
+    "diff_5_pct", "diff_20_pct", "diff_60_pct", "diff_120_pct", "diff_240_pct",
+    "macd", "macd_signal", "macd_hist", "macd_hist_change",
+    "bollinger_width_pct", "bollinger_percent_b",
+    "high_52w", "low_52w", "from_high_pct", "from_low_pct",
+    "high_20d", "low_20d", "high_60d", "low_60d",
+    "close_position_in_range_20d", "close_position_in_range_60d",
+    "volume_ratio", "value_traded", "value_ratio_20d", "volume_avg20", "volume_avg60",
+    "ma20_slope_pct", "ma60_slope_pct",
+    "return_5d", "return_20d", "return_60d", "return_120d", "return_240d",
+    "atr14", "atr14_pct",
+    "volatility_20d", "volatility_60d",
+    "change_pct", "gap_pct",
+    "candle_body_pct", "candle_range_pct", "upper_shadow_pct", "lower_shadow_pct",
+)
+_BOOL_COLUMNS: tuple[str, ...] = (
+    "near_5", "near_20", "near_60", "near_120", "near_240",
+    "breakout_20d", "breakout_60d", "breakout_high_20d", "breakout_high_60d",
+    "is_ma_bullish_alignment",
+)
+_INT_COLUMNS: tuple[str, ...] = ("ma_alignment_score", "trend_score")
+_TEXT_COLUMNS_WITH_DEFAULT: dict[str, str] = {
+    "macd_state": "Unknown",
+    "macd_cross": "none",
+    "candle_type": "Unknown",
+}
+_TEXT_COLUMNS: tuple[str, ...] = ("trend",)
+
+
 def upsert_daily_indicator(
     conn: psycopg.Connection,
     instrument_id: int,
@@ -38,89 +71,23 @@ def upsert_daily_indicator(
     row: pd.Series,
     run_id: str,
 ) -> None:
-    values = {
+    values: dict[str, Any] = {
         "instrument_id": instrument_id,
         "trade_date": trade_date,
         "price_source_provider": source_provider,
-        "rsi14": clean_number(row.get("rsi14", row.get("rsi"))),
-        "rsi14_prev": clean_number(row.get("rsi14_prev")),
-        "rsi14_change": clean_number(row.get("rsi14_change")),
-        "rsi14_ma5": clean_number(row.get("rsi14_ma5")),
-        "rsi2": clean_number(row.get("rsi2")),
-        "rsi5": clean_number(row.get("rsi5")),
-        "rsi30": clean_number(row.get("rsi30")),
-        "ma5": clean_number(row.get("ma_5")),
-        "ma20": clean_number(row.get("ma_20")),
-        "ma60": clean_number(row.get("ma_60")),
-        "ma120": clean_number(row.get("ma_120")),
-        "ma240": clean_number(row.get("ma_240")),
-        "diff_5_pct": clean_number(row.get("diff_5")),
-        "diff_20_pct": clean_number(row.get("diff_20")),
-        "diff_60_pct": clean_number(row.get("diff_60")),
-        "diff_120_pct": clean_number(row.get("diff_120")),
-        "diff_240_pct": clean_number(row.get("diff_240")),
-        "near_5": clean_bool(row.get("near_5")),
-        "near_20": clean_bool(row.get("near_20")),
-        "near_60": clean_bool(row.get("near_60")),
-        "near_120": clean_bool(row.get("near_120")),
-        "near_240": clean_bool(row.get("near_240")),
-        "macd": clean_number(row.get("macd")),
-        "macd_signal": clean_number(row.get("macd_signal")),
-        "macd_hist": clean_number(row.get("macd_hist")),
-        "macd_state": clean_text(row.get("macd_state")) or "Unknown",
-        "bollinger_width_pct": clean_number(row.get("bollinger_width_pct")),
-        "bollinger_percent_b": clean_number(row.get("bollinger_percent_b")),
-        "high_52w": clean_number(row.get("high_52w")),
-        "low_52w": clean_number(row.get("low_52w")),
-        "from_high_pct": clean_number(row.get("from_high_pct")),
-        "from_low_pct": clean_number(row.get("from_low_pct")),
-        "high_20d": clean_number(row.get("high_20d")),
-        "low_20d": clean_number(row.get("low_20d")),
-        "high_60d": clean_number(row.get("high_60d")),
-        "low_60d": clean_number(row.get("low_60d")),
-        "breakout_20d": clean_bool(row.get("breakout_20d")),
-        "breakout_60d": clean_bool(row.get("breakout_60d")),
-        "breakout_high_20d": clean_bool(row.get("breakout_high_20d")),
-        "breakout_high_60d": clean_bool(row.get("breakout_high_60d")),
-        "volume_ratio": clean_number(row.get("volume_ratio")),
-        "value_traded": clean_number(row.get("value_traded")),
-        "value_ratio_20d": clean_number(row.get("value_ratio_20d")),
-        "volume_avg20": clean_number(row.get("volume_avg20")),
-        "volume_avg60": clean_number(row.get("volume_avg60")),
-        "ma_alignment_score": clean_int(row.get("ma_alignment_score")),
-        "is_ma_bullish_alignment": clean_bool(row.get("is_ma_bullish_alignment")),
-        "ma20_slope_pct": clean_number(row.get("ma20_slope_pct")),
-        "ma60_slope_pct": clean_number(row.get("ma60_slope_pct")),
-        "rsi_prev": clean_number(row.get("rsi_prev")),
-        "rsi_change": clean_number(row.get("rsi_change")),
-        "macd_cross": clean_text(row.get("macd_cross")) or "none",
-        "macd_hist_change": clean_number(row.get("macd_hist_change")),
-        "new_high_20d_close": clean_bool(row.get("new_high_20d_close")),
-        "new_high_20d_high": clean_bool(row.get("new_high_20d_high")),
-        "new_high_60d_close": clean_bool(row.get("new_high_60d_close")),
-        "new_high_60d_high": clean_bool(row.get("new_high_60d_high")),
-        "close_position_in_range_20d": clean_number(row.get("close_position_in_range_20d")),
-        "close_position_in_range_60d": clean_number(row.get("close_position_in_range_60d")),
-        "return_5d": clean_number(row.get("return_5d")),
-        "return_20d": clean_number(row.get("return_20d")),
-        "return_60d": clean_number(row.get("return_60d")),
-        "return_120d": clean_number(row.get("return_120d")),
-        "return_240d": clean_number(row.get("return_240d")),
-        "atr14": clean_number(row.get("atr14")),
-        "atr14_pct": clean_number(row.get("atr14_pct")),
-        "volatility_20d": clean_number(row.get("volatility_20d")),
-        "volatility_60d": clean_number(row.get("volatility_60d")),
-        "change_pct": clean_number(row.get("change_pct")),
-        "gap_pct": clean_number(row.get("gap_pct")),
-        "candle_body_pct": clean_number(row.get("candle_body_pct")),
-        "candle_range_pct": clean_number(row.get("candle_range_pct")),
-        "upper_shadow_pct": clean_number(row.get("upper_shadow_pct")),
-        "lower_shadow_pct": clean_number(row.get("lower_shadow_pct")),
-        "candle_type": clean_text(row.get("candle_type")) or "Unknown",
-        "trend": clean_text(row.get("trend")),
-        "trend_score": clean_int(row.get("trend_score")),
-        "run_id": run_id,
     }
+    for col in _NUMERIC_COLUMNS:
+        values[col] = clean_number(row.get(col))
+    for col in _BOOL_COLUMNS:
+        values[col] = clean_bool(row.get(col))
+    for col in _INT_COLUMNS:
+        values[col] = clean_int(row.get(col))
+    for col, default in _TEXT_COLUMNS_WITH_DEFAULT.items():
+        values[col] = clean_text(row.get(col)) or default
+    for col in _TEXT_COLUMNS:
+        values[col] = clean_text(row.get(col))
+    values["run_id"] = run_id
+
     columns = list(values)
     placeholders = ", ".join(["%s"] * len(columns))
     update_assignments = ",\n            ".join(

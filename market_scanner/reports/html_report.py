@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from html import escape
 import json
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pandas as pd
-import yfinance as yf
 
 from market_scanner.models import MarketDefinition, ScanSettings
 from market_scanner.reports._common import _safe_number, enrich_metadata_frame
-from market_scanner.storage.connection import connect
 
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 
+
+# ── 템플릿 로드 ───────────────────────────────────────────────────────────────
 
 def _read_template(name: str) -> str:
     return (TEMPLATE_DIR / name).read_text(encoding="utf-8")
@@ -36,11 +36,13 @@ def _updated_at_text() -> str:
     return datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
 
 
-def _summary_cards_interactive_html(frame: pd.DataFrame, settings: ScanSettings) -> str:
+# ── 상단 카드 / 탭 / 헤더 ─────────────────────────────────────────────────────
+
+def _summary_cards_html(frame: pd.DataFrame, settings: ScanSettings) -> str:
     card_classes = ["text-info", "text-warning", "text-danger", "text-primary", "text-success", "text-secondary"]
     cards: list[str] = []
     for index, period in enumerate(settings.ma_periods):
-        count = int(frame[f"near_{period}"].sum()) if not frame.empty else 0
+        count = int(frame[f"near_{period}"].sum()) if not frame.empty and f"near_{period}" in frame.columns else 0
         tone = card_classes[index % len(card_classes)]
         cards.append(
             "<div class='col-6 col-md-3'><div class='card text-center p-3 stat-card'>"
@@ -50,19 +52,21 @@ def _summary_cards_interactive_html(frame: pd.DataFrame, settings: ScanSettings)
             "</div></div>"
         )
 
-    if len(settings.ma_periods) > 1:
-        multi_count = int((frame["near_count"] >= 2).sum()) if not frame.empty and "near_count" in frame.columns else 0
-        cards.append(
-            "<div class='col-6 col-md-3'><div class='card text-center p-3 stat-card'>"
-            "<div class='text-secondary small'>복수 MA 수렴</div>"
-            f"<h2 class='{card_classes[len(settings.ma_periods) % len(card_classes)]}'>{multi_count}</h2>"
-            "<div class='text-secondary small'>2개 이상</div>"
-            "</div></div>"
-        )
+    if len(settings.ma_periods) > 1 and not frame.empty:
+        near_cols = [f"near_{p}" for p in settings.ma_periods if f"near_{p}" in frame.columns]
+        if near_cols:
+            multi_count = int((frame[near_cols].sum(axis=1) >= 2).sum())
+            cards.append(
+                "<div class='col-6 col-md-3'><div class='card text-center p-3 stat-card'>"
+                "<div class='text-secondary small'>복수 MA 수렴</div>"
+                f"<h2 class='{card_classes[len(settings.ma_periods) % len(card_classes)]}'>{multi_count}</h2>"
+                "<div class='text-secondary small'>2개 이상</div>"
+                "</div></div>"
+            )
     return "".join(cards)
 
 
-def _interactive_tab_nav_html(settings: ScanSettings) -> str:
+def _tab_nav_html(settings: ScanSettings) -> str:
     items = ['<li class="nav-item"><a class="nav-link active" href="#" data-tab="all">전체</a></li>']
     for period in settings.ma_periods:
         items.append(
@@ -73,7 +77,7 @@ def _interactive_tab_nav_html(settings: ScanSettings) -> str:
     return "".join(items)
 
 
-def _interactive_table_headers_html(settings: ScanSettings, market: MarketDefinition) -> str:
+def _table_headers_html(market: MarketDefinition) -> str:
     currency = escape(market.currency_symbol)
     headers = [
         '<th data-col="ticker">티커</th>',
@@ -88,10 +92,12 @@ def _interactive_table_headers_html(settings: ScanSettings, market: MarketDefini
         '<th data-col="volRatio">거래량비율</th>',
         '<th data-col="per">PER</th>',
         '<th data-col="upside">업사이드</th>',
+        "<th>근접</th>",
     ]
-    headers.append("<th>근접</th>")
     return "".join(headers)
 
+
+# ── 차트/패널용 집계 ──────────────────────────────────────────────────────────
 
 def _sector_strength_data(frame: pd.DataFrame) -> tuple[list[str], list[int], list[int], list[int]]:
     if frame.empty or "sector" not in frame.columns or "trend" not in frame.columns:
@@ -111,9 +117,8 @@ def _sector_strength_data(frame: pd.DataFrame) -> tuple[list[str], list[int], li
     grouped = grouped[grouped["total"] >= 2]
     grouped["bull_ratio"] = grouped["bull"] / grouped["total"]
     grouped = grouped.sort_values("bull_ratio", ascending=True).tail(14)
-    labels = grouped.index.tolist()
     return (
-        labels,
+        grouped.index.tolist(),
         [int(v) for v in grouped["bull"].tolist()],
         [int(v) for v in grouped["neu"].tolist()],
         [int(v) for v in grouped["bear"].tolist()],
@@ -121,64 +126,25 @@ def _sector_strength_data(frame: pd.DataFrame) -> tuple[list[str], list[int], li
 
 
 def _rsi_chart_data(frame: pd.DataFrame) -> tuple[list[str], list[int]]:
-    labels = ["<25", "25-30", "30-35", "35-40", "40-45", "45-50", "50-55", "55-60", "60-65", "65-70", "70-75", "75+"]
+    labels = ["<25", "25-30", "30-35", "35-40", "40-45", "45-50",
+              "50-55", "55-60", "60-65", "65-70", "70-75", "75+"]
     if frame.empty or "rsi" not in frame.columns:
         return labels, [0] * len(labels)
-
     bins = [-float("inf"), 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, float("inf")]
     rsi_values = pd.to_numeric(frame["rsi"], errors="coerce").dropna()
     if rsi_values.empty:
         return labels, [0] * len(labels)
-
     categories = pd.cut(rsi_values, bins=bins, labels=labels, right=False)
     counts = categories.value_counts(sort=False)
     return labels, [int(counts.get(label, 0)) for label in labels]
 
 
-def _fear_label_and_note(level: float) -> tuple[str, str]:
-    if level < 15:
-        return "Calm", "변동성은 낮은 편입니다. 추세가 유지되면 눌림목 선별에 유리합니다."
-    if level < 20:
-        return "Normal", "변동성은 정상권입니다. 개별 종목 신호 품질을 우선 확인합니다."
-    if level < 30:
-        return "Elevated", "변동성이 높아진 구간입니다. 포지션 크기와 손절 기준이 중요합니다."
-    return "Stress", "시장 스트레스가 큰 구간입니다. 방어적 접근과 현금 비중 점검이 필요합니다."
+# ── 패널 기본값 (외부 호출 없이 빈 패널) ──────────────────────────────────────
+# VIX(yfinance)와 뉴스(DB) 로딩은 v2에서 site_builder 책임으로 분리.
+# 개별 market 리포트는 빈 패널로 렌더하고, 사이트 빌더가 원하면 데이터를 주입한다.
 
-
-def _fear_from_scan_data(frame: pd.DataFrame | None, date_str: str | None) -> dict[str, object] | None:
-    sources: list[pd.DataFrame] = []
-    if frame is not None and not frame.empty:
-        sources.append(frame)
-
-    for source in sources:
-        if "symbol" not in source.columns:
-            continue
-        vix_rows = source[source["symbol"].astype(str) == "^VIX"]
-        if vix_rows.empty:
-            continue
-        row = vix_rows.iloc[0]
-        level = _safe_number(row.get("price"), 2)
-        if level is None:
-            continue
-        change_pct = _safe_number(row.get("change_pct"), 1)
-        label, note = _fear_label_and_note(level)
-        return {
-            "available": True,
-            "symbol": "^VIX",
-            "label": label,
-            "level": level,
-            "avg20": None,
-            "avg60": None,
-            "vs20Pct": change_pct,
-            "vsLabel": "전일 대비",
-            "trend": "rising" if change_pct is not None and change_pct > 0 else ("falling" if change_pct is not None and change_pct < 0 else "unknown"),
-            "note": f"{note} VIX 값은 스캔 데이터 fallback에서 읽었습니다.",
-        }
-    return None
-
-
-def _fear_panel_data(frame: pd.DataFrame | None = None, date_str: str | None = None) -> dict[str, object]:
-    fallback = {
+def _empty_fear_panel() -> dict[str, object]:
+    return {
         "available": False,
         "symbol": "^VIX",
         "label": "Unavailable",
@@ -188,176 +154,137 @@ def _fear_panel_data(frame: pd.DataFrame | None = None, date_str: str | None = N
         "vs20Pct": None,
         "vsLabel": "20D 대비",
         "trend": "unknown",
-        "note": "VIX data could not be loaded in this environment.",
+        "note": "VIX 패널은 site_builder 단계에서 주입됩니다.",
     }
-    try:
-        hist = yf.Ticker("^VIX").history(period="3mo")
-    except Exception:
-        return _fear_from_scan_data(frame, date_str) or fallback
 
-    if hist.empty or "Close" not in hist.columns:
-        return _fear_from_scan_data(frame, date_str) or fallback
 
-    close = pd.to_numeric(hist["Close"], errors="coerce").dropna()
-    if close.empty:
-        return _fear_from_scan_data(frame, date_str) or fallback
-
-    level = float(close.iloc[-1])
-    avg20 = float(close.tail(20).mean()) if len(close) >= 20 else float(close.mean())
-    avg60 = float(close.tail(60).mean()) if len(close) >= 60 else float(close.mean())
-    lookback = float(close.iloc[-6]) if len(close) >= 6 else float(close.iloc[0])
-    vs20 = ((level - avg20) / avg20 * 100) if avg20 else None
-
-    label, note = _fear_label_and_note(level)
-
+def _empty_news_panel() -> dict[str, object]:
     return {
-        "available": True,
-        "symbol": "^VIX",
-        "label": label,
-        "level": round(level, 2),
-        "avg20": round(avg20, 2),
-        "avg60": round(avg60, 2),
-        "vs20Pct": round(vs20, 1) if vs20 is not None else None,
-        "vsLabel": "20D 대비",
-        "trend": "rising" if level > lookback else "falling",
-        "note": note,
-    }
-
-
-def _news_briefing_data(frame: pd.DataFrame, market: MarketDefinition, date_str: str) -> dict[str, object]:
-    base = {
         "available": False,
         "title": "뉴스 브리핑",
-        "subtitle": "DB에 저장된 뉴스가 없어서 표시할 항목이 없습니다.",
-        "note": "뉴스는 별도 news 수집 단계가 저장한 news_items/instrument_news 테이블에서 읽습니다.",
+        "subtitle": "뉴스 패널은 site_builder 단계에서 주입됩니다.",
+        "note": "개별 시장 리포트는 외부 호출과 뉴스 DB 조회를 하지 않습니다.",
         "items": [],
     }
 
-    symbols = sorted(set(frame.get("symbol", pd.Series(dtype=str)).dropna().astype(str).tolist()))
-    if not symbols:
-        return base
 
-    try:
-        target_date = datetime.strptime(date_str, "%Y%m%d").date()
-    except Exception:
-        target_date = datetime.now(timezone.utc).date()
-    start_at = datetime.combine(target_date - timedelta(days=7), datetime.min.time(), tzinfo=timezone.utc)
-    end_at = datetime.combine(target_date + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
+# ── 테이블 데이터 빌더 (scan_results + daily_indicators) ───────────────────────
 
-    try:
-        with connect() as conn:
-            rows = conn.execute(
-                """
-                SELECT i.symbol, ni.title, ni.publisher, ni.summary, ni.url,
-                       ni.source_provider, ni.published_at, inw.relevance_score
-                FROM instrument_news inw
-                JOIN instruments i ON i.instrument_id = inw.instrument_id
-                JOIN news_items ni ON ni.news_id = inw.news_id
-                WHERE i.symbol = ANY(%s)
-                  AND (ni.published_at IS NULL OR (ni.published_at >= %s AND ni.published_at < %s))
-                ORDER BY ni.published_at DESC NULLS LAST,
-                         inw.relevance_score DESC NULLS LAST,
-                         ni.collected_at DESC
-                LIMIT 80
-                """,
-                (symbols, start_at, end_at),
-            ).fetchall()
-    except Exception:
-        return base
+def _row_payload(row: pd.Series, market: MarketDefinition, settings: ScanSettings) -> dict[str, object]:
+    symbol = str(row.get("symbol", ""))
+    setup_tags = row.get("setup_tags") if isinstance(row.get("setup_tags"), list) else []
+    risk_flags = row.get("risk_flags") if isinstance(row.get("risk_flags"), list) else []
 
-    if not rows:
-        return base
-
-    items = []
-    for row in rows:
-        published_at = row[6]
-        if hasattr(published_at, "astimezone"):
-            published_at = published_at.astimezone(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
-        else:
-            published_at = str(published_at or "")
-        items.append(
-            {
-                "ticker": str(row[0] or ""),
-                "title": str(row[1] or ""),
-                "publisher": str(row[2] or row[5] or ""),
-                "summary": str(row[3] or ""),
-                "url": str(row[4] or ""),
-                "sentiment": "neutral",
-                "publishedAt": published_at,
-            }
-        )
-
-    if not items:
-        return base
-    return {
-        "available": True,
-        "title": "뉴스 브리핑",
-        "subtitle": f"{date_str} 기준 DB 저장 뉴스 {len(items)}건",
-        "note": "뉴스는 news 수집 단계가 저장한 DB 데이터를 표시합니다. 실시간 요청은 렌더링 안정성을 위해 피합니다.",
-        "items": items[:80],
+    payload: dict[str, object] = {
+        "ticker": symbol,
+        "displayTicker": str(row.get("display_symbol", symbol)),
+        "quoteUrl": market.quote_url_builder(symbol),
+        "en_name": row.get("name_en"),
+        "kr_name": row.get("name_local"),
+        "sector": row.get("sector"),
+        "desc": row.get("description"),
+        "open": _safe_number(row.get("open"), market.price_decimals),
+        "high": _safe_number(row.get("high"), market.price_decimals),
+        "low": _safe_number(row.get("low"), market.price_decimals),
+        "close": _safe_number(row.get("close"), market.price_decimals),
+        "price": _safe_number(row.get("price"), market.price_decimals),
+        "changePct": _safe_number(row.get("change_pct"), 2),
+        "gapPct": _safe_number(row.get("gap_pct"), 2),
+        "candleBodyPct": _safe_number(row.get("candle_body_pct"), 2),
+        "candleRangePct": _safe_number(row.get("candle_range_pct"), 2),
+        "upperShadowPct": _safe_number(row.get("upper_shadow_pct"), 2),
+        "lowerShadowPct": _safe_number(row.get("lower_shadow_pct"), 2),
+        "candleType": row.get("candle_type") or "",
+        "rsi": _safe_number(row.get("rsi"), 1),
+        "fromHigh": _safe_number(row.get("from_high_pct"), 1),
+        "volRatio": _safe_number(row.get("volume_ratio"), 2),
+        "per": _safe_number(row.get("trailing_pe"), 1),
+        "pbr": _safe_number(row.get("price_to_book"), 2),
+        "roe": _safe_number(row.get("return_on_equity"), 1),
+        "revenueGrowth": _safe_number(row.get("revenue_growth"), 1),
+        "marketCap": _safe_number(row.get("market_cap"), 0),
+        "upside": _upside_pct(row),
+        # scan_results 점수 (스크리너 결과 그대로)
+        "rank": _safe_number(row.get("rank_no"), 0),
+        "score": _safe_number(row.get("composite_score"), 1),
+        "chartScore": _safe_number(row.get("chart_score"), 1),
+        "technicalScore": _safe_number(row.get("technical_score"), 1),
+        "fundamentalScore": _safe_number(row.get("fundamental_score"), 1),
+        "themeScore": _safe_number(row.get("theme_score"), 1),
+        "flowScore": _safe_number(row.get("flow_score"), 1),
+        # 전략별 점수 (summary_payload 에서 펼친 값)
+        "pullbackScore": _safe_number(row.get("pullback_score"), 1),
+        "breakoutScore": _safe_number(row.get("breakout_score"), 1),
+        "boxBreakoutScore": _safe_number(row.get("box_breakout_score"), 1),
+        "trendQualityScore": _safe_number(row.get("trend_quality_score"), 1),
+        "reversalScore": _safe_number(row.get("reversal_score"), 1),
+        "overboughtScore": _safe_number(row.get("overbought_score"), 1),
+        "riskScore": _safe_number(row.get("risk_score"), 1),
+        # 셋업 라벨 / 태그 (스크리너가 결정)
+        "setupLabel": row.get("setup_label") or "",
+        "signalTags": list(setup_tags),
+        "riskFlags": list(risk_flags),
+        "macdState": row.get("macd_state") or "",
+        "bollingerWidth": _safe_number(row.get("bollinger_width_pct"), 2),
+        "bollingerPercentB": _safe_number(row.get("bollinger_percent_b"), 3),
+        "trend": row.get("trend") or "",
+        "trendScore": int(row.get("trend_score") or 0),
     }
+    # MA 근접 / 이격 (탭 필터·설정용)
+    near_count = 0
+    for period in settings.ma_periods:
+        is_near = bool(row.get(f"near_{period}", False))
+        payload[f"near_{period}"] = is_near
+        payload[f"diff_{period}"] = _safe_number(row.get(f"diff_{period}"), 2)
+        if is_near:
+            near_count += 1
+    payload["nearCount"] = near_count
+    return payload
 
 
-def _interactive_table_data(frame: pd.DataFrame, market: MarketDefinition, settings: ScanSettings) -> list[dict[str, object]]:
-    rows: list[dict[str, object]] = []
-    for _, row in frame.iterrows():
-        symbol = str(row.get("symbol", ""))
-        payload: dict[str, object] = {
-            "ticker": symbol,
-            "displayTicker": str(row.get("display_symbol", symbol)),
-            "quoteUrl": market.quote_url_builder(symbol),
-            "en_name": row.get("name_en"),
-            "kr_name": row.get("name_local"),
-            "sector": row.get("sector"),
-            "desc": row.get("description"),
-            "open": _safe_number(row.get("open"), market.price_decimals),
-            "high": _safe_number(row.get("high"), market.price_decimals),
-            "low": _safe_number(row.get("low"), market.price_decimals),
-            "close": _safe_number(row.get("close"), market.price_decimals),
-            "prevClose": _safe_number(row.get("prev_close"), market.price_decimals),
-            "price": _safe_number(row.get("price"), market.price_decimals),
-            "changePct": _safe_number(row.get("change_pct"), 2),
-            "gapPct": _safe_number(row.get("gap_pct"), 2),
-            "candleBodyPct": _safe_number(row.get("candle_body_pct"), 2),
-            "candleRangePct": _safe_number(row.get("candle_range_pct"), 2),
-            "upperShadowPct": _safe_number(row.get("upper_shadow_pct"), 2),
-            "lowerShadowPct": _safe_number(row.get("lower_shadow_pct"), 2),
-            "candleType": row.get("candle_type") or "",
-            "rsi": _safe_number(row.get("rsi"), 1),
-            "fromHigh": _safe_number(row.get("from_high_pct"), 1),
-            "volRatio": _safe_number(row.get("volume_ratio"), 2),
-            "per": _safe_number(row.get("trailing_pe"), 1),
-            "pbr": _safe_number(row.get("price_to_book"), 2),
-            "roe": _safe_number(row.get("return_on_equity"), 1),
-            "revenueGrowth": _safe_number(row.get("revenue_growth"), 1),
-            "marketCap": _safe_number(row.get("market_cap"), 0),
-            "upside": _safe_number(row.get("upside_pct"), 1),
-            "score": _safe_number(row.get("composite_score"), 1),
-            "chartScore": _safe_number(row.get("chart_score"), 1),
-            "technicalScore": _safe_number(row.get("technical_score"), 1),
-            "fundamentalScore": _safe_number(row.get("fundamental_score"), 1),
-            "themeScore": _safe_number(row.get("theme_score"), 1),
-            "flowScore": _safe_number(row.get("flow_score"), 1),
-            "momentumScore": _safe_number(row.get("momentum_score", row.get("flow_score")), 1),
-            "macdState": row.get("macd_state") or "",
-            "bollingerWidth": _safe_number(row.get("bollinger_width_pct"), 2),
-            "bollingerPercentB": _safe_number(row.get("bollinger_percent_b"), 3),
-            "trend": row.get("trend") or "",
-            "trendScore": int(row.get("trend_score") or 0),
-            "nearCount": int(row.get("near_count") or 0),
-        }
-        for period in settings.ma_periods:
-            payload[f"diff_{period}"] = _safe_number(row.get(f"diff_{period}"), 2)
-            payload[f"near_{period}"] = bool(row.get(f"near_{period}", False))
-        rows.append(payload)
-    return rows
+def _upside_pct(row: pd.Series) -> float | None:
+    """price 와 target_price 로 upside_pct 산출 (없으면 None)."""
+    price = row.get("price")
+    target = row.get("target_price")
+    if price is None or target is None or pd.isna(price) or pd.isna(target):
+        return None
+    try:
+        price_f = float(price)
+        target_f = float(target)
+    except (TypeError, ValueError):
+        return None
+    if price_f <= 0:
+        return None
+    return round((target_f - price_f) / price_f * 100, 1)
 
 
-def write_html(frame: pd.DataFrame, market: MarketDefinition, settings: ScanSettings, date_str: str, markdown_text: str, path: Path) -> None:
+def _table_data(frame: pd.DataFrame, market: MarketDefinition, settings: ScanSettings) -> list[dict[str, object]]:
+    return [_row_payload(row, market, settings) for _, row in frame.iterrows()]
+
+
+# ── 공개 API ──────────────────────────────────────────────────────────────────
+
+def write_html(
+    frame: pd.DataFrame,
+    market: MarketDefinition,
+    settings: ScanSettings,
+    date_str: str,
+    markdown_text: str,
+    path: Path,
+    *,
+    fear_panel: dict[str, object] | None = None,
+    news_panel: dict[str, object] | None = None,
+) -> None:
+    """scan_results + daily_indicators 기반 HTML 리포트 생성.
+
+    fear_panel / news_panel 은 site_builder 가 주입할 수 있는 옵션 데이터.
+    개별 market 리포트는 빈 패널로 렌더한다 (외부 호출 없음).
+    """
     frame = enrich_metadata_frame(frame, market)
     sector_labels, sector_bull, sector_neu, sector_bear = _sector_strength_data(frame)
     rsi_labels, rsi_values = _rsi_chart_data(frame)
     display_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}" if len(date_str) == 8 else date_str
+
     html = _render_html_template(
         {
             "TITLE": escape(f"{market.label} Report {date_str}"),
@@ -365,22 +292,24 @@ def write_html(frame: pd.DataFrame, market: MarketDefinition, settings: ScanSett
             "META": escape(f"{display_date} | {market.label} | {len(frame)} rows"),
             "UPDATED_AT": escape(_updated_at_text()),
             "STYLE": _read_template("report.css"),
-            "SUMMARY_CARDS": _summary_cards_interactive_html(frame, settings),
-            "TAB_NAV": _interactive_tab_nav_html(settings),
-            "TABLE_HEADERS": _interactive_table_headers_html(settings, market),
+            "SUMMARY_CARDS": _summary_cards_html(frame, settings),
+            "TAB_NAV": _tab_nav_html(settings),
+            "TABLE_HEADERS": _table_headers_html(market),
             "CURRENCY_JSON": _json_script(market.currency_symbol),
             "PERIODS_JSON": _json_script(list(settings.ma_periods)),
-            "DATA_JSON": _json_script(_interactive_table_data(frame, market, settings)),
+            "DATA_JSON": _json_script(_table_data(frame, market, settings)),
             "SECTOR_LABELS_JSON": _json_script(sector_labels),
             "SECTOR_BULL_JSON": _json_script(sector_bull),
             "SECTOR_NEU_JSON": _json_script(sector_neu),
             "SECTOR_BEAR_JSON": _json_script(sector_bear),
             "RSI_LABELS_JSON": _json_script(rsi_labels),
             "RSI_VALUES_JSON": _json_script(rsi_values),
-            "FEAR_JSON": _json_script(_fear_panel_data(frame, date_str)),
-            "NEWS_JSON": _json_script(_news_briefing_data(frame, market, date_str)),
+            "FEAR_JSON": _json_script(fear_panel or _empty_fear_panel()),
+            "NEWS_JSON": _json_script(news_panel or _empty_news_panel()),
             "ANALYSIS_MD_JSON": _json_script(markdown_text or ""),
-            "REPORT_EMPTY_TEXT": escape("No analysis markdown was found. Run the analyze stage or the full pipeline first."),
+            "REPORT_EMPTY_TEXT": escape(
+                "분석 마크다운이 비어 있습니다. screener를 먼저 실행한 뒤 render 단계를 다시 수행하세요."
+            ),
         }
     )
     path.write_text(html, encoding="utf-8")

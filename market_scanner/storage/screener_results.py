@@ -11,6 +11,27 @@ from market_scanner.domain.market_policy import home_market_key
 from market_scanner.storage.common import clean_number, row_payload
 
 
+def _tag_list(value: object) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [tag.strip() for tag in value.split(",") if tag.strip()]
+    if isinstance(value, (list, tuple, set)):
+        return [str(tag).strip() for tag in value if str(tag).strip()]
+    return []
+
+
+def _risk_flags(row: pd.Series) -> list[str]:
+    flags = _tag_list(row.get("risk_flags"))
+    risk_score = clean_number(row.get("risk_score"))
+    overbought_score = clean_number(row.get("overbought_score"))
+    if risk_score is not None and risk_score >= 55:
+        flags.append("리스크")
+    if overbought_score is not None and overbought_score >= 75:
+        flags.append("과열주의")
+    return list(dict.fromkeys(flags))
+
+
 def upsert_scan_result(
     conn: psycopg.Connection,
     run_id: str,
@@ -28,7 +49,7 @@ def upsert_scan_result(
             chart_score, technical_score, fundamental_score, theme_score, flow_score,
             composite_score, rank_no, setup_tags, risk_flags, summary_payload
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ARRAY[]::TEXT[], ARRAY[]::TEXT[], %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (run_id, instrument_id) DO UPDATE SET
             chart_score = EXCLUDED.chart_score,
             technical_score = EXCLUDED.technical_score,
@@ -37,6 +58,8 @@ def upsert_scan_result(
             flow_score = EXCLUDED.flow_score,
             composite_score = EXCLUDED.composite_score,
             rank_no = EXCLUDED.rank_no,
+            setup_tags = EXCLUDED.setup_tags,
+            risk_flags = EXCLUDED.risk_flags,
             summary_payload = EXCLUDED.summary_payload
         """,
         (
@@ -52,10 +75,18 @@ def upsert_scan_result(
             clean_number(row.get("flow_score")),
             clean_number(row.get("composite_score")),
             rank_no,
+            _tag_list(row.get("signal_tags")),
+            _risk_flags(row),
             Jsonb(
                 row_payload(
                     row,
-                    ["symbol", "name_local", "sector", "change_pct", "candle_type", "trend", "composite_score"],
+                    [
+                        "symbol", "name_local", "sector", "change_pct", "candle_type", "trend",
+                        "composite_score", "raw_composite_score", "setup_label", "signal_tags",
+                        "pullback_score", "breakout_score", "box_breakout_score",
+                        "trend_quality_score", "reversal_score", "overbought_score",
+                        "risk_score", "action_score", "quality_score",
+                    ],
                 )
             ),
         ),
