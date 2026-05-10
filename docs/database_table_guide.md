@@ -484,3 +484,10 @@ WHERE market_key = 'kospi'
   )
 ORDER BY avg_change_pct DESC;
 ```
+
+## Daily Indicator Notes
+
+- `high_52w`/`low_52w` are based on trailing High/Low, not Close.
+- `breakout_20d`/`breakout_60d` are close-price breakouts above prior High.
+- `breakout_high_20d`/`breakout_high_60d` are intraday High breakouts above prior High.
+- Additional momentum/liquidity fields include `value_traded`, `value_ratio_20d`, `volume_avg20`, `volume_avg60`, MA alignment/slope fields, RSI change fields, RSI2/5/30, RSI14 MA5, MACD cross fields, new-high flags, and close position in 20/60-day ranges.

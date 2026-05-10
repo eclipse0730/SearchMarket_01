@@ -10,6 +10,7 @@ Last updated: 2026-05-06
 
 ```bash
 uv run python -m market_scanner.analysis.indicators compute --market us --date 20260505
+uv run python -m market_scanner.analysis.indicators compute --market us --from 20260501 --to 20260505
 ```
 
 `uv`가 현재 셸에서 잡히지 않지만 프로젝트 의존성이 설치된 Python 환경이면 다음처럼 실행할 수 있습니다.
@@ -26,6 +27,8 @@ python3 -m market_scanner.analysis.indicators compute --market us --date 2026050
 | `compute` | `daily_prices`에서 `daily_indicators`를 계산하는 하위 명령 |
 | `--market` | 필수. `us`, `kospi`, `kosdaq`, `global-indices`, `commodities` 등 시장 key |
 | `--date` | 계산 기준일 `YYYYMMDD`. 생략하면 실행일 기준 |
+| `--from` | 계산 시작일 `YYYYMMDD`. `--date`와 함께 사용할 수 없음 |
+| `--to` | 계산 종료일 `YYYYMMDD`. `--date`와 함께 사용할 수 없음 |
 | `--limit` | 앞에서 N개 종목만 처리. 검증용 |
 
 ## 실행 위치
@@ -55,6 +58,7 @@ Search.py
 
 1. 기준일 결정
    - `--date`가 있으면 `datetime.strptime(date_str, "%Y%m%d").date()`
+   - `--from`/`--to`가 있으면 해당 범위에서 `daily_prices`가 존재하는 날짜만 순서대로 계산
    - 없으면 `date.today()`
 2. 가격 소스 라벨 결정
    - `price_source_for_market(market_key)`
@@ -282,6 +286,8 @@ rolling basis는 20일 평균, band 폭은 표준편차 2배입니다.
 
 ```python
 trailing_window = min(252, len(close))
+high_52w = max(high[-trailing_window:])
+low_52w = min(low[-trailing_window:])
 ```
 
 계산값:
@@ -560,3 +566,12 @@ python3 -m market_scanner.analysis.screener run --market us --date 20260505
 ```bash
 python3 -m market_scanner.reports.render build --market us --date 20260505
 ```
+
+## Indicator Calculation Updates
+
+- `calc_rsi()` seeds average gain/loss with an initial SMA over `period`, then applies Wilder smoothing.
+- `high_52w` now uses the trailing 252-session High column. `low_52w` uses the trailing 252-session Low column.
+- `breakout_20d` and `breakout_60d` are close-price breakouts above the prior 20/60-session High.
+- `breakout_high_20d` and `breakout_high_60d` are intraday High breakouts above the prior 20/60-session High.
+- `atr14` uses Wilder smoothing over True Range instead of a simple rolling average.
+- Added traded value, prior-volume averages, value ratio, MA alignment/slope, RSI previous/change, RSI2/5/30, RSI14 MA5, MACD cross/hist-change, explicit new-high flags, and close position in 20/60-day ranges.

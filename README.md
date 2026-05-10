@@ -40,23 +40,18 @@ uv run python -m market_scanner.storage.db refresh-master --market commodities
 
 ## 2단계: 가격 수집
 
-일일 증분 수집은 목표일 가격이 없는 종목만 조회합니다.
+기본 수집은 US는 전일, KOSPI/KOSDAQ은 오늘을 대상으로 필요한 종목만 조회합니다.
 ```bash
-uv run python -m market_scanner.collectors.prices fetch --market us
-uv run python -m market_scanner.collectors.prices fetch --market kospi
-uv run python -m market_scanner.collectors.prices fetch --market kosdaq
+uv run python -m market_scanner.collectors.prices fetch us
+uv run python -m market_scanner.collectors.prices fetch kospi
+uv run python -m market_scanner.collectors.prices fetch kosdaq
 ```
 
-날짜와 병렬도를 지정할 수 있습니다.
+범위 수집은 이미 있는 데이터 다음 날부터 이어서 수집합니다. `--force`를 붙이면 같은 범위의 기존 데이터도 다시 수집해 upsert합니다. `retry`는 실패 로그에 저장된 종목과 날짜 범위를 다시 수집합니다.
 ```bash
-uv run python -m market_scanner.collectors.prices fetch --market us --date 20260505 --workers 8
-```
-
-대량 적재나 신규 종목 백필은 `backfill`을 사용합니다.
-```bash
-uv run python -m market_scanner.collectors.prices backfill --market us    --years 2 --workers 8
-uv run python -m market_scanner.collectors.prices backfill --market kospi --new-only
-uv run python -m market_scanner.collectors.prices retry    --market us
+uv run python -m market_scanner.collectors.prices fetch --market us --from 20250101 --to 20260505 --workers 8
+uv run python -m market_scanner.collectors.prices fetch --market us --from 20250101 --to 20260505 --force
+uv run python -m market_scanner.collectors.prices retry --market us
 ```
 
 ## 3단계: 지표 계산
@@ -67,6 +62,7 @@ uv run python -m market_scanner.analysis.indicators compute --market us
 uv run python -m market_scanner.analysis.indicators compute --market kospi
 uv run python -m market_scanner.analysis.indicators compute --market kosdaq
 uv run python -m market_scanner.analysis.indicators compute --market us     --date 20260505
+uv run python -m market_scanner.analysis.indicators compute --market kospi  --from 20260501 --to 20260507
 ```
 
 ## 4단계: 스코어링
@@ -99,7 +95,7 @@ uv run python -m market_scanner.reports.site_builder --no-open
 
 ## 날짜 기준 예시
 
-US 시장은 KST 기준으로 실행하면 오늘이 아니라 전일 거래일 데이터가 최신일 수 있습니다. 4단계 스코어링은 날짜를 생략하면 최신 지표일을 자동 선택합니다. 2, 3, 5단계 날짜를 명확히 맞추고 싶을 때는 같은 `--date`를 명시합니다.
+US 시장은 KST 기준으로 실행하면 오늘이 아니라 전일 거래일 데이터가 최신일 수 있습니다. 4단계 스코어링은 날짜를 생략하면 최신 지표일을 자동 선택합니다. 2, 3, 5단계 날짜를 명확히 맞추고 싶을 때는 같은 `--date`를 명시하거나 가격 수집/지표 계산에 같은 `--from`/`--to` 범위를 사용합니다.
 ```bash
 uv run python -m market_scanner.collectors.prices fetch     --market us --date 20260505
 uv run python -m market_scanner.analysis.indicators compute --market us --date 20260505
@@ -218,7 +214,7 @@ uv run python -m market_scanner.reports.site_builder --no-open
 - `market_scanner/assets/global_indices_meta.json`, `commodities_meta.json`: 글로벌 지수·원자재는 FDR 자동 발견이 불가능하므로 JSON이 심볼 정의 원본입니다. 새 심볼 추가 시 JSON 편집 후 `refresh-master --market global-indices` 또는 `--market commodities`로 DB에 반영합니다. 현재 글로벌 지수는 22개입니다.
 - 테마 ETF는 별도 스캔 없이 US 스캔 결과에서 파생됩니다. 대상 심볼은 `markets.py`의 `_THEME_PROXY_SYMBOLS` 상수로 관리합니다.
 - 한국 시장 유니버스는 FinanceDataReader를 우선 사용하고, 실패 시 Naver Finance로 fallback합니다. 정적 JSON fallback(`kospi_static_meta.json`, `kosdaq_static_meta.json`)은 제거되었습니다.
-- KOSPI/KOSDAQ 가격 히스토리는 timeout이 적용된 Naver 일봉 조회를 우선 사용하고, 실패하거나 히스토리가 부족하면 yfinance로 fallback합니다. US 가격 히스토리는 Yahoo 계열 조회를 사용합니다.
+- KOSPI/KOSDAQ 가격 히스토리는 timeout이 적용된 Naver 일봉 조회만 사용합니다. US 가격 히스토리는 Yahoo 계열 조회를 우선 사용하고 실패 시 FinanceDataReader로 보완합니다.
 - `news` 단계는 DB의 최신 `scan_results`가 있어야 실행되며, `all`에는 포함하지 않습니다.
 
 ## 패키지 구조

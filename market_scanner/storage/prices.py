@@ -71,20 +71,6 @@ def instruments_needing_prices(
     ]
 
 
-def instruments_without_prices(conn: psycopg.Connection, market_key: str) -> list[dict[str, Any]]:
-    rows = conn.execute(
-        """
-        SELECT i.instrument_id, i.symbol, i.currency_code
-        FROM instruments i
-        LEFT JOIN daily_prices dp ON dp.instrument_id = i.instrument_id
-        WHERE i.market_key = %s AND i.is_active = TRUE AND dp.instrument_id IS NULL
-        ORDER BY i.symbol
-        """,
-        (home_market_key(market_key),),
-    ).fetchall()
-    return [{"instrument_id": row[0], "symbol": str(row[1]), "currency_code": row[2]} for row in rows]
-
-
 def instruments_by_symbols(
     conn: psycopg.Connection, market_key: str, symbols: list[str]
 ) -> list[dict[str, Any]]:

@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import io
 import re
-import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import date, datetime, timedelta
@@ -21,8 +20,6 @@ from market_scanner.storage.prices import (
     instruments_by_symbols,
     instruments_for_market,
     instruments_needing_prices,
-    instruments_without_prices,
-    last_price_date_any_source,
     upsert_daily_price,
 )
 from market_scanner.storage.runs import (
@@ -32,14 +29,12 @@ from market_scanner.storage.runs import (
     run_error_samples,
 )
 
-_DEFAULT_HISTORY_YEARS = 1
 _DEFAULT_FETCH_WORKERS = 8
-_FDR_RETRY = 2
-_YF_RETRY = 1
-_REQUEST_TIMEOUT = 5
+_REQUEST_TIMEOUT = 2
+_KOREA_PRICE_SOURCE = "naver"
 
 
-# ── OHLCV 정규화 ──────────────────────────────────────────────────────────────
+# OHLCV 정규화
 
 def _normalize_ohlcv(frame: pd.DataFrame) -> pd.DataFrame:
     if frame.empty:
@@ -57,41 +52,40 @@ def _normalize_ohlcv(frame: pd.DataFrame) -> pd.DataFrame:
     return frame.sort_index()
 
 
-# ── fdr fetch ─────────────────────────────────────────────────────────────────
+# 가격 수집 경로 선택
+
+def _is_korea(market_key: str) -> bool:
+    return home_market_key(market_key) in {"kospi", "kosdaq"}
+
+
+def _is_us(market_key: str) -> bool:
+    return home_market_key(market_key) == "us"
+
+
+def fetch_ohlcv(symbol: str, market_key: str, start: str, end: str) -> tuple[pd.DataFrame, str]:
+    """OHLCV를 수집하고 (frame, source_provider)를 반환합니다.
+
+    한국 시장은 Naver만 사용합니다. US는 yfinance 실패 시 FDR로 보완합니다.
+    """
+    if _is_korea(market_key):
+        hist = _fetch_naver_daily(symbol, start, end)
+        if not hist.empty:
+            return hist, _KOREA_PRICE_SOURCE
+        return pd.DataFrame(), "none"
+    hist = _fetch_yfinance(symbol, start, end)
+    if not hist.empty:
+        return hist, "yfinance"
+    if _is_us(market_key):
+        hist = _fetch_fdr_daily(symbol, start, end)
+        if not hist.empty:
+            return hist, "fdr"
+    return pd.DataFrame(), "none"
+
+
+# 한국 시장 가격 수집
 
 def _korea_code(symbol: str) -> str:
     return symbol.replace(".KS", "").replace(".KQ", "").zfill(6)
-
-
-def _fdr_symbol(symbol: str, market_key: str) -> str:
-    if _is_korea(market_key):
-        return _korea_code(symbol)
-    return symbol
-
-
-def _fetch_fdr(symbol: str, market_key: str, start: str, end: str) -> pd.DataFrame:
-    if _is_korea(market_key):
-        return _fetch_naver_daily(symbol, start, end)
-
-    try:
-        import FinanceDataReader as fdr
-    except ImportError:
-        return pd.DataFrame()
-
-    code = _fdr_symbol(symbol, market_key)
-    retry_count = _FDR_RETRY if _is_korea(market_key) else 1
-    for attempt in range(retry_count):
-        if attempt:
-            time.sleep(1)
-        try:
-            with redirect_stdout(io.StringIO()):
-                hist = fdr.DataReader(code, start, end)
-            normalized = _normalize_ohlcv(hist)
-            if not normalized.empty:
-                return normalized
-        except Exception:
-            continue
-    return pd.DataFrame()
 
 
 def _fetch_naver_daily(symbol: str, start: str, end: str) -> pd.DataFrame:
@@ -108,26 +102,23 @@ def _fetch_naver_daily(symbol: str, start: str, end: str) -> pd.DataFrame:
         "requestType": "0",
         "symbol": code,
     }
-    for attempt in range(_FDR_RETRY):
-        if attempt:
-            time.sleep(1)
-        try:
-            response = requests.get(url, params=params, timeout=_REQUEST_TIMEOUT)
-            response.raise_for_status()
-            data_list = re.findall(r'<item data="(.*?)" />', response.text, re.DOTALL)
-            if not data_list:
-                return pd.DataFrame()
-            frame = pd.read_csv(io.StringIO("\n".join(data_list)), delimiter="|", header=None)
-            frame.columns = ["Date", "Open", "High", "Low", "Close", "Volume"]
-            frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
-            frame = frame.set_index("Date").sort_index()
-            return _normalize_ohlcv(frame.loc[start:end])
-        except Exception:
-            continue
+    try:
+        response = requests.get(url, params=params, timeout=_REQUEST_TIMEOUT)
+        response.raise_for_status()
+        data_list = re.findall(r'<item data="(.*?)" />', response.text, re.DOTALL)
+        if not data_list:
+            return pd.DataFrame()
+        frame = pd.read_csv(io.StringIO("\n".join(data_list)), delimiter="|", header=None)
+        frame.columns = ["Date", "Open", "High", "Low", "Close", "Volume"]
+        frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
+        frame = frame.set_index("Date").sort_index()
+        return _normalize_ohlcv(frame.loc[start:end])
+    except Exception:
+        pass
     return pd.DataFrame()
 
 
-# ── yfinance fetch ────────────────────────────────────────────────────────────
+# yfinance 가격 수집
 
 def _fetch_yfinance(symbol: str, start: str, end: str) -> pd.DataFrame:
     try:
@@ -135,55 +126,47 @@ def _fetch_yfinance(symbol: str, start: str, end: str) -> pd.DataFrame:
     except ImportError:
         return pd.DataFrame()
 
-    for attempt in range(_YF_RETRY):
-        if attempt:
-            time.sleep(attempt * 2)
-        try:
-            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-                hist = yf.Ticker(symbol).history(
-                    start=start,
-                    end=end,
-                    auto_adjust=True,
-                    timeout=_REQUEST_TIMEOUT,
-                )
-            normalized = _normalize_ohlcv(hist)
-            if not normalized.empty:
-                return normalized
-        except Exception:
-            continue
-    return pd.DataFrame()
+    with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+        hist = yf.Ticker(symbol).history(
+            start=start,
+            end=end,
+            auto_adjust=True,
+            timeout=_REQUEST_TIMEOUT,
+        )
+    normalized = _normalize_ohlcv(hist)
+    return normalized if not normalized.empty else pd.DataFrame()
 
 
-# ── 통합 fetch ────────────────────────────────────────────────────────────────
-
-def _is_korea(market_key: str) -> bool:
-    return home_market_key(market_key) in {"kospi", "kosdaq"}
+def _inclusive_end_from_exclusive(end: str) -> str:
+    return (date.fromisoformat(end) - timedelta(days=1)).isoformat()
 
 
-def _uses_fdr_primary(market_key: str) -> bool:
-    return home_market_key(market_key) in {"kospi", "kosdaq"}
+def _fetch_fdr_daily(symbol: str, start: str, end: str) -> pd.DataFrame:
+    try:
+        import FinanceDataReader as fdr
+    except ImportError:
+        return pd.DataFrame()
+
+    try:
+        inclusive_end = _inclusive_end_from_exclusive(end)
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            hist = fdr.DataReader(symbol, start, inclusive_end)
+        normalized = _normalize_ohlcv(hist)
+        normalized = normalized.loc[start:inclusive_end]
+        return normalized if not normalized.empty else pd.DataFrame()
+    except Exception:
+        return pd.DataFrame()
 
 
-def fetch_ohlcv(symbol: str, market_key: str, start: str, end: str) -> tuple[pd.DataFrame, str]:
-    """fdr → yfinance 순서로 OHLCV를 fetch. (DataFrame, source_provider) 반환."""
-    if _uses_fdr_primary(market_key):
-        hist = _fetch_fdr(symbol, market_key, start, end)
-        if not hist.empty:
-            return hist, "fdr"
-    hist = _fetch_yfinance(symbol, start, end)
-    if not hist.empty:
-        return hist, "yfinance"
-    return pd.DataFrame(), "none"
-
-
-# ── 날짜 헬퍼 ─────────────────────────────────────────────────────────────────
-
-def _start_for_years(years: int) -> str:
-    return (date.today() - timedelta(days=years * 365 + 30)).isoformat()
+# 날짜 헬퍼
 
 
 def _next_day(d: date) -> date:
     return d + timedelta(days=1)
+
+
+def _parse_date_arg(value: str | None) -> date | None:
+    return datetime.strptime(value, "%Y%m%d").date() if value else None
 
 
 def _default_target_date(market_key: str) -> date:
@@ -193,7 +176,19 @@ def _default_target_date(market_key: str) -> date:
     return today - timedelta(days=1)
 
 
-# ── DataFrame → daily_prices upsert ──────────────────────────────────────────
+def _resolve_date_range(market_key: str, date_from: str | None, date_to: str | None) -> tuple[date, date]:
+    end_date = _parse_date_arg(date_to) or _default_target_date(market_key)
+    start_date = _parse_date_arg(date_from) or end_date
+    if start_date > end_date:
+        raise ValueError("--from must be earlier than or equal to --to")
+    return start_date, end_date
+
+
+def _fetch_end_for_date(end_date: date) -> str:
+    return _next_day(end_date).isoformat()
+
+
+# 정규화한 OHLCV 저장
 
 def _upsert_ohlcv_frame(
     conn: psycopg.Connection,
@@ -202,8 +197,7 @@ def _upsert_ohlcv_frame(
     source_provider: str,
     run_id: str,
     currency_code: str | None,
-) -> int:
-    count = 0
+) -> None:
     for ts, row in frame.iterrows():
         trade_date = ts.date() if hasattr(ts, "date") else ts
         price_row = pd.Series({
@@ -214,21 +208,9 @@ def _upsert_ohlcv_frame(
             "volume": row.get("Volume"),
         })
         upsert_daily_price(conn, instrument_id, trade_date, source_provider, price_row, run_id, currency_code)
-        count += 1
-    return count
 
 
-def _fetch_task(instr: dict[str, Any], market_key: str, start: str, end: str) -> dict[str, Any]:
-    frame, source = fetch_ohlcv(instr["symbol"], market_key, start, end)
-    return {
-        "instrument": instr,
-        "start": start,
-        "frame": frame,
-        "source": source,
-    }
-
-
-# ── fetch (증분) ──────────────────────────────────────────────────────────────
+# 증분 가격 수집
 
 def run_fetch(
     market_key: str,
@@ -236,16 +218,33 @@ def run_fetch(
     explicit_url: str | None = None,
     limit: int | None = None,
     workers: int = _DEFAULT_FETCH_WORKERS,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    force: bool = False,
+    symbols: list[str] | None = None,
 ) -> None:
-    target_date = _default_target_date(market_key) if not date_str else datetime.strptime(date_str, "%Y%m%d").date()
-    end = _next_day(target_date).isoformat()
+    if date_str:
+        if date_from or date_to:
+            raise ValueError("--date cannot be used with --from/--to")
+        date_from = date_str
+        date_to = date_str
+    start_date, end_date = _resolve_date_range(market_key, date_from, date_to)
+    is_korea_market = _is_korea(market_key)
+    fetch_end = end_date.isoformat() if is_korea_market else _fetch_end_for_date(end_date)
     _, currency_code, _ = country_currency_for_market(market_key)
-    primary_source = "fdr" if _uses_fdr_primary(market_key) else "yfinance"
+    primary_source = _KOREA_PRICE_SOURCE if is_korea_market else "yfinance"
 
     with connect(explicit_url) as conn:
         active_count = active_instrument_count(conn, market_key)
-        instruments = instruments_needing_prices(conn, market_key, target_date)
-        skipped = max(0, active_count - len(instruments))
+        if symbols:
+            instruments = instruments_by_symbols(conn, market_key, symbols)
+            skipped = 0
+        elif force:
+            instruments = instruments_for_market(conn, market_key)
+            skipped = 0
+        else:
+            instruments = instruments_needing_prices(conn, market_key, end_date)
+            skipped = max(0, active_count - len(instruments))
         if limit:
             instruments = instruments[:limit]
         if not instruments:
@@ -255,32 +254,58 @@ def run_fetch(
                     "Run refresh-master for this market first."
                 )
                 return
-            print(f"  prices fetch [{market_key}]: all active instruments already have prices through {target_date.isoformat()}")
+            print(f"  prices fetch [{market_key}]: all active instruments already have prices through {end_date.isoformat()}")
+            return
+
+        tasks: list[dict[str, Any]] = []
+        for instr in instruments:
+            last = instr.get("last_price_date")
+            task_from = start_date if force or not last else max(_next_day(last), start_date)
+            if task_from > end_date:
+                skipped += 1
+                continue
+            tasks.append({
+                "instrument": instr,
+                "start": task_from.isoformat(),
+                "end": fetch_end,
+                "from": task_from,
+                "to": end_date,
+            })
+
+        if not tasks:
+            print(f"  prices fetch [{market_key}]: no target instruments")
             return
 
         run_id = create_collection_run(
-            conn, "prices", market_key, target_date, primary_source, len(instruments),
-            params={"mode": "incremental", "target_date": target_date.isoformat(), "fetch_end": end},
+            conn, "prices", market_key, end_date, primary_source, len(tasks),
+            params={
+                "mode": "fetch",
+                "from": start_date.isoformat(),
+                "to": end_date.isoformat(),
+                "fetch_end": fetch_end,
+                "force": force,
+                "workers": workers,
+            },
         )
-        worker_count = max(1, min(workers, len(instruments)))
+        worker_count = max(1, min(workers, len(tasks)))
         print(
-            f"  prices fetch [{market_key}] {len(instruments)} symbols → {target_date.isoformat()}  "
+            f"  prices fetch [{market_key}] {len(tasks)} symbols  "
+            f"{start_date.isoformat()} ~ {end_date.isoformat()}  "
             f"workers={worker_count}  run_id={run_id}"
         )
 
-        success, failed = 0, 0
-        submitted = 0
+        success, failed, submitted = 0, 0, 0
         error_samples: list[Any] = []
-        progress_interval = max(1, len(instruments) // 100)
+        progress_interval = max(1, len(tasks) // 100)
 
-        def print_progress(force: bool = False) -> None:
+        def print_progress(force_print: bool = False) -> None:
             processed = success + failed
-            if not force and processed % progress_interval != 0:
+            if not force_print and processed % progress_interval != 0:
                 return
             print(
                 progress_line(
                     processed,
-                    len(instruments),
+                    len(tasks),
                     queued=submitted,
                     active=submitted - processed,
                     success=success,
@@ -291,79 +316,71 @@ def run_fetch(
                 flush=True,
             )
 
-        tasks: list[tuple[dict[str, Any], str]] = []
-        for instr in instruments:
-            instrument_id = instr["instrument_id"]
-            last = instr.get("last_price_date") or last_price_date_any_source(conn, instrument_id)
-            start = _next_day(last).isoformat() if last else _start_for_years(_DEFAULT_HISTORY_YEARS)
-            tasks.append((instr, start))
+        def fetch_task(task: dict[str, Any]) -> dict[str, Any]:
+            frame, source = fetch_ohlcv(task["instrument"]["symbol"], market_key, task["start"], task["end"])
+            return {**task, "frame": frame, "source": source}
 
         def handle_result(result: dict[str, Any]) -> None:
             nonlocal success, failed
             instr = result["instrument"]
-            instrument_id = instr["instrument_id"]
-            symbol = instr["symbol"]
-            instr_currency = instr["currency_code"] or currency_code
-            start = result["start"]
-            frame = result["frame"]
-            source = result["source"]
-            if frame.empty:
+            if result["frame"].empty:
                 failed += 1
-                if len(error_samples) < 30:
-                    error_samples.append({"symbol": symbol, "reason": "fetch_failed", "start": start})
-                print_progress(force=True)
+                error_samples.append({
+                    "symbol": instr["symbol"],
+                    "reason": "fetch_failed",
+                    "from": result["from"].isoformat(),
+                    "to": result["to"].isoformat(),
+                })
+                print_progress(True)
                 return
 
-            _upsert_ohlcv_frame(conn, instrument_id, frame, source, run_id, instr_currency)
+            instr_currency = instr["currency_code"] or currency_code
+            _upsert_ohlcv_frame(conn, instr["instrument_id"], result["frame"], result["source"], run_id, instr_currency)
             success += 1
             print_progress()
 
-        print_progress(force=True)
-        if worker_count == 1:
-            for instr, start in tasks:
+        print_progress(True)
+        task_iter = iter(tasks)
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            pending: dict[Any, dict[str, Any]] = {}
+
+            def submit_next() -> bool:
+                nonlocal submitted
+                try:
+                    task = next(task_iter)
+                except StopIteration:
+                    return False
+                pending[executor.submit(fetch_task, task)] = task
                 submitted += 1
-                print_progress(force=True)
-                handle_result(_fetch_task(instr, market_key, start, end))
-        else:
-            task_iter = iter(tasks)
-            with ThreadPoolExecutor(max_workers=worker_count) as executor:
-                pending: dict[Any, tuple[dict[str, Any], str]] = {}
+                return True
 
-                def submit_next() -> bool:
-                    nonlocal submitted
+            for _ in range(worker_count):
+                if not submit_next():
+                    break
+            print_progress(True)
+
+            while pending:
+                done, _ = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
+                if not done:
+                    print_progress(True)
+                    continue
+                for future in done:
+                    task = pending.pop(future)
                     try:
-                        instr, start = next(task_iter)
-                    except StopIteration:
-                        return False
-                    future = executor.submit(_fetch_task, instr, market_key, start, end)
-                    pending[future] = (instr, start)
-                    submitted += 1
-                    return True
+                        handle_result(future.result(timeout=_REQUEST_TIMEOUT * 2))
+                    except Exception as exc:
+                        failed += 1
+                        error_samples.append({
+                            "symbol": task["instrument"]["symbol"],
+                            "reason": type(exc).__name__,
+                            "from": task["from"].isoformat(),
+                            "to": task["to"].isoformat(),
+                        })
+                        print_progress(True)
+                    submit_next()
+                    print_progress(True)
 
-                for _ in range(worker_count):
-                    if not submit_next():
-                        break
-                print_progress(force=True)
-
-                while pending:
-                    done, _ = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
-                    if not done:
-                        print_progress(force=True)
-                        continue
-                    for future in done:
-                        instr, start = pending.pop(future)
-                        try:
-                            handle_result(future.result())
-                        except Exception as exc:
-                            symbol = instr["symbol"]
-                            failed += 1
-                            if len(error_samples) < 30:
-                                error_samples.append({"symbol": symbol, "reason": type(exc).__name__, "start": start})
-                            print_progress(force=True)
-                        submit_next()
-                        print_progress(force=True)
-
-        print_progress(force=True)
+        print_progress(True)
         print()
         status = "success" if not failed else ("partial" if success else "failed")
         finish_run(conn, run_id, status=status, success_count=success, failed_count=failed, skipped_count=skipped, error_samples=error_samples)
@@ -376,151 +393,7 @@ def run_fetch(
             print(f"  failed samples: {sample_text}")
 
 
-# ── backfill ──────────────────────────────────────────────────────────────────
-
-def run_backfill(
-    market_key: str,
-    years: int = _DEFAULT_HISTORY_YEARS,
-    new_only: bool = False,
-    symbols: list[str] | None = None,
-    explicit_url: str | None = None,
-    limit: int | None = None,
-    workers: int = _DEFAULT_FETCH_WORKERS,
-) -> None:
-    start = _start_for_years(years)
-    end = date.today().isoformat()
-    _, currency_code, _ = country_currency_for_market(market_key)
-    primary_source = "fdr" if _uses_fdr_primary(market_key) else "yfinance"
-
-    with connect(explicit_url) as conn:
-        if symbols:
-            instruments = instruments_by_symbols(conn, market_key, symbols)
-        elif new_only:
-            instruments = instruments_without_prices(conn, market_key)
-        else:
-            instruments = instruments_for_market(conn, market_key)
-
-        if limit:
-            instruments = instruments[:limit]
-
-        if not instruments:
-            print(f"  prices backfill [{market_key}]: no target instruments")
-            return
-
-        mode = "backfill_new" if new_only else "backfill_all"
-        run_id = create_collection_run(
-            conn, "backfill", market_key, date.today(), primary_source, len(instruments),
-            params={"mode": mode, "years": years, "start": start, "end": end, "workers": workers},
-        )
-        worker_count = max(1, min(workers, len(instruments)))
-        print(
-            f"  prices backfill [{market_key}] {len(instruments)} symbols  "
-            f"{start} ~ {end}  workers={worker_count}  run_id={run_id}"
-        )
-
-        success, failed = 0, 0
-        submitted = 0
-        error_samples: list[Any] = []
-        progress_interval = 1
-
-        def print_progress(force: bool = False) -> None:
-            processed = success + failed
-            if not force and processed % progress_interval != 0:
-                return
-            print(
-                progress_line(
-                    processed,
-                    len(instruments),
-                    queued=submitted,
-                    active=submitted - processed,
-                    success=success,
-                    failed=failed,
-                ),
-                end="",
-                flush=True,
-            )
-
-        def handle_result(result: dict[str, Any]) -> None:
-            nonlocal success, failed
-            instr = result["instrument"]
-            instrument_id = instr["instrument_id"]
-            symbol = instr["symbol"]
-            instr_currency = instr["currency_code"] or currency_code
-            task_start = result["start"]
-            frame = result["frame"]
-            source = result["source"]
-
-            if frame.empty:
-                failed += 1
-                if len(error_samples) < 30:
-                    error_samples.append({"symbol": symbol, "reason": "fetch_failed", "start": task_start})
-                print_progress(force=True)
-                return
-
-            _upsert_ohlcv_frame(conn, instrument_id, frame, source, run_id, instr_currency)
-            success += 1
-            print_progress()
-
-        if worker_count == 1:
-            print_progress(force=True)
-            for instr in instruments:
-                submitted += 1
-                print_progress(force=True)
-                handle_result(_fetch_task(instr, market_key, start, end))
-        else:
-            print_progress(force=True)
-            with ThreadPoolExecutor(max_workers=worker_count) as executor:
-                pending: dict[Any, dict[str, Any]] = {}
-                instrument_iter = iter(instruments)
-
-                def submit_next() -> bool:
-                    nonlocal submitted
-                    try:
-                        instr = next(instrument_iter)
-                    except StopIteration:
-                        return False
-                    future = executor.submit(_fetch_task, instr, market_key, start, end)
-                    pending[future] = instr
-                    submitted += 1
-                    return True
-
-                for _ in range(worker_count):
-                    if not submit_next():
-                        break
-                print_progress(force=True)
-
-                while pending:
-                    done, _ = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
-                    if not done:
-                        print_progress(force=True)
-                        continue
-                    for future in done:
-                        instr = pending.pop(future)
-                        try:
-                            handle_result(future.result())
-                        except Exception as exc:
-                            symbol = instr["symbol"]
-                            failed += 1
-                            if len(error_samples) < 30:
-                                error_samples.append({"symbol": symbol, "reason": type(exc).__name__, "start": start})
-                            print_progress(force=True)
-                        submit_next()
-                        print_progress(force=True)
-
-        print_progress(force=True)
-        print()
-        status = "success" if not failed else ("partial" if success else "failed")
-        finish_run(conn, run_id, status=status, success_count=success, failed_count=failed, skipped_count=0, error_samples=error_samples)
-        print(
-            f"  prices backfill [{market_key}] done: "
-            f"success={success} failed={failed} status={status}"
-        )
-        if error_samples:
-            sample_text = ", ".join(f"{sample['symbol']}:{sample['reason']}" for sample in error_samples[:5])
-            print(f"  failed samples: {sample_text}")
-
-
-# ── retry ─────────────────────────────────────────────────────────────────────
+# 실패 종목 재시도
 
 def run_retry(
     market_key: str,
@@ -531,22 +404,54 @@ def run_retry(
         if run_id:
             samples = run_error_samples(conn, run_id)
         else:
-            samples = last_failed_run_error_samples(conn, market_key, ["prices", "backfill"])
+            samples = last_failed_run_error_samples(conn, market_key, ["prices"])
 
     if not samples:
         print(f"  prices retry [{market_key}]: no failed run found")
         return
 
-    symbols = [s["symbol"] for s in samples if isinstance(s, dict) and "symbol" in s]
-    if not symbols:
+    grouped: dict[tuple[date, date], set[str]] = {}
+    for sample in samples:
+        if not isinstance(sample, dict) or "symbol" not in sample:
+            continue
+        try:
+            start_date = date.fromisoformat(str(sample.get("from") or sample.get("start")))
+        except (TypeError, ValueError):
+            start_date = date.today()
+        try:
+            end_date = date.fromisoformat(str(sample.get("to")))
+        except (TypeError, ValueError):
+            end_date = start_date
+        if start_date > end_date:
+            start_date, end_date = end_date, start_date
+        grouped.setdefault((start_date, end_date), set()).add(str(sample["symbol"]))
+
+    if not grouped:
         print(f"  prices retry [{market_key}]: no symbols in error_samples")
         return
 
-    print(f"  prices retry [{market_key}]: retrying {len(symbols)} symbols")
-    run_backfill(market_key, years=_DEFAULT_HISTORY_YEARS, symbols=symbols, explicit_url=explicit_url)
+    total = sum(len(symbols) for symbols in grouped.values())
+    print(f"  prices retry [{market_key}]: retrying {total} symbols in {len(grouped)} date range(s)")
+    for (start_date, end_date), symbols in sorted(grouped.items()):
+        run_fetch(
+            market_key,
+            explicit_url=explicit_url,
+            workers=1,
+            date_from=start_date.strftime("%Y%m%d"),
+            date_to=end_date.strftime("%Y%m%d"),
+            force=True,
+            symbols=sorted(symbols),
+        )
 
 
-# ── CLI ───────────────────────────────────────────────────────────────────────
+# CLI
+
+def _resolve_cli_market(args: argparse.Namespace) -> str:
+    market_key = args.market or args.market_arg
+    if not market_key:
+        raise ValueError("market is required")
+    return market_key
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Daily OHLCV price collector.")
@@ -554,33 +459,40 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     fetch_p = sub.add_parser("fetch", help="Incremental daily price fetch.")
-    fetch_p.add_argument("--market", required=True, choices=sorted(MARKETS))
-    fetch_p.add_argument("--date", default=None, help="Target date YYYYMMDD (default: today).")
+    fetch_p.add_argument("market_arg", nargs="?", choices=sorted(MARKETS), help="Market to fetch.")
+    fetch_p.add_argument("--market", choices=sorted(MARKETS))
+    fetch_p.add_argument("--date", default=None, help="Single target date YYYYMMDD. Alias for --from/--to.")
+    fetch_p.add_argument("--from", dest="date_from", default=None, help="Start date YYYYMMDD (default: end date).")
+    fetch_p.add_argument("--to", dest="date_to", default=None, help="End date YYYYMMDD (default: US previous day, KR today).")
+    fetch_p.add_argument("--force", action="store_true", help="Refetch the full requested range even if prices already exist.")
     fetch_p.add_argument("--limit", type=int, default=None)
     fetch_p.add_argument("--workers", type=int, default=_DEFAULT_FETCH_WORKERS)
 
-    backfill_p = sub.add_parser("backfill", help="Bulk historical price backfill.")
-    backfill_p.add_argument("--market", required=True, choices=sorted(MARKETS))
-    backfill_p.add_argument("--years", type=int, default=_DEFAULT_HISTORY_YEARS)
-    backfill_p.add_argument(
-        "--new-only", action="store_true",
-        help="daily_prices가 없는 신규 종목만 대상으로 합니다.",
-    )
-    backfill_p.add_argument("--limit", type=int, default=None)
-    backfill_p.add_argument("--workers", type=int, default=_DEFAULT_FETCH_WORKERS)
-
-    retry_p = sub.add_parser("retry", help="Retry failed symbols from the last prices/backfill run.")
-    retry_p.add_argument("--market", required=True, choices=sorted(MARKETS))
+    retry_p = sub.add_parser("retry", help="Retry failed symbols from the last prices run.")
+    retry_p.add_argument("market_arg", nargs="?", choices=sorted(MARKETS), help="Market to retry.")
+    retry_p.add_argument("--market", choices=sorted(MARKETS))
     retry_p.add_argument("--run-id", default=None, help="Specific run_id to retry.")
 
     args = parser.parse_args()
 
-    if args.command == "fetch":
-        run_fetch(args.market, args.date, args.database_url, args.limit, args.workers)
-    elif args.command == "backfill":
-        run_backfill(args.market, args.years, args.new_only, explicit_url=args.database_url, limit=args.limit, workers=args.workers)
-    elif args.command == "retry":
-        run_retry(args.market, args.run_id, args.database_url)
+    try:
+        if args.command == "fetch":
+            market_key = _resolve_cli_market(args)
+            run_fetch(
+                market_key,
+                args.date,
+                args.database_url,
+                args.limit,
+                args.workers,
+                args.date_from,
+                args.date_to,
+                args.force,
+            )
+        elif args.command == "retry":
+            market_key = _resolve_cli_market(args)
+            run_retry(market_key, args.run_id, args.database_url)
+    except ValueError as exc:
+        parser.error(str(exc))
 
 
 if __name__ == "__main__":
