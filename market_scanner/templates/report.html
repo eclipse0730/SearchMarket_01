@@ -10,6 +10,7 @@
   <style>###STYLE###</style>
 </head>
 <body>
+###V2_NAV###
 <div class="report-shell">
 
 <header class="report-header">
@@ -37,7 +38,7 @@
       </div>
       <div class="filters">
         <input type="text" id="searchBox" placeholder="티커 또는 종목명 검색" oninput="applyFilter()">
-        <select id="sectorFilter" onchange="applyFilter()"><option value="">All sectors</option></select>
+        <select id="sectorFilter" onchange="_heatmapSector=''; applyFilter()"><option value="">All sectors</option></select>
         <select id="setupFilter" onchange="applyFilter()">
           <option value="">All setups</option>
           <option value="trend-pullback">추세 눌림목</option>
@@ -52,6 +53,11 @@
 
     <ul class="nav nav-tabs compact-tabs" id="mainTabs">
       ###TAB_NAV###
+      <li class="nav-item"><a class="nav-link" href="#" data-tab="uptrend">강세추세</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-tab="pullback">눌림목</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-tab="oversold">과매도RSI</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-tab="overheated">과열RSI</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-tab="volsurge">거래량↑</a></li>
     </ul>
 
     <div id="tableSection" class="table-card">
@@ -118,11 +124,11 @@
     <section class="panel chart-panel">
       <div class="panel-head">
         <div>
-          <span>MA Distance vs RSI</span>
-          <h3>이격률과 온도</h3>
+          <span>Sector Distribution</span>
+          <h3>섹터 강세·약세 분포</h3>
         </div>
       </div>
-      <p class="panel-note">이격률은 현재가가 가장 가까운 MA(60/120/240)에서 몇 % 떨어졌는지, 온도는 RSI 과열·과매도 수준을 뜻합니다.</p>
+      <p class="panel-note">섹터별 강세·중립·약세 추세 종목 수. 추세는 이동평균 정렬 기준.</p>
       <div id="scatterCommentary" class="scatter-commentary"></div>
       <canvas id="scatterChart"></canvas>
     </section>
@@ -149,6 +155,7 @@ let sortCol = "changePct";
 let sortAsc = false;
 let reportRendered = false;
 let newsRendered = false;
+let _heatmapSector = "";
 
 const trendPoints = {
   "Strong Uptrend": 2,
@@ -172,7 +179,7 @@ const trendColors = {
   "Strong Downtrend": "#f45b69"
 };
 
-const sectorSet = [...new Set(DATA.map(d => d.sector).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "ko"));
+const sectorSet = [...new Set(DATA.map(d => (d.sector || "").trim()).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "ko"));
 const trendSet = [...new Set(DATA.map(d => d.trend).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "en"));
 const sectorFilter = document.getElementById("sectorFilter");
 const trendFilter = document.getElementById("trendFilter");
@@ -249,7 +256,9 @@ function fmt(value, digits = 2, suffix = "") {
 
 function fmtPrice(value) {
   if (value == null || Number.isNaN(Number(value))) return "-";
-  return `${CURRENCY}${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const num = Number(value);
+  if (CURRENCY === "₩") return `${CURRENCY}${Math.round(num).toLocaleString()}`;
+  return `${CURRENCY}${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function trendPoint(row) {
@@ -369,6 +378,18 @@ function badges(row) {
   return html || "-";
 }
 
+function keywordsCell(row) {
+  const parts = [];
+  if (row.setupLabel) {
+    const sc = setupType(row);
+    parts.push(`<span class="setup-tag ${sc}">${esc(row.setupLabel)}</span>`);
+  }
+  if (Array.isArray(row.signalTags) && row.signalTags.length)
+    row.signalTags.slice(0, 3).forEach(tag => parts.push(`<span class="ma-badge">${esc(tag)}</span>`));
+  PERIODS.forEach(p => { if (row[`near_${p}`]) parts.push(`<span class="ma-badge">MA${p}</span>`); });
+  return parts.length ? parts.join(" ") : "-";
+}
+
 function tabMatch(row) {
   if (currentTab === "all" || currentTab === "report" || currentTab === "news") return true;
   if (currentTab === "multi") return (row.nearCount || 0) >= 2;
@@ -376,6 +397,11 @@ function tabMatch(row) {
     const period = currentTab.slice(2);
     return !!row[`near_${period}`];
   }
+  if (currentTab === "uptrend") return row.trend === "Uptrend" || row.trend === "Strong Uptrend";
+  if (currentTab === "pullback") return setupType(row) === "trend-pullback";
+  if (currentTab === "oversold") return (row.rsi || 999) < 35;
+  if (currentTab === "overheated") return (row.rsi || 0) >= 70;
+  if (currentTab === "volsurge") return (row.volRatio || 0) >= 2;
   return true;
 }
 
@@ -385,13 +411,14 @@ function filteredRows() {
   const setup = document.getElementById("setupFilter").value;
   const trend = document.getElementById("trendFilter").value;
 
+  const activeSector = _heatmapSector || sector;
   return DATA.filter(row => {
     if (!tabMatch(row)) return false;
     if (search) {
       const haystack = [row.ticker, row.displayTicker, row.kr_name, row.en_name].filter(Boolean).join(" ").toLowerCase();
       if (!haystack.includes(search)) return false;
     }
-    if (sector && row.sector !== sector) return false;
+    if (activeSector && (row.sector || "").trim() !== activeSector) return false;
     if (setup && setupType(row) !== setup) return false;
     if (trend && row.trend !== trend) return false;
     return true;
@@ -435,9 +462,9 @@ function renderFilter() {
       <td>${rsiCell(row.rsi)}</td>
       <td>${fmt(row.fromHigh, 1, "%")}</td>
       <td>${fmt(row.volRatio, 2, "x")}</td>
+      <td>${keywordsCell(row)}</td>
       <td>${perCell(row.per)}</td>
       <td>${upCell(row.upside)}</td>
-      <td>${badges(row)} <span class="setup-tag ${setup}">${setupLabel(setup)}</span></td>
     </tr>`;
   }).join("");
 
@@ -507,10 +534,13 @@ function renderNews() {
 }
 
 function renderSignalStrip() {
-  const maItems = PERIODS.map(period => {
-    const count = DATA.filter(row => row[`near_${period}`]).length;
-    return `<b><em>MA${period}</em><strong>${count}</strong></b>`;
-  }).join("");
+  const topCandidates = [...DATA]
+    .filter(r => r.score != null)
+    .sort((a, b) => (b.score || 0) - (a.score || 0))
+    .slice(0, 5);
+  const candidateHtml = topCandidates.map(r =>
+    `<b><em>${esc(r.displayTicker || r.ticker)}</em><strong>${(r.score || 0).toFixed(1)}</strong></b>`
+  ).join("");
   const avgRsiValues = DATA.map(row => Number(row.rsi)).filter(value => !Number.isNaN(value));
   const avgRsi = avgRsiValues.length ? avgRsiValues.reduce((a, b) => a + b, 0) / avgRsiValues.length : null;
   const hotRsi = avgRsiValues.filter(value => value >= 70).length;
@@ -546,31 +576,26 @@ function renderSignalStrip() {
   const laggingSector = sectorAverages[sectorAverages.length - 1];
   const marketTone = avgChange == null ? "확인 불가" : avgChange > 0.15 && upRows >= downRows ? "강세" : avgChange < -0.15 && downRows >= upRows ? "약세" : "보합";
   const marketToneClass = marketTone === "강세" ? "bullish" : marketTone === "약세" ? "bearish" : "neutral";
-  const trend = FEAR.trend === "rising" ? "상승" : FEAR.trend === "falling" ? "하락" : "확인 불가";
-  const tone = FEAR.label === "Stress" || FEAR.label === "Elevated" ? "danger" : FEAR.label === "Calm" ? "calm" : "normal";
-  const labelKo = { Calm: "평온", Normal: "보통", Elevated: "경계", Stress: "스트레스", Unavailable: "확인 불가" }[FEAR.label] || "확인 불가";
-  const fearLevel = FEAR.available ? fmt(FEAR.level, 2) : "-";
-  const fearNote = esc(String(FEAR.note || "")
-    .replace(" VIX 값은 스캔 데이터 fallback에서 읽었습니다.", "")
-    .replace("VIX 값은 스캔 데이터 fallback에서 읽었습니다.", "")
-    .replace("VIX data could not be loaded in this environment.", "VIX 데이터를 확인할 수 없습니다.")
-    .trim());
+
+  const allScores = DATA.filter(r => r.score != null).map(r => r.score);
+  const avgScore = allScores.length ? allScores.reduce((a, b) => a + b, 0) / allScores.length : null;
+  const near52High = DATA.filter(r => r.fromHigh != null && r.fromHigh >= -5).length;
+  const highVolCount = DATA.filter(r => r.volRatio != null && r.volRatio >= 2).length;
+  const scoreClass = avgScore == null ? "normal" : avgScore >= 55 ? "calm" : avgScore < 40 ? "danger" : "normal";
+
   document.getElementById("signalStrip").innerHTML = `
-    <div class="signal-card ma-cluster"><span>이동평균 근접</span><div class="ma-cluster-grid">${maItems}</div><em>근접 종목 ${DATA.filter(row => (row.nearCount || 0) > 0).length}개 / 전체 ${DATA.length}개</em></div>
+    <div class="signal-card ma-cluster"><span>핵심 후보 Top 5</span><div class="ma-cluster-grid">${candidateHtml}</div><em>종합점수 상위 · 전체 ${DATA.length}개 종목</em></div>
     <div class="signal-card market-tone-card ${marketToneClass}"><span>시장 상태</span><strong>${marketTone}</strong><em>평균 ${avgChange == null ? "-" : (avgChange >= 0 ? "+" : "") + avgChange.toFixed(2) + "%"} · 상승 ${upRows}개 · 하락 ${downRows}개</em><em>리딩 ${leadingSector ? esc(leadingSector.sector) + " " + (leadingSector.avg >= 0 ? "+" : "") + leadingSector.avg.toFixed(2) + "%" : "-"} · 약세 ${laggingSector ? esc(laggingSector.sector) + " " + (laggingSector.avg >= 0 ? "+" : "") + laggingSector.avg.toFixed(2) + "%" : "-"}</em></div>
     <div class="signal-card"><span>평균 RSI</span><strong>${avgRsi == null ? "-" : avgRsi.toFixed(1)}</strong><em>과열 ${hotRsi}개 · 중립 ${normalRsi}개 · 과매도 ${coldRsi}개</em></div>
     <div class="signal-card"><span>강세 비율</span><strong>${breadth == null ? "-" : breadth.toFixed(0) + "%"}</strong><em>강세추세 ${bulls}개 · 중립 ${neutralTrends}개 · 약세추세 ${bears}개</em><em>강세 섹터 ${sectorToneCounts.bull} · 보합 ${sectorToneCounts.neutral} · 약세 ${sectorToneCounts.bear}</em></div>
-    <div class="signal-card fear-panel volatility-card ${tone}">
-      <div class="panel-head">
-        <div><span>공포지수 해석</span></div>
-      </div>
+    <div class="signal-card fear-panel volatility-card ${scoreClass}">
+      <div class="panel-head"><div><span>시장 건강도</span></div></div>
       <div class="fear-grid">
-        <div><span>VIX</span><strong>${fearLevel}</strong></div>
-        <div><span>${esc(FEAR.vsLabel || "20D 대비")}</span><strong>${FEAR.vs20Pct == null ? "-" : fmt(FEAR.vs20Pct, 1, "%")}</strong></div>
-        <div><span>방향</span><strong>${trend}</strong></div>
-        <div><span>상태</span><strong><b class="fear-badge ${tone}">${esc(labelKo)}</b></strong></div>
+        <div><span>평균점수</span><strong>${avgScore != null ? avgScore.toFixed(1) : "-"}</strong></div>
+        <div><span>강세추세</span><strong>${bulls}</strong></div>
+        <div><span>52주고점근접</span><strong>${near52High}</strong></div>
+        <div><span>거래량급증</span><strong>${highVolCount}</strong></div>
       </div>
-      <p>${fearNote}</p>
     </div>
   `;
 }
@@ -591,7 +616,7 @@ function changeColor(changePct) {
 function renderSectorHeatmap() {
   const sectorMap = new Map();
   DATA.forEach(row => {
-    const sector = row.sector || "Unknown";
+    const sector = (row.sector || "").trim() || "Unknown";
     const change = Number(row.changePct);
     if (!sectorMap.has(sector)) sectorMap.set(sector, []);
     if (!Number.isNaN(change)) sectorMap.get(sector).push({ ...row, change });
@@ -627,11 +652,13 @@ function renderSectorHeatmap() {
 }
 
 function setSectorFilter(value) {
-  sectorFilter.value = value;
+  _heatmapSector = (value && value !== "Unknown") ? value.trim() : "";
+  sectorFilter.value = _heatmapSector;
   applyFilter();
 }
 
 function clearSectorFilter() {
+  _heatmapSector = "";
   sectorFilter.value = "";
   applyFilter();
 }
@@ -655,81 +682,40 @@ function renderSetupBuckets() {
 }
 
 function renderScatterChart() {
-  const groups = {
-    "강세": { color: "#28d17c", rows: [] },
-    "중립": { color: "#d8a94a", rows: [] },
-    "약세": { color: "#f45b69", rows: [] }
-  };
-  DATA.forEach(row => {
-    const x = closestMADiff(row);
-    const y = row.rsi;
-    if (x == null || y == null) return;
-    const point = trendPoint(row);
-    const key = point > 0 ? "강세" : point < 0 ? "약세" : "중립";
-    groups[key].rows.push({ x, y, ticker: row.displayTicker || row.ticker, name: row.kr_name || row.en_name || "", setup: setupLabel(setupType(row)) });
-  });
-  renderScatterCommentary(groups);
-  new Chart(document.getElementById("scatterChart"), {
-    type: "scatter",
-    data: {
-      datasets: Object.entries(groups).map(([label, item]) => ({
-        label,
-        data: item.rows,
-        backgroundColor: item.color + "bb",
-        borderColor: item.color,
-        pointRadius: 5,
-        pointHitRadius: 14,
-        pointHoverRadius: 7
-      }))
-    },
-    options: {
-      interaction: { mode: "nearest", intersect: false },
-      plugins: {
-        legend: { labels: { color: "#b8c6d7", boxWidth: 10, font: { size: 11 } } },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const raw = ctx.raw;
-              return ` ${raw.ticker}: MA ${raw.x.toFixed(2)}%, RSI ${raw.y.toFixed(1)} · ${raw.setup}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: { display: true, text: "Closest MA Distance %", color: "#7f8ea3" },
-          ticks: { color: "#7f8ea3" },
-          grid: { color: "rgba(148,163,184,.12)" }
-        },
-        y: {
-          min: 10,
-          max: 90,
-          title: { display: true, text: "RSI", color: "#7f8ea3" },
-          ticks: { color: "#7f8ea3" },
-          grid: { color: "rgba(148,163,184,.12)" }
-        }
-      },
-      maintainAspectRatio: false
-    }
-  });
-}
-
-function renderScatterCommentary(groups) {
-  const all = Object.values(groups).flatMap(item => item.rows);
-  if (!all.length) {
-    document.getElementById("scatterCommentary").textContent = "이격률/RSI 데이터가 부족해 해석을 만들 수 없습니다.";
+  if (!SECTOR_LABELS.length) {
+    document.getElementById("scatterCommentary").textContent = "섹터 데이터가 없습니다.";
     return;
   }
-  const nearBalanced = all.filter(row => Math.abs(row.x) <= 2 && row.y >= 40 && row.y <= 65).length;
-  const overheated = all.filter(row => row.y >= 70).length;
-  const oversold = all.filter(row => row.y < 35).length;
-  const extended = all.filter(row => Math.abs(row.x) >= 8).length;
-  let text = `중립 진입 후보 ${nearBalanced}개, 과열 ${overheated}개, 과매도 ${oversold}개입니다.`;
-  if (overheated > nearBalanced) text = `과열 신호가 ${overheated}개로 많아 추격보다 눌림 확인이 유리합니다.`;
-  else if (nearBalanced >= overheated && nearBalanced >= oversold) text = `MA 근처의 정상 RSI 후보가 ${nearBalanced}개로, 선별 진입을 보기 좋은 분포입니다.`;
-  else if (oversold > overheated) text = `과매도 후보가 ${oversold}개로 반등 관찰 대상이 늘어난 상태입니다.`;
-  if (extended > all.length * 0.25) text += ` 다만 MA 이격이 큰 종목도 ${extended}개라 변동성 관리는 필요합니다.`;
-  document.getElementById("scatterCommentary").textContent = text;
+  const total = SECTOR_LABELS.map((_, i) => (SECTOR_BULL[i] || 0) + (SECTOR_NEU[i] || 0) + (SECTOR_BEAR[i] || 0));
+  const bullPct = SECTOR_LABELS.map((_, i) => total[i] ? ((SECTOR_BULL[i] || 0) / total[i] * 100).toFixed(0) + "%" : "-");
+  const bestIdx = SECTOR_BULL.reduce((bi, v, i) => (total[i] ? v / total[i] : 0) > (total[bi] ? SECTOR_BULL[bi] / total[bi] : 0) ? i : bi, 0);
+  const worstIdx = SECTOR_BULL.reduce((bi, v, i) => (total[i] ? v / total[i] : 1) < (total[bi] ? SECTOR_BULL[bi] / total[bi] : 1) ? i : bi, 0);
+  document.getElementById("scatterCommentary").textContent =
+    `강세 리딩: ${SECTOR_LABELS[bestIdx]} (강세 ${bullPct[bestIdx]}) · 최약: ${SECTOR_LABELS[worstIdx]} (강세 ${bullPct[worstIdx]})`;
+
+  new Chart(document.getElementById("scatterChart"), {
+    type: "bar",
+    data: {
+      labels: SECTOR_LABELS,
+      datasets: [
+        { label: "강세", data: SECTOR_BULL, backgroundColor: "#28d17c99", borderWidth: 0 },
+        { label: "중립", data: SECTOR_NEU,  backgroundColor: "#d8a94a88", borderWidth: 0 },
+        { label: "약세", data: SECTOR_BEAR, backgroundColor: "#f45b6999", borderWidth: 0 },
+      ]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: "#b8c6d7", boxWidth: 10, font: { size: 11 } } }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: "#7f8ea3" }, grid: { color: "rgba(148,163,184,.12)" } },
+        y: { stacked: true, ticks: { color: "#c9d1d9", font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
 }
 
 renderSignalStrip();

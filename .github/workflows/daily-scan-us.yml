@@ -1,8 +1,9 @@
-name: Daily Scan KOSDAQ (KST 16:35)
+name: Daily Scan US Markets (After Close)
 
 on:
   schedule:
-    - cron: "35 7 * * *"
+    # 21:05 UTC = 5:05 PM EDT (summer) / 4:05 PM EST (winter) — runs after NYSE/NASDAQ close
+    - cron: "5 21 * * 1-5"
   workflow_dispatch:
 
 jobs:
@@ -26,10 +27,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Fetch prices
-        run: python -m market_scanner.collectors.prices fetch --market kosdaq --worker 1
+        run: python -m market_scanner.collectors.prices fetch --market us --worker 1
 
       - name: Compute indicators
-        run: python -m market_scanner.analysis.indicators compute --market kosdaq
+        run: python -m market_scanner.analysis.indicators compute --market us
 
       - name: Run screener
-        run: python -m market_scanner.analysis.screener run --market kosdaq
+        run: python -m market_scanner.analysis.screener run --market us

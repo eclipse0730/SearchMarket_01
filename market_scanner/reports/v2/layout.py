@@ -5,15 +5,52 @@
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime
+from functools import lru_cache
 from html import escape
+from pathlib import Path
+from urllib.parse import quote_plus
 
 
 SITE_TITLE = "SearchMarket"
 SITE_TAGLINE = "Daily Market Scan"
 
+# 상단 네비게이션 항목: (nav_key, 표시명, href_suffix)
+# href_suffix 는 prefix + suffix 로 최종 URL을 조합한다.
+_NAV_ITEMS: list[tuple[str, str, str]] = [
+    ("home",           "홈",       "index.html"),
+    ("us",             "나스닥",   "markets/us/index.html"),
+    ("kospi",          "KOSPI",    "markets/kospi/index.html"),
+    ("kosdaq",         "KOSDAQ",   "markets/kosdaq/index.html"),
+    ("global-indices", "글로벌지수", "markets/global-indices/index.html"),
+    ("commodities",    "원자재",   "markets/commodities/index.html"),
+]
 
-# 페이지 깊이별 상대 경로 prefix (..(/..)*). 메인=0, 시장=2, 전략=3.
+
+_CACHE_PATH = Path(__file__).resolve().parents[2] / "assets" / "investing_url_cache.json"
+
+
+@lru_cache(maxsize=1)
+def _investing_cache() -> dict[str, str]:
+    if not _CACHE_PATH.exists():
+        return {}
+    try:
+        return json.loads(_CACHE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def quote_url(symbol: str) -> str:
+    """종목 심볼 → kr.investing.com 상세 URL (캐시 히트 시) 또는 검색 URL (미스 시)."""
+    cached = _investing_cache().get(symbol)
+    if cached:
+        return cached.replace("www.investing.com", "kr.investing.com", 1)
+    normalized = symbol.replace(".KS", "").replace(".KQ", "").replace("=F", "")
+    return f"https://kr.investing.com/search?q={quote_plus(normalized)}"
+
+
+# 페이지 깊이별 상대 경로 prefix (..(/..)*). 메인=0, 시장=2, 섹터=4.
 def rel_prefix(depth: int) -> str:
     return "" if depth == 0 else "../" * depth
 
@@ -45,8 +82,10 @@ header.site {
 }
 header.site .title { font-size: 18px; font-weight: 600; }
 header.site .tagline { color: var(--muted); font-size: 13px; }
-header.site nav a { margin-left: 16px; color: var(--muted); font-size: 13px; }
-header.site nav a:hover { color: var(--text); }
+header.site nav { display: flex; flex-wrap: wrap; gap: 2px; align-items: center; }
+header.site nav a { padding: 4px 10px; border-radius: 6px; color: var(--muted); font-size: 13px; }
+header.site nav a:hover { color: var(--text); text-decoration: none; background: var(--panel-2); }
+header.site nav a.nav-active { color: var(--text); font-weight: 600; background: var(--panel-2); }
 main { max-width: 1280px; margin: 0 auto; padding: 24px; }
 section.block { margin-bottom: 32px; }
 section.block > h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px 0;
@@ -117,6 +156,34 @@ table.t tr:hover td { background: var(--panel-2); }
 
 footer.site { border-top: 1px solid var(--border); margin-top: 24px;
   padding: 16px 24px; color: var(--muted); font-size: 12px; text-align: center; }
+
+/* 종합 시장 점수 히어로 */
+.score-hero { display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 20px 24px; }
+.sh-score { text-align: center; min-width: 90px; }
+.sh-value { font-size: 48px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.sh-label { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.pulse-grid { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; }
+.pulse-card { background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 14px; min-width: 90px; }
+.pc-label { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+.pc-value { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* 섹터 타일 링크 */
+a.sector-tile-link { display: block; color: var(--text); text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s; }
+a.sector-tile-link:hover { border-color: var(--accent); transform: translateY(-1px); text-decoration: none; }
+
+/* 워치리스트 패널 */
+.watchlist-grid { display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.wl-panel { background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden; }
+.wl-head { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.wl-title { font-weight: 600; font-size: 14px; margin-right: 8px; }
+.wl-desc { color: var(--muted); font-size: 11px; }
+.wl-panel table.t th, .wl-panel table.t td { padding: 5px 10px; }
 """
 
 
@@ -185,13 +252,10 @@ def render_page(
 ) -> str:
     """공통 헤더/푸터로 감싼 HTML 페이지 문자열."""
     prefix = rel_prefix(depth)
-    nav_items = [
-        ("home", "메인", f"{prefix}index.html"),
-    ]
     nav_html = "".join(
-        f'<a href="{escape(href)}"'
-        f'{" style=\"color:var(--text);\"" if key == nav_active else ""}>{escape(label)}</a>'
-        for key, label, href in nav_items
+        f'<a href="{escape(prefix + href)}"'
+        f'{" class=\"nav-active\"" if key == nav_active else ""}>{escape(label)}</a>'
+        for key, label, href in _NAV_ITEMS
     )
     ts = (generated_at or datetime.now()).strftime("%Y-%m-%d %H:%M")
     return f"""<!DOCTYPE html>

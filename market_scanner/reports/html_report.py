@@ -90,9 +90,9 @@ def _table_headers_html(market: MarketDefinition) -> str:
         '<th data-col="rsi">RSI</th>',
         '<th data-col="fromHigh">52주고점%</th>',
         '<th data-col="volRatio">거래량비율</th>',
+        '<th data-col="setupLabel">키워드(셋업)</th>',
         '<th data-col="per">PER</th>',
         '<th data-col="upside">업사이드</th>',
-        "<th>근접</th>",
     ]
     return "".join(headers)
 
@@ -274,13 +274,16 @@ def write_html(
     *,
     fear_panel: dict[str, object] | None = None,
     news_panel: dict[str, object] | None = None,
+    v2_nav: str = "",
+    skip_enrich: bool = False,
 ) -> None:
     """scan_results + daily_indicators 기반 HTML 리포트 생성.
 
     fear_panel / news_panel 은 site_builder 가 주입할 수 있는 옵션 데이터.
     개별 market 리포트는 빈 패널로 렌더한다 (외부 호출 없음).
     """
-    frame = enrich_metadata_frame(frame, market)
+    if not skip_enrich:
+        frame = enrich_metadata_frame(frame, market)
     sector_labels, sector_bull, sector_neu, sector_bear = _sector_strength_data(frame)
     rsi_labels, rsi_values = _rsi_chart_data(frame)
     display_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}" if len(date_str) == 8 else date_str
@@ -307,6 +310,7 @@ def write_html(
             "FEAR_JSON": _json_script(fear_panel or _empty_fear_panel()),
             "NEWS_JSON": _json_script(news_panel or _empty_news_panel()),
             "ANALYSIS_MD_JSON": _json_script(markdown_text or ""),
+            "V2_NAV": v2_nav,
             "REPORT_EMPTY_TEXT": escape(
                 "분석 마크다운이 비어 있습니다. screener를 먼저 실행한 뒤 render 단계를 다시 수행하세요."
             ),

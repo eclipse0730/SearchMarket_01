@@ -191,6 +191,37 @@ def _risk_section(frame: pd.DataFrame) -> pd.DataFrame:
     return frame[frame["risk_flags"].apply(lambda x: bool(x))].copy()
 
 
+def _rsi_extreme_section(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if "rsi" not in frame.columns:
+        return pd.DataFrame(), pd.DataFrame()
+    rsi = pd.to_numeric(frame["rsi"], errors="coerce")
+    return (
+        frame[rsi < 30].sort_values("rsi", ascending=True).copy(),
+        frame[rsi >= 70].sort_values("rsi", ascending=False).copy(),
+    )
+
+
+def _volume_surge_section(frame: pd.DataFrame, threshold: float = 2.0) -> pd.DataFrame:
+    if "volume_ratio" not in frame.columns:
+        return pd.DataFrame()
+    vol = pd.to_numeric(frame["volume_ratio"], errors="coerce")
+    return frame[vol >= threshold].sort_values("volume_ratio", ascending=False).copy()
+
+
+def _near_52high_section(frame: pd.DataFrame, threshold: float = -5.0) -> pd.DataFrame:
+    if "from_high_pct" not in frame.columns:
+        return pd.DataFrame()
+    fh = pd.to_numeric(frame["from_high_pct"], errors="coerce")
+    return frame[fh >= threshold].sort_values("from_high_pct", ascending=False).copy()
+
+
+def _macd_section(frame: pd.DataFrame) -> pd.DataFrame:
+    if "macd_state" not in frame.columns:
+        return pd.DataFrame()
+    mask = frame["macd_state"].notna() & (frame["macd_state"].astype(str).str.strip() != "")
+    return frame[mask].sort_values("composite_score", ascending=False).copy()
+
+
 def _sector_summary(frame: pd.DataFrame) -> pd.DataFrame:
     if frame.empty or "sector" not in frame.columns:
         return pd.DataFrame()
@@ -259,9 +290,101 @@ def _summary_lines(frame: pd.DataFrame, market: MarketDefinition, date_str: str)
         _section_table(lines, section, market)
     lines.extend(["---", ""])
 
-    # 3. 리스크 / 과열
+    # 3. RSI 극단값
+    oversold_df, overbought_df = _rsi_extreme_section(frame)
+    lines.extend(["## 3. RSI 극단값", ""])
+    lines.extend(["### 과매도 (RSI < 30)", ""])
+    if oversold_df.empty:
+        lines.extend(["_해당 종목 없음_", ""])
+    else:
+        lines.extend(["| 심볼 | 종목명 | RSI | 종합 | 추세 | 셋업 |", "|---|---|---:|---:|:---:|---|"])
+        for _, row in oversold_df.head(10).iterrows():
+            lines.append(
+                f"| {row.get('display_symbol', '-')}"
+                f" | {str(row.get('name_local') or '-')[:18]}"
+                f" | {_fmt_num(row.get('rsi'), 0)}"
+                f" | {_fmt_num(row.get('composite_score'), 1)}"
+                f" | {_trend_badge_html(row.get('trend'))}"
+                f" | {row.get('setup_label') or '-'} |"
+            )
+        lines.append("")
+    lines.extend(["### 과열 (RSI ≥ 70)", ""])
+    if overbought_df.empty:
+        lines.extend(["_해당 종목 없음_", ""])
+    else:
+        lines.extend(["| 심볼 | 종목명 | RSI | 종합 | 추세 | 셋업 |", "|---|---|---:|---:|:---:|---|"])
+        for _, row in overbought_df.head(10).iterrows():
+            lines.append(
+                f"| {row.get('display_symbol', '-')}"
+                f" | {str(row.get('name_local') or '-')[:18]}"
+                f" | {_fmt_num(row.get('rsi'), 0)}"
+                f" | {_fmt_num(row.get('composite_score'), 1)}"
+                f" | {_trend_badge_html(row.get('trend'))}"
+                f" | {row.get('setup_label') or '-'} |"
+            )
+        lines.append("")
+    lines.extend(["---", ""])
+
+    # 4. 거래량 급등
+    vol_df = _volume_surge_section(frame)
+    lines.extend(["## 4. 거래량 급등 (≥ 2x)", ""])
+    if vol_df.empty:
+        lines.extend(["_해당 종목 없음_", ""])
+    else:
+        lines.extend(["| 심볼 | 종목명 | 거래량비율 | 종합 | 등락 | 추세 |", "|---|---|---:|---:|---:|:---:|"])
+        for _, row in vol_df.head(15).iterrows():
+            lines.append(
+                f"| {row.get('display_symbol', '-')}"
+                f" | {str(row.get('name_local') or '-')[:18]}"
+                f" | {_fmt_num(row.get('volume_ratio'), 1)}x"
+                f" | {_fmt_num(row.get('composite_score'), 1)}"
+                f" | {_fmt_num(row.get('change_pct'), 2, '%')}"
+                f" | {_trend_badge_html(row.get('trend'))} |"
+            )
+        lines.append("")
+    lines.extend(["---", ""])
+
+    # 5. 52주 고점 근접
+    near52_df = _near_52high_section(frame)
+    lines.extend(["## 5. 52주 고점 근접 (고점 대비 -5% 이내)", ""])
+    if near52_df.empty:
+        lines.extend(["_해당 종목 없음_", ""])
+    else:
+        lines.extend(["| 심볼 | 종목명 | 고점대비% | 종합 | RSI | 추세 |", "|---|---|---:|---:|---:|:---:|"])
+        for _, row in near52_df.head(15).iterrows():
+            lines.append(
+                f"| {row.get('display_symbol', '-')}"
+                f" | {str(row.get('name_local') or '-')[:18]}"
+                f" | {_fmt_num(row.get('from_high_pct'), 1, '%')}"
+                f" | {_fmt_num(row.get('composite_score'), 1)}"
+                f" | {_fmt_num(row.get('rsi'), 0)}"
+                f" | {_trend_badge_html(row.get('trend'))} |"
+            )
+        lines.append("")
+    lines.extend(["---", ""])
+
+    # 6. MACD 신호
+    macd_df = _macd_section(frame)
+    lines.extend(["## 6. MACD 신호", ""])
+    if macd_df.empty:
+        lines.extend(["_MACD 데이터 없음_", ""])
+    else:
+        lines.extend(["| 심볼 | 종목명 | MACD 상태 | 종합 | RSI | 추세 |", "|---|---|---|---:|---:|:---:|"])
+        for _, row in macd_df.head(15).iterrows():
+            lines.append(
+                f"| {row.get('display_symbol', '-')}"
+                f" | {str(row.get('name_local') or '-')[:18]}"
+                f" | {row.get('macd_state') or '-'}"
+                f" | {_fmt_num(row.get('composite_score'), 1)}"
+                f" | {_fmt_num(row.get('rsi'), 0)}"
+                f" | {_trend_badge_html(row.get('trend'))} |"
+            )
+        lines.append("")
+    lines.extend(["---", ""])
+
+    # 7. 리스크 / 과열
     lines.extend([
-        "## 3. 리스크 / 과열 알림",
+        "## 7. 리스크 / 과열 알림",
         "",
         "> 스크리너가 부여한 `risk_flags` 가 비어있지 않은 종목입니다.",
         "",
@@ -286,8 +409,8 @@ def _summary_lines(frame: pd.DataFrame, market: MarketDefinition, date_str: str)
         lines.append("")
     lines.extend(["---", ""])
 
-    # 4. 섹터 요약
-    lines.extend(["## 4. 섹터 요약", ""])
+    # 8. 섹터 요약
+    lines.extend(["## 8. 섹터 요약", ""])
     sector_df = _sector_summary(frame)
     if sector_df.empty:
         lines.extend(["_데이터 없음_", ""])
@@ -319,8 +442,11 @@ def write_markdown(
     settings: ScanSettings,  # noqa: ARG001 — 시그니처 호환용 (재스코어링 안 함)
     date_str: str,
     path: Path,
+    *,
+    skip_enrich: bool = False,
 ) -> str:
-    frame = enrich_metadata_frame(frame, market)
+    if not skip_enrich:
+        frame = enrich_metadata_frame(frame, market)
     text = "\n".join(_summary_lines(frame, market, date_str))
     path.write_text(text, encoding="utf-8")
     return text

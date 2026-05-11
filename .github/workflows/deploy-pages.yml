@@ -4,6 +4,7 @@ on:
   workflow_run:
     workflows:
       - Daily Scan US Markets (KST 08:05)
+      - Daily Scan US Markets (After Close)
       - Daily Scan Overview Markets (KST 08:20)
       - Daily Scan KOSPI (KST 16:05)
       - Daily Scan KOSDAQ (KST 16:35)

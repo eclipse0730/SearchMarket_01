@@ -92,6 +92,21 @@ uv run python -m market_scanner.analysis.screener run --market kospi  --universe
 uv run python -m market_scanner.reports.site_builder --no-open
 ```
 
+v2
+```bash
+# 메인 페이지만
+python -m market_scanner.reports.v2.build main
+
+# 특정 마켓 페이지 (+ 해당 시장의 섹터 서브페이지 자동 생성)
+python -m market_scanner.reports.v2.build market kospi
+
+# 특정 섹터 페이지만
+python -m market_scanner.reports.v2.build sector kospi 전기전자
+
+# 전체 (메인 + 모든 마켓 + 모든 섹터)
+python -m market_scanner.reports.v2.build all
+```
+
 ## 보조 명령
 
 핵심 테이블 적재 건수 확인:
