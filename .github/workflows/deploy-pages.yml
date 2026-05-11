@@ -38,21 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TZ: Asia/Seoul
-      DATABASE_URL: postgresql://searchmarket:searchmarket@localhost:5432/searchmarket
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: searchmarket
-          POSTGRES_USER: searchmarket
-          POSTGRES_PASSWORD: searchmarket
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U searchmarket -d searchmarket"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
       - name: Checkout
