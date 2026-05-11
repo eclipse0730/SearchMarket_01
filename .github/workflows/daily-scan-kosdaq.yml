@@ -25,11 +25,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Prepare database
-        run: |
-          python -m market_scanner.storage.db init
-          python -m market_scanner.storage.db refresh-master --market kosdaq
+      - name: Fetch prices
+        run: python -m market_scanner.collectors.prices fetch --market kosdaq --worker 1
 
-      - name: Run scanner
-        run: python Search.py --market kosdaq
+      - name: Compute indicators
+        run: python -m market_scanner.analysis.indicators compute --market kosdaq
 
+      - name: Run screener
+        run: python -m market_scanner.analysis.screener run --market kosdaq

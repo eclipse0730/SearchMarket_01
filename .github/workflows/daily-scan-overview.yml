@@ -25,14 +25,17 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Prepare database
+      - name: Fetch prices
         run: |
-          python -m market_scanner.storage.db init
-          python -m market_scanner.storage.db refresh-master --market global-indices
-          python -m market_scanner.storage.db refresh-master --market commodities
+          python -m market_scanner.collectors.prices fetch --market global-indices --worker 1
+          python -m market_scanner.collectors.prices fetch --market commodities --worker 1
 
-      - name: Run overview scanners
+      - name: Compute indicators
         run: |
-          python Search.py --market global-indices
-          python Search.py --market commodities
+          python -m market_scanner.analysis.indicators compute --market global-indices
+          python -m market_scanner.analysis.indicators compute --market commodities
 
+      - name: Run screener
+        run: |
+          python -m market_scanner.analysis.screener run --market global-indices
+          python -m market_scanner.analysis.screener run --market commodities

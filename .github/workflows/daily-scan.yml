@@ -1,8 +1,6 @@
 name: Daily Scan US Markets (KST 08:05)
 
 on:
-  schedule:
-    - cron: "5 23 * * *"
   workflow_dispatch:
 
 jobs:

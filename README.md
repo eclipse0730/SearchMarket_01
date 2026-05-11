@@ -85,18 +85,9 @@ uv run python -m market_scanner.analysis.screener run --market us     --universe
 uv run python -m market_scanner.analysis.screener run --market kospi  --universe kospi200
 ```
 
-## 5단계: 결과 도출
+## 5단계: 사이트 빌드
 
-`scan_results`를 읽어 Markdown/HTML 리포트를 생성하고 `generated_reports`에 기록합니다.
-```bash
-uv run python -m market_scanner.reports.render build --market us
-uv run python -m market_scanner.reports.render build --market kospi
-uv run python -m market_scanner.reports.render build --market kosdaq
-uv run python -m market_scanner.reports.render build --market us     --universe sp500
-uv run python -m market_scanner.reports.render build --market kospi  --universe kospi200
-```
-
-전체 사이트 대시보드는 별도 빌드 명령으로 생성합니다.
+`scan_results`를 읽어 전체 GitHub Pages 사이트를 생성합니다.
 ```bash
 uv run python -m market_scanner.reports.site_builder --no-open
 ```
@@ -119,22 +110,22 @@ uv run python Search.py --market us --universe sp500 --stage news
 
 ## Search.py 단축 실행
 
-`Search.py`는 2~5단계를 한 번에 묶어 실행하는 호환용 단축 CLI입니다. 운영 흐름을 명확히 보고 싶을 때는 위의 모듈별 5단계 명령을 권장합니다.
+`Search.py`는 2~4단계를 한 번에 묶어 실행하는 단축 CLI입니다.
 ```bash
 uv run python Search.py --market us
 uv run python Search.py --market kospi
 uv run python Search.py --market kosdaq
 ```
 
-단계별 단축 실행도 가능하지만, 실제 운영 기준은 모듈별 명령입니다.
+단계별 실행:
 ```bash
 uv run python Search.py --market us --stage scan
-uv run python Search.py --market us --stage render
+uv run python Search.py --market us --stage analyze
 ```
 
 ## 출력
 
-스캔 결과의 원천은 PostgreSQL입니다. `render` 단계는 DB의 `scan_results`를 읽어 `site/reports/{scope}/{YYYYMMDD}/` 아래에 Markdown/HTML을 생성하고 `generated_reports`에 산출물 메타데이터를 기록합니다. GitHub Pages 사이트는 `site/` 아래에 생성됩니다.
+스캔 결과의 원천은 PostgreSQL입니다. GitHub Pages 사이트는 `site_builder`가 DB에서 직접 읽어 `site/` 아래에 생성합니다.
 
 ## PostgreSQL
 
@@ -231,3 +222,7 @@ market_scanner/
 | `daily-scan-kospi.yml` | KST 16:05 | KOSPI |
 | `daily-scan-kosdaq.yml` | KST 16:35 | KOSDAQ |
 | `deploy-pages.yml` | 스캔 성공 후 자동, 또는 수동 실행 | GitHub Pages 사이트 빌드·배포 |
+
+
+python -c "from market_scanner.storage.connection import connect; conn = connect(); print('connected:', conn.info.host)"
+# localhost 출력되면 로컬 DB

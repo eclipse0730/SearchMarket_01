@@ -13,7 +13,6 @@ from market_scanner.models import ScanSettings
 from market_scanner.pipeline import (
     run_analysis_stage,
     run_news_stage,
-    run_render_stage,
     run_scan_stage_with_settings,
 )
 
@@ -68,7 +67,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--stage",
-        choices=["scan", "analyze", "news", "render", "all"],
+        choices=["scan", "analyze", "news", "all"],
         default="all",
         help="Pipeline stage to run (default: all). 'news' is an opt-in DB collection stage.",
     )
@@ -158,13 +157,6 @@ def main() -> None:
             parser.error(str(exc))
         print(f"  news stored: {news_count} items")
         completed.append("news_items")
-
-    # render: DB의 scan_results를 기준으로 Markdown과 HTML 리포트를 생성합니다.
-    if run_all or args.stage == "render":
-        paths = run_render_stage(scan_market_key, date_str, path_key=path_key)
-        if str(paths["md"]) not in completed and paths["md"].exists():
-            completed.append(str(paths["md"]))
-        completed.append(str(paths["html"]))
 
     scope_label = f"{scan_market_key}/{effective_universe}" if effective_universe else scan_market_key
     print(f"\n  done [{scope_label}]: {' | '.join(completed)}")

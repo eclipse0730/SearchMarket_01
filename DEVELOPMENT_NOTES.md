@@ -65,8 +65,8 @@ uv run python -m market_scanner.storage.db init
    `daily_prices`를 읽어 `daily_indicators`를 계산합니다. 기준일 이하 가격 히스토리만 사용하고, 실패/스킵 샘플을 `collection_runs.error_samples`에 저장합니다. 완료된 종목 수 기준 진행 바와 success/failed/skipped 카운트를 출력합니다.
 4. 스코어링: `uv run python -m market_scanner.analysis.screener run --market us`
    `daily_indicators`, `daily_prices`, `instrument_fundamentals`를 읽어 `scan_results`, `market_snapshots`, `sector_snapshots`를 갱신합니다. `--date`를 생략하면 해당 시장/유니버스의 최신 `daily_indicators.trade_date`를 자동 선택합니다. `--universe`를 지정하면 `universe_memberships`의 현재 편입 종목만 대상으로 합니다.
-5. 결과 도출: `uv run python -m market_scanner.reports.render build --market us`
-   DB의 `scan_results`를 기반으로 Markdown/HTML 리포트를 렌더링하고 `generated_reports`에 산출물 메타데이터를 기록합니다.
+5. 사이트 빌드: `uv run python -m market_scanner.reports.site_builder --no-open`
+   DB의 `scan_results`를 직접 읽어 전체 GitHub Pages 사이트를 `site/` 아래에 생성합니다.
 
 뉴스 단계는 기본 5단계에 포함하지 않습니다. 현재는 `Search.py --stage news`가 DB `scan_results`의 종합점수 상위 종목에서 Finnhub와 RSS 뉴스 항목을 수집해 `news_items`, `instrument_news`에 저장합니다.
 
@@ -75,7 +75,6 @@ uv run python -m market_scanner.storage.db init
 ```powershell
 uv run python Search.py --market us
 uv run python Search.py --market kospi --stage scan
-uv run python Search.py --market us --universe sp500 --stage render
 ```
 
 진행률 표시는 `market_scanner.progress.progress_line()`을 공통으로 사용합니다. 기본 폭은 20칸이며 완료 구간은 `■`, 남은 구간은 `□`로 표시합니다. `refresh-master`, `prices fetch`, `prices backfill`, `indicators compute`, `fundamentals fetch`, `news fetch`는 같은 형식의 진행 라인을 사용합니다. 병렬 경로는 worker 수만큼만 pending 작업을 유지하고, 완료가 없을 때도 1초마다 queued/active 상태를 다시 출력합니다.
@@ -105,8 +104,7 @@ pg_ctl -D .postgres-data stop
 출력 규칙:
 
 - 스캔/스크리닝 결과의 원천은 PostgreSQL `daily_prices`, `daily_indicators`, `scan_results`, `market_snapshots`, `sector_snapshots`입니다.
-- `render` 단계의 Markdown/HTML 산출물은 `site/reports/{scope}/{YYYYMMDD}/` 아래에 생성합니다.
-- 산출물 메타데이터는 `generated_reports`에 기록합니다.
+- GitHub Pages 사이트는 `site_builder`가 DB에서 직접 읽어 `site/` 아래에 생성합니다.
 
 ## Data Model And Scoring
 

@@ -16,7 +16,7 @@ from market_scanner.collectors.fundamentals import run_fetch as fetch_fundamenta
 from market_scanner.collectors.news import run_fetch as fetch_news
 from market_scanner.collectors.prices import run_fetch as fetch_prices
 from market_scanner.models import MarketDefinition, ScanSettings
-from market_scanner.reports.render import report_output_paths, run_build as build_reports
+from market_scanner.reports.render import report_output_paths
 from market_scanner.reports.markdown_report import write_markdown
 from market_scanner.storage.universe import scan_symbols_for_scope
 
@@ -76,16 +76,6 @@ def run_analysis_stage(
     paths["md"].parent.mkdir(parents=True, exist_ok=True)
     markdown = write_markdown(frame, market, settings, date_str, paths["md"])
     return markdown, paths
-
-
-def run_render_stage(
-    market_key: str,
-    date_str: str,
-    *,
-    path_key: str | None = None,
-) -> dict[str, Path]:
-    universe_key = path_key if path_key and path_key != market_key else None
-    return build_reports(market_key, date_str, universe_key=universe_key)
 
 
 def run_news_stage(

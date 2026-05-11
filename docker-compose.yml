@@ -40,15 +40,12 @@ services:
         echo '35 7 * * 1-5 cd /app && uv run python -m market_scanner.collectors.prices fetch --market kospi >> /var/log/cron.log 2>&1' > /etc/cron.d/searchmarket &&
         echo '40 7 * * 1-5 cd /app && uv run python -m market_scanner.analysis.indicators compute --market kospi >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         echo '45 7 * * 1-5 cd /app && uv run python -m market_scanner.analysis.screener run --market kospi >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
-        echo '50 7 * * 1-5 cd /app && uv run python -m market_scanner.reports.render build --market kospi >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         echo '05 8 * * 1-5 cd /app && uv run python -m market_scanner.collectors.prices fetch --market kosdaq >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         echo '10 8 * * 1-5 cd /app && uv run python -m market_scanner.analysis.indicators compute --market kosdaq >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         echo '15 8 * * 1-5 cd /app && uv run python -m market_scanner.analysis.screener run --market kosdaq >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
-        echo '20 8 * * 1-5 cd /app && uv run python -m market_scanner.reports.render build --market kosdaq >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         echo '30 6 * * 2-6 cd /app && uv run python -m market_scanner.collectors.prices fetch --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         echo '40 6 * * 2-6 cd /app && uv run python -m market_scanner.analysis.indicators compute --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         echo '50 6 * * 2-6 cd /app && uv run python -m market_scanner.analysis.screener run --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
-        echo '00 7 * * 2-6 cd /app && uv run python -m market_scanner.reports.render build --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         echo '0 1 * * 0 cd /app && uv run python -m market_scanner.collectors.fundamentals fetch --market us >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         echo '30 1 * * 0 cd /app && uv run python -m market_scanner.collectors.fundamentals fetch --market kospi >> /var/log/cron.log 2>&1' >> /etc/cron.d/searchmarket &&
         chmod 0644 /etc/cron.d/searchmarket &&

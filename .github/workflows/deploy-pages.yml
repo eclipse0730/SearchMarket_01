@@ -56,24 +56,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Prepare database
-        run: |
-          python -m market_scanner.storage.db init
-          python -m market_scanner.storage.db refresh-master --market us
-          python -m market_scanner.storage.db refresh-master --market kospi
-          python -m market_scanner.storage.db refresh-master --market kosdaq
-          python -m market_scanner.storage.db refresh-master --market global-indices
-          python -m market_scanner.storage.db refresh-master --market commodities
-
-      - name: Populate site database
-        run: |
-          python Search.py --market us --universe nasdaq100
-          python Search.py --market us --universe sp500
-          python Search.py --market kospi
-          python Search.py --market kosdaq
-          python Search.py --market global-indices
-          python Search.py --market commodities
-
       - name: Build static site
         run: python -m market_scanner.reports.site_builder
 
