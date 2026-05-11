@@ -1,15 +1,6 @@
 name: Deploy GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
-      - master
-    paths:
-      - "Search.py"
-      - "requirements.txt"
-      - "market_scanner/**"
-      - ".github/workflows/**"
   workflow_run:
     workflows:
       - Daily Scan US Markets (KST 08:05)
