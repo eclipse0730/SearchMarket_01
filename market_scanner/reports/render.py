@@ -28,14 +28,8 @@ def report_output_paths(scope_key: str, date_str: str) -> dict[str, Path]:
     }
 
 
-# scan_results.summary_payload 안에 들어있는 전략별 점수/라벨을 컬럼으로 풀어낼 키 목록.
-# screener.py 가 저장한 row_payload([...]) 와 동기화 필요.
-_PAYLOAD_NUMERIC_KEYS = (
-    "raw_composite_score",
-    "pullback_score", "breakout_score", "box_breakout_score",
-    "trend_quality_score", "reversal_score", "overbought_score",
-    "risk_score", "action_score", "quality_score",
-)
+# 전략별 점수/라벨은 이제 scan_results 컬럼에서 직접 SELECT 한다.
+# summary_payload(JSONB)는 디버깅/원본 보존용으로만 유지.
 
 
 def _load_render_frame(
@@ -78,6 +72,11 @@ def _load_render_frame(
             sr.rank_no,
             sr.composite_score, sr.chart_score, sr.technical_score,
             sr.fundamental_score, sr.theme_score, sr.flow_score,
+            sr.pullback_score, sr.breakout_score, sr.box_breakout_score,
+            sr.trend_quality_score, sr.reversal_score, sr.overbought_score,
+            sr.risk_score, sr.raw_composite_score,
+            sr.action_score, sr.quality_score,
+            sr.setup_label, sr.pullback_ma_period,
             sr.setup_tags, sr.risk_flags, sr.summary_payload,
             i.symbol, i.display_symbol, i.name_en, i.name_local, i.sector, i.description,
             di.rsi14         AS rsi,
@@ -171,6 +170,11 @@ def _load_render_frame(
     columns = [
         "rank_no", "composite_score", "chart_score", "technical_score",
         "fundamental_score", "theme_score", "flow_score",
+        "pullback_score", "breakout_score", "box_breakout_score",
+        "trend_quality_score", "reversal_score", "overbought_score",
+        "risk_score", "raw_composite_score",
+        "action_score", "quality_score",
+        "setup_label", "pullback_ma_period",
         "setup_tags", "risk_flags", "summary_payload",
         "symbol", "display_symbol", "name_en", "name_local", "sector", "description",
         "rsi", "rsi14", "rsi14_prev", "rsi14_change", "rsi14_ma5", "rsi2", "rsi5", "rsi30",
@@ -196,11 +200,8 @@ def _load_render_frame(
     ]
     frame = pd.DataFrame(rows, columns=columns)
 
-    # summary_payload(JSONB) 안의 전략별 점수/라벨을 1차 컬럼으로 풀어 둔다.
-    payloads = frame["summary_payload"].apply(lambda p: p if isinstance(p, dict) else {})
-    frame["setup_label"] = payloads.apply(lambda p: p.get("setup_label") or "")
-    for key in _PAYLOAD_NUMERIC_KEYS:
-        frame[key] = payloads.apply(lambda p, k=key: p.get(k))
+    # setup_label은 NULL을 빈 문자열로 정규화해 downstream의 문자열 가정과 맞춘다.
+    frame["setup_label"] = frame["setup_label"].fillna("")
 
     # 태그 배열은 list[str] 로 정규화 (psycopg2/3 모두 list 또는 None 으로 들어옴)
     frame["setup_tags"] = frame["setup_tags"].apply(lambda v: list(v) if v else [])

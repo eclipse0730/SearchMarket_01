@@ -47,6 +47,14 @@ uv run python -m market_scanner.collectors.prices fetch kospi
 uv run python -m market_scanner.collectors.prices fetch kosdaq
 ```
 
+펀더멘탈 수집:
+```bash
+uv run python -m market_scanner.collectors.fundamentals fetch --market us
+uv run python -m market_scanner.collectors.fundamentals fetch --market kospi
+uv run python -m market_scanner.collectors.fundamentals fetch --market kosdaq --workers 8 --limit 100
+uv run python -m market_scanner.collectors.fundamentals fetch --market kospi --source naver --limit 10
+```
+
 범위 수집은 이미 있는 데이터 다음 날부터 이어서 수집합니다. `--force`를 붙이면 같은 범위의 기존 데이터도 다시 수집해 upsert합니다. `retry`는 실패 로그에 저장된 종목과 날짜 범위를 다시 수집합니다.
 ```bash
 uv run python -m market_scanner.collectors.prices fetch --market us --from 20250101 --to 20260505 --workers 8
@@ -98,14 +106,6 @@ uv run python -m market_scanner.reports.site_builder --no-open
 핵심 테이블 적재 건수 확인:
 ```bash
 uv run python -m market_scanner.storage.db counts
-```
-
-펀더멘탈 수집:
-```bash
-uv run python -m market_scanner.collectors.fundamentals fetch --market us
-uv run python -m market_scanner.collectors.fundamentals fetch --market kospi
-uv run python -m market_scanner.collectors.fundamentals fetch --market kosdaq --workers 8 --limit 100
-uv run python -m market_scanner.collectors.fundamentals fetch --market kospi --source naver --limit 10
 ```
 
 기본 `--source auto`는 US는 Yahoo Finance, KOSPI/KOSDAQ은 Naver Finance -> FinanceDataReader -> Yahoo Finance 순서로 값을 채웁니다. `--workers`는 기본 2이며 US/Yahoo 경로는 최대 4, 한국 Naver/FDR 경로는 최대 8로 제한합니다.

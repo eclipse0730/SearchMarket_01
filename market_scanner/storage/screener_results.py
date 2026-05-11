@@ -8,7 +8,7 @@ import psycopg
 from psycopg.types.json import Jsonb
 
 from market_scanner.domain.market_policy import home_market_key
-from market_scanner.storage.common import clean_number, row_payload
+from market_scanner.storage.common import clean_int, clean_number, clean_text, row_payload
 
 
 def _tag_list(value: object) -> list[str]:
@@ -47,9 +47,23 @@ def upsert_scan_result(
         INSERT INTO scan_results (
             run_id, instrument_id, market_key, universe_key, trade_date,
             chart_score, technical_score, fundamental_score, theme_score, flow_score,
-            composite_score, rank_no, setup_tags, risk_flags, summary_payload
+            composite_score,
+            pullback_score, breakout_score, box_breakout_score, trend_quality_score,
+            reversal_score, overbought_score, risk_score, raw_composite_score,
+            action_score, quality_score, setup_label, pullback_ma_period,
+            close_price, change_pct, value_traded, rsi14,
+            rank_no, setup_tags, risk_flags, summary_payload
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (
+            %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s,
+            %s,
+            %s, %s, %s, %s,
+            %s, %s, %s, %s,
+            %s, %s, %s, %s,
+            %s, %s, %s, %s,
+            %s, %s, %s, %s
+        )
         ON CONFLICT (run_id, instrument_id) DO UPDATE SET
             chart_score = EXCLUDED.chart_score,
             technical_score = EXCLUDED.technical_score,
@@ -57,6 +71,22 @@ def upsert_scan_result(
             theme_score = EXCLUDED.theme_score,
             flow_score = EXCLUDED.flow_score,
             composite_score = EXCLUDED.composite_score,
+            pullback_score = EXCLUDED.pullback_score,
+            breakout_score = EXCLUDED.breakout_score,
+            box_breakout_score = EXCLUDED.box_breakout_score,
+            trend_quality_score = EXCLUDED.trend_quality_score,
+            reversal_score = EXCLUDED.reversal_score,
+            overbought_score = EXCLUDED.overbought_score,
+            risk_score = EXCLUDED.risk_score,
+            raw_composite_score = EXCLUDED.raw_composite_score,
+            action_score = EXCLUDED.action_score,
+            quality_score = EXCLUDED.quality_score,
+            setup_label = EXCLUDED.setup_label,
+            pullback_ma_period = EXCLUDED.pullback_ma_period,
+            close_price = EXCLUDED.close_price,
+            change_pct = EXCLUDED.change_pct,
+            value_traded = EXCLUDED.value_traded,
+            rsi14 = EXCLUDED.rsi14,
             rank_no = EXCLUDED.rank_no,
             setup_tags = EXCLUDED.setup_tags,
             risk_flags = EXCLUDED.risk_flags,
@@ -74,6 +104,22 @@ def upsert_scan_result(
             clean_number(row.get("theme_score")),
             clean_number(row.get("flow_score")),
             clean_number(row.get("composite_score")),
+            clean_number(row.get("pullback_score")),
+            clean_number(row.get("breakout_score")),
+            clean_number(row.get("box_breakout_score")),
+            clean_number(row.get("trend_quality_score")),
+            clean_number(row.get("reversal_score")),
+            clean_number(row.get("overbought_score")),
+            clean_number(row.get("risk_score")),
+            clean_number(row.get("raw_composite_score")),
+            clean_number(row.get("action_score")),
+            clean_number(row.get("quality_score")),
+            clean_text(row.get("setup_label")),
+            clean_int(row.get("pullback_ma_period")),
+            clean_number(row.get("close_price") if row.get("close_price") is not None else row.get("close")),
+            clean_number(row.get("change_pct")),
+            clean_number(row.get("value_traded")),
+            clean_number(row.get("rsi14")),
             rank_no,
             _tag_list(row.get("signal_tags")),
             _risk_flags(row),
@@ -86,6 +132,7 @@ def upsert_scan_result(
                         "pullback_score", "breakout_score", "box_breakout_score",
                         "trend_quality_score", "reversal_score", "overbought_score",
                         "risk_score", "action_score", "quality_score",
+                        "pullback_ma_period",
                     ],
                 )
             ),

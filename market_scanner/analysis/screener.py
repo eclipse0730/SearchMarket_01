@@ -643,7 +643,13 @@ def theme_scores(frame: pd.DataFrame) -> pd.Series:
     for col in numeric_cols:
         work[col] = pd.to_numeric(work[col], errors="coerce") if col in work.columns else pd.NA
 
-    work["above_ma20"] = pd.to_numeric(work.get("diff_20_pct", pd.NA), errors="coerce") > 0
+    if "diff_20_pct" in work.columns:
+        diff20 = work["diff_20_pct"]
+    elif "diff_20" in work.columns:
+        diff20 = work["diff_20"]
+    else:
+        diff20 = pd.Series(pd.NA, index=work.index, dtype="float64")
+    work["above_ma20"] = pd.to_numeric(diff20, errors="coerce") > 0
     work["breakout_20d_num"] = work["breakout_20d"].apply(lambda v: 1.0 if bool(v) and pd.notna(v) else 0.0) if "breakout_20d" in work.columns else pd.NA
     work["breakout_60d_num"] = work["breakout_60d"].apply(lambda v: 1.0 if bool(v) and pd.notna(v) else 0.0) if "breakout_60d" in work.columns else pd.NA
 
@@ -770,10 +776,30 @@ def score_setup_label(row: pd.Series) -> str:
     return label
 
 
+_PULLBACK_MA_PERIODS: tuple[int, ...] = (20, 60, 120, 240)
+
+
+def _pullback_period_hits(row: pd.Series) -> list[int]:
+    """Return MA periods (20/60/120/240) where the price is currently near the MA."""
+    return [p for p in _PULLBACK_MA_PERIODS if _bool(row, f"near_{p}")]
+
+
+def compute_pullback_ma_period(row: pd.Series) -> int | None:
+    """가장 짧은 눌림 MA 기간. pullback_score가 충분히 높을 때만 의미가 있음."""
+    if _num(row, "pullback_score", 0) < 75:
+        return None
+    hits = _pullback_period_hits(row)
+    return hits[0] if hits else None
+
+
 def make_signal_tags(row: pd.Series) -> str:
     tags: list[str] = []
     if _num(row, "pullback_score", 0) >= 75:
-        tags.append("눌림")
+        hits = _pullback_period_hits(row)
+        if hits:
+            tags.extend(f"눌림{p}" for p in hits)
+        else:
+            tags.append("눌림")
     if _num(row, "breakout_score", 0) >= 75:
         tags.append("돌파")
     if _num(row, "box_breakout_score", 0) >= 72:
@@ -854,6 +880,7 @@ def add_advanced_scores(frame: pd.DataFrame, settings: AdvancedScoreSettings = _
     )
 
     scored["setup_label"] = scored.apply(score_setup_label, axis=1)
+    scored["pullback_ma_period"] = scored.apply(compute_pullback_ma_period, axis=1)
     scored["signal_tags"] = scored.apply(make_signal_tags, axis=1)
 
     # 실전 랭킹 보조 컬럼

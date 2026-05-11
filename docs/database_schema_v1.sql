@@ -347,6 +347,22 @@ CREATE TABLE IF NOT EXISTS scan_results (
     theme_score NUMERIC(8, 4),
     flow_score NUMERIC(8, 4),
     composite_score NUMERIC(8, 4),
+    pullback_score NUMERIC(8, 4),
+    breakout_score NUMERIC(8, 4),
+    box_breakout_score NUMERIC(8, 4),
+    trend_quality_score NUMERIC(8, 4),
+    reversal_score NUMERIC(8, 4),
+    overbought_score NUMERIC(8, 4),
+    risk_score NUMERIC(8, 4),
+    raw_composite_score NUMERIC(8, 4),
+    action_score NUMERIC(8, 4),
+    quality_score NUMERIC(8, 4),
+    setup_label TEXT,
+    pullback_ma_period SMALLINT,
+    close_price NUMERIC(18, 6),
+    change_pct NUMERIC(10, 4),
+    value_traded NUMERIC(20, 4),
+    rsi14 NUMERIC(8, 4),
     rank_no INTEGER,
     setup_tags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     risk_flags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
@@ -363,6 +379,16 @@ CREATE INDEX IF NOT EXISTS idx_scan_results_universe_rank
 
 CREATE INDEX IF NOT EXISTS idx_scan_results_instrument_date
     ON scan_results (instrument_id, trade_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_scan_results_pullback
+    ON scan_results (market_key, trade_date DESC, pullback_score DESC);
+
+CREATE INDEX IF NOT EXISTS idx_scan_results_breakout
+    ON scan_results (market_key, trade_date DESC, breakout_score DESC);
+
+CREATE INDEX IF NOT EXISTS idx_scan_results_pullback_period
+    ON scan_results (market_key, trade_date DESC, pullback_ma_period)
+    WHERE pullback_ma_period IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS market_snapshots (
     market_key TEXT NOT NULL REFERENCES markets(market_key),
