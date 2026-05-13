@@ -145,49 +145,17 @@ uv run python Search.py --market us --stage analyze
 ## PostgreSQL
 
 기본 접속 문자열은 `.env.example`의 `DATABASE_URL`입니다.
-
 ```text
 postgresql://searchmarket:searchmarket@localhost:5433/searchmarket
 ```
 
 DBeaver 로컬 접속:
-
 ```text
 Host: localhost
 Port: 5433
 Database: searchmarket
 Username: searchmarket
 Password: searchmarket
-```
-
-같은 LAN/Wi-Fi의 다른 컴퓨터에서 윈도우 Docker PostgreSQL에 접속하려면 윈도우 PC IP를 Host로 사용합니다.
-
-```powershell
-ipconfig
-```
-
-예를 들어 윈도우 PC IP가 `192.168.0.23`이면:
-
-```text
-DATABASE_URL=postgresql://searchmarket:searchmarket@192.168.0.23:5433/searchmarket
-```
-
-방화벽이 막으면 관리자 권한 터미널에서 Private 네트워크용 인바운드 규칙을 추가합니다.
-
-```powershell
-netsh advfirewall firewall add rule name="SearchMarket PostgreSQL 5433" dir=in action=allow protocol=TCP localport=5433 profile=private
-```
-
-DB 파일이나 Docker volume을 iCloud/Dropbox 같은 파일 동기화 도구로 공유하지 마세요. 여러 컴퓨터가 같은 DB를 보려면 한쪽 PostgreSQL 서버에 네트워크로 접속합니다. 외부 인터넷 접속은 포트포워딩보다 Tailscale/VPN 또는 관리형 PostgreSQL을 권장합니다.
-
-Docker Desktop을 쓰지 않고 로컬 Postgres 바이너리로 임시 DB를 띄울 수도 있습니다.
-
-```powershell
-initdb -D .postgres-data --auth=trust --username=searchmarket
-pg_ctl -D .postgres-data -o "-p 5433" -l .postgres-data/postgres.log start
-createdb -h localhost -p 5433 -U searchmarket searchmarket
-pg_ctl -D .postgres-data status
-pg_ctl -D .postgres-data stop
 ```
 
 `.postgres-data/`는 로컬 DB 데이터 디렉터리이며 Git 추적 대상이 아닙니다.

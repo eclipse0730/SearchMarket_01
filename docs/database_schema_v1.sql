@@ -123,15 +123,6 @@ CREATE TABLE IF NOT EXISTS collection_runs (
 CREATE INDEX IF NOT EXISTS idx_collection_runs_lookup
     ON collection_runs (market_key, universe_key, trade_date, run_type, started_at DESC);
 
--- migrate: add 'fundamentals' to run_type check (idempotent)
-DO $$
-BEGIN
-    ALTER TABLE collection_runs DROP CONSTRAINT IF EXISTS collection_runs_type_check;
-    ALTER TABLE collection_runs ADD CONSTRAINT collection_runs_type_check CHECK (
-        run_type IN ('universe', 'prices', 'indicators', 'scan', 'news', 'render', 'backfill', 'fundamentals')
-    );
-END $$;
-
 CREATE TABLE IF NOT EXISTS daily_prices (
     instrument_id BIGINT NOT NULL REFERENCES instruments(instrument_id),
     trade_date DATE NOT NULL,
@@ -268,50 +259,6 @@ CREATE INDEX IF NOT EXISTS idx_daily_indicators_date
 CREATE INDEX IF NOT EXISTS idx_daily_indicators_rsi_date
     ON daily_indicators (trade_date DESC, rsi14);
 
-ALTER TABLE IF EXISTS daily_indicators
-    ADD COLUMN IF NOT EXISTS ma5 NUMERIC(20, 6),
-    ADD COLUMN IF NOT EXISTS rsi14_prev NUMERIC(8, 4),
-    ADD COLUMN IF NOT EXISTS rsi14_change NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS rsi14_ma5 NUMERIC(8, 4),
-    ADD COLUMN IF NOT EXISTS rsi2 NUMERIC(8, 4),
-    ADD COLUMN IF NOT EXISTS rsi5 NUMERIC(8, 4),
-    ADD COLUMN IF NOT EXISTS rsi30 NUMERIC(8, 4),
-    ADD COLUMN IF NOT EXISTS ma20 NUMERIC(20, 6),
-    ADD COLUMN IF NOT EXISTS diff_5_pct NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS diff_20_pct NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS near_5 BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS near_20 BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS from_low_pct NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS high_20d NUMERIC(20, 6),
-    ADD COLUMN IF NOT EXISTS low_20d NUMERIC(20, 6),
-    ADD COLUMN IF NOT EXISTS high_60d NUMERIC(20, 6),
-    ADD COLUMN IF NOT EXISTS low_60d NUMERIC(20, 6),
-    ADD COLUMN IF NOT EXISTS breakout_20d BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS breakout_60d BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS breakout_high_20d BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS breakout_high_60d BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS value_traded NUMERIC(28, 6),
-    ADD COLUMN IF NOT EXISTS value_ratio_20d NUMERIC(12, 4),
-    ADD COLUMN IF NOT EXISTS volume_avg20 NUMERIC(20, 4),
-    ADD COLUMN IF NOT EXISTS volume_avg60 NUMERIC(20, 4),
-    ADD COLUMN IF NOT EXISTS ma_alignment_score INTEGER,
-    ADD COLUMN IF NOT EXISTS is_ma_bullish_alignment BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS ma20_slope_pct NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS ma60_slope_pct NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS macd_cross TEXT,
-    ADD COLUMN IF NOT EXISTS macd_hist_change NUMERIC(20, 6),
-    ADD COLUMN IF NOT EXISTS close_position_in_range_20d NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS close_position_in_range_60d NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS return_5d NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS return_20d NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS return_60d NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS return_120d NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS return_240d NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS atr14 NUMERIC(20, 6),
-    ADD COLUMN IF NOT EXISTS atr14_pct NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS volatility_20d NUMERIC(10, 4),
-    ADD COLUMN IF NOT EXISTS volatility_60d NUMERIC(10, 4);
-
 CREATE TABLE IF NOT EXISTS instrument_fundamentals (
     instrument_id BIGINT NOT NULL REFERENCES instruments(instrument_id),
     as_of_date DATE NOT NULL,
@@ -389,6 +336,24 @@ CREATE INDEX IF NOT EXISTS idx_scan_results_breakout
 CREATE INDEX IF NOT EXISTS idx_scan_results_pullback_period
     ON scan_results (market_key, trade_date DESC, pullback_ma_period)
     WHERE pullback_ma_period IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS daily_macro (
+    indicator_code TEXT NOT NULL,
+    trade_date DATE NOT NULL,
+    source_provider TEXT NOT NULL,
+    value NUMERIC(20, 6) NOT NULL,
+    prev_value NUMERIC(20, 6),
+    change_pct NUMERIC(10, 4),
+    raw_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+    collected_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (indicator_code, trade_date, source_provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_macro_date
+    ON daily_macro (trade_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_daily_macro_indicator_date
+    ON daily_macro (indicator_code, trade_date DESC);
 
 CREATE TABLE IF NOT EXISTS market_snapshots (
     market_key TEXT NOT NULL REFERENCES markets(market_key),
