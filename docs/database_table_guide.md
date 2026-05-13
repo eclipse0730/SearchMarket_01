@@ -29,6 +29,7 @@ Last updated: 2026-05-13
 - `kospi`
 - `kosdaq`
 - `global-indices`
+- `sector-etfs`
 - `theme-proxies`
 - `commodities`
 

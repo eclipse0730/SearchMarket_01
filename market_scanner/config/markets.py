@@ -80,6 +80,7 @@ _SECTOR_KO: dict[str, str] = {
 _STATIC_META_ASSETS: dict[str, str] = {
     "global-indices": "global_indices_meta.json",
     "commodities": "commodities_meta.json",
+    "sector-etfs": "sector_etfs_meta.json",
 }
 
 _THEME_PROXY_SYMBOLS: frozenset[str] = frozenset({
@@ -251,12 +252,21 @@ def _commodity_meta() -> dict[str, StaticTickerMeta]:
     return _instrument_meta_db_first("commodities", _STATIC_META_ASSETS["commodities"])
 
 
+@lru_cache(maxsize=None)
+def _sector_etf_meta() -> dict[str, StaticTickerMeta]:
+    return _instrument_meta_db_first("sector-etfs", _STATIC_META_ASSETS["sector-etfs"])
+
+
 def _global_index_universe() -> list[str]:
     return _static_symbols(_instrument_meta("global-indices", _STATIC_META_ASSETS["global-indices"]))
 
 
 def _commodity_universe() -> list[str]:
     return _static_symbols(_instrument_meta("commodities", _STATIC_META_ASSETS["commodities"]))
+
+
+def _sector_etf_universe() -> list[str]:
+    return _static_symbols(_instrument_meta("sector-etfs", _STATIC_META_ASSETS["sector-etfs"]))
 
 
 def _fetch_sp500_tickers() -> list[str]:
@@ -941,5 +951,16 @@ MARKETS: dict[str, MarketDefinition] = {
         quote_url_builder=_quote_url_investing_detail,
         display_symbol_builder=_display_commodity,
         notes="Commodity futures watchlist backed by asset files.",
+    ),
+    "sector-etfs": MarketDefinition(
+        key="sector-etfs",
+        label="US Sector ETFs",
+        output_prefix="sector-etfs",
+        currency_symbol="$",
+        price_decimals=2,
+        universe_loader=_sector_etf_universe,
+        metadata_loader=_sector_etf_meta,
+        quote_url_builder=_quote_url_investing_detail,
+        notes="Curated GICS sector ETF proxy watchlist backed by asset files.",
     ),
 }

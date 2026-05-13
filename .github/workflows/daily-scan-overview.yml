@@ -28,14 +28,17 @@ jobs:
       - name: Fetch prices
         run: |
           python Search.py price global-indices --workers 1
+          python Search.py price sector-etfs --workers 1
           python Search.py price commodities --workers 1
 
       - name: Compute indicators
         run: |
           python Search.py indicators global-indices
+          python Search.py indicators sector-etfs
           python Search.py indicators commodities
 
       - name: Run screener
         run: |
           python Search.py screen global-indices
+          python Search.py screen sector-etfs
           python Search.py screen commodities

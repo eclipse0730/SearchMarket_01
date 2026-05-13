@@ -74,6 +74,7 @@ def _macro_panel_section(quotes: list[MacroQuote]) -> str:
 
     market_labels = {
         "global-indices": "글로벌 지수",
+        "sector-etfs": "섹터 ETF",
         "commodities": "원자재",
     }
 

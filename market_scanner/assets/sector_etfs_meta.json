@@ -1,0 +1,74 @@
+{
+  "XLK": {
+    "name_en": "Technology Select Sector SPDR Fund",
+    "name_local": "기술",
+    "sector": "기술",
+    "description": "GICS technology sector ETF proxy."
+  },
+  "XLV": {
+    "name_en": "Health Care Select Sector SPDR Fund",
+    "name_local": "헬스케어",
+    "sector": "헬스케어",
+    "description": "GICS health care sector ETF proxy."
+  },
+  "XLF": {
+    "name_en": "Financial Select Sector SPDR Fund",
+    "name_local": "금융",
+    "sector": "금융",
+    "description": "GICS financial sector ETF proxy."
+  },
+  "XLY": {
+    "name_en": "Consumer Discretionary Select Sector SPDR Fund",
+    "name_local": "경기소비재",
+    "sector": "경기소비재",
+    "description": "GICS consumer discretionary sector ETF proxy."
+  },
+  "XLP": {
+    "name_en": "Consumer Staples Select Sector SPDR Fund",
+    "name_local": "필수소비재",
+    "sector": "필수소비재",
+    "description": "GICS consumer staples sector ETF proxy."
+  },
+  "XLI": {
+    "name_en": "Industrial Select Sector SPDR Fund",
+    "name_local": "산업재",
+    "sector": "산업재",
+    "description": "GICS industrial sector ETF proxy."
+  },
+  "XLE": {
+    "name_en": "Energy Select Sector SPDR Fund",
+    "name_local": "에너지",
+    "sector": "에너지",
+    "description": "GICS energy sector ETF proxy."
+  },
+  "XLU": {
+    "name_en": "Utilities Select Sector SPDR Fund",
+    "name_local": "유틸리티",
+    "sector": "유틸리티",
+    "description": "GICS utilities sector ETF proxy."
+  },
+  "XLB": {
+    "name_en": "Materials Select Sector SPDR Fund",
+    "name_local": "소재",
+    "sector": "소재",
+    "description": "GICS materials sector ETF proxy."
+  },
+  "XLC": {
+    "name_en": "Communication Services Select Sector SPDR Fund",
+    "name_local": "통신",
+    "sector": "통신",
+    "description": "GICS communication services sector ETF proxy."
+  },
+  "XLRE": {
+    "name_en": "Real Estate Select Sector SPDR Fund",
+    "name_local": "부동산",
+    "sector": "부동산/리츠",
+    "description": "GICS real estate sector ETF proxy."
+  },
+  "VNQ": {
+    "name_en": "Vanguard Real Estate ETF",
+    "name_local": "리츠",
+    "sector": "부동산/리츠",
+    "description": "Broad US REIT ETF proxy. Optional complement to XLRE."
+  }
+}

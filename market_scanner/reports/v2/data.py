@@ -309,7 +309,7 @@ def load_sector_cells(conn, per_market_top: int = 10) -> list[SectorCell]:
 
 
 def load_macro_quotes(conn) -> list[MacroQuote]:
-    """global-indices, commodities 의 최신 daily_prices.
+    """global-indices, sector-etfs, commodities 의 최신 daily_prices.
 
     이 시장들은 scan_results 가 없으므로 daily_prices 에서 직접 가져오고,
     전일 종가로 등락률을 계산한다.
@@ -326,7 +326,7 @@ def load_macro_quotes(conn) -> list[MacroQuote]:
                 MAX(dp.trade_date) AS trade_date
             FROM instruments i
             JOIN daily_prices dp ON dp.instrument_id = i.instrument_id
-            WHERE i.market_key IN ('global-indices', 'commodities')
+            WHERE i.market_key IN ('global-indices', 'sector-etfs', 'commodities')
               AND i.is_active = TRUE
             GROUP BY i.instrument_id, i.market_key, i.symbol, i.display_symbol, i.name_local
         ),

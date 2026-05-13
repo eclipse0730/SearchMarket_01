@@ -35,6 +35,7 @@ _ROOT_PAGES = [
     ("kospi", "KOSPI", "코스피 대형주 시장", "kospi"),
     ("kosdaq", "KOSDAQ", "코스닥 성장주 시장", "kosdaq"),
     ("global-indices", "글로벌 지수", "주요 글로벌 지수 동향", "indices"),
+    ("sector-etfs", "섹터 ETF", "GICS 섹터 ETF 프록시", "sectors"),
     ("theme-proxies", "테마 ETF", "테마별 강세·약세 현황", "themes"),
     ("commodities", "원자재", "원자재 선물 동향", "commodities"),
 ]
@@ -396,6 +397,7 @@ def _market_pulse_html(pages: list[BuiltPage], overview_frames: dict[str, pd.Dat
     stock_frames = [frame for _, frame in stock_items]
     macro_frames = [
         overview_frames.get("global-indices", pd.DataFrame()),
+        overview_frames.get("sector-etfs", pd.DataFrame()),
         overview_frames.get("theme-proxies", pd.DataFrame()),
         overview_frames.get("commodities", pd.DataFrame()),
     ]
@@ -408,7 +410,10 @@ def _market_pulse_html(pages: list[BuiltPage], overview_frames: dict[str, pd.Dat
 
     macro_combined = _combined_frame(macro_frames)
     macro_label, macro_tone, macro_subtitle = _macro_risk_label(macro_stats, _avg_change(macro_combined))
-    leading_sector, lagging_sector = _sector_extremes(_combined_frame(stock_frames + [overview_frames.get("theme-proxies", pd.DataFrame())]))
+    leading_sector, lagging_sector = _sector_extremes(_combined_frame(stock_frames + [
+        overview_frames.get("sector-etfs", pd.DataFrame()),
+        overview_frames.get("theme-proxies", pd.DataFrame()),
+    ]))
     candidate_symbol, candidate_detail, candidate_tone = _top_candidate_card(_combined_frame(stock_frames))
 
     cards = [
@@ -468,6 +473,7 @@ def _sector_leadership_html(pages: list[BuiltPage], overview_frames: dict[str, p
         _market_frame_for_slug(pages, overview_frames, "sp500", "sp500"),
         _market_frame_for_slug(pages, overview_frames, "kospi", "kospi"),
         _market_frame_for_slug(pages, overview_frames, "kosdaq", "kosdaq"),
+        overview_frames.get("sector-etfs", pd.DataFrame()),
         overview_frames.get("theme-proxies", pd.DataFrame()),
     ]
     combined = _combined_frame(frames)
@@ -873,6 +879,11 @@ def _build_home_page(pages: list[BuiltPage], overview_frames: dict[str, pd.DataF
         "테마 ETF",
         "테마별 강세·약세 현황",
     )
+    sector_etfs_panel = _overview_panel_html(
+        overview_frames.get("sector-etfs", pd.DataFrame()),
+        "섹터 ETF",
+        "GICS 섹터 프록시 추세 동향",
+    )
     commodities_panel = _overview_panel_html(
         overview_frames.get("commodities", pd.DataFrame()),
         "원자재",
@@ -1163,10 +1174,11 @@ def _build_home_page(pages: list[BuiltPage], overview_frames: dict[str, pd.DataF
     <section>
       <div class="section-title">
         <h2>시장 개요</h2>
-        <p>글로벌 지수 · 테마 · 원자재 — 각 스캔 완료 후 자동으로 표시됩니다</p>
+        <p>글로벌 지수 · 섹터 ETF · 테마 · 원자재 — 각 스캔 완료 후 자동으로 표시됩니다</p>
       </div>
       <div class="overview-grid">
         {indices_panel}
+        {sector_etfs_panel}
         {themes_panel}
         {commodities_panel}
       </div>
@@ -1195,6 +1207,7 @@ def _build_home_preview_page(
     ]
     macro_frames = [
         overview_frames.get("global-indices", pd.DataFrame()),
+        overview_frames.get("sector-etfs", pd.DataFrame()),
         overview_frames.get("theme-proxies", pd.DataFrame()),
         overview_frames.get("commodities", pd.DataFrame()),
     ]

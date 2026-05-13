@@ -1,6 +1,6 @@
 # Stock MA Scanner
 
-미국 주식, KOSPI, KOSDAQ, 글로벌 지수, 테마 ETF, 원자재를 대상으로 5/20/60/120/240일 이동평균선, 기간 수익률, ATR/변동성, 기술/재무/테마/모멘텀 점수를 계산하고 PostgreSQL 기반 Markdown/HTML 리포트와 GitHub Pages 대시보드를 생성합니다.
+미국 주식, KOSPI, KOSDAQ, 글로벌 지수, 섹터 ETF, 테마 ETF, 원자재를 대상으로 5/20/60/120/240일 이동평균선, 기간 수익률, ATR/변동성, 기술/재무/테마/모멘텀 점수를 계산하고 PostgreSQL 기반 Markdown/HTML 리포트와 GitHub Pages 대시보드를 생성합니다.
 
 ## 설치
 
@@ -28,12 +28,14 @@ uv run python Search.py refresh us --universe sp500
 uv run python Search.py refresh kospi --universe kospi200
 uv run python Search.py refresh kosdaq --universe kosdaq150
 uv run python Search.py refresh global-indices
+uv run python Search.py refresh sector-etfs
 uv run python Search.py refresh commodities
 ```
 
 데이터 소스:
 - `us`, `kospi`, `kosdaq`: 종목 목록은 FinanceDataReader를 우선 사용합니다. 가격 수집은 US는 yfinance, KOSPI/KOSDAQ은 FinanceDataReader를 사용합니다.
 - `global-indices`, `commodities`: JSON 메타 파일을 원본으로 사용합니다.
+- `sector-etfs`: 11개 GICS 섹터 ETF와 리츠 보조 프록시를 JSON 메타 파일에서 수집합니다. GICS 부동산 섹터 기준은 `XLRE`, 리츠 보조 프록시는 `VNQ`입니다.
 - 한국 종목명/업종 보강: `uv run python Search.py names kospi`
 
 `--reset`은 해당 범위의 `universe_memberships`만 삭제 후 재생성합니다. `instruments`, 가격, 지표, 스캔 결과, 뉴스, 리포트, 실행 로그는 보존합니다.
@@ -45,6 +47,7 @@ uv run python Search.py refresh commodities
 uv run python Search.py price us
 uv run python Search.py price kospi
 uv run python Search.py price kosdaq
+uv run python Search.py price sector-etfs
 uv run python Search.py price kospi --date 20260513 --force --workers 1
 uv run python Search.py price us --from 20250101 --to 20260505 --workers 1
 uv run python Search.py price us --from 20250101 --to 20260505 --force
@@ -175,7 +178,8 @@ uv run python Search.py site --no-open
 - `instruments`: 종목마스터의 우선 원천입니다.
 - `universe_memberships`: `nasdaq`, `nyse`, `amex`(거래소 전체), `nasdaq100`, `sp500`(지수), `kospi100`, `kospi200`, `kosdaq150` 같은 분석/필터 단위 멤버십입니다. US는 `--market us` 한 번으로 5개 universe가 동시 갱신됩니다.
 - `market_scanner/assets/instruments.json`: DB가 비어 있거나 연결되지 않을 때 쓰는 seed/fallback입니다. 스캔 실행은 이 JSON을 자동 갱신하지 않습니다.
-- `market_scanner/assets/global_indices_meta.json`, `commodities_meta.json`: 글로벌 지수·원자재는 FDR 자동 발견이 불가능하므로 JSON이 심볼 정의 원본입니다. 새 심볼 추가 시 JSON 편집 후 `refresh-master --market global-indices` 또는 `--market commodities`로 DB에 반영합니다. 현재 글로벌 지수는 22개입니다.
+- `market_scanner/assets/global_indices_meta.json`, `commodities_meta.json`: 글로벌 지수·원자재는 FDR 자동 발견이 불가능하므로 JSON이 심볼 정의 원본입니다. 새 심볼 추가 시 JSON 편집 후 `Search.py refresh global-indices` 또는 `Search.py refresh commodities`로 DB에 반영합니다. 현재 글로벌 지수는 22개입니다.
+- `market_scanner/assets/sector_etfs_meta.json`: 섹터 ETF 유니버스의 원본입니다. `XLK`, `XLV`, `XLF`, `XLY`, `XLP`, `XLI`, `XLE`, `XLU`, `XLB`, `XLC`, `XLRE`를 기본 GICS 섹터 프록시로 사용하고, `VNQ`는 리츠 보조 프록시로 함께 수집합니다.
 - 테마 ETF는 별도 스캔 없이 US 스캔 결과에서 파생됩니다. 대상 심볼은 `markets.py`의 `_THEME_PROXY_SYMBOLS` 상수로 관리합니다.
 - 한국 시장 유니버스는 FinanceDataReader를 우선 사용하고, 실패 시 Naver Finance로 fallback합니다. 정적 JSON fallback(`kospi_static_meta.json`, `kosdaq_static_meta.json`)은 제거되었습니다.
 - KOSPI/KOSDAQ 가격 히스토리는 FinanceDataReader를 사용합니다. US 가격 히스토리는 yfinance만 사용합니다.
@@ -201,7 +205,7 @@ market_scanner/
 | 워크플로우 | 실행 시각 | 대상 |
 |---|---|---|
 | `daily-scan.yml` | KST 08:05 | US Market |
-| `daily-scan-overview.yml` | KST 08:20 | 글로벌 지수·테마 ETF·원자재 |
+| `daily-scan-overview.yml` | KST 08:20 | 글로벌 지수·섹터 ETF·테마 ETF·원자재 |
 | `daily-scan-kospi.yml` | KST 16:05 | KOSPI |
 | `daily-scan-kosdaq.yml` | KST 16:35 | KOSDAQ |
 | `deploy-pages.yml` | 스캔 성공 후 자동, 또는 수동 실행 | GitHub Pages 사이트 빌드·배포 |

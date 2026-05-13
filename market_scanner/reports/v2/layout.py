@@ -24,6 +24,7 @@ _NAV_ITEMS: list[tuple[str, str, str]] = [
     ("kospi",          "KOSPI",    "markets/kospi/index.html"),
     ("kosdaq",         "KOSDAQ",   "markets/kosdaq/index.html"),
     ("global-indices", "글로벌지수", "markets/global-indices/index.html"),
+    ("sector-etfs",    "섹터ETF",  "markets/sector-etfs/index.html"),
     ("commodities",    "원자재",   "markets/commodities/index.html"),
 ]
 

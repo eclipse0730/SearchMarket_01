@@ -19,6 +19,8 @@ def classify_asset_type(row: Any, market_key: str) -> str:
         return "index"
     if home_key in {"commodities"}:
         return "commodity"
+    if home_key in {"sector-etfs"}:
+        return "etf"
 
     name = (_clean_text(row.get("name_local")) or _clean_text(row.get("name_en")) or "").upper()
     symbol = (_clean_text(row.get("symbol")) or "").upper()
@@ -57,4 +59,3 @@ def source_rank(source_provider: str | None) -> int:
     if source == "csv":
         return 80
     return 100
-

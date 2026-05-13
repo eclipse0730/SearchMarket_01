@@ -24,6 +24,8 @@ def default_asset_filter(market_key: str) -> list[str]:
         return ["index"]
     if market_key in {"commodities"}:
         return ["commodity"]
+    if market_key in {"sector-etfs"}:
+        return ["etf"]
     return ["common_stock"]
 
 
@@ -31,7 +33,7 @@ def country_currency_for_market(market_key: str) -> tuple[str | None, str | None
     home_key = home_market_key(market_key)
     if home_key in {"kospi", "kosdaq"}:
         return "KR", "KRW", "Asia/Seoul"
-    if home_key in {"us", "nasdaq100", "sp500"}:
+    if home_key in {"us", "nasdaq100", "sp500", "sector-etfs"}:
         return "US", "USD", "America/New_York"
     return None, None, "Asia/Seoul"
 
@@ -40,4 +42,3 @@ def price_source_for_market(market_key: str) -> str:
     if home_market_key(market_key) in {"kospi", "kosdaq"}:
         return "fdr"
     return "yfinance"
-
