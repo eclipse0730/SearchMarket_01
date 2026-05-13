@@ -10,7 +10,7 @@ def run_fetch_name(
     market_key: str,
     stale_only: bool = True,
     limit: int | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
     delay: float = 0.3,
 ) -> None:
     """Fetch local Korean instrument names/sectors and update instruments."""
@@ -18,7 +18,7 @@ def run_fetch_name(
 
     base_key = home_market_key(market_key)
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         if stale_only:
             rows = conn.execute(
                 """

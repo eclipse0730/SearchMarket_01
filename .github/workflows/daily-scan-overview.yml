@@ -27,15 +27,15 @@ jobs:
 
       - name: Fetch prices
         run: |
-          python -m market_scanner.collectors.prices fetch --market global-indices --worker 1
-          python -m market_scanner.collectors.prices fetch --market commodities --worker 1
+          python Search.py price global-indices --workers 1
+          python Search.py price commodities --workers 1
 
       - name: Compute indicators
         run: |
-          python -m market_scanner.analysis.indicators compute --market global-indices
-          python -m market_scanner.analysis.indicators compute --market commodities
+          python Search.py indicators global-indices
+          python Search.py indicators commodities
 
       - name: Run screener
         run: |
-          python -m market_scanner.analysis.screener run --market global-indices
-          python -m market_scanner.analysis.screener run --market commodities
+          python Search.py screen global-indices
+          python Search.py screen commodities

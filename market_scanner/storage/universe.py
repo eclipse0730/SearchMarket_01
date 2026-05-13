@@ -89,14 +89,14 @@ def _current_instrument_symbols(conn: psycopg.Connection, market_key: str) -> se
 def scan_symbols_for_scope(
     market_key: str,
     universe_key: str | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
 ) -> tuple[list[str], str | None]:
     base_market_key = home_market_key(market_key)
     effective_universe_key = universe_key
     if effective_universe_key is None and base_market_key != market_key:
         effective_universe_key = market_key
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         if effective_universe_key:
             row = conn.execute(
                 "SELECT market_key FROM universe_definitions WHERE universe_key = %s",

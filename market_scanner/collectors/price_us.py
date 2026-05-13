@@ -9,7 +9,7 @@ from typing import Any
 import pandas as pd
 import psycopg
 
-from market_scanner.domain.market_policy import country_currency_for_market, home_market_key
+from market_scanner.domain.market_policy import country_currency_for_market
 from market_scanner.progress import progress_line
 from market_scanner.storage.connection import connect
 from market_scanner.storage.prices import (
@@ -26,7 +26,8 @@ from market_scanner.storage.runs import (
     run_error_samples,
 )
 
-_DEFAULT_FETCH_WORKERS = 8
+_DEFAULT_FETCH_WORKERS = 1
+_MAX_FETCH_WORKERS = 8
 _REQUEST_TIMEOUT = 2
 _PRIMARY_SOURCE = "yfinance"
 
@@ -51,16 +52,10 @@ def fetch_ohlcv(
     symbol: str,
     start: str,
     end: str,
-    *,
-    allow_fdr_fallback: bool = True,
 ) -> tuple[pd.DataFrame, str]:
     hist = _fetch_yfinance(symbol, start, end)
     if not hist.empty:
-        return hist, "yfinance"
-    if allow_fdr_fallback:
-        hist = _fetch_fdr_daily(symbol, start, end)
-        if not hist.empty:
-            return hist, "fdr"
+        return hist, _PRIMARY_SOURCE
     return pd.DataFrame(), "none"
 
 
@@ -70,40 +65,18 @@ def _fetch_yfinance(symbol: str, start: str, end: str) -> pd.DataFrame:
     except ImportError:
         return pd.DataFrame()
 
-    with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-        hist = yf.Ticker(symbol).history(
-            start=start,
-            end=end,
-            auto_adjust=True,
-            timeout=_REQUEST_TIMEOUT,
-        )
-    normalized = _normalize_ohlcv(hist)
-    return normalized if not normalized.empty else pd.DataFrame()
-
-
-def _inclusive_end_from_exclusive(end: str) -> str:
-    return (date.fromisoformat(end) - timedelta(days=1)).isoformat()
-
-
-def _fetch_fdr_daily(symbol: str, start: str, end: str) -> pd.DataFrame:
     try:
-        import FinanceDataReader as fdr
-    except ImportError:
-        return pd.DataFrame()
-
-    try:
-        inclusive_end = _inclusive_end_from_exclusive(end)
         with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-            hist = fdr.DataReader(symbol, start, inclusive_end)
-        normalized = _normalize_ohlcv(hist)
-        normalized = normalized.loc[start:inclusive_end]
-        return normalized if not normalized.empty else pd.DataFrame()
+            hist = yf.Ticker(symbol).history(
+                start=start,
+                end=end,
+                auto_adjust=True,
+                timeout=_REQUEST_TIMEOUT,
+            )
     except Exception:
         return pd.DataFrame()
-
-
-def _is_us(market_key: str) -> bool:
-    return home_market_key(market_key) == "us"
+    normalized = _normalize_ohlcv(hist)
+    return normalized if not normalized.empty else pd.DataFrame()
 
 
 def _next_day(d: date) -> date:
@@ -137,7 +110,8 @@ def _upsert_ohlcv_frame(
     source_provider: str,
     run_id: str,
     currency_code: str | None,
-) -> None:
+) -> int:
+    stored = 0
     for ts, row in frame.iterrows():
         trade_date = ts.date() if hasattr(ts, "date") else ts
         price_row = pd.Series({
@@ -148,12 +122,14 @@ def _upsert_ohlcv_frame(
             "volume": row.get("Volume"),
         })
         upsert_daily_price(conn, instrument_id, trade_date, source_provider, price_row, run_id, currency_code)
+        stored += 1
+    return stored
 
 
 def run_fetch(
     market_key: str,
     date_str: str | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
     limit: int | None = None,
     workers: int = _DEFAULT_FETCH_WORKERS,
     date_from: str | None = None,
@@ -170,7 +146,7 @@ def run_fetch(
     fetch_end = _fetch_end_for_date(end_date)
     _, currency_code, _ = country_currency_for_market(market_key)
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         active_count = active_instrument_count(conn, market_key)
         if symbols:
             instruments = instruments_by_symbols(conn, market_key, symbols)
@@ -220,10 +196,10 @@ def run_fetch(
                 "to": end_date.isoformat(),
                 "fetch_end": fetch_end,
                 "force": force,
-                "workers": workers,
+                "workers": min(max(1, workers), _MAX_FETCH_WORKERS),
             },
         )
-        worker_count = max(1, min(workers, len(tasks)))
+        worker_count = max(1, min(workers, _MAX_FETCH_WORKERS, len(tasks)))
         print(
             f"  prices fetch [{market_key}] {len(tasks)} symbols  "
             f"{start_date.isoformat()} ~ {end_date.isoformat()}  "
@@ -231,6 +207,7 @@ def run_fetch(
         )
 
         success, failed, submitted = 0, 0, 0
+        stored_rows = 0
         error_samples: list[Any] = []
         progress_interval = max(1, len(tasks) // 100)
 
@@ -247,22 +224,18 @@ def run_fetch(
                     success=success,
                     failed=failed,
                     skipped=skipped,
+                    stored_rows=stored_rows,
                 ),
                 end="",
                 flush=True,
             )
 
         def fetch_task(task: dict[str, Any]) -> dict[str, Any]:
-            frame, source = fetch_ohlcv(
-                task["instrument"]["symbol"],
-                task["start"],
-                task["end"],
-                allow_fdr_fallback=_is_us(market_key),
-            )
+            frame, source = fetch_ohlcv(task["instrument"]["symbol"], task["start"], task["end"])
             return {**task, "frame": frame, "source": source}
 
         def handle_result(result: dict[str, Any]) -> None:
-            nonlocal success, failed
+            nonlocal success, failed, stored_rows
             instr = result["instrument"]
             if result["frame"].empty:
                 failed += 1
@@ -276,7 +249,7 @@ def run_fetch(
                 return
 
             instr_currency = instr["currency_code"] or currency_code
-            _upsert_ohlcv_frame(conn, instr["instrument_id"], result["frame"], result["source"], run_id, instr_currency)
+            stored_rows += _upsert_ohlcv_frame(conn, instr["instrument_id"], result["frame"], result["source"], run_id, instr_currency)
             success += 1
             print_progress()
 
@@ -324,10 +297,19 @@ def run_fetch(
         print_progress(True)
         print()
         status = "success" if not failed else ("partial" if success else "failed")
-        finish_run(conn, run_id, status=status, success_count=success, failed_count=failed, skipped_count=skipped, error_samples=error_samples)
+        finish_run(
+            conn,
+            run_id,
+            status=status,
+            success_count=success,
+            failed_count=failed,
+            skipped_count=skipped,
+            params={"stored_rows": stored_rows},
+            error_samples=error_samples,
+        )
         print(
             f"  prices fetch [{market_key}] done: "
-            f"success={success} failed={failed} skipped={skipped} status={status}"
+            f"success={success} failed={failed} skipped={skipped} stored_rows={stored_rows} status={status}"
         )
         if error_samples:
             sample_text = ", ".join(f"{sample['symbol']}:{sample['reason']}" for sample in error_samples[:5])
@@ -337,9 +319,9 @@ def run_fetch(
 def run_retry(
     market_key: str,
     run_id: str | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
 ) -> None:
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         if run_id:
             samples = run_error_samples(conn, run_id)
         else:
@@ -374,7 +356,7 @@ def run_retry(
     for (start_date, end_date), symbols in sorted(grouped.items()):
         run_fetch(
             market_key,
-            explicit_url=explicit_url,
+            database_url=database_url,
             workers=1,
             date_from=start_date.strftime("%Y%m%d"),
             date_to=end_date.strftime("%Y%m%d"),

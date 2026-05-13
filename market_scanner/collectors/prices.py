@@ -6,15 +6,11 @@ from market_scanner.config.markets import MARKETS
 from market_scanner.domain.market_policy import home_market_key
 
 
-_DEFAULT_FETCH_WORKERS = 8
-
-
-def _is_korea(market_key: str) -> bool:
-    return home_market_key(market_key) in {"kospi", "kosdaq"}
+_DEFAULT_FETCH_WORKERS = 1
 
 
 def _collector_for_market(market_key: str):
-    if _is_korea(market_key):
+    if home_market_key(market_key) in {"kospi", "kosdaq"}:
         from market_scanner.collectors import price_kr
 
         return price_kr
@@ -27,7 +23,7 @@ def _collector_for_market(market_key: str):
 def run_fetch(
     market_key: str,
     date_str: str | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
     limit: int | None = None,
     workers: int = _DEFAULT_FETCH_WORKERS,
     date_from: str | None = None,
@@ -38,7 +34,7 @@ def run_fetch(
     _collector_for_market(market_key).run_fetch(
         market_key,
         date_str=date_str,
-        explicit_url=explicit_url,
+        database_url=database_url,
         limit=limit,
         workers=workers,
         date_from=date_from,
@@ -51,16 +47,9 @@ def run_fetch(
 def run_retry(
     market_key: str,
     run_id: str | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
 ) -> None:
-    _collector_for_market(market_key).run_retry(market_key, run_id, explicit_url)
-
-
-def _resolve_cli_market(args: argparse.Namespace) -> str:
-    market_key = args.market or args.market_arg
-    if not market_key:
-        raise ValueError("market is required")
-    return market_key
+    _collector_for_market(market_key).run_retry(market_key, run_id, database_url)
 
 
 def main() -> None:
@@ -86,8 +75,10 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
+        market_key = args.market or args.market_arg
+        if not market_key:
+            raise ValueError("market is required")
         if args.command == "fetch":
-            market_key = _resolve_cli_market(args)
             run_fetch(
                 market_key,
                 args.date,
@@ -99,7 +90,6 @@ def main() -> None:
                 args.force,
             )
         elif args.command == "retry":
-            market_key = _resolve_cli_market(args)
             run_retry(market_key, args.run_id, args.database_url)
     except ValueError as exc:
         parser.error(str(exc))

@@ -43,12 +43,12 @@ def _master_row(symbol: str, values: dict[str, Any]) -> pd.Series:
     )
 
 
-def load_master(market_key: str | None = None, explicit_url: str | None = None) -> int:
+def load_master(market_key: str | None = None, database_url: str | None = None) -> int:
     from market_scanner.config.markets import clear_db_instrument_meta_cache
 
     payload = _load_master_payload()
     loaded = 0
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         seed_reference_data(conn)
         for symbol, values in sorted(payload.items()):
             record_market_key = clean_text(values.get("market_key"))

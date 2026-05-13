@@ -450,7 +450,7 @@ def run_fetch(
     lookback_days: int = _DEFAULT_LOOKBACK_DAYS,
     workers: int = _DEFAULT_WORKERS,
     provider: str = "all",
-    explicit_url: str | None = None,
+    database_url: str | None = None,
 ) -> int:
     if home_market_key(market_key) != "us":
         raise ValueError("News fetch currently supports the US market only.")
@@ -460,7 +460,7 @@ def run_fetch(
     providers = _provider_names(provider)
     provider_label = "+".join(providers)
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         targets = _select_news_targets(conn, market_key, trade_date, universe_key, max_symbols)
         if not targets:
             effective_universe = universe_key or market_key
@@ -640,7 +640,7 @@ def main() -> None:
             lookback_days=max(0, args.lookback_days),
             workers=max(1, args.workers),
             provider=args.provider,
-            explicit_url=args.database_url,
+            database_url=args.database_url,
         )
 
 

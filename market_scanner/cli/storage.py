@@ -84,7 +84,7 @@ def main() -> None:
             args.market,
             stale_only=not args.fetch_all,
             limit=args.limit,
-            explicit_url=args.database_url,
+            database_url=args.database_url,
             delay=args.delay,
         )
 

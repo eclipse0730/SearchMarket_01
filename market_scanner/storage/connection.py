@@ -8,9 +8,13 @@ import psycopg
 DEFAULT_DATABASE_URL = "postgresql://searchmarket:searchmarket@localhost:5433/searchmarket"
 
 
-def database_url(explicit_url: str | None = None) -> str:
-    return explicit_url or os.getenv("DATABASE_URL") or DEFAULT_DATABASE_URL
+def resolve_database_url(database_url: str | None = None) -> str:
+    return database_url or os.getenv("DATABASE_URL") or DEFAULT_DATABASE_URL
 
 
-def connect(explicit_url: str | None = None) -> psycopg.Connection:
-    return psycopg.connect(database_url(explicit_url))
+def database_url(database_url: str | None = None) -> str:
+    return resolve_database_url(database_url)
+
+
+def connect(database_url: str | None = None) -> psycopg.Connection:
+    return psycopg.connect(resolve_database_url(database_url))

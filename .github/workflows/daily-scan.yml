@@ -25,12 +25,12 @@ jobs:
 
       - name: Prepare database
         run: |
-          python -m market_scanner.storage.db init
-          python -m market_scanner.storage.db refresh-master --market us
+          python Search.py init
+          python Search.py refresh us
 
       - name: Run NASDAQ 100 scanner
-        run: python Search.py --market us --universe nasdaq100
+        run: python Search.py all us --universe nasdaq100
 
       - name: Run S&P 500 scanner
-        run: python Search.py --market us --universe sp500
+        run: python Search.py all us --universe sp500
 

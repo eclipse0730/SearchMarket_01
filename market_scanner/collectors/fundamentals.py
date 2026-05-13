@@ -483,7 +483,7 @@ def run_fetch(
     date_str: str | None = None,
     stale_only: bool = True,
     stale_days: int = 7,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
     limit: int | None = None,
     workers: int = _DEFAULT_WORKERS,
     source: str = "auto",
@@ -493,7 +493,7 @@ def run_fetch(
     sources = _source_plan(market_key, source)
     max_workers = _max_workers_for_sources(sources)
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         if stale_only:
             instruments = instruments_stale_fundamentals(conn, market_key, stale_days)
         else:
@@ -690,7 +690,7 @@ def main() -> None:
             args.date,
             stale_only=not args.fetch_all,
             stale_days=args.stale_days,
-            explicit_url=args.database_url,
+            database_url=args.database_url,
             limit=args.limit,
             workers=args.workers,
             source=args.source,

@@ -12,7 +12,7 @@ def progress_line(
     pct = (completed / total * 100) if total > 0 else 0.0
     safe_completed = max(0, min(completed, total))
     filled = min(width, int(width * safe_completed / total)) if total > 0 else 0
-    bar = "■" * filled + "□" * (width - filled)
+    bar = "#" * filled + "-" * (width - filled)
     suffix = " ".join(f"{key}={value}" for key, value in counts.items())
     return (
         f"\r{indent}[{bar}] "

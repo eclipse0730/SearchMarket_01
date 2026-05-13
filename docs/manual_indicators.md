@@ -42,10 +42,10 @@ CLI 진입점은 `market_scanner/analysis/indicators.py::main()`입니다.
 3. 하위 명령 `compute` 등록
 4. `compute` 명령이면 `run_compute(args.market, args.date, args.database_url, args.limit)` 호출
 
-`Search.py --stage scan` 경로에서도 같은 계산 함수가 호출됩니다.
+`Search.py scan <market>` 경로에서도 같은 계산 함수가 호출됩니다.
 
 ```text
-Search.py
+Search.py scan <market>
 → market_scanner.pipeline.run_scan_stage_with_settings()
 → collectors.prices.run_fetch()
 → analysis.indicators.run_compute()
@@ -67,7 +67,7 @@ Search.py
    - `MARKETS[market_key]`
    - `price_decimals`를 계산 결과 반올림에 사용
 4. DB 연결
-   - `connect(explicit_url)`
+   - `connect(database_url)`
 5. 활성 instruments 조회
    - `instruments.market_key = home_market_key(market_key)`
    - `is_active = TRUE`

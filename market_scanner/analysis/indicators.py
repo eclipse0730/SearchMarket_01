@@ -738,7 +738,7 @@ def _process_date(
 def run_compute(
     market_key: str,
     date_str: str | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
     limit: int | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
@@ -746,7 +746,7 @@ def run_compute(
     source_provider = price_source_for_market(market_key)
     price_decimals = MARKETS[market_key].price_decimals
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         target_dates = _resolve_target_dates(conn, market_key, date_str, date_from, date_to)
         if not target_dates:
             return

@@ -223,7 +223,7 @@ def run_build(
     market_key: str,
     date_str: str | None = None,
     universe_key: str | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
 ) -> dict[str, Path]:
     trade_date = date.today() if not date_str else datetime.strptime(date_str, "%Y%m%d").date()
     date_str_fmt = trade_date.strftime("%Y%m%d")
@@ -232,7 +232,7 @@ def run_build(
     settings = _DEFAULT_SETTINGS
     paths = report_output_paths(effective_universe, date_str_fmt)
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         frame = _load_render_frame(conn, market_key, trade_date, universe_key)
 
     if frame.empty:
@@ -249,7 +249,7 @@ def run_build(
     paths["md"].parent.mkdir(parents=True, exist_ok=True)
     paths["html"].parent.mkdir(parents=True, exist_ok=True)
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         run_result = conn.execute(
             """
             INSERT INTO collection_runs (

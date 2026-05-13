@@ -301,7 +301,7 @@ def refresh_master(
     market_key: str | None = None,
     universe_key: str | None = None,
     date_str: str | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
     *,
     reset: bool = False,
 ) -> dict[str, dict[str, Any]]:
@@ -328,7 +328,7 @@ def refresh_master(
                 refresh_targets.append((key, key))
     summaries: dict[str, dict[str, Any]] = {}
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         seed_reference_data(conn)
         universe_keys_by_market: dict[str, list[str]] = {}
         for key, target_universe in refresh_targets:

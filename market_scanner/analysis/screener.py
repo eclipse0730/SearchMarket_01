@@ -933,12 +933,12 @@ def run_screen(
     market_key: str,
     date_str: str | None = None,
     universe_key: str | None = None,
-    explicit_url: str | None = None,
+    database_url: str | None = None,
 ) -> pd.DataFrame:
     effective_universe = universe_key or market_key
     source_provider = price_source_for_market(market_key)
 
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         if date_str:
             trade_date = datetime.strptime(date_str, "%Y%m%d").date()
         else:

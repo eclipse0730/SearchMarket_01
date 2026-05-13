@@ -18,9 +18,9 @@ CORE_TABLES = [
 ]
 
 
-def table_counts(explicit_url: str | None = None) -> dict[str, int]:
+def table_counts(database_url: str | None = None) -> dict[str, int]:
     counts: dict[str, int] = {}
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         for table in CORE_TABLES:
             counts[table] = int(conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0])
     return counts
@@ -37,7 +37,7 @@ def table_counts(explicit_url: str | None = None) -> dict[str, int]:
         "sector_snapshots",
         "collection_runs",
     ]
-    with connect(explicit_url) as conn:
+    with connect(database_url) as conn:
         for table in tables:
             count = conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
             print(f"{table}: {count}")
