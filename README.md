@@ -173,6 +173,8 @@ uv run python Search.py site --no-open
 
 대시보드는 DB의 `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 종합 시장 점수, 시장 체력, 매크로 리스크, 섹터/테마 히트맵, 오늘의 핵심 후보, 시장별 스냅샷, 섹터 리더십, 뉴스 브리핑을 표시합니다.
 
+상단 `관리` 탭은 빌드 시점의 PostgreSQL 테이블 목록, 행 수, 컬럼, 최근 데이터 샘플을 보여주는 정적 읽기 전용 페이지입니다. 데이터 수정/삭제는 DB 또는 CLI에서 처리합니다.
+
 ## 데이터 정책
 
 - `instruments`: 종목마스터의 우선 원천입니다.

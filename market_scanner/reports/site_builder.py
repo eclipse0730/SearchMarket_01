@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import re
 import shutil
 import webbrowser
 from dataclasses import dataclass, replace
@@ -11,6 +13,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pandas as pd
+from psycopg import sql
 
 from market_scanner.config.markets import MARKETS, _fetch_sp500_tickers, _nasdaq100_universe, _THEME_PROXY_SYMBOLS
 from market_scanner.domain.market_policy import home_market_key
@@ -39,6 +42,8 @@ _ROOT_PAGES = [
     ("theme-proxies", "테마 ETF", "테마별 강세·약세 현황", "themes"),
     ("commodities", "원자재", "원자재 선물 동향", "commodities"),
 ]
+
+_ADMIN_PREVIEW_LIMIT = 200
 
 _DOW30_SYMBOLS = {
     "MMM", "AXP", "AMGN", "AMZN", "AAPL", "BA", "CAT", "CVX", "CSCO", "KO",
@@ -123,6 +128,8 @@ def _site_nav(active_slug: str, depth: int) -> str:
         href = _relative_href(slug, depth)
         cls = "site-nav-link active" if slug == active_slug else "site-nav-link"
         links.append(f'<a class="{cls}" href="{href}">{escape(title)}</a>')
+    admin_cls = "site-nav-link active" if active_slug == "admin" else "site-nav-link"
+    links.append(f'<a class="{admin_cls}" href="{_relative_href("admin", depth)}">관리</a>')
 
     return (
         '<div class="site-shell">'
@@ -204,6 +211,458 @@ def _avg_number(frame: pd.DataFrame, column: str) -> float | None:
     if series.empty:
         return None
     return float(series.mean())
+
+
+def _json_data_script(value: object) -> str:
+    return json.dumps(value, ensure_ascii=False, default=str).replace("</", "<\\/")
+
+
+def _admin_cell_value(value: object) -> object:
+    if value is None:
+        return None
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, (dict, list)):
+        text = json.dumps(value, ensure_ascii=False, default=str)
+        return text if len(text) <= 600 else text[:597] + "..."
+    text = str(value)
+    return text if len(text) <= 600 else text[:597] + "..."
+
+
+def _admin_order_column(column_names: set[str]) -> str | None:
+    for candidate in (
+        "updated_at",
+        "created_at",
+        "collected_at",
+        "calculated_at",
+        "started_at",
+        "published_at",
+        "generated_at",
+        "trade_date",
+        "as_of_date",
+        "instrument_id",
+        "market_key",
+    ):
+        if candidate in column_names:
+            return candidate
+    return None
+
+
+def _load_admin_tables(limit: int = _ADMIN_PREVIEW_LIMIT) -> list[dict[str, object]]:
+    with connect() as conn:
+        table_rows = conn.execute(
+            """
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE'
+            ORDER BY table_name
+            """
+        ).fetchall()
+
+        tables: list[dict[str, object]] = []
+        for table_row in table_rows:
+            table_name = table_row[0]
+            column_meta_rows = conn.execute(
+                """
+                SELECT column_name, data_type, is_nullable
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = %s
+                ORDER BY ordinal_position
+                """,
+                (table_name,),
+            ).fetchall()
+            column_names = {row[0] for row in column_meta_rows}
+            order_column = _admin_order_column(column_names)
+            count = int(
+                conn.execute(
+                    sql.SQL("SELECT count(*) FROM {}").format(sql.Identifier(table_name))
+                ).fetchone()[0]
+            )
+
+            order_clause = (
+                sql.SQL(" ORDER BY {} DESC NULLS LAST").format(sql.Identifier(order_column))
+                if order_column
+                else sql.SQL("")
+            )
+            preview_cursor = conn.execute(
+                sql.SQL("SELECT * FROM {}{} LIMIT %s").format(sql.Identifier(table_name), order_clause),
+                (limit,),
+            )
+            preview_columns = []
+            for description in preview_cursor.description or []:
+                preview_columns.append(description.name if hasattr(description, "name") else description[0])
+            preview_rows = [
+                [_admin_cell_value(value) for value in row]
+                for row in preview_cursor.fetchall()
+            ]
+
+            tables.append(
+                {
+                    "name": table_name,
+                    "count": count,
+                    "orderColumn": order_column,
+                    "columns": [
+                        {
+                            "name": row[0],
+                            "type": row[1],
+                            "nullable": row[2] == "YES",
+                        }
+                        for row in column_meta_rows
+                    ],
+                    "previewColumns": preview_columns,
+                    "rows": preview_rows,
+                }
+            )
+    return tables
+
+
+def _build_admin_page() -> None:
+    tables = _load_admin_tables()
+    total_rows = sum(int(table["count"]) for table in tables)
+    generated_at = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S KST")
+    latest_table = max(tables, key=lambda item: int(item["count"]))["name"] if tables else "-"
+    data_json = _json_data_script({"tables": tables, "limit": _ADMIN_PREVIEW_LIMIT})
+    nav_html = _site_nav("admin", 1)
+    html = f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>테이블 관리 - Market Scanner</title>
+  <style>
+    :root {{
+      color-scheme: dark;
+      --bg: #07111f;
+      --panel: rgba(10, 22, 36, .9);
+      --panel-2: rgba(15, 31, 50, .78);
+      --line: rgba(148, 163, 184, .18);
+      --line-strong: rgba(148, 163, 184, .34);
+      --text: #e6edf3;
+      --muted: #94a3b8;
+      --accent: #7dd3fc;
+      --good: #4ade80;
+      --warn: #f7b267;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #07111f, #040811 76%);
+      color: var(--text);
+      font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+    }}
+    .wrap {{ max-width: 1480px; margin: 0 auto; padding: 26px 18px 72px; }}
+    .topline {{
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: 18px;
+    }}
+    .eyebrow {{
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }}
+    h1 {{ margin: 7px 0 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.08; }}
+    .meta {{ color: var(--muted); font-size: 12px; text-align: right; }}
+    .summary {{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }}
+    .stat, .panel {{
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .24);
+    }}
+    .stat {{ padding: 16px; border-radius: 12px; }}
+    .stat span {{ color: var(--muted); font-size: 11px; font-weight: 900; text-transform: uppercase; }}
+    .stat strong {{ display: block; margin-top: 8px; font-size: 26px; }}
+    .layout {{
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }}
+    .panel {{ border-radius: 12px; min-width: 0; }}
+    .sidebar {{ position: sticky; top: 74px; max-height: calc(100vh - 96px); overflow: auto; padding: 12px; }}
+    .search {{
+      width: 100%;
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(4, 8, 17, .7);
+      color: var(--text);
+      outline: none;
+    }}
+    .search:focus {{ border-color: rgba(125, 211, 252, .55); }}
+    .table-list {{ display: grid; gap: 7px; margin-top: 10px; }}
+    .table-btn {{
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(15, 31, 50, .56);
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+    }}
+    .table-btn.active {{ border-color: rgba(125, 211, 252, .65); background: rgba(125, 211, 252, .12); }}
+    .table-btn small {{ color: var(--muted); font-variant-numeric: tabular-nums; }}
+    .content-head {{
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+    }}
+    .content-head h2 {{ margin: 0; font-size: 24px; }}
+    .content-head p {{ margin: 5px 0 0; color: var(--muted); font-size: 12px; }}
+    .badge {{
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(125, 211, 252, .12);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }}
+    .columns {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+    }}
+    .column-pill {{
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(4, 8, 17, .42);
+      color: #cbd5e1;
+      font-size: 11px;
+      white-space: nowrap;
+    }}
+    .column-pill em {{ color: var(--muted); font-style: normal; }}
+    .toolbar {{
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+    }}
+    .toolbar .search {{ max-width: 420px; }}
+    .hint {{ color: var(--muted); font-size: 12px; }}
+    .table-wrap {{ overflow: auto; max-height: 68vh; }}
+    table {{ width: 100%; min-width: 820px; border-collapse: collapse; font-size: 12px; }}
+    th {{
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line-strong);
+      background: #0b1726;
+      color: var(--muted);
+      text-align: left;
+      white-space: nowrap;
+    }}
+    td {{
+      max-width: 340px;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(148, 163, 184, .09);
+      color: #dbe7f5;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }}
+    tr:hover td {{ background: rgba(125, 211, 252, .06); }}
+    .empty {{ padding: 34px 18px; color: var(--muted); }}
+    @media (max-width: 860px) {{
+      .topline, .toolbar {{ align-items: flex-start; flex-direction: column; }}
+      .meta {{ text-align: left; }}
+      .summary, .layout {{ grid-template-columns: 1fr; }}
+      .sidebar {{ position: static; max-height: none; }}
+    }}
+  </style>
+</head>
+<body>
+  {nav_html}
+  <main class="wrap">
+    <div class="topline">
+      <div>
+        <div class="eyebrow">Database Tables</div>
+        <h1>테이블 관리</h1>
+      </div>
+      <div class="meta">생성 {escape(generated_at)}<br>정적 페이지: 편집은 DB 또는 CLI에서 처리</div>
+    </div>
+
+    <section class="summary">
+      <div class="stat"><span>테이블</span><strong>{len(tables):,}</strong></div>
+      <div class="stat"><span>전체 행</span><strong>{total_rows:,}</strong></div>
+      <div class="stat"><span>최대 테이블</span><strong>{escape(str(latest_table))}</strong></div>
+    </section>
+
+    <section class="layout">
+      <aside class="panel sidebar">
+        <input class="search" id="tableSearch" type="search" placeholder="테이블 검색">
+        <div class="table-list" id="tableList"></div>
+      </aside>
+      <section class="panel">
+        <div class="content-head">
+          <div>
+            <h2 id="activeTitle">-</h2>
+            <p id="activeMeta"></p>
+          </div>
+          <span class="badge" id="activeCount">0 rows</span>
+        </div>
+        <div class="columns" id="columnList"></div>
+        <div class="toolbar">
+          <input class="search" id="rowSearch" type="search" placeholder="현재 테이블 데이터 검색">
+          <div class="hint" id="rowHint"></div>
+        </div>
+        <div class="table-wrap">
+          <table id="dataTable"></table>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script id="adminData" type="application/json">{data_json}</script>
+  <script>
+    const adminData = JSON.parse(document.getElementById("adminData").textContent);
+    const tableList = document.getElementById("tableList");
+    const tableSearch = document.getElementById("tableSearch");
+    const rowSearch = document.getElementById("rowSearch");
+    const dataTable = document.getElementById("dataTable");
+    const columnList = document.getElementById("columnList");
+    const activeTitle = document.getElementById("activeTitle");
+    const activeMeta = document.getElementById("activeMeta");
+    const activeCount = document.getElementById("activeCount");
+    const rowHint = document.getElementById("rowHint");
+    let activeName = adminData.tables[0]?.name || "";
+
+    function formatNumber(value) {{
+      return Number(value || 0).toLocaleString("ko-KR");
+    }}
+
+    function escapeHtml(value) {{
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }}
+
+    function activeTable() {{
+      return adminData.tables.find((table) => table.name === activeName) || adminData.tables[0];
+    }}
+
+    function rowMatches(row, query) {{
+      if (!query) return true;
+      return row.some((value) => String(value ?? "").toLowerCase().includes(query));
+    }}
+
+    function renderTableList() {{
+      const query = tableSearch.value.trim().toLowerCase();
+      tableList.innerHTML = "";
+      adminData.tables
+        .filter((table) => {{
+          const haystack = [
+            table.name,
+            ...table.columns.map((column) => column.name),
+          ].join(" ").toLowerCase();
+          return haystack.includes(query);
+        }})
+        .forEach((table) => {{
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `table-btn${{table.name === activeName ? " active" : ""}}`;
+          button.innerHTML = `<span>${{escapeHtml(table.name)}}</span><small>${{formatNumber(table.count)}}</small>`;
+          button.addEventListener("click", () => {{
+            activeName = table.name;
+            rowSearch.value = "";
+            renderTableList();
+            renderActiveTable();
+          }});
+          tableList.appendChild(button);
+        }});
+    }}
+
+    function renderColumns(table) {{
+      columnList.innerHTML = "";
+      table.columns.forEach((column) => {{
+        const pill = document.createElement("span");
+        pill.className = "column-pill";
+        pill.innerHTML = `${{escapeHtml(column.name)}} <em>${{escapeHtml(column.type)}}</em>`;
+        columnList.appendChild(pill);
+      }});
+    }}
+
+    function renderActiveTable() {{
+      const table = activeTable();
+      if (!table) {{
+        dataTable.innerHTML = "";
+        columnList.innerHTML = "";
+        activeTitle.textContent = "-";
+        activeMeta.textContent = "";
+        activeCount.textContent = "0 rows";
+        rowHint.textContent = "";
+        return;
+      }}
+
+      activeTitle.textContent = table.name;
+      activeMeta.textContent = table.orderColumn
+        ? `최근 ${{adminData.limit}}개 기준: ${{table.orderColumn}} 내림차순`
+        : `최근 ${{adminData.limit}}개 기준: 기본 순서`;
+      activeCount.textContent = `${{formatNumber(table.count)}} rows`;
+      renderColumns(table);
+
+      const query = rowSearch.value.trim().toLowerCase();
+      const rows = table.rows.filter((row) => rowMatches(row, query));
+      rowHint.textContent = `${{formatNumber(rows.length)}} / ${{formatNumber(table.rows.length)}} preview rows`;
+
+      if (!table.previewColumns.length) {{
+        dataTable.innerHTML = '<tbody><tr><td class="empty">컬럼이 없습니다.</td></tr></tbody>';
+        return;
+      }}
+      const thead = `<thead><tr>${{table.previewColumns.map((column) => `<th>${{escapeHtml(column)}}</th>`).join("")}}</tr></thead>`;
+      const tbodyRows = rows.map((row) => {{
+        const cells = row.map((value) => `<td title="${{escapeHtml(value)}}">${{escapeHtml(value)}}</td>`).join("");
+        return `<tr>${{cells}}</tr>`;
+      }}).join("");
+      const tbody = tbodyRows || '<tr><td class="empty" colspan="99">표시할 데이터가 없습니다.</td></tr>';
+      dataTable.innerHTML = `${{thead}}<tbody>${{tbody}}</tbody>`;
+    }}
+
+    tableSearch.addEventListener("input", renderTableList);
+    rowSearch.addEventListener("input", renderActiveTable);
+    renderTableList();
+    renderActiveTable();
+  </script>
+</body>
+</html>
+"""
+    page_path = SITE_DIR / "admin" / "index.html"
+    page_path.parent.mkdir(parents=True, exist_ok=True)
+    page_path.write_text(html, encoding="utf-8")
 
 
 def _market_frame_for_slug(
@@ -1701,6 +2160,7 @@ def build_site() -> list[BuiltPage]:
         preview=False,
     )
     _build_home_preview_page(built_pages, overview_frames)
+    _build_admin_page()
     built_keys = {page.key for page in built_pages}
     built_slugs = {page.slug for page in built_pages}
     for key, title, description, slug in _ROOT_PAGES:
