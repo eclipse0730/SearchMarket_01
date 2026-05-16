@@ -86,6 +86,18 @@ class DailyMacroItem:
 
 
 @dataclass
+class MacroPriceSeries:
+    """global-indices / commodities / sector-etfs 종목의 가격 시계열 (정규화)."""
+
+    market_key: str
+    symbol: str
+    display_symbol: str
+    name_en: str | None
+    dates: list[str]          # ISO date strings
+    values: list[float | None]  # 첫 유효가 = 100 기준 정규화
+
+
+@dataclass
 class WatchlistStock:
     """워치리스트 패널용 종목 행."""
 
@@ -113,6 +125,7 @@ class MainPageData:
     generated_at: date
     macro_quotes: list[MacroQuote] = field(default_factory=list)
     daily_macro_items: list[DailyMacroItem] = field(default_factory=list)
+    macro_price_series: list[MacroPriceSeries] = field(default_factory=list)
 
 
 @dataclass
@@ -663,6 +676,57 @@ def load_admin_page_data(conn, limit: int = 50) -> AdminPageData:
     )
 
 
+def load_macro_price_series(conn, days: int = 90) -> list[MacroPriceSeries]:
+    """global-indices / commodities / sector-etfs 의 최근 N일 종가 시계열.
+
+    첫 유효 종가를 100으로 정규화해 반환한다.
+    """
+    from collections import defaultdict
+
+    rows = conn.execute(
+        """
+        SELECT DISTINCT ON (i.instrument_id, dp.trade_date)
+            i.market_key,
+            i.symbol,
+            COALESCE(i.display_symbol, i.symbol) AS display_symbol,
+            i.name_en,
+            dp.trade_date,
+            dp.close_price
+        FROM instruments i
+        JOIN daily_prices dp ON dp.instrument_id = i.instrument_id
+        WHERE i.market_key IN ('global-indices', 'commodities', 'sector-etfs')
+          AND i.is_active = TRUE
+          AND dp.trade_date >= CURRENT_DATE - %s
+        ORDER BY i.instrument_id, dp.trade_date, dp.source_provider
+        """,
+        (days,),
+    ).fetchall()
+
+    grouped: dict[tuple, list[tuple[str, float | None]]] = defaultdict(list)
+    for r in rows:
+        key = (r[0], r[1], r[2], r[3])
+        grouped[key].append((r[4].isoformat(), _to_float(r[5])))
+
+    result: list[MacroPriceSeries] = []
+    for (market_key, symbol, display_symbol, name_en), points in grouped.items():
+        points.sort(key=lambda x: x[0])
+        first_val = next((v for _, v in points if v is not None and v != 0), None)
+        if first_val is None:
+            continue
+        result.append(MacroPriceSeries(
+            market_key=market_key,
+            symbol=symbol,
+            display_symbol=display_symbol,
+            name_en=name_en,
+            dates=[d for d, _ in points],
+            values=[
+                round(v / first_val * 100, 2) if v is not None else None
+                for _, v in points
+            ],
+        ))
+    return result
+
+
 def load_daily_macro_items(conn) -> list[DailyMacroItem]:
     """daily_macro 테이블에서 각 indicator_code 의 최신 행을 반환."""
     rows = conn.execute(
@@ -1040,6 +1104,7 @@ def load_main_page_data(conn) -> MainPageData:
     """메인 페이지 데이터 로드. 매크로 지표와 글로벌 틱커만 포함."""
     macro_quotes = load_macro_quotes(conn)
     daily_macro_items = load_daily_macro_items(conn)
+    macro_price_series = load_macro_price_series(conn)
     generated_at = max(
         (q.trade_date for q in macro_quotes),
         default=date.today(),
@@ -1048,6 +1113,7 @@ def load_main_page_data(conn) -> MainPageData:
         generated_at=generated_at,
         macro_quotes=macro_quotes,
         daily_macro_items=daily_macro_items,
+        macro_price_series=macro_price_series,
     )
 
 

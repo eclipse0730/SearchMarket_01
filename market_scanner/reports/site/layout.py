@@ -221,6 +221,23 @@ a.sector-tile-link:hover { border-color: var(--accent); transform: translateY(-1
 .wl-title { font-weight: 600; font-size: 14px; margin-right: 8px; }
 .wl-desc { color: var(--muted); font-size: 11px; }
 .wl-panel table.t th, .wl-panel table.t td { padding: 5px 10px; }
+
+/* 시계열 차트 */
+.macro-chart-wrap { margin-bottom: 20px; }
+.chart-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.ct-tab {
+  padding: 5px 14px; border-radius: 5px; border: 1px solid var(--border);
+  background: var(--panel); color: var(--muted); font-size: 12px; cursor: pointer; }
+.ct-tab:hover { color: var(--text); border-color: var(--accent); }
+.ct-tab.ct-tab-active { background: var(--accent-dim); color: #fff; border-color: var(--accent-dim); }
+.chart-canvas-wrap { position: relative; height: 320px; margin-bottom: 8px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 5px; padding: 6px 0 12px; }
+.cl-item {
+  padding: 2px 9px 2px 6px; border-radius: 4px; border-left: 3px solid;
+  background: var(--panel); font-size: 11px; color: var(--text); cursor: pointer;
+  user-select: none; transition: opacity 0.15s; }
+.cl-item:hover { background: var(--panel-2); }
+.cl-item.cl-hidden { opacity: 0.3; }
 """
 
 
