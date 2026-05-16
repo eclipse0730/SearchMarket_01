@@ -284,7 +284,7 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
               label:function(c){{
                 const v=c.parsed.y;
                 if(v==null) return ' '+c.dataset.label+': —';
-                return ' '+c.dataset.label+': '+v.toFixed(1);
+                return ' '+c.dataset.label+': '+v.toLocaleString(undefined,{{maximumFractionDigits:2}});
               }}
             }}
           }}
