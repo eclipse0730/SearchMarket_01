@@ -219,7 +219,7 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
             name = _SERIES_NAMES.get(s.display_symbol, s.display_symbol)
             datasets.append({
                 "label": name,
-                "data": [date_to_val.get(d) for d in all_dates],
+                "rawData": [date_to_val.get(d) for d in all_dates],  # raw close — JS가 정규화
                 "borderColor": color,
                 "backgroundColor": color + "1a",
                 "pointRadius": 0,
@@ -243,8 +243,17 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
     first_tab_js = json.dumps(first_tab)
 
     return f"""<div class="macro-chart-wrap">
-  <div class="chart-tabs">{tabs_html}</div>
-  <div class="chart-canvas-wrap" id="macro-chart-scroll">
+  <div class="chart-controls">
+    <div class="chart-tabs">{tabs_html}</div>
+    <div class="chart-daterange">
+      <span class="cdr-label">From</span>
+      <input type="date" id="chart-from" class="ct-date-input">
+      <span class="cdr-sep">~</span>
+      <span class="cdr-label">To</span>
+      <input type="date" id="chart-to" class="ct-date-input">
+    </div>
+  </div>
+  <div class="chart-canvas-wrap">
     <canvas id="macro-line-chart"></canvas>
   </div>
   <div class="chart-legend" id="macro-chart-legend"></div>
@@ -255,24 +264,68 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
   const GROUPS={groups_json};
   const DPR=window.devicePixelRatio||1;
   const CHART_H=320;
+  const REC_DAYS=90;
   let chart=null;
-  function build(gk){{
+  let cur={first_tab_js};
+  let hiddenIdx=new Set();
+
+  // 날짜 입력 초기값 설정 (최초 1회)
+  (function(){{
+    let maxD='';
+    Object.values(GROUPS).forEach(function(g){{
+      const last=g.dates[g.dates.length-1];
+      if(last>maxD) maxD=last;
+    }});
+    if(!maxD) return;
+    const toD=new Date(maxD+'T00:00:00');
+    const fromD=new Date(toD);
+    fromD.setDate(fromD.getDate()-REC_DAYS);
+    document.getElementById('chart-to').value=maxD;
+    document.getElementById('chart-from').value=fromD.toISOString().slice(0,10);
+  }})();
+
+  function normFromBase(vals){{
+    const base=vals.find(function(v){{return v!=null&&v!==0;}});
+    if(base==null) return vals;
+    return vals.map(function(v){{return v!=null?Math.round((v/base-1)*10000)/100:null;}});
+  }}
+
+  function build(gk,resetHidden){{
     const g=GROUPS[gk]; if(!g) return;
+    cur=gk;
+    if(resetHidden) hiddenIdx=new Set();
+    const fromV=document.getElementById('chart-from').value;
+    const toV=document.getElementById('chart-to').value;
+
+    // from~to 범위 필터
+    const filtDates=g.dates.filter(function(d){{
+      return(!fromV||d>=fromV)&&(!toV||d<=toV);
+    }});
+    if(!filtDates.length) return;
+
+    // from 날짜 기준 0% 재정규화
+    const filtDS=g.datasets.map(function(ds){{
+      const dtv={{}};
+      g.dates.forEach(function(d,i){{dtv[d]=ds.rawData[i];}});
+      const raw=filtDates.map(function(d){{return dtv[d]!=null?dtv[d]:null;}});
+      return Object.assign({{}},ds,{{data:normFromBase(raw)}});
+    }});
+
+    // 캔버스 크기 (날짜 수에 따른 스크롤)
     const canvas=document.getElementById('macro-line-chart');
-    if(chart){{ chart.destroy(); chart=null; }}
-    // 날짜 수에 따라 캔버스 너비 동적 설정 (좌우 스크롤)
-    const pw=Math.max(10,Math.min(18,1000/g.dates.length));
-    const w=Math.max(900,g.dates.length*pw);
+    if(chart){{chart.destroy();chart=null;}}
+    const pw=Math.max(10,Math.min(18,1000/filtDates.length));
+    const w=Math.max(900,filtDates.length*pw);
     canvas.style.width=w+'px';
     canvas.style.height=CHART_H+'px';
     canvas.width=Math.round(w*DPR);
     canvas.height=Math.round(CHART_H*DPR);
+
     chart=new Chart(canvas,{{
       type:'line',
-      data:{{labels:g.dates,datasets:g.datasets}},
+      data:{{labels:filtDates,datasets:filtDS}},
       options:{{
-        responsive:false,
-        maintainAspectRatio:false,
+        responsive:false,maintainAspectRatio:false,
         interaction:{{mode:'index',intersect:false}},
         plugins:{{
           legend:{{display:false}},
@@ -280,14 +333,11 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
             backgroundColor:'rgba(8,19,33,.95)',
             borderColor:'rgba(148,163,184,.18)',borderWidth:1,
             titleColor:'#e6edf3',bodyColor:'#8fa3ba',padding:10,
-            callbacks:{{
-              label:function(c){{
-                const v=c.parsed.y;
-                if(v==null) return ' '+c.dataset.label+': —';
-                const s=(v>=0?'+':'')+v.toFixed(1)+'%';
-                return ' '+c.dataset.label+': '+s;
-              }}
-            }}
+            callbacks:{{label:function(c){{
+              const v=c.parsed.y;
+              if(v==null) return ' '+c.dataset.label+': —';
+              return ' '+c.dataset.label+': '+(v>=0?'+':'')+v.toFixed(1)+'%';
+            }}}}
           }}
         }},
         scales:{{
@@ -296,29 +346,38 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
         }}
       }}
     }});
-    // 범례 빌드
+
+    // 숨김 상태 복원
+    hiddenIdx.forEach(function(i){{chart.getDatasetMeta(i).hidden=true;}});
+    chart.update();
+
+    // 범례
     const leg=document.getElementById('macro-chart-legend');
-    leg.innerHTML=g.datasets.map(function(ds,i){{
-      return '<span class="cl-item" data-idx="'+i+'" style="border-color:'+ds.borderColor+'">'+ds.label+'</span>';
+    leg.innerHTML=filtDS.map(function(ds,i){{
+      return '<span class="cl-item'+(hiddenIdx.has(i)?' cl-hidden':'')+'" data-idx="'+i+'" style="border-color:'+ds.borderColor+'">'+ds.label+'</span>';
     }}).join('');
     leg.querySelectorAll('.cl-item').forEach(function(el){{
       el.addEventListener('click',function(){{
-        const idx=+el.dataset.idx;
-        const m=chart.getDatasetMeta(idx);
+        const i=+el.dataset.idx;
+        const m=chart.getDatasetMeta(i);
         m.hidden=!m.hidden;
         el.classList.toggle('cl-hidden',m.hidden);
+        if(m.hidden) hiddenIdx.add(i); else hiddenIdx.delete(i);
         chart.update();
       }});
     }});
   }}
+
   document.querySelectorAll('.ct-tab').forEach(function(btn){{
     btn.addEventListener('click',function(){{
       document.querySelectorAll('.ct-tab').forEach(function(b){{b.classList.remove('ct-tab-active');}});
       btn.classList.add('ct-tab-active');
-      build(btn.dataset.group);
+      build(btn.dataset.group,true);
     }});
   }});
-  build({first_tab_js});
+  document.getElementById('chart-from').addEventListener('change',function(){{build(cur,false);}});
+  document.getElementById('chart-to').addEventListener('change',function(){{build(cur,false);}});
+  build({first_tab_js},true);
 }})();
 </script>"""
 

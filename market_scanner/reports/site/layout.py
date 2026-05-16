@@ -224,12 +224,21 @@ a.sector-tile-link:hover { border-color: var(--accent); transform: translateY(-1
 
 /* 시계열 차트 */
 .macro-chart-wrap { margin-bottom: 20px; }
-.chart-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.chart-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.chart-tabs { display: flex; gap: 6px; }
 .ct-tab {
   padding: 5px 14px; border-radius: 5px; border: 1px solid var(--border);
   background: var(--panel); color: var(--muted); font-size: 12px; cursor: pointer; }
 .ct-tab:hover { color: var(--text); border-color: var(--accent); }
 .ct-tab.ct-tab-active { background: var(--accent-dim); color: #fff; border-color: var(--accent-dim); }
+.chart-daterange { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.cdr-label { color: var(--muted); font-size: 12px; }
+.cdr-sep { color: var(--muted); font-size: 13px; }
+.ct-date-input {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
+  color: var(--text); font-size: 12px; padding: 4px 7px; cursor: pointer;
+  color-scheme: dark; }
+.ct-date-input:focus { outline: none; border-color: var(--accent); }
 .chart-canvas-wrap {
   overflow-x: auto; overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
