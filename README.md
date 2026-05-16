@@ -62,6 +62,35 @@ uv run python Search.py fundamentals kosdaq --workers 8 --limit 100
 uv run python Search.py fundamentals kospi --source naver --limit 10
 ```
 
+## 매크로 지표 수집
+
+금리·환율·원자재·신용 스프레드·유동성·크립토 등 시장 공통 매크로 지표를 `daily_macro`에 저장합니다.
+FRED API key가 `.env`에 있어야 FRED 지표를 수집합니다.
+
+```bash
+# 증분 수집 (각 지표의 마지막 수집일 다음 날부터 오늘까지)
+uv run python Search.py macro
+
+# 특정 날짜까지 수집
+uv run python Search.py macro --to 20260515
+
+# 날짜 범위 강제 지정 (DB 이력 무시, 해당 구간 재수집)
+uv run python Search.py macro --from 20250101 --to 20260515
+
+# 처음 실행 시 소급 기간 조정 (기본 90일)
+uv run python Search.py macro --days-back 365
+```
+
+수집 소스 및 지표:
+
+| 소스 | 지표 |
+|---|---|
+| FRED | SOFR, US_FFR, US_2Y, US_10Y, US_30Y, US_SPREAD_2S10S, US_SPREAD_3M10Y, HY_OAS, IG_OAS, FED_RRP, FED_BS |
+| yfinance | USDKRW, EURUSD, USDJPY, USDCNY, DXY, WTI, GOLD, SILVER, NATGAS, COPPER, VIX, VVIX, BTC_USD, ETH_USD |
+| CoinGecko | CRYPTO_TOTAL_MCAP (현재 스냅샷, `/global` 엔드포인트) |
+| alternative.me | CRYPTO_FNG (공포·탐욕 지수) |
+
+
 ## 3단계: 지표 계산
 
 `daily_prices`를 읽어 `daily_indicators`를 계산합니다.

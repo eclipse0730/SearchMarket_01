@@ -134,6 +134,11 @@ def _build_parser() -> argparse.ArgumentParser:
     news_p.add_argument("--workers", type=int, default=4)
     news_p.add_argument("--provider", choices=["all", "auto", "finnhub", "rss"], default="all")
 
+    macro_p = sub.add_parser("macro", help="Collect macro indicators (rates, FX, commodities, crypto).")
+    _add_date_range(macro_p)
+    macro_p.add_argument("--days-back", type=int, default=90, help="Lookback days when an indicator has no history.")
+    _add_database_url(macro_p)
+
     counts_p = sub.add_parser("counts", help="Print core table row counts.")
     _add_database_url(counts_p)
 
@@ -247,6 +252,17 @@ def main() -> None:
                 provider=args.provider,
             )
             print(f"  news stored: {count} items")
+            return
+
+        if args.command == "macro":
+            from market_scanner.collectors.macro import run_fetch as fetch_macro
+
+            fetch_macro(
+                date_str=args.date_to or args.date,
+                date_from=args.date_from,
+                database_url=args.database_url,
+                days_back=args.days_back,
+            )
             return
 
         if args.command == "counts":
