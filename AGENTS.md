@@ -72,8 +72,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - `market_scanner/config/markets.py`: 시장 정의, 유니버스 로더, 메타데이터 로더입니다.
 - `market_scanner/analysis/indicators.py`: RSI와 추세 계산입니다.
 - `market_scanner/analysis/screener.py`: DB 기반 스크리닝과 점수화입니다.
-- `market_scanner/pipeline.py`: v2 단계 순서 제어입니다.
-- `market_scanner/reports/site_builder.py`: GitHub Pages용 `site/` 생성기입니다.
+- `market_scanner/pipeline.py`: 파이프라인 단계 순서 제어입니다.
+- `market_scanner/reports/site/build.py`: GitHub Pages용 `site/` 생성기입니다.
 - `market_scanner/templates/report.html`: HTML 리포트 템플릿입니다.
 - `market_scanner/templates/report.css`: HTML 리포트 스타일입니다.
 - `README.md`: 사용자용 설치/실행 설명입니다.
@@ -86,11 +86,11 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | 변경 대상 | 함께 확인/갱신할 문서와 파일 |
 |---|---|
 | CLI 옵션, 기본값, 실행 단계 변경 | `README.md`, `.github/workflows/*.yml` |
-| 시장 추가/삭제, 시장 key 변경 | `README.md`, `market_scanner/reports/site_builder.py`, `.github/workflows/*.yml` |
+| 시장 추가/삭제, 시장 key 변경 | `README.md`, `market_scanner/reports/site/build.py`, `.github/workflows/*.yml` |
 | 출력 파일명 규칙 변경 | `README.md`, `.github/workflows/*.yml` |
-| 스캔 데이터 컬럼 추가/삭제/이름 변경 | `market_scanner/analysis/screener.py`, `market_scanner/reports/html_report.py`, `market_scanner/templates/report.html`, `market_scanner/reports/site_builder.py` |
+| 스캔 데이터 컬럼 추가/삭제/이름 변경 | `market_scanner/analysis/screener.py`, `market_scanner/reports/html_report.py`, `market_scanner/templates/report.html`, `market_scanner/reports/site/` |
 | 점수 산식, RSI, 추세 계산 변경 | `README.md`의 설명 필요 여부, 관련 테스트가 생기면 테스트 문서 |
-| HTML 리포트 UI/필터/차트 변경 | `market_scanner/templates/report.html`, `market_scanner/templates/report.css`, `site_builder.py` 영향 여부 |
+| HTML 리포트 UI/필터/차트 변경 | `market_scanner/templates/report.html`, `market_scanner/templates/report.css`, `market_scanner/reports/site/layout.py` |
 | GitHub Pages 구조 변경 | `README.md`, `.github/workflows/deploy-pages.yml` |
 | GitHub Actions 스케줄/대상 변경 | `README.md`, 관련 workflow 파일 |
 | 의존성 추가/삭제 | `requirements.txt`, `README.md`, workflow 설치 단계 |

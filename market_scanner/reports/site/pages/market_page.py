@@ -1,4 +1,4 @@
-"""시장 서브페이지 (site/v2/markets/{market}/index.html).
+"""시장 서브페이지 (site/markets/{market}/index.html).
 
 섹션:
 1. 시장 요약 헤더 + MA 근접 카드 (market_snapshots)
@@ -11,8 +11,8 @@ from __future__ import annotations
 from datetime import datetime
 from html import escape
 
-from market_scanner.reports.v2 import layout
-from market_scanner.reports.v2.data import (
+from market_scanner.reports.site import layout
+from market_scanner.reports.site.data import (
     STRATEGY_KEYS,
     MarketCard,
     MarketDetailData,

@@ -1,4 +1,4 @@
-"""v2 페이지 생성에 필요한 DB 조회 모듈.
+"""페이지 생성에 필요한 DB 조회 모듈.
 
 기존 render.py 와는 별개로, 메인/시장/전략 페이지가 공통으로 쓰는 조회만 모음.
 """
@@ -186,7 +186,7 @@ class AdminRunRow:
 
 @dataclass
 class AdminPageData:
-    """v2 관리 페이지에 필요한 DB 테이블 스냅샷."""
+    """관리 페이지에 필요한 DB 테이블 스냅샷."""
 
     generated_at: datetime
     preview_limit: int

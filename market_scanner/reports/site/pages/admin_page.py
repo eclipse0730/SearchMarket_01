@@ -1,10 +1,10 @@
-"""v2 관리 페이지 (site/v2/admin/index.html)."""
+"""관리 페이지 (site/admin/index.html)."""
 from __future__ import annotations
 
 from html import escape
 
-from market_scanner.reports.v2 import layout
-from market_scanner.reports.v2.data import AdminCoverageRow, AdminPageData, AdminRunRow, AdminTable
+from market_scanner.reports.site import layout
+from market_scanner.reports.site.data import AdminCoverageRow, AdminPageData, AdminRunRow, AdminTable
 
 
 def _date_text(value: object) -> str:

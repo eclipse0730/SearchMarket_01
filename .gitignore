@@ -5,7 +5,7 @@ __pycache__/
 .env
 .claude/
 refactor_outputs/
-site/
+/site/
 archive/
 market_scanner/assets/.yfinance_cache/
 .postgres-data/

@@ -1,6 +1,6 @@
-"""v2 pipeline stage orchestrator.
+"""Pipeline stage orchestrator.
 
-This module owns only the order in which v2 stages run. Collection,
+This module owns only the order in which stages run. Collection,
 indicator calculation, scoring, storage, and report rendering live in their
 own packages.
 """

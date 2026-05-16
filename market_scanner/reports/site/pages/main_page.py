@@ -8,8 +8,8 @@ from __future__ import annotations
 from datetime import datetime
 from html import escape
 
-from market_scanner.reports.v2 import layout
-from market_scanner.reports.v2.data import DailyMacroItem, MacroQuote, MainPageData
+from market_scanner.reports.site import layout
+from market_scanner.reports.site.data import DailyMacroItem, MacroQuote, MainPageData
 
 
 # indicator_code → (표시명, 소수점 자리수, 단위 suffix)

@@ -117,28 +117,23 @@ uv run python Search.py screen kospi --universe kospi200
 
 ## 5단계: 사이트 빌드
 
-`scan_results`를 읽어 전체 GitHub Pages 사이트를 생성합니다.
+DB의 스캔 결과를 읽어 `site/` 아래에 GitHub Pages 정적 사이트를 생성합니다.
 ```bash
+# 전체 빌드 (기본값: all)
 uv run python Search.py site --no-open
-```
 
-v2
-```bash
 # 메인 페이지만
-uv run python Search.py site-v2 main --no-open
+uv run python Search.py site main --no-open
 
-# 특정 마켓 또는 유니버스 페이지
-uv run python Search.py site-v2 market kospi --no-open
-uv run python Search.py site-v2 market sp500 --no-open
+# 특정 마켓 페이지
+uv run python Search.py site market kospi --no-open
+uv run python Search.py site market us-all --no-open
 
-# 특정 섹터 페이지만
-uv run python Search.py site-v2 sector kospi 전기전자 --no-open
+# 특정 섹터 페이지
+uv run python Search.py site sector kospi 전기전자 --no-open
 
 # 관리 페이지만
-uv run python Search.py site-v2 admin --no-open
-
-# 전체 (메인 + 관리 + US/KR 종합 + 주요 유니버스 + 모든 마켓)
-uv run python Search.py site-v2 all --no-open
+uv run python Search.py site admin --no-open
 ```
 
 ## 보조 명령
@@ -177,7 +172,7 @@ uv run python Search.py analyze us --universe sp500
 
 ## 출력
 
-스캔 결과의 원천은 PostgreSQL입니다. GitHub Pages 사이트는 `site_builder`가 DB에서 직접 읽어 `site/` 아래에 생성합니다.
+스캔 결과의 원천은 PostgreSQL입니다. GitHub Pages 사이트는 `market_scanner/reports/site/build.py`가 DB에서 직접 읽어 `site/` 아래에 생성합니다.
 
 ## PostgreSQL
 
@@ -205,9 +200,9 @@ uv run python Search.py site --no-open
 
 `site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 자동 열기를 원하면 `--no-open`을 빼고 실행합니다.
 
-대시보드는 DB의 `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 종합 시장 점수, 시장 체력, 매크로 리스크, 섹터/테마 히트맵, 오늘의 핵심 후보, 시장별 스냅샷, 섹터 리더십, 뉴스 브리핑을 표시합니다.
+대시보드는 DB의 `daily_macro`, `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 매크로 지표, 글로벌 지수·원자재, US/KR 종합 시황, 섹터 히트맵, 리더십, 당일 Top 종목, 워치리스트를 표시합니다.
 
-상단 `관리` 탭은 빌드 시점의 PostgreSQL 테이블 목록, 행 수, 컬럼, 최근 데이터 샘플을 보여주는 정적 읽기 전용 페이지입니다. v2에서는 `site/v2/admin/index.html`로 생성됩니다. 데이터 수정/삭제는 DB 또는 CLI에서 처리합니다.
+상단 `관리` 탭(`site/admin/index.html`)은 빌드 시점의 PostgreSQL 테이블 목록·행 수·컬럼·최근 데이터 샘플을 보여주는 정적 읽기 전용 페이지입니다. 데이터 수정/삭제는 DB 또는 CLI에서 처리합니다.
 
 ## 데이터 정책
 
@@ -226,11 +221,12 @@ uv run python Search.py site --no-open
 ```text
 market_scanner/
   models.py             # 공통 데이터 모델·설정
-  pipeline.py           # v2 단계 순서 제어
+  pipeline.py           # 단계 순서 제어
   analysis/             # 지표 계산·스크리닝
   collectors/           # 가격·펀더멘탈·뉴스·번역 수집
   config/markets.py     # 시장 설정·유니버스/메타데이터 로더
   reports/              # Markdown/HTML/Page 렌더링
+    site/               # 정적 사이트 빌더 (site/ 생성)
   storage/              # PostgreSQL 유틸리티
   assets/               # seed/cache 파일
   templates/            # HTML 리포트 템플릿/CSS

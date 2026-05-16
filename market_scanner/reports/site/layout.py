@@ -1,4 +1,4 @@
-"""v2 사이트 공통 HTML 레이아웃과 포맷팅 헬퍼.
+"""사이트 공통 HTML 레이아웃과 포맷팅 헬퍼.
 
 모든 페이지는 render_page() 로 HTML 문자열을 만든다. CSS는 한 곳에 모아 두고
 페이지마다 같은 헤더/풋터를 공유한다.
@@ -289,7 +289,7 @@ def _nav_active_class(
 
 
 def nav_links_html(depth: int, nav_active: str | None, active_class: str = "nav-active") -> str:
-    """상단 네비게이션 링크 HTML. v2 공통 페이지와 v1-style 상세 페이지가 함께 사용한다."""
+    """상단 네비게이션 링크 HTML. 공통 페이지와 v1-style 상세 페이지가 함께 사용한다."""
     prefix = rel_prefix(depth)
     items: list[str] = []
     for key, label, href, children in _NAV_ITEMS:
@@ -353,7 +353,7 @@ def render_page(
 {body_html}
 </main>
 <footer class="site">
-  Generated {escape(ts)} · SearchMarket v2
+  Generated {escape(ts)} · SearchMarket
 </footer>
 </body>
 </html>

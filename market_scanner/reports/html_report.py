@@ -140,8 +140,6 @@ def _rsi_chart_data(frame: pd.DataFrame) -> tuple[list[str], list[int]]:
 
 
 # ── 패널 기본값 (외부 호출 없이 빈 패널) ──────────────────────────────────────
-# VIX(yfinance)와 뉴스(DB) 로딩은 v2에서 site_builder 책임으로 분리.
-# 개별 market 리포트는 빈 패널로 렌더하고, 사이트 빌더가 원하면 데이터를 주입한다.
 
 def _empty_fear_panel() -> dict[str, object]:
     return {
@@ -154,7 +152,7 @@ def _empty_fear_panel() -> dict[str, object]:
         "vs20Pct": None,
         "vsLabel": "20D 대비",
         "trend": "unknown",
-        "note": "VIX 패널은 site_builder 단계에서 주입됩니다.",
+        "note": "",
     }
 
 
@@ -162,8 +160,8 @@ def _empty_news_panel() -> dict[str, object]:
     return {
         "available": False,
         "title": "뉴스 브리핑",
-        "subtitle": "뉴스 패널은 site_builder 단계에서 주입됩니다.",
-        "note": "개별 시장 리포트는 외부 호출과 뉴스 DB 조회를 하지 않습니다.",
+        "subtitle": "",
+        "note": "",
         "items": [],
     }
 
@@ -274,12 +272,12 @@ def write_html(
     *,
     fear_panel: dict[str, object] | None = None,
     news_panel: dict[str, object] | None = None,
-    v2_nav: str = "",
+    site_nav: str = "",
     skip_enrich: bool = False,
 ) -> None:
     """scan_results + daily_indicators 기반 HTML 리포트 생성.
 
-    fear_panel / news_panel 은 site_builder 가 주입할 수 있는 옵션 데이터.
+    fear_panel / news_panel 은 선택적 옵션 데이터.
     개별 market 리포트는 빈 패널로 렌더한다 (외부 호출 없음).
     """
     if not skip_enrich:
@@ -310,7 +308,7 @@ def write_html(
             "FEAR_JSON": _json_script(fear_panel or _empty_fear_panel()),
             "NEWS_JSON": _json_script(news_panel or _empty_news_panel()),
             "ANALYSIS_MD_JSON": _json_script(markdown_text or ""),
-            "V2_NAV": v2_nav,
+            "SITE_NAV": site_nav,
             "REPORT_EMPTY_TEXT": escape(
                 "분석 마크다운이 비어 있습니다. screener를 먼저 실행한 뒤 render 단계를 다시 수행하세요."
             ),

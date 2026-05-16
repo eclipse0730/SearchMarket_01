@@ -14,8 +14,8 @@ from datetime import datetime
 from html import escape
 from itertools import groupby
 
-from market_scanner.reports.v2 import layout
-from market_scanner.reports.v2.data import (
+from market_scanner.reports.site import layout
+from market_scanner.reports.site.data import (
     MarketCard,
     OverviewPageData,
     SectorCell,

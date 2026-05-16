@@ -64,6 +64,7 @@ def _build_parser() -> argparse.ArgumentParser:
             "  uv run python Search.py scan us --universe sp500\n"
             "  uv run python Search.py all kospi --universe kospi200\n"
             "  uv run python Search.py site --no-open\n"
+            "  uv run python Search.py site market kospi --no-open\n"
         ),
     )
     sub = parser.add_subparsers(dest="command", required=True)
@@ -150,17 +151,13 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_database_url(names_p)
 
     site_p = sub.add_parser("site", help="Build the static site.")
-    site_open = site_p.add_mutually_exclusive_group()
-    site_open.add_argument("--open", dest="open_browser", action="store_true")
-    site_open.add_argument("--no-open", dest="open_browser", action="store_false")
-    site_p.set_defaults(open_browser=None)
-
-    site_v2_p = sub.add_parser("site-v2", help="Build v2 static site pages.")
-    site_v2_p.add_argument("target", choices=["main", "market", "sector", "admin", "all"])
-    site_v2_p.add_argument("market", nargs="?")
-    site_v2_p.add_argument("sector", nargs="?")
-    site_v2_p.add_argument("--no-open", action="store_true")
-    _add_database_url(site_v2_p)
+    site_p.add_argument("target", nargs="?", default="all",
+                        choices=["main", "market", "sector", "admin", "all"],
+                        help="빌드 대상 (기본: all).")
+    site_p.add_argument("market", nargs="?")
+    site_p.add_argument("sector", nargs="?")
+    site_p.add_argument("--no-open", action="store_true")
+    _add_database_url(site_p)
 
     all_p = sub.add_parser("all", help="Run scan and then render markdown report.")
     _add_market(all_p)
@@ -281,59 +278,36 @@ def main() -> None:
             return
 
         if args.command == "site":
-            from market_scanner.reports.site_builder import (
-                SITE_DIR,
-                _open_site_index,
-                _should_open_browser_by_default,
-                build_site,
-            )
-
-            pages = build_site()
-            if not pages:
-                raise ValueError("No reports were found. Generate at least one market report before building the site.")
-            print(f"Built {len(pages)} site pages under {SITE_DIR}")
-            open_browser = args.open_browser
-            if open_browser is None:
-                open_browser = _should_open_browser_by_default()
-            if open_browser:
-                _open_site_index()
-            return
-
-        if args.command == "site-v2":
-            from market_scanner.reports.v2 import build as v2_build
-            from market_scanner.reports.v2 import data as v2_data
+            from market_scanner.reports.site import build as site_build
+            from market_scanner.reports.site import data as site_data
             from market_scanner.storage.connection import connect
 
             with connect(args.database_url) as conn:
                 primary_path = None
                 if args.target == "main":
-                    primary_path = v2_build.build_main(conn)
+                    primary_path = site_build.build_main(conn)
                 elif args.target == "admin":
-                    primary_path = v2_build.build_admin(conn)
+                    primary_path = site_build.build_admin(conn)
                 elif args.target == "market":
                     if not args.market:
-                        raise ValueError("site-v2 market requires a market key")
+                        raise ValueError("site market requires a market key")
                     if args.market == "us-all":
-                        primary_path = v2_build.build_us_all(conn)
+                        primary_path = site_build.build_us_all(conn)
                     elif args.market == "kr-all":
-                        primary_path = v2_build.build_kr_all(conn)
-                    elif args.market in v2_data.UNIVERSE_DETAIL_PAGES:
-                        primary_path = v2_build.build_universe_market(conn, args.market)
+                        primary_path = site_build.build_kr_all(conn)
                     else:
-                        primary_path = v2_build.build_market(conn, args.market)
+                        primary_path = site_build.build_market(conn, args.market)
                 elif args.target == "sector":
                     if not args.market or not args.sector:
-                        raise ValueError("site-v2 sector requires a market key and sector name")
-                    primary_path = v2_build.build_sector(conn, args.market, args.sector)
+                        raise ValueError("site sector requires a market key and sector name")
+                    primary_path = site_build.build_sector(conn, args.market, args.sector)
                 elif args.target == "all":
-                    primary_path = v2_build.build_main(conn)
-                    v2_build.build_admin(conn)
-                    v2_build.build_us_all(conn)
-                    v2_build.build_kr_all(conn)
-                    for universe_key in v2_data.UNIVERSE_DETAIL_PAGES:
-                        v2_build.build_universe_market(conn, universe_key)
-                    for market_key in v2_data.list_buildable_markets(conn):
-                        v2_build.build_market(conn, market_key)
+                    primary_path = site_build.build_main(conn)
+                    site_build.build_admin(conn)
+                    site_build.build_us_all(conn)
+                    site_build.build_kr_all(conn)
+                    for market_key in site_data.list_buildable_markets(conn):
+                        site_build.build_market(conn, market_key)
 
             if primary_path is not None and not args.no_open:
                 import webbrowser

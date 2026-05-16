@@ -1,4 +1,4 @@
-"""섹터 서브페이지 (site/v2/markets/{market}/sectors/{sector}/index.html).
+"""섹터 서브페이지 (site/markets/{market}/sectors/{sector}/index.html).
 
 섹션:
 1. 섹터 요약 헤더 (sector_snapshots)
@@ -10,8 +10,8 @@ from __future__ import annotations
 from datetime import datetime
 from html import escape
 
-from market_scanner.reports.v2 import layout
-from market_scanner.reports.v2.data import (
+from market_scanner.reports.site import layout
+from market_scanner.reports.site.data import (
     STRATEGY_KEYS,
     SectorDetailData,
     TopStock,
