@@ -676,10 +676,10 @@ def load_admin_page_data(conn, limit: int = 50) -> AdminPageData:
     )
 
 
-def load_macro_price_series(conn, days: int = 90) -> list[MacroPriceSeries]:
-    """global-indices / commodities / sector-etfs 의 최근 N일 종가 시계열.
+def load_macro_price_series(conn) -> list[MacroPriceSeries]:
+    """global-indices / commodities / sector-etfs 의 전체 종가 시계열.
 
-    첫 유효 종가를 100으로 정규화해 반환한다.
+    DB에 있는 가장 이른 날짜부터 최신까지 모두 로드하고 첫 유효 종가를 100으로 정규화해 반환한다.
     """
     from collections import defaultdict
 
@@ -696,10 +696,8 @@ def load_macro_price_series(conn, days: int = 90) -> list[MacroPriceSeries]:
         JOIN daily_prices dp ON dp.instrument_id = i.instrument_id
         WHERE i.market_key IN ('global-indices', 'commodities', 'sector-etfs')
           AND i.is_active = TRUE
-          AND dp.trade_date >= CURRENT_DATE - %s
         ORDER BY i.instrument_id, dp.trade_date, dp.source_provider
         """,
-        (days,),
     ).fetchall()
 
     grouped: dict[tuple, list[tuple[str, float | None]]] = defaultdict(list)

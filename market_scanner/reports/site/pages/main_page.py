@@ -14,6 +14,34 @@ from market_scanner.reports.site import layout
 from market_scanner.reports.site.data import DailyMacroItem, MacroPriceSeries, MacroQuote, MainPageData
 
 
+# display_symbol → 범례/툴팁 표시명
+_SERIES_NAMES: dict[str, str] = {
+    # 섹터 ETF
+    "XLRE": "리츠",       "VNQ":  "리츠(VNQ)",
+    "XLB":  "소재",       "XLE":  "에너지",
+    "XLF":  "금융",       "XLK":  "기술",
+    "XLV":  "헬스케어",   "XLY":  "경기소비재",
+    "XLP":  "필수소비재", "XLI":  "산업재",
+    "XLU":  "유틸리티",   "XLC":  "통신",
+    # 글로벌 지수
+    "DJI":      "다우",       "GSPC":     "S&P500",
+    "IXIC":     "나스닥",     "NDX":      "나스닥100",
+    "RUT":      "러셀2000",   "VIX":      "VIX",
+    "FTSE":     "영국",       "GDAXI":    "독일DAX",
+    "FCHI":     "프랑스",     "STOXX50E": "유럽50",
+    "N225":     "닛케이",     "KS11":     "코스피",
+    "KQ11":     "코스닥",     "HSI":      "항셍",
+    "SSE":      "상해",       "CSI300":   "CSI300",
+    "TWII":     "대만",       "BSESN":    "인도BSE",
+    "NSEI":     "인도50",     "AXJO":     "호주",
+    "BVSP":     "브라질",     "STI":      "싱가포르",
+    # 원자재
+    "GC":  "금",    "SI":  "은",    "PL":  "백금",  "PA":  "팔라듐",
+    "CL":  "WTI",  "BZ":  "브렌트","NG":  "천연가스","HG":  "구리",
+    "ALI": "알루미늄","ZC": "옥수수","ZS":  "대두",  "ZW":  "밀",
+    "KC":  "커피",  "SB":  "설탕",
+}
+
 # display_symbol → CSS border-color (차트 라인 색상)
 _SERIES_COLORS: dict[str, str] = {
     # 글로벌 지수 — 미국 파랑, 유럽 초록, 아시아 노랑/오렌지/빨강
@@ -177,7 +205,6 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
     }
     _TAB_ORDER = ["global-indices", "sector-etfs", "commodities"]
 
-    # 그룹별로 날짜(공통 x축)와 datasets 구성
     by_market: dict[str, list[MacroPriceSeries]] = defaultdict(list)
     for s in series_list:
         by_market[s.market_key].append(s)
@@ -189,8 +216,9 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
         for s in group:
             date_to_val = dict(zip(s.dates, s.values))
             color = _SERIES_COLORS.get(s.display_symbol, "#62c7ff")
+            name = _SERIES_NAMES.get(s.display_symbol, s.display_symbol)
             datasets.append({
-                "label": s.display_symbol,
+                "label": name,
                 "data": [date_to_val.get(d) for d in all_dates],
                 "borderColor": color,
                 "backgroundColor": color + "1a",
@@ -216,23 +244,35 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
 
     return f"""<div class="macro-chart-wrap">
   <div class="chart-tabs">{tabs_html}</div>
-  <div class="chart-canvas-wrap"><canvas id="macro-line-chart"></canvas></div>
+  <div class="chart-canvas-wrap" id="macro-chart-scroll">
+    <canvas id="macro-line-chart"></canvas>
+  </div>
   <div class="chart-legend" id="macro-chart-legend"></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
 (function(){{
   const GROUPS={groups_json};
+  const DPR=window.devicePixelRatio||1;
+  const CHART_H=320;
   let chart=null;
   function build(gk){{
     const g=GROUPS[gk]; if(!g) return;
-    const ctx=document.getElementById('macro-line-chart').getContext('2d');
-    if(chart) chart.destroy();
-    chart=new Chart(ctx,{{
+    const canvas=document.getElementById('macro-line-chart');
+    if(chart){{ chart.destroy(); chart=null; }}
+    // 날짜 수에 따라 캔버스 너비 동적 설정 (좌우 스크롤)
+    const pw=Math.max(10,Math.min(18,1000/g.dates.length));
+    const w=Math.max(900,g.dates.length*pw);
+    canvas.style.width=w+'px';
+    canvas.style.height=CHART_H+'px';
+    canvas.width=Math.round(w*DPR);
+    canvas.height=Math.round(CHART_H*DPR);
+    chart=new Chart(canvas,{{
       type:'line',
       data:{{labels:g.dates,datasets:g.datasets}},
       options:{{
-        responsive:true,maintainAspectRatio:false,
+        responsive:false,
+        maintainAspectRatio:false,
         interaction:{{mode:'index',intersect:false}},
         plugins:{{
           legend:{{display:false}},
@@ -244,23 +284,18 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
               label:function(c){{
                 const v=c.parsed.y;
                 if(v==null) return ' '+c.dataset.label+': —';
-                const p=(v-100).toFixed(1);
-                return ' '+c.dataset.label+': '+(p>=0?'+':'')+p+'%';
+                return ' '+c.dataset.label+': '+v.toFixed(1);
               }}
             }}
           }}
         }},
         scales:{{
-          x:{{ticks:{{color:'#8fa3ba',maxTicksLimit:8,maxRotation:0}},grid:{{color:'rgba(148,163,184,.08)'}}}},
-          y:{{
-            ticks:{{color:'#8fa3ba',callback:function(v){{
-              const p=(v-100).toFixed(0);return(p>=0?'+':'')+p+'%';
-            }}}},
-            grid:{{color:'rgba(148,163,184,.08)'}},
-          }}
+          x:{{ticks:{{color:'#8fa3ba',maxTicksLimit:14,maxRotation:0}},grid:{{color:'rgba(148,163,184,.08)'}}}},
+          y:{{ticks:{{color:'#8fa3ba',precision:1}},grid:{{color:'rgba(148,163,184,.08)'}}}}
         }}
       }}
     }});
+    // 범례 빌드
     const leg=document.getElementById('macro-chart-legend');
     leg.innerHTML=g.datasets.map(function(ds,i){{
       return '<span class="cl-item" data-idx="'+i+'" style="border-color:'+ds.borderColor+'">'+ds.label+'</span>';

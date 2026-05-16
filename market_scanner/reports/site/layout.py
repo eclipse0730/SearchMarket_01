@@ -230,7 +230,11 @@ a.sector-tile-link:hover { border-color: var(--accent); transform: translateY(-1
   background: var(--panel); color: var(--muted); font-size: 12px; cursor: pointer; }
 .ct-tab:hover { color: var(--text); border-color: var(--accent); }
 .ct-tab.ct-tab-active { background: var(--accent-dim); color: #fff; border-color: var(--accent-dim); }
-.chart-canvas-wrap { position: relative; height: 320px; margin-bottom: 8px; }
+.chart-canvas-wrap {
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 8px;
+  scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.3) transparent; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 5px; padding: 6px 0 12px; }
 .cl-item {
   padding: 2px 9px 2px 6px; border-radius: 4px; border-left: 3px solid;
