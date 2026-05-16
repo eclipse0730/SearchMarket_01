@@ -94,7 +94,7 @@ class MacroPriceSeries:
     display_symbol: str
     name_en: str | None
     dates: list[str]          # ISO date strings
-    values: list[float | None]  # DB close_price 원본값
+    values: list[float | None]  # 첫 유효가 대비 등락률(%) — 시작일 = 0.0
 
 
 @dataclass
@@ -708,7 +708,8 @@ def load_macro_price_series(conn) -> list[MacroPriceSeries]:
     result: list[MacroPriceSeries] = []
     for (market_key, symbol, display_symbol, name_en), points in grouped.items():
         points.sort(key=lambda x: x[0])
-        if not any(v is not None for _, v in points):
+        first_val = next((v for _, v in points if v is not None and v != 0), None)
+        if first_val is None:
             continue
         result.append(MacroPriceSeries(
             market_key=market_key,
@@ -716,7 +717,10 @@ def load_macro_price_series(conn) -> list[MacroPriceSeries]:
             display_symbol=display_symbol,
             name_en=name_en,
             dates=[d for d, _ in points],
-            values=[v for _, v in points],
+            values=[
+                round((v / first_val - 1) * 100, 2) if v is not None else None
+                for _, v in points
+            ],
         ))
     return result
 

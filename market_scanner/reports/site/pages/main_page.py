@@ -284,14 +284,15 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
               label:function(c){{
                 const v=c.parsed.y;
                 if(v==null) return ' '+c.dataset.label+': —';
-                return ' '+c.dataset.label+': '+v.toLocaleString(undefined,{{maximumFractionDigits:2}});
+                const s=(v>=0?'+':'')+v.toFixed(1)+'%';
+                return ' '+c.dataset.label+': '+s;
               }}
             }}
           }}
         }},
         scales:{{
           x:{{ticks:{{color:'#8fa3ba',maxTicksLimit:14,maxRotation:0}},grid:{{color:'rgba(148,163,184,.08)'}}}},
-          y:{{ticks:{{color:'#8fa3ba',precision:1}},grid:{{color:'rgba(148,163,184,.08)'}}}}
+          y:{{ticks:{{color:'#8fa3ba',callback:function(v){{return(v>=0?'+':'')+v.toFixed(1)+'%';}}}},grid:{{color:'rgba(148,163,184,.08)'}}}}
         }}
       }}
     }});
