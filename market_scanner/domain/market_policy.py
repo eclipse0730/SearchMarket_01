@@ -7,6 +7,7 @@ UNIVERSE_MARKET_ALIASES = {
     "amex": "us",
     "nasdaq100": "us",
     "sp500": "us",
+    "dow30": "us",
     "kospi100": "kospi",
     "kospi200": "kospi",
     "kosdaq150": "kosdaq",
@@ -33,7 +34,7 @@ def country_currency_for_market(market_key: str) -> tuple[str | None, str | None
     home_key = home_market_key(market_key)
     if home_key in {"kospi", "kosdaq"}:
         return "KR", "KRW", "Asia/Seoul"
-    if home_key in {"us", "nasdaq100", "sp500", "sector-etfs"}:
+    if home_key in {"us", "nasdaq100", "sp500", "dow30", "sector-etfs"}:
         return "US", "USD", "America/New_York"
     return None, None, "Asia/Seoul"
 

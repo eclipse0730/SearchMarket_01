@@ -16,16 +16,32 @@ from urllib.parse import quote_plus
 SITE_TITLE = "SearchMarket"
 SITE_TAGLINE = "Daily Market Scan"
 
-# 상단 네비게이션 항목: (nav_key, 표시명, href_suffix)
+# 상단 네비게이션 항목: (nav_key, 표시명, href_suffix, dropdown_items)
 # href_suffix 는 prefix + suffix 로 최종 URL을 조합한다.
-_NAV_ITEMS: list[tuple[str, str, str]] = [
-    ("home",           "홈",       "index.html"),
-    ("us",             "나스닥",   "markets/us/index.html"),
-    ("kospi",          "KOSPI",    "markets/kospi/index.html"),
-    ("kosdaq",         "KOSDAQ",   "markets/kosdaq/index.html"),
-    ("global-indices", "글로벌지수", "markets/global-indices/index.html"),
-    ("sector-etfs",    "섹터ETF",  "markets/sector-etfs/index.html"),
-    ("commodities",    "원자재",   "markets/commodities/index.html"),
+_NAV_ITEMS: list[tuple[str, str, str, tuple[tuple[str, str, str], ...]]] = [
+    (
+        "us-all",
+        "US종합",
+        "markets/us-all/index.html",
+        (
+            ("us", "나스닥", "markets/us/index.html"),
+            ("nasdaq100", "NASDAQ100", "markets/nasdaq100/index.html"),
+            ("sp500", "S&P500", "markets/sp500/index.html"),
+            ("dow30", "다우존스30", "markets/dow30/index.html"),
+        ),
+    ),
+    (
+        "kr-all",
+        "KR종합",
+        "markets/kr-all/index.html",
+        (
+            ("kospi", "KOSPI", "markets/kospi/index.html"),
+            ("kospi200", "KOSPI200", "markets/kospi200/index.html"),
+            ("kosdaq", "KOSDAQ", "markets/kosdaq/index.html"),
+            ("kosdaq150", "KOSDAQ150", "markets/kosdaq150/index.html"),
+        ),
+    ),
+    ("admin", "관리", "admin/index.html", ()),
 ]
 
 
@@ -58,35 +74,55 @@ def rel_prefix(depth: int) -> str:
 
 CSS = """
 :root {
-  --bg: #0e1117;
-  --panel: #161b22;
-  --panel-2: #1c2330;
-  --border: #2a313c;
+  --bg: #07101c;
+  --panel: rgba(14, 26, 42, .82);
+  --panel-2: rgba(17, 31, 50, .92);
+  --border: rgba(148, 163, 184, .18);
   --text: #e6edf3;
-  --muted: #8b95a5;
+  --muted: #8fa3ba;
   --up: #16c784;
   --down: #ea3943;
   --flat: #8b95a5;
-  --accent: #58a6ff;
+  --accent: #62c7ff;
   --accent-dim: #1f6feb;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+html { min-height: 100%; background: #050a12; }
+body { margin: 0; padding: 0; min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% -10%, rgba(98, 199, 255, .18), transparent 28%),
+    radial-gradient(circle at 98% 0, rgba(216, 169, 74, .12), transparent 24%),
+    linear-gradient(180deg, #081321, #050a12 74%);
+  color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", Roboto, sans-serif;
   font-size: 14px; line-height: 1.5; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 header.site {
   border-bottom: 1px solid var(--border);
-  padding: 18px 24px; background: var(--panel);
-  display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  padding: 14px 24px; background: rgba(5, 10, 18, .72); backdrop-filter: blur(14px);
+  display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 12px;
+  position: sticky; top: 0; z-index: 20;
 }
-header.site .title { font-size: 18px; font-weight: 600; }
+.site-left { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
+header.site .brand { color: var(--text); text-decoration: none; }
+header.site .brand:hover { color: var(--accent); text-decoration: none; }
+header.site .title { font-size: 18px; font-weight: 700; }
 header.site .tagline { color: var(--muted); font-size: 13px; }
-header.site nav { display: flex; flex-wrap: wrap; gap: 2px; align-items: center; }
-header.site nav a { padding: 4px 10px; border-radius: 6px; color: var(--muted); font-size: 13px; }
-header.site nav a:hover { color: var(--text); text-decoration: none; background: var(--panel-2); }
-header.site nav a.nav-active { color: var(--text); font-weight: 600; background: var(--panel-2); }
+header.site nav { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.nav-item { position: relative; }
+.nav-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; color: var(--muted); font-size: 13px; }
+.nav-link:hover { color: var(--text); text-decoration: none; background: var(--panel-2); }
+.nav-link.nav-active { color: var(--text); font-weight: 600; background: var(--panel-2); }
+.nav-caret { color: var(--muted); font-size: 10px; }
+.nav-menu {
+  display: none; position: absolute; left: 0; top: 100%; min-width: 170px;
+  padding: 7px; border: 1px solid var(--border); border-radius: 8px;
+  background: rgba(8, 19, 33, .98); box-shadow: 0 16px 36px rgba(0, 0, 0, .28);
+}
+.nav-item:hover .nav-menu, .nav-item:focus-within .nav-menu { display: grid; gap: 2px; }
+.nav-menu a { display: block; padding: 7px 9px; border-radius: 6px; color: #cbd5e1; font-size: 12px; }
+.nav-menu a:hover, .nav-menu a.nav-active { color: var(--text); background: var(--panel-2); text-decoration: none; }
 main { max-width: 1280px; margin: 0 auto; padding: 24px; }
 section.block { margin-bottom: 32px; }
 section.block > h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px 0;
@@ -243,6 +279,56 @@ def risk_pill(risk_level: str | None) -> str:
     return "risk-normal"
 
 
+def _nav_active_class(
+    key: str,
+    children: tuple[tuple[str, str, str], ...],
+    nav_active: str | None,
+) -> str:
+    child_keys = {child_key for child_key, _, _ in children}
+    return " nav-active" if nav_active == key or nav_active in child_keys else ""
+
+
+def nav_links_html(depth: int, nav_active: str | None, active_class: str = "nav-active") -> str:
+    """상단 네비게이션 링크 HTML. v2 공통 페이지와 v1-style 상세 페이지가 함께 사용한다."""
+    prefix = rel_prefix(depth)
+    items: list[str] = []
+    for key, label, href, children in _NAV_ITEMS:
+        active = _nav_active_class(key, children, nav_active).strip()
+        active_attr = f" {active_class}" if active else ""
+        caret = ' <span class="nav-caret">▾</span>' if children else ""
+        link = (
+            f'<a class="nav-link{active_attr}" href="{escape(prefix + href)}">'
+            f'{escape(label)}{caret}</a>'
+        )
+        if children:
+            child_links: list[str] = []
+            for child_key, child_label, child_href in children:
+                child_active = f' class="{active_class}"' if child_key == nav_active else ""
+                child_links.append(
+                    f'<a href="{escape(prefix + child_href)}"{child_active}>'
+                    f'{escape(child_label)}</a>'
+                )
+            menu = "".join(child_links)
+            items.append(f'<div class="nav-item has-menu">{link}<div class="nav-menu">{menu}</div></div>')
+        else:
+            items.append(f'<div class="nav-item">{link}</div>')
+    return "".join(items)
+
+
+def site_header_html(depth: int, nav_active: str | None) -> str:
+    prefix = rel_prefix(depth)
+    return f"""
+<header class="site">
+  <div class="site-left">
+    <a class="brand" href="{escape(prefix + "index.html")}">
+      <span class="title">{escape(SITE_TITLE)}</span>
+      <span class="tagline"> · {escape(SITE_TAGLINE)}</span>
+    </a>
+    <nav>{nav_links_html(depth, nav_active)}</nav>
+  </div>
+</header>"""
+
+
 def render_page(
     *,
     title: str,
@@ -252,12 +338,6 @@ def render_page(
     generated_at: datetime | None = None,
 ) -> str:
     """공통 헤더/푸터로 감싼 HTML 페이지 문자열."""
-    prefix = rel_prefix(depth)
-    nav_html = "".join(
-        f'<a href="{escape(prefix + href)}"'
-        f'{" class=\"nav-active\"" if key == nav_active else ""}>{escape(label)}</a>'
-        for key, label, href in _NAV_ITEMS
-    )
     ts = (generated_at or datetime.now()).strftime("%Y-%m-%d %H:%M")
     return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -268,13 +348,7 @@ def render_page(
 <style>{CSS}</style>
 </head>
 <body>
-<header class="site">
-  <div>
-    <span class="title">{escape(SITE_TITLE)}</span>
-    <span class="tagline"> · {escape(SITE_TAGLINE)}</span>
-  </div>
-  <nav>{nav_html}</nav>
-</header>
+{site_header_html(depth, nav_active)}
 <main>
 {body_html}
 </main>

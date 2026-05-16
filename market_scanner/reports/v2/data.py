@@ -4,9 +4,12 @@
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from typing import Any
+
+from psycopg import sql
 
 
 @dataclass
@@ -72,6 +75,17 @@ class MacroQuote:
 
 
 @dataclass
+class DailyMacroItem:
+    """daily_macro 테이블의 지표 한 행 (금리·환율·변동성 등)."""
+
+    indicator_code: str
+    trade_date: date
+    value: float
+    prev_value: float | None
+    change_pct: float | None
+
+
+@dataclass
 class WatchlistStock:
     """워치리스트 패널용 종목 행."""
 
@@ -94,14 +108,94 @@ class WatchlistStock:
 
 @dataclass
 class MainPageData:
-    """메인 페이지에 필요한 모든 데이터."""
+    """메인 페이지 데이터. 매크로 지표와 글로벌 틱커 중심."""
 
+    generated_at: date
+    macro_quotes: list[MacroQuote] = field(default_factory=list)
+    daily_macro_items: list[DailyMacroItem] = field(default_factory=list)
+
+
+@dataclass
+class OverviewPageData:
+    """US종합·KR종합 페이지 데이터. 히트맵·리더십·Top종목·워치리스트."""
+
+    nav_key: str
+    label: str
     generated_at: date
     market_cards: list[MarketCard] = field(default_factory=list)
     top_stocks: list[TopStock] = field(default_factory=list)
     sector_cells: list[SectorCell] = field(default_factory=list)
-    macro_quotes: list[MacroQuote] = field(default_factory=list)
     watchlist_stocks: list[WatchlistStock] = field(default_factory=list)
+
+
+@dataclass
+class AdminColumn:
+    """관리 페이지의 테이블 컬럼 메타데이터."""
+
+    name: str
+    data_type: str
+    nullable: bool
+
+
+@dataclass
+class AdminTable:
+    """관리 페이지의 테이블 한 칸."""
+
+    name: str
+    count: int
+    order_column: str | None
+    columns: list[AdminColumn] = field(default_factory=list)
+    preview_columns: list[str] = field(default_factory=list)
+    rows: list[list[object]] = field(default_factory=list)
+
+
+@dataclass
+class AdminCoverageRow:
+    """운영 점검용 최신 적재/계산 커버리지 행."""
+
+    dataset: str
+    market_key: str | None
+    universe_key: str | None
+    source_provider: str | None
+    trade_date: date | None
+    row_count: int
+    instrument_count: int | None
+    target_count: int | None
+    coverage_pct: float | None
+    last_updated: datetime | None
+    extra_value: float | None = None
+
+
+@dataclass
+class AdminRunRow:
+    """최근 collection_runs 상태 행."""
+
+    run_type: str
+    market_key: str | None
+    universe_key: str | None
+    trade_date: date | None
+    source_provider: str | None
+    status: str
+    requested_count: int
+    success_count: int
+    failed_count: int
+    skipped_count: int
+    started_at: datetime | None
+    finished_at: datetime | None
+
+
+@dataclass
+class AdminPageData:
+    """v2 관리 페이지에 필요한 DB 테이블 스냅샷."""
+
+    generated_at: datetime
+    preview_limit: int
+    prices: list[AdminCoverageRow] = field(default_factory=list)
+    indicators: list[AdminCoverageRow] = field(default_factory=list)
+    scans: list[AdminCoverageRow] = field(default_factory=list)
+    macro: list[AdminCoverageRow] = field(default_factory=list)
+    runs: list[AdminRunRow] = field(default_factory=list)
+    tables: list[AdminTable] = field(default_factory=list)
 
 
 # 시장 페이지에서 다룰 전략 키와 라벨. scan_results 컬럼명과 1:1.
@@ -113,12 +207,48 @@ STRATEGY_KEYS: tuple[tuple[str, str], ...] = (
     ("trend_quality_score", "추세 품질"),
 )
 
+UNIVERSE_DETAIL_PAGES: dict[str, tuple[str, str]] = {
+    "nasdaq100": ("us", "NASDAQ100"),
+    "sp500": ("us", "S&P500"),
+    "dow30": ("us", "다우존스30"),
+    "kospi200": ("kospi", "KOSPI200"),
+    "kosdaq150": ("kosdaq", "KOSDAQ150"),
+}
+
+HIDDEN_ADMIN_COLUMNS: dict[str, set[str]] = {
+    "collection_runs": {"run_id"},
+    "daily_indicators": set(),
+    "daily_macro": set(),
+    "daily_prices": set(),
+    "generated_reports": set(),
+    "instrument_fundamentals": set(),
+    "instrument_news": set(),
+    "instruments": set(),
+    "market_snapshots": set(),
+    "markets": set(),
+    "news_items": set(),
+    "scan_results": set(),
+    "sector_snapshots": set(),
+    "universe_definitions": set(),
+    "universe_memberships": set(),
+}
+
+INSTRUMENT_JOIN_ADMIN_TABLES: set[str] = {
+    "daily_indicators",
+    "daily_prices",
+    "instrument_fundamentals",
+    "instrument_news",
+    "scan_results",
+    "universe_memberships",
+}
+
 
 @dataclass
 class MarketDetailData:
     """시장 서브페이지 한 장에 필요한 데이터."""
 
     market_key: str
+    nav_key: str
     label: str
     summary: MarketCard | None
     sectors: list[SectorCell] = field(default_factory=list)
@@ -138,14 +268,434 @@ def _to_float(value: Any) -> float | None:
         return None
 
 
-def load_market_cards(conn) -> list[MarketCard]:
+def _admin_cell_value(value: object) -> object:
+    if value is None:
+        return None
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, (dict, list)):
+        text = json.dumps(value, ensure_ascii=False, default=str)
+    else:
+        text = str(value)
+    return text if len(text) <= 600 else text[:597] + "..."
+
+
+def _admin_order_column(column_names: set[str]) -> str | None:
+    for candidate in (
+        "updated_at",
+        "created_at",
+        "collected_at",
+        "calculated_at",
+        "started_at",
+        "published_at",
+        "generated_at",
+        "trade_date",
+        "as_of_date",
+        "instrument_id",
+        "market_key",
+    ):
+        if candidate in column_names:
+            return candidate
+    return None
+
+
+def _admin_preview_query(
+    table_name: str,
+    column_names: set[str],
+    order_column: str | None,
+) -> sql.Composed:
+    if table_name in INSTRUMENT_JOIN_ADMIN_TABLES and "instrument_id" in column_names:
+        order_clause = (
+            sql.SQL(" ORDER BY t.{} DESC NULLS LAST").format(sql.Identifier(order_column))
+            if order_column
+            else sql.SQL("")
+        )
+        return sql.SQL(
+            "SELECT i.name_local, i.symbol, t.* FROM {} t "
+            "LEFT JOIN instruments i ON i.instrument_id = t.instrument_id{} LIMIT %s"
+        ).format(sql.Identifier(table_name), order_clause)
+    order_clause = (
+        sql.SQL(" ORDER BY {} DESC NULLS LAST").format(sql.Identifier(order_column))
+        if order_column
+        else sql.SQL("")
+    )
+    return sql.SQL("SELECT * FROM {}{} LIMIT %s").format(
+        sql.Identifier(table_name),
+        order_clause,
+    )
+
+
+def _coverage_pct(instrument_count: int | None, target_count: int | None) -> float | None:
+    if not instrument_count or not target_count:
+        return None
+    return instrument_count / target_count * 100.0
+
+
+def load_admin_price_coverage(conn) -> list[AdminCoverageRow]:
+    rows = conn.execute(
+        """
+        WITH current_members AS (
+            SELECT ud.market_key, um.universe_key, um.instrument_id
+            FROM universe_memberships um
+            JOIN universe_definitions ud ON ud.universe_key = um.universe_key
+            WHERE um.effective_to IS NULL
+        ),
+        targets AS (
+            SELECT market_key, universe_key, count(*)::int AS target_count
+            FROM current_members
+            GROUP BY market_key, universe_key
+        ),
+        latest AS (
+            SELECT cm.market_key, cm.universe_key, dp.source_provider, max(dp.trade_date) AS trade_date
+            FROM current_members cm
+            JOIN daily_prices dp ON dp.instrument_id = cm.instrument_id
+            GROUP BY cm.market_key, cm.universe_key, dp.source_provider
+        )
+        SELECT
+            l.market_key,
+            l.universe_key,
+            l.source_provider,
+            l.trade_date,
+            count(*)::int AS row_count,
+            count(DISTINCT dp.instrument_id)::int AS instrument_count,
+            t.target_count,
+            max(dp.collected_at) AS last_updated
+        FROM latest l
+        JOIN current_members cm
+          ON cm.market_key = l.market_key
+         AND cm.universe_key = l.universe_key
+        JOIN daily_prices dp
+          ON dp.instrument_id = cm.instrument_id
+         AND dp.trade_date = l.trade_date
+         AND dp.source_provider = l.source_provider
+        JOIN targets t
+          ON t.market_key = l.market_key
+         AND t.universe_key = l.universe_key
+        GROUP BY l.market_key, l.universe_key, l.source_provider, l.trade_date, t.target_count
+        ORDER BY l.market_key, l.universe_key, l.source_provider
+        """
+    ).fetchall()
+    return [
+        AdminCoverageRow(
+            dataset="daily_prices",
+            market_key=row[0],
+            universe_key=row[1],
+            source_provider=row[2],
+            trade_date=row[3],
+            row_count=int(row[4] or 0),
+            instrument_count=int(row[5] or 0),
+            target_count=int(row[6] or 0),
+            coverage_pct=_coverage_pct(int(row[5] or 0), int(row[6] or 0)),
+            last_updated=row[7],
+        )
+        for row in rows
+    ]
+
+
+def load_admin_indicator_coverage(conn) -> list[AdminCoverageRow]:
+    rows = conn.execute(
+        """
+        WITH current_members AS (
+            SELECT ud.market_key, um.universe_key, um.instrument_id
+            FROM universe_memberships um
+            JOIN universe_definitions ud ON ud.universe_key = um.universe_key
+            WHERE um.effective_to IS NULL
+        ),
+        targets AS (
+            SELECT market_key, universe_key, count(*)::int AS target_count
+            FROM current_members
+            GROUP BY market_key, universe_key
+        ),
+        latest AS (
+            SELECT cm.market_key, cm.universe_key, di.price_source_provider, max(di.trade_date) AS trade_date
+            FROM current_members cm
+            JOIN daily_indicators di ON di.instrument_id = cm.instrument_id
+            GROUP BY cm.market_key, cm.universe_key, di.price_source_provider
+        )
+        SELECT
+            l.market_key,
+            l.universe_key,
+            l.price_source_provider,
+            l.trade_date,
+            count(*)::int AS row_count,
+            count(DISTINCT di.instrument_id)::int AS instrument_count,
+            t.target_count,
+            max(di.calculated_at) AS last_updated
+        FROM latest l
+        JOIN current_members cm
+          ON cm.market_key = l.market_key
+         AND cm.universe_key = l.universe_key
+        JOIN daily_indicators di
+          ON di.instrument_id = cm.instrument_id
+         AND di.trade_date = l.trade_date
+         AND di.price_source_provider = l.price_source_provider
+        JOIN targets t
+          ON t.market_key = l.market_key
+         AND t.universe_key = l.universe_key
+        GROUP BY l.market_key, l.universe_key, l.price_source_provider, l.trade_date, t.target_count
+        ORDER BY l.market_key, l.universe_key, l.price_source_provider
+        """
+    ).fetchall()
+    return [
+        AdminCoverageRow(
+            dataset="daily_indicators",
+            market_key=row[0],
+            universe_key=row[1],
+            source_provider=row[2],
+            trade_date=row[3],
+            row_count=int(row[4] or 0),
+            instrument_count=int(row[5] or 0),
+            target_count=int(row[6] or 0),
+            coverage_pct=_coverage_pct(int(row[5] or 0), int(row[6] or 0)),
+            last_updated=row[7],
+        )
+        for row in rows
+    ]
+
+
+def load_admin_scan_coverage(conn) -> list[AdminCoverageRow]:
+    rows = conn.execute(
+        """
+        WITH current_targets AS (
+            SELECT universe_key, count(*)::int AS target_count
+            FROM universe_memberships
+            WHERE effective_to IS NULL
+            GROUP BY universe_key
+        ),
+        latest AS (
+            SELECT market_key, universe_key, max(trade_date) AS trade_date
+            FROM scan_results
+            GROUP BY market_key, universe_key
+        )
+        SELECT
+            l.market_key,
+            l.universe_key,
+            l.trade_date,
+            count(*)::int AS row_count,
+            count(DISTINCT sr.instrument_id)::int AS instrument_count,
+            ct.target_count,
+            max(sr.created_at) AS last_updated,
+            avg(sr.composite_score)::float AS avg_score
+        FROM latest l
+        JOIN scan_results sr
+          ON sr.market_key = l.market_key
+         AND sr.universe_key IS NOT DISTINCT FROM l.universe_key
+         AND sr.trade_date = l.trade_date
+        LEFT JOIN current_targets ct ON ct.universe_key = l.universe_key
+        GROUP BY l.market_key, l.universe_key, l.trade_date, ct.target_count
+        ORDER BY l.market_key, l.universe_key
+        """
+    ).fetchall()
+    return [
+        AdminCoverageRow(
+            dataset="scan_results",
+            market_key=row[0],
+            universe_key=row[1],
+            source_provider=None,
+            trade_date=row[2],
+            row_count=int(row[3] or 0),
+            instrument_count=int(row[4] or 0),
+            target_count=int(row[5]) if row[5] is not None else None,
+            coverage_pct=_coverage_pct(int(row[4] or 0), int(row[5]) if row[5] is not None else None),
+            last_updated=row[6],
+            extra_value=_to_float(row[7]),
+        )
+        for row in rows
+    ]
+
+
+def load_admin_macro_coverage(conn) -> list[AdminCoverageRow]:
+    rows = conn.execute(
+        """
+        WITH latest AS (
+            SELECT source_provider, max(trade_date) AS trade_date
+            FROM daily_macro
+            GROUP BY source_provider
+        )
+        SELECT
+            l.source_provider,
+            l.trade_date,
+            count(*)::int AS row_count,
+            max(dm.collected_at) AS last_updated
+        FROM latest l
+        JOIN daily_macro dm
+          ON dm.source_provider = l.source_provider
+         AND dm.trade_date = l.trade_date
+        GROUP BY l.source_provider, l.trade_date
+        ORDER BY l.source_provider
+        """
+    ).fetchall()
+    return [
+        AdminCoverageRow(
+            dataset="daily_macro",
+            market_key=None,
+            universe_key=None,
+            source_provider=row[0],
+            trade_date=row[1],
+            row_count=int(row[2] or 0),
+            instrument_count=None,
+            target_count=None,
+            coverage_pct=None,
+            last_updated=row[3],
+        )
+        for row in rows
+    ]
+
+
+def load_admin_recent_runs(conn, limit: int = 20) -> list[AdminRunRow]:
+    rows = conn.execute(
+        """
+        SELECT
+            run_type, market_key, universe_key, trade_date, source_provider, status,
+            requested_count, success_count, failed_count, skipped_count,
+            started_at, finished_at
+        FROM collection_runs
+        ORDER BY started_at DESC
+        LIMIT %s
+        """,
+        (limit,),
+    ).fetchall()
+    return [
+        AdminRunRow(
+            run_type=row[0],
+            market_key=row[1],
+            universe_key=row[2],
+            trade_date=row[3],
+            source_provider=row[4],
+            status=row[5],
+            requested_count=int(row[6] or 0),
+            success_count=int(row[7] or 0),
+            failed_count=int(row[8] or 0),
+            skipped_count=int(row[9] or 0),
+            started_at=row[10],
+            finished_at=row[11],
+        )
+        for row in rows
+    ]
+
+
+def load_admin_page_data(conn, limit: int = 50) -> AdminPageData:
+    """PostgreSQL public 스키마의 테이블 메타데이터와 최근 샘플 행을 읽는다."""
+    table_rows = conn.execute(
+        """
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+          AND table_type = 'BASE TABLE'
+        ORDER BY table_name
+        """
+    ).fetchall()
+
+    tables: list[AdminTable] = []
+    for table_row in table_rows:
+        table_name = table_row[0]
+        column_meta_rows = conn.execute(
+            """
+            SELECT column_name, data_type, is_nullable
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = %s
+            ORDER BY ordinal_position
+            """,
+            (table_name,),
+        ).fetchall()
+        column_names = {row[0] for row in column_meta_rows}
+        order_column = _admin_order_column(column_names)
+        hidden_columns = HIDDEN_ADMIN_COLUMNS.get(table_name, set())
+        count = int(
+            conn.execute(
+                sql.SQL("SELECT count(*) FROM {}").format(sql.Identifier(table_name))
+            ).fetchone()[0]
+        )
+
+        preview_cursor = conn.execute(_admin_preview_query(table_name, column_names, order_column), (limit,))
+        all_preview_columns = [
+            description.name if hasattr(description, "name") else description[0]
+            for description in preview_cursor.description or []
+        ]
+        visible_indexes = [
+            index
+            for index, column in enumerate(all_preview_columns)
+            if column not in hidden_columns
+        ]
+        preview_columns = [all_preview_columns[index] for index in visible_indexes]
+        rows = [
+            [_admin_cell_value(row[index]) for index in visible_indexes]
+            for row in preview_cursor.fetchall()
+        ]
+        joined_columns = (
+            [
+                AdminColumn(name="name_local", data_type="text", nullable=True),
+                AdminColumn(name="symbol", data_type="text", nullable=True),
+            ]
+            if table_name in INSTRUMENT_JOIN_ADMIN_TABLES and "instrument_id" in column_names
+            else []
+        )
+        visible_columns = [
+            column for column in joined_columns
+            if column.name not in hidden_columns
+        ] + [
+            AdminColumn(name=row[0], data_type=row[1], nullable=row[2] == "YES")
+            for row in column_meta_rows
+            if row[0] not in hidden_columns
+        ]
+
+        tables.append(
+            AdminTable(
+                name=table_name,
+                count=count,
+                order_column=order_column,
+                columns=visible_columns,
+                preview_columns=preview_columns,
+                rows=rows,
+            )
+        )
+
+    return AdminPageData(
+        generated_at=datetime.now(),
+        preview_limit=limit,
+        prices=load_admin_price_coverage(conn),
+        indicators=load_admin_indicator_coverage(conn),
+        scans=load_admin_scan_coverage(conn),
+        macro=load_admin_macro_coverage(conn),
+        runs=load_admin_recent_runs(conn),
+        tables=tables,
+    )
+
+
+def load_daily_macro_items(conn) -> list[DailyMacroItem]:
+    """daily_macro 테이블에서 각 indicator_code 의 최신 행을 반환."""
+    rows = conn.execute(
+        """
+        SELECT DISTINCT ON (indicator_code)
+            indicator_code, trade_date, value, prev_value, change_pct
+        FROM daily_macro
+        ORDER BY indicator_code, trade_date DESC
+        """
+    ).fetchall()
+    return [
+        DailyMacroItem(
+            indicator_code=r[0],
+            trade_date=r[1],
+            value=float(r[2]),
+            prev_value=_to_float(r[3]),
+            change_pct=_to_float(r[4]),
+        )
+        for r in rows
+    ]
+
+
+def load_market_cards(conn, market_keys: list[str] | None = None) -> list[MarketCard]:
     """활성 시장의 최신 market_snapshots 카드.
 
     같은 market에서 universe가 여러 개면 market_key == universe_key 인 행을 우선,
     없으면 trade_date 최신/total_count 최대인 행을 고른다.
+    market_keys 가 주어지면 해당 시장만 반환한다.
     """
+    mk_filter = "AND ms.market_key = ANY(%s)" if market_keys is not None else ""
+    mk_params = (market_keys,) if market_keys is not None else ()
     rows = conn.execute(
-        """
+        f"""
         WITH latest AS (
             SELECT
                 ms.*,
@@ -159,7 +709,7 @@ def load_market_cards(conn) -> list[MarketCard]:
                 ) AS rn
             FROM market_snapshots ms
             JOIN markets m ON m.market_key = ms.market_key
-            WHERE m.is_active = TRUE
+            WHERE m.is_active = TRUE {mk_filter}
         )
         SELECT
             market_key, market_label, trade_date, universe_key,
@@ -169,7 +719,8 @@ def load_market_cards(conn) -> list[MarketCard]:
         FROM latest
         WHERE rn = 1
         ORDER BY market_key
-        """
+        """,
+        mk_params,
     ).fetchall()
 
     return [
@@ -193,15 +744,17 @@ def load_market_cards(conn) -> list[MarketCard]:
     ]
 
 
-def load_top_stocks(conn, limit: int = 30) -> list[TopStock]:
+def load_top_stocks(
+    conn, limit: int = 30, market_keys: list[str] | None = None
+) -> list[TopStock]:
     """시장 통합 composite_score 상위 N. 가장 최신 trade_date 기준.
 
-    market_key 별로 최신 trade_date 의 scan_results 에서 가져온 뒤,
-    composite_score 내림차순으로 정렬. 같은 (instrument, trade_date) 에 여러
-    run 결과가 있으면 가장 최근 created_at 행만 사용한다.
+    market_keys 가 주어지면 해당 시장만 대상으로 한다.
     """
+    mk_filter = "AND sr.market_key = ANY(%s)" if market_keys is not None else ""
+    params = (*((market_keys,) if market_keys is not None else ()), limit)
     rows = conn.execute(
-        """
+        f"""
         WITH latest_dates AS (
             SELECT market_key, MAX(trade_date) AS trade_date
             FROM scan_results
@@ -216,6 +769,7 @@ def load_top_stocks(conn, limit: int = 30) -> list[TopStock]:
             JOIN latest_dates ld
               ON ld.market_key = sr.market_key
              AND ld.trade_date = sr.trade_date
+            WHERE TRUE {mk_filter}
             ORDER BY sr.instrument_id, sr.trade_date, sr.created_at DESC
         )
         SELECT
@@ -239,7 +793,7 @@ def load_top_stocks(conn, limit: int = 30) -> list[TopStock]:
         ORDER BY d.composite_score DESC
         LIMIT %s
         """,
-        (limit,),
+        params,
     ).fetchall()
 
     return [
@@ -261,10 +815,17 @@ def load_top_stocks(conn, limit: int = 30) -> list[TopStock]:
     ]
 
 
-def load_sector_cells(conn, per_market_top: int = 10) -> list[SectorCell]:
-    """시장별 sector_snapshots 상위 N (instrument_count 기준)."""
+def load_sector_cells(
+    conn, per_market_top: int = 10, market_keys: list[str] | None = None
+) -> list[SectorCell]:
+    """시장별 sector_snapshots 상위 N (instrument_count 기준).
+
+    market_keys 가 주어지면 해당 시장만 반환한다.
+    """
+    mk_filter = "AND ss.market_key = ANY(%s)" if market_keys is not None else ""
+    params = (*((market_keys,) if market_keys is not None else ()), per_market_top)
     rows = conn.execute(
-        """
+        f"""
         WITH ranked AS (
             SELECT
                 ss.market_key,
@@ -278,7 +839,7 @@ def load_sector_cells(conn, per_market_top: int = 10) -> list[SectorCell]:
                 ) AS rn
             FROM sector_snapshots ss
             JOIN markets m ON m.market_key = ss.market_key
-            WHERE m.is_active = TRUE
+            WHERE m.is_active = TRUE {mk_filter}
               AND (ss.market_key, ss.trade_date) IN (
                   SELECT market_key, MAX(trade_date)
                   FROM sector_snapshots
@@ -293,7 +854,7 @@ def load_sector_cells(conn, per_market_top: int = 10) -> list[SectorCell]:
         WHERE rn <= %s
         ORDER BY market_key, rn
         """,
-        (per_market_top,),
+        params,
     ).fetchall()
 
     return [
@@ -372,10 +933,17 @@ def load_macro_quotes(conn) -> list[MacroQuote]:
     ]
 
 
-def load_watchlist_stocks(conn, per_panel: int = 5) -> list[WatchlistStock]:
-    """6개 워치리스트 패널용 종목을 한 번에 로드."""
+def load_watchlist_stocks(
+    conn, per_panel: int = 5, market_keys: list[str] | None = None
+) -> list[WatchlistStock]:
+    """6개 워치리스트 패널용 종목을 한 번에 로드.
+
+    market_keys 가 주어지면 해당 시장만 대상으로 한다.
+    """
+    mk_filter = "AND sr.market_key = ANY(%s)" if market_keys is not None else ""
+    mk_params = (market_keys,) if market_keys is not None else ()
     rows = conn.execute(
-        """
+        f"""
         WITH latest_dates AS (
             SELECT market_key, MAX(trade_date) AS trade_date
             FROM scan_results GROUP BY market_key
@@ -411,9 +979,10 @@ def load_watchlist_stocks(conn, per_panel: int = 5) -> list[WatchlistStock]:
             WHERE instrument_id = sr.instrument_id AND trade_date = sr.trade_date
             ORDER BY source_provider LIMIT 1
         ) dp ON TRUE
-        WHERE m.is_active = TRUE
+        WHERE m.is_active = TRUE {mk_filter}
         ORDER BY sr.instrument_id, sr.created_at DESC
-        """
+        """,
+        mk_params,
     ).fetchall()
 
     pool: list[dict] = [
@@ -467,22 +1036,62 @@ def load_watchlist_stocks(conn, per_panel: int = 5) -> list[WatchlistStock]:
     return result
 
 
-def load_main_page_data(conn, top_n: int = 30, sector_per_market: int = 10) -> MainPageData:
-    """메인 페이지에 필요한 섹션 한 번에 로드."""
-    cards = load_market_cards(conn)
-    generated_at = max((c.trade_date for c in cards), default=date.today())
+def load_main_page_data(conn) -> MainPageData:
+    """메인 페이지 데이터 로드. 매크로 지표와 글로벌 틱커만 포함."""
+    macro_quotes = load_macro_quotes(conn)
+    daily_macro_items = load_daily_macro_items(conn)
+    generated_at = max(
+        (q.trade_date for q in macro_quotes),
+        default=date.today(),
+    )
     return MainPageData(
         generated_at=generated_at,
-        market_cards=cards,
-        top_stocks=load_top_stocks(conn, top_n),
-        sector_cells=load_sector_cells(conn, sector_per_market),
-        macro_quotes=load_macro_quotes(conn),
-        watchlist_stocks=load_watchlist_stocks(conn),
+        macro_quotes=macro_quotes,
+        daily_macro_items=daily_macro_items,
     )
 
 
-def load_market_summary(conn, market_key: str) -> MarketCard | None:
+def load_overview_data(
+    conn,
+    market_keys: list[str],
+    label: str,
+    nav_key: str,
+    *,
+    top_n: int = 30,
+    sector_per_market: int = 10,
+) -> OverviewPageData:
+    """US종합·KR종합 등 시장 묶음 개요 페이지 데이터."""
+    cards = load_market_cards(conn, market_keys=market_keys)
+    generated_at = max((c.trade_date for c in cards), default=date.today())
+    return OverviewPageData(
+        nav_key=nav_key,
+        label=label,
+        generated_at=generated_at,
+        market_cards=cards,
+        top_stocks=load_top_stocks(conn, top_n, market_keys=market_keys),
+        sector_cells=load_sector_cells(conn, sector_per_market, market_keys=market_keys),
+        watchlist_stocks=load_watchlist_stocks(conn, market_keys=market_keys),
+    )
+
+
+def load_us_all_data(conn) -> OverviewPageData:
+    """US종합 페이지 데이터 (us 시장)."""
+    return load_overview_data(conn, ["us"], "US종합", "us-all")
+
+
+def load_kr_all_data(conn) -> OverviewPageData:
+    """KR종합 페이지 데이터 (kospi + kosdaq)."""
+    return load_overview_data(conn, ["kospi", "kosdaq"], "KR종합", "kr-all")
+
+
+def load_market_summary(
+    conn,
+    market_key: str,
+    universe_key: str | None = None,
+    label: str | None = None,
+) -> MarketCard | None:
     """단일 시장의 최신 market_snapshots → MarketCard. 없으면 None."""
+    effective_universe = universe_key or market_key
     row = conn.execute(
         """
         SELECT
@@ -493,19 +1102,19 @@ def load_market_summary(conn, market_key: str) -> MarketCard | None:
         FROM market_snapshots ms
         JOIN markets m ON m.market_key = ms.market_key
         WHERE ms.market_key = %s
+          AND ms.universe_key = %s
         ORDER BY
             ms.trade_date DESC,
-            CASE WHEN ms.universe_key = ms.market_key THEN 0 ELSE 1 END,
             ms.total_count DESC
         LIMIT 1
         """,
-        (market_key,),
+        (market_key, effective_universe),
     ).fetchone()
     if not row:
         return None
     return MarketCard(
         market_key=row[0],
-        label=row[1],
+        label=label or row[1],
         trade_date=row[2],
         universe_key=row[3],
         total_count=row[4] or 0,
@@ -521,23 +1130,24 @@ def load_market_summary(conn, market_key: str) -> MarketCard | None:
     )
 
 
-def load_market_sectors(conn, market_key: str) -> list[SectorCell]:
+def load_market_sectors(conn, market_key: str, universe_key: str | None = None) -> list[SectorCell]:
     """해당 시장의 최신 sector_snapshots 전부."""
+    effective_universe = universe_key or market_key
     rows = conn.execute(
         """
         SELECT sector, instrument_count, avg_change_pct, avg_composite_score
         FROM sector_snapshots
         WHERE market_key = %s
-          AND universe_key = market_key
+          AND universe_key = %s
           AND trade_date = (
               SELECT MAX(trade_date) FROM sector_snapshots
-              WHERE market_key = %s AND universe_key = market_key
+              WHERE market_key = %s AND universe_key = %s
           )
           AND sector IS NOT NULL
           AND sector <> ''
         ORDER BY instrument_count DESC
         """,
-        (market_key, market_key),
+        (market_key, effective_universe, market_key, effective_universe),
     ).fetchall()
     return [
         SectorCell(
@@ -551,24 +1161,35 @@ def load_market_sectors(conn, market_key: str) -> list[SectorCell]:
     ]
 
 
-def load_market_top_stocks(conn, market_key: str, limit: int = 50) -> list[TopStock]:
+def load_market_top_stocks(
+    conn,
+    market_key: str,
+    limit: int = 50,
+    universe_key: str | None = None,
+    label: str | None = None,
+) -> list[TopStock]:
     """해당 시장의 composite_score 상위 N."""
+    effective_universe = universe_key or market_key
     rows = conn.execute(
         """
         WITH latest AS (
-            SELECT MAX(trade_date) AS trade_date FROM scan_results WHERE market_key = %s
+            SELECT MAX(trade_date) AS trade_date
+            FROM scan_results
+            WHERE market_key = %s AND universe_key = %s
         ),
         dedup AS (
             SELECT DISTINCT ON (sr.instrument_id, sr.trade_date)
                 sr.instrument_id, sr.rank_no, sr.composite_score, sr.change_pct,
                 sr.close_price, sr.rsi14, sr.setup_label
             FROM scan_results sr, latest l
-            WHERE sr.market_key = %s AND sr.trade_date = l.trade_date
+            WHERE sr.market_key = %s
+              AND sr.universe_key = %s
+              AND sr.trade_date = l.trade_date
             ORDER BY sr.instrument_id, sr.trade_date, sr.created_at DESC
         )
         SELECT
             %s::TEXT,
-            m.label,
+            %s::TEXT,
             d.rank_no,
             i.symbol,
             COALESCE(i.display_symbol, i.symbol),
@@ -581,12 +1202,11 @@ def load_market_top_stocks(conn, market_key: str, limit: int = 50) -> list[TopSt
             d.setup_label
         FROM dedup d
         JOIN instruments i ON i.instrument_id = d.instrument_id
-        JOIN markets m ON m.market_key = %s
         WHERE d.composite_score IS NOT NULL
         ORDER BY d.composite_score DESC
         LIMIT %s
         """,
-        (market_key, market_key, market_key, market_key, limit),
+        (market_key, effective_universe, market_key, effective_universe, market_key, label or market_key, limit),
     ).fetchall()
     return [
         TopStock(
@@ -608,40 +1228,52 @@ def load_market_top_stocks(conn, market_key: str, limit: int = 50) -> list[TopSt
 
 
 def load_market_strategy_top(
-    conn, market_key: str, score_column: str, limit: int = 5
+    conn,
+    market_key: str,
+    score_column: str,
+    limit: int = 5,
+    universe_key: str | None = None,
+    label: str | None = None,
 ) -> list[TopStock]:
     """전략 점수 컬럼 상위 N. score_column 은 STRATEGY_KEYS 중 하나여야 한다."""
     valid = {key for key, _ in STRATEGY_KEYS}
     if score_column not in valid:
         raise ValueError(f"Unknown strategy score column: {score_column}")
+    effective_universe = universe_key or market_key
 
     # f-string 으로 컬럼명 삽입 — 화이트리스트 검증 후라 안전.
     sql = f"""
         WITH latest AS (
-            SELECT MAX(trade_date) AS trade_date FROM scan_results WHERE market_key = %s
+            SELECT MAX(trade_date) AS trade_date
+            FROM scan_results
+            WHERE market_key = %s AND universe_key = %s
         ),
         dedup AS (
             SELECT DISTINCT ON (sr.instrument_id, sr.trade_date)
                 sr.instrument_id, sr.rank_no, sr.composite_score, sr.change_pct,
                 sr.close_price, sr.rsi14, sr.setup_label, sr.{score_column} AS score
             FROM scan_results sr, latest l
-            WHERE sr.market_key = %s AND sr.trade_date = l.trade_date
+            WHERE sr.market_key = %s
+              AND sr.universe_key = %s
+              AND sr.trade_date = l.trade_date
             ORDER BY sr.instrument_id, sr.trade_date, sr.created_at DESC
         )
         SELECT
-            %s::TEXT, m.label, d.rank_no, i.symbol,
+            %s::TEXT, %s::TEXT, d.rank_no, i.symbol,
             COALESCE(i.display_symbol, i.symbol),
             i.name_local, i.sector,
             d.score AS strategy_score,
             d.change_pct, d.close_price, d.rsi14, d.setup_label
         FROM dedup d
         JOIN instruments i ON i.instrument_id = d.instrument_id
-        JOIN markets m ON m.market_key = %s
         WHERE d.score IS NOT NULL
         ORDER BY d.score DESC
         LIMIT %s
     """
-    rows = conn.execute(sql, (market_key, market_key, market_key, market_key, limit)).fetchall()
+    rows = conn.execute(
+        sql,
+        (market_key, effective_universe, market_key, effective_universe, market_key, label or market_key, limit),
+    ).fetchall()
     # 전략 점수는 composite_score 자리에 담아 표시 (UI 가 단일 점수 컬럼만 쓰므로 재사용)
     return [
         TopStock(
@@ -662,12 +1294,20 @@ def load_market_strategy_top(
     ]
 
 
-def load_ma_near_counts(conn, market_key: str, threshold_pct: float = 5.0) -> dict[str, int]:
+def load_ma_near_counts(
+    conn,
+    market_key: str,
+    threshold_pct: float = 5.0,
+    universe_key: str | None = None,
+) -> dict[str, int]:
     """MA 근접 종목 수 (60/120/240일, ±threshold_pct% 이내)."""
+    effective_universe = universe_key or market_key
     row = conn.execute(
         """
         WITH latest AS (
-            SELECT MAX(trade_date) AS trade_date FROM scan_results WHERE market_key = %s
+            SELECT MAX(trade_date) AS trade_date
+            FROM scan_results
+            WHERE market_key = %s AND universe_key = %s
         )
         SELECT
             COUNT(CASE WHEN ABS(di.diff_60_pct)  <= %s THEN 1 END),
@@ -678,9 +1318,18 @@ def load_ma_near_counts(conn, market_key: str, threshold_pct: float = 5.0) -> di
             ON di.instrument_id = sr.instrument_id
            AND di.trade_date = sr.trade_date
         WHERE sr.market_key = %s
+          AND sr.universe_key = %s
           AND sr.trade_date = (SELECT trade_date FROM latest)
         """,
-        (market_key, threshold_pct, threshold_pct, threshold_pct, market_key),
+        (
+            market_key,
+            effective_universe,
+            threshold_pct,
+            threshold_pct,
+            threshold_pct,
+            market_key,
+            effective_universe,
+        ),
     ).fetchone()
     if not row:
         return {"60": 0, "120": 0, "240": 0}
@@ -691,23 +1340,29 @@ def load_market_detail_data(
     conn,
     market_key: str,
     *,
+    universe_key: str | None = None,
+    label: str | None = None,
+    nav_key: str | None = None,
     top_n: int = 50,
     strategy_n: int = 5,
 ) -> MarketDetailData:
     """시장 서브페이지에 필요한 데이터 한 번에 로드."""
-    summary = load_market_summary(conn, market_key)
-    label = summary.label if summary else market_key
+    effective_universe = universe_key or market_key
+    display_label = label or UNIVERSE_DETAIL_PAGES.get(effective_universe, ("", effective_universe))[1]
+    summary = load_market_summary(conn, market_key, effective_universe, display_label)
+    display_label = summary.label if summary else display_label
     return MarketDetailData(
         market_key=market_key,
-        label=label,
+        nav_key=nav_key or effective_universe,
+        label=display_label,
         summary=summary,
-        sectors=load_market_sectors(conn, market_key),
-        top_stocks=load_market_top_stocks(conn, market_key, top_n),
+        sectors=load_market_sectors(conn, market_key, effective_universe),
+        top_stocks=load_market_top_stocks(conn, market_key, top_n, effective_universe, display_label),
         strategy_top={
-            col: load_market_strategy_top(conn, market_key, col, strategy_n)
+            col: load_market_strategy_top(conn, market_key, col, strategy_n, effective_universe, display_label)
             for col, _ in STRATEGY_KEYS
         },
-        ma_near_counts=load_ma_near_counts(conn, market_key),
+        ma_near_counts=load_ma_near_counts(conn, market_key, universe_key=effective_universe),
     )
 
 

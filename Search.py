@@ -156,7 +156,7 @@ def _build_parser() -> argparse.ArgumentParser:
     site_p.set_defaults(open_browser=None)
 
     site_v2_p = sub.add_parser("site-v2", help="Build v2 static site pages.")
-    site_v2_p.add_argument("target", choices=["main", "market", "sector", "all"])
+    site_v2_p.add_argument("target", choices=["main", "market", "sector", "admin", "all"])
     site_v2_p.add_argument("market", nargs="?")
     site_v2_p.add_argument("sector", nargs="?")
     site_v2_p.add_argument("--no-open", action="store_true")
@@ -308,16 +308,30 @@ def main() -> None:
                 primary_path = None
                 if args.target == "main":
                     primary_path = v2_build.build_main(conn)
+                elif args.target == "admin":
+                    primary_path = v2_build.build_admin(conn)
                 elif args.target == "market":
                     if not args.market:
                         raise ValueError("site-v2 market requires a market key")
-                    primary_path = v2_build.build_market(conn, args.market)
+                    if args.market == "us-all":
+                        primary_path = v2_build.build_us_all(conn)
+                    elif args.market == "kr-all":
+                        primary_path = v2_build.build_kr_all(conn)
+                    elif args.market in v2_data.UNIVERSE_DETAIL_PAGES:
+                        primary_path = v2_build.build_universe_market(conn, args.market)
+                    else:
+                        primary_path = v2_build.build_market(conn, args.market)
                 elif args.target == "sector":
                     if not args.market or not args.sector:
                         raise ValueError("site-v2 sector requires a market key and sector name")
                     primary_path = v2_build.build_sector(conn, args.market, args.sector)
                 elif args.target == "all":
                     primary_path = v2_build.build_main(conn)
+                    v2_build.build_admin(conn)
+                    v2_build.build_us_all(conn)
+                    v2_build.build_kr_all(conn)
+                    for universe_key in v2_data.UNIVERSE_DETAIL_PAGES:
+                        v2_build.build_universe_market(conn, universe_key)
                     for market_key in v2_data.list_buildable_markets(conn):
                         v2_build.build_market(conn, market_key)
 

@@ -199,6 +199,6 @@ def render(data: MarketDetailData) -> str:
         title=data.label,
         depth=2,
         body_html=body,
-        nav_active=data.market_key,
+        nav_active=data.nav_key,
         generated_at=generated_at,
     )

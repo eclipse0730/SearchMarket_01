@@ -11,4 +11,4 @@ market_scanner/assets/.yfinance_cache/
 .postgres-data/
 data/
 analysis/
-reports/
+/reports/

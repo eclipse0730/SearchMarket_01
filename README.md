@@ -25,6 +25,7 @@ uv run python Search.py init
 `refresh-master`는 가격이나 지표를 수집하지 않습니다. 시장별 종목 목록을 받아 `instruments`, `universe_memberships`, `collection_runs`만 갱신합니다.
 ```bash
 uv run python Search.py refresh us --universe sp500
+uv run python Search.py refresh us --universe dow30
 uv run python Search.py refresh kospi --universe kospi200
 uv run python Search.py refresh kosdaq --universe kosdaq150
 uv run python Search.py refresh global-indices
@@ -126,13 +127,17 @@ v2
 # 메인 페이지만
 uv run python Search.py site-v2 main --no-open
 
-# 특정 마켓 페이지 (+ 해당 시장의 섹터 서브페이지 자동 생성)
+# 특정 마켓 또는 유니버스 페이지
 uv run python Search.py site-v2 market kospi --no-open
+uv run python Search.py site-v2 market sp500 --no-open
 
 # 특정 섹터 페이지만
 uv run python Search.py site-v2 sector kospi 전기전자 --no-open
 
-# 전체 (메인 + 모든 마켓 + 모든 섹터)
+# 관리 페이지만
+uv run python Search.py site-v2 admin --no-open
+
+# 전체 (메인 + 관리 + US/KR 종합 + 주요 유니버스 + 모든 마켓)
 uv run python Search.py site-v2 all --no-open
 ```
 
@@ -202,12 +207,12 @@ uv run python Search.py site --no-open
 
 대시보드는 DB의 `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 종합 시장 점수, 시장 체력, 매크로 리스크, 섹터/테마 히트맵, 오늘의 핵심 후보, 시장별 스냅샷, 섹터 리더십, 뉴스 브리핑을 표시합니다.
 
-상단 `관리` 탭은 빌드 시점의 PostgreSQL 테이블 목록, 행 수, 컬럼, 최근 데이터 샘플을 보여주는 정적 읽기 전용 페이지입니다. 데이터 수정/삭제는 DB 또는 CLI에서 처리합니다.
+상단 `관리` 탭은 빌드 시점의 PostgreSQL 테이블 목록, 행 수, 컬럼, 최근 데이터 샘플을 보여주는 정적 읽기 전용 페이지입니다. v2에서는 `site/v2/admin/index.html`로 생성됩니다. 데이터 수정/삭제는 DB 또는 CLI에서 처리합니다.
 
 ## 데이터 정책
 
 - `instruments`: 종목마스터의 우선 원천입니다.
-- `universe_memberships`: `nasdaq`, `nyse`, `amex`(거래소 전체), `nasdaq100`, `sp500`(지수), `kospi100`, `kospi200`, `kosdaq150` 같은 분석/필터 단위 멤버십입니다. US는 `--market us` 한 번으로 5개 universe가 동시 갱신됩니다.
+- `universe_memberships`: `nasdaq`, `nyse`, `amex`(거래소 전체), `nasdaq100`, `sp500`, `dow30`(지수), `kospi100`, `kospi200`, `kosdaq150` 같은 분석/필터 단위 멤버십입니다. US는 `--market us` 한 번으로 6개 universe가 동시 갱신됩니다.
 - `market_scanner/assets/instruments.json`: DB가 비어 있거나 연결되지 않을 때 쓰는 seed/fallback입니다. 스캔 실행은 이 JSON을 자동 갱신하지 않습니다.
 - `market_scanner/assets/global_indices_meta.json`, `commodities_meta.json`: 글로벌 지수·원자재는 FDR 자동 발견이 불가능하므로 JSON이 심볼 정의 원본입니다. 새 심볼 추가 시 JSON 편집 후 `Search.py refresh global-indices` 또는 `Search.py refresh commodities`로 DB에 반영합니다. 현재 글로벌 지수는 22개입니다.
 - `market_scanner/assets/sector_etfs_meta.json`: 섹터 ETF 유니버스의 원본입니다. `XLK`, `XLV`, `XLF`, `XLY`, `XLP`, `XLI`, `XLE`, `XLU`, `XLB`, `XLC`, `XLRE`를 기본 GICS 섹터 프록시로 사용하고, `VNQ`는 리츠 보조 프록시로 함께 수집합니다.

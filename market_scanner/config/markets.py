@@ -22,6 +22,7 @@ _INVESTING_SEARCH_URL = f"{_INVESTING_BASE_URL}/search"
 _INVESTING_CACHE_PATH = ASSET_DIR / "investing_url_cache.json"
 _SP500_SOURCE_URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
 _NASDAQ100_SOURCE_URL = "https://en.wikipedia.org/wiki/Nasdaq-100"
+_DOW30_SOURCE_URL = "https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average"
 _NAVER_MARKET_SUM_URL = "https://finance.naver.com/sise/sise_market_sum.naver"
 _NAVER_MARKET_SUM_MAX_PAGES = 90
 _INVESTING_SEARCH_HEADERS = {
@@ -642,6 +643,26 @@ def _sp500_universe() -> list[str]:
     return _fetch_sp500_tickers()
 
 
+def _dow30_universe() -> list[str]:
+    try:
+        import pandas as pd
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; stock-scanner/1.0)"}
+        resp = requests.get(_DOW30_SOURCE_URL, headers=headers, timeout=15)
+        resp.raise_for_status()
+        tables = pd.read_html(io.StringIO(resp.text))
+        for table in tables:
+            if "Symbol" not in table.columns or len(table) != 30:
+                continue
+            tickers = table["Symbol"].astype(str).str.replace(".", "-", regex=False).tolist()
+            print(f"  Dow 30 (Wikipedia): loaded {len(tickers)} tickers")
+            return tickers
+        print("  Dow 30 load failed: no suitable table found")
+        return []
+    except Exception as exc:
+        print(f"  Dow 30 load failed: {exc}")
+        return []
+
+
 def _nasdaq_universe() -> list[str]:
     return _fetch_fdr_us_symbols("NASDAQ", "NASDAQ")
 
@@ -883,6 +904,7 @@ REPRESENTATIVE_UNIVERSE_LOADERS: dict[str, UniverseLoader] = {
     "amex": _amex_universe,
     "nasdaq100": _nasdaq100_universe,
     "sp500": _sp500_universe,
+    "dow30": _dow30_universe,
     "kospi100": _kospi100_universe,
     "kospi200": _kospi200_universe,
     "kosdaq150": _kosdaq150_universe,

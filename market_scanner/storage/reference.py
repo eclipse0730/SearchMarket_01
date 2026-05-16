@@ -66,6 +66,7 @@ def seed_reference_data(conn: psycopg.Connection) -> None:
         "amex": ("us", "AMEX", "All AMEX-listed stocks."),
         "nasdaq100": ("us", "NASDAQ 100", "NASDAQ 100 component universe."),
         "sp500": ("us", "S&P 500", "S&P 500 component universe."),
+        "dow30": ("us", "Dow Jones 30", "Dow Jones Industrial Average component universe."),
         "kospi100": ("kospi", "KOSPI 100", "KOSPI 100 component universe."),
         "kospi200": ("kospi", "KOSPI 200", "KOSPI 200 component universe."),
         "kosdaq150": ("kosdaq", "KOSDAQ 150", "KOSDAQ 150 component universe."),

@@ -26,7 +26,7 @@ from market_scanner.storage.universe import (
 REFRESH_LOG_SAMPLE_LIMIT = 30
 
 _MARKET_UNIVERSE_EXPANSION: dict[str, list[str]] = {
-    "us": ["nasdaq", "nyse", "amex", "nasdaq100", "sp500"],
+    "us": ["nasdaq", "nyse", "amex", "nasdaq100", "sp500", "dow30"],
     "kospi": ["kospi", "kospi100", "kospi200"],
     "kosdaq": ["kosdaq", "kosdaq150"],
 }
