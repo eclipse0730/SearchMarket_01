@@ -123,7 +123,8 @@ header.site nav { display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
 .nav-item:hover .nav-menu, .nav-item:focus-within .nav-menu { display: grid; gap: 2px; }
 .nav-menu a { display: block; padding: 7px 9px; border-radius: 6px; color: #cbd5e1; font-size: 12px; }
 .nav-menu a:hover, .nav-menu a.nav-active { color: var(--text); background: var(--panel-2); text-decoration: none; }
-main { max-width: 1280px; margin: 0 auto; padding: 24px; }
+main { width: min(76%, calc(100% - 32px)); margin: 0 auto; padding: 24px 0; }
+main.main-wide { width: min(70%, calc(100% - 32px)); }
 section.block { margin-bottom: 32px; }
 section.block > h2 { font-size: 16px; font-weight: 600; margin: 0 0 12px 0;
   border-left: 3px solid var(--accent); padding-left: 10px; }
@@ -134,6 +135,7 @@ section.block > .sub { color: var(--muted); font-size: 12px; margin-bottom: 12px
   gap: 12px; }
 .card { background: var(--panel); border: 1px solid var(--border);
   border-radius: 8px; padding: 14px 16px; }
+.summary-card { width: min(42%, 100%); }
 .card-link { display: block; color: var(--text); text-decoration: none;
   transition: border-color 0.15s, transform 0.15s; }
 .card-link:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-1px); }
@@ -166,17 +168,50 @@ table.t tr:hover td { background: var(--panel-2); }
 .down { color: var(--down); }
 .flat { color: var(--flat); }
 
+/* 메인 핵심 지표 */
+.market-pulse {
+  margin-bottom: 28px; padding: 22px;
+  border: 1px solid rgba(148, 163, 184, .2); border-radius: 8px;
+  background: linear-gradient(135deg, rgba(14, 26, 42, .96), rgba(18, 24, 38, .92));
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .22);
+}
+.pulse-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+.eyebrow { color: #9cc9ff; font-size: 11px; font-weight: 700; letter-spacing: 0; margin-bottom: 3px; }
+.pulse-head h1 { margin: 0; font-size: 26px; line-height: 1.15; }
+.pulse-note { max-width: 38%; color: var(--muted); font-size: 12px; text-align: right; }
+.top-indicator-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.top-indicator-card {
+  min-height: 118px; display: flex; flex-direction: column; justify-content: space-between;
+  padding: 13px 14px; border: 1px solid var(--border); border-radius: 8px;
+  background: rgba(7, 16, 28, .72);
+}
+.top-indicator-card:hover { border-color: rgba(98, 199, 255, .5); }
+.tic-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.tic-label { color: var(--text); font-weight: 700; font-size: 13px; }
+.tic-group {
+  color: #d7b56d; background: rgba(216, 169, 74, .12); border: 1px solid rgba(216, 169, 74, .22);
+  border-radius: 999px; padding: 1px 7px; font-size: 10px; white-space: nowrap;
+}
+.tic-main { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; margin: 10px 0 9px; }
+.tic-value { min-width: 0; font-size: 24px; line-height: 1; font-weight: 750; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.tic-change { flex: 0 0 auto; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tic-asof {
+  min-width: 0; color: var(--muted); font-size: 10px; line-height: 1.25;
+  text-align: left; overflow-wrap: anywhere;
+}
+
 /* 매크로 패널 */
 .macro-grid { display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 8px; }
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 9px; }
 .macro-cell { background: var(--panel); border: 1px solid var(--border);
-  border-radius: 6px; padding: 10px 12px; }
+  border-radius: 8px; padding: 11px 12px; }
 .macro-cell .sym { color: var(--muted); font-size: 11px; }
 .macro-cell .name { font-size: 12px; margin-bottom: 4px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.macro-cell .px { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.macro-cell .chg { font-size: 12px; font-variant-numeric: tabular-nums; }
+.macro-value-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+.macro-cell .px { min-width: 0; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.macro-cell .chg { flex: 0 0 auto; font-size: 12px; font-variant-numeric: tabular-nums; }
 
 /* 섹터 히트맵 */
 .sector-group { margin-bottom: 16px; }
@@ -223,7 +258,25 @@ a.sector-tile-link:hover { border-color: var(--accent); transform: translateY(-1
 .wl-panel table.t th, .wl-panel table.t td { padding: 5px 10px; }
 
 /* 시계열 차트 */
-.macro-chart-wrap { margin-bottom: 20px; }
+.macro-chart-wrap {
+  margin-bottom: 20px; padding: 14px; border: 1px solid var(--border);
+  border-radius: 8px; background: rgba(7, 16, 28, .58);
+}
+.chart-body { display: flex; align-items: flex-start; gap: 14px; }
+.chart-main { flex: 0 1 60%; max-width: 60%; min-width: 0; }
+.chart-side { flex: 1 1 0; min-width: 0; }
+.chart-side .sector-group { margin-bottom: 0; }
+.chart-side .gname { display: none; }
+.chart-side .macro-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.macro-toggle-card {
+  position: relative; width: 100%; color: inherit; text-align: left; cursor: pointer;
+  border-left: 4px solid var(--series-color, var(--accent));
+  transition: opacity .15s, filter .15s, border-color .15s, transform .15s;
+}
+.macro-toggle-card:hover { transform: translateY(-1px); border-color: var(--series-color, var(--accent)); }
+.macro-toggle-card.macro-toggle-off { opacity: .42; filter: grayscale(.65) brightness(.72); }
+.macro-toggle-card.macro-toggle-unmatched { opacity: .36; cursor: default; }
+.chart-side-disabled .macro-toggle-card { opacity: .36; cursor: default; }
 .chart-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .chart-tabs { display: flex; gap: 6px; }
 .ct-tab {
@@ -242,15 +295,36 @@ a.sector-tile-link:hover { border-color: var(--accent); transform: translateY(-1
 .chart-canvas-wrap {
   overflow-x: auto; overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  margin-bottom: 8px;
+  margin-bottom: 8px; padding: 8px 0;
   scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.3) transparent; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 5px; padding: 6px 0 12px; }
+.chart-legend.chart-legend-hidden { display: none; }
 .cl-item {
   padding: 2px 9px 2px 6px; border-radius: 4px; border-left: 3px solid;
   background: var(--panel); font-size: 11px; color: var(--text); cursor: pointer;
   user-select: none; transition: opacity 0.15s; }
 .cl-item:hover { background: var(--panel-2); }
 .cl-item.cl-hidden { opacity: 0.3; }
+
+@media (max-width: 760px) {
+  main, main.main-wide { width: calc(100% - 24px); padding: 16px 0; }
+  .market-pulse { padding: 16px; }
+  .summary-card { width: 100%; }
+  .pulse-head { align-items: flex-start; flex-direction: column; }
+  .pulse-note { max-width: none; text-align: left; }
+  .top-indicator-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tic-value { font-size: 20px; }
+  .tic-main { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .tic-asof { white-space: normal; }
+  .chart-body { display: block; }
+  .chart-main { max-width: none; }
+  .chart-side { margin-top: 14px; }
+  .chart-daterange { margin-left: 0; }
+}
+
+@media (max-width: 420px) {
+  .top-indicator-grid { grid-template-columns: 1fr; }
+}
 """
 
 
@@ -366,9 +440,11 @@ def render_page(
     body_html: str,
     nav_active: str | None = None,
     generated_at: datetime | None = None,
+    main_class: str | None = None,
 ) -> str:
     """공통 헤더/푸터로 감싼 HTML 페이지 문자열."""
     ts = (generated_at or datetime.now()).strftime("%Y-%m-%d %H:%M")
+    main_attr = f' class="{escape(main_class)}"' if main_class else ""
     return f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -379,7 +455,7 @@ def render_page(
 </head>
 <body>
 {site_header_html(depth, nav_active)}
-<main>
+<main{main_attr}>
 {body_html}
 </main>
 <footer class="site">

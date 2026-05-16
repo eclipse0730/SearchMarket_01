@@ -72,6 +72,7 @@ class MacroQuote:
     close_price: float | None
     change_pct: float | None
     trade_date: date
+    collected_at: datetime | None = None
 
 
 @dataclass
@@ -83,6 +84,7 @@ class DailyMacroItem:
     value: float
     prev_value: float | None
     change_pct: float | None
+    collected_at: datetime | None = None
 
 
 @dataclass
@@ -253,6 +255,19 @@ INSTRUMENT_JOIN_ADMIN_TABLES: set[str] = {
     "instrument_news",
     "scan_results",
     "universe_memberships",
+}
+
+MACRO_SERIES_FALLBACKS: dict[str, tuple[str, str, str | None]] = {
+    "SP500": ("global-indices", "GSPC", "S&P 500"),
+    "NASDAQ100": ("global-indices", "NDX", "NASDAQ 100"),
+    "KOSPI": ("global-indices", "KS11", "코스피"),
+    "KOSDAQ": ("global-indices", "KQ11", "코스닥"),
+    "VIX": ("global-indices", "VIX", "VIX"),
+    "WTI": ("commodities", "CL", "WTI 원유"),
+    "GOLD": ("commodities", "GC", "금"),
+    "SILVER": ("commodities", "SI", "은"),
+    "NATGAS": ("commodities", "NG", "천연가스"),
+    "COPPER": ("commodities", "HG", "구리"),
 }
 
 
@@ -718,6 +733,36 @@ def load_macro_price_series(conn) -> list[MacroPriceSeries]:
             dates=[d for d, _ in points],
             values=[round(v, 4) if v is not None else None for _, v in points],
         ))
+    existing = {(item.market_key, item.display_symbol) for item in result}
+
+    macro_rows = conn.execute(
+        """
+        SELECT indicator_code, trade_date, value
+        FROM daily_macro
+        WHERE indicator_code = ANY(%s)
+        ORDER BY indicator_code, trade_date
+        """,
+        (list(MACRO_SERIES_FALLBACKS),),
+    ).fetchall()
+
+    macro_grouped: dict[str, list[tuple[str, float | None]]] = defaultdict(list)
+    for code, trade_date, value in macro_rows:
+        macro_grouped[code].append((trade_date.isoformat(), _to_float(value)))
+
+    for code, points in macro_grouped.items():
+        market_key, display_symbol, name_en = MACRO_SERIES_FALLBACKS[code]
+        if (market_key, display_symbol) in existing:
+            continue
+        if not any(v is not None for _, v in points):
+            continue
+        result.append(MacroPriceSeries(
+            market_key=market_key,
+            symbol=code,
+            display_symbol=display_symbol,
+            name_en=name_en,
+            dates=[d for d, _ in points],
+            values=[round(v, 4) if v is not None else None for _, v in points],
+        ))
     return result
 
 
@@ -726,9 +771,9 @@ def load_daily_macro_items(conn) -> list[DailyMacroItem]:
     rows = conn.execute(
         """
         SELECT DISTINCT ON (indicator_code)
-            indicator_code, trade_date, value, prev_value, change_pct
+            indicator_code, trade_date, value, prev_value, change_pct, collected_at
         FROM daily_macro
-        ORDER BY indicator_code, trade_date DESC
+        ORDER BY indicator_code, trade_date DESC, collected_at DESC
         """
     ).fetchall()
     return [
@@ -738,6 +783,7 @@ def load_daily_macro_items(conn) -> list[DailyMacroItem]:
             value=float(r[2]),
             prev_value=_to_float(r[3]),
             change_pct=_to_float(r[4]),
+            collected_at=r[5],
         )
         for r in rows
     ]
@@ -961,7 +1007,12 @@ def load_macro_quotes(conn) -> list[MacroQuote]:
                     SELECT close_price FROM daily_prices
                     WHERE instrument_id = l.instrument_id AND trade_date < l.trade_date
                     ORDER BY trade_date DESC, source_provider LIMIT 1
-                ) AS prev_close
+                ) AS prev_close,
+                (
+                    SELECT collected_at FROM daily_prices
+                    WHERE instrument_id = l.instrument_id AND trade_date = l.trade_date
+                    ORDER BY source_provider LIMIT 1
+                ) AS collected_at
             FROM latest l
         )
         SELECT
@@ -970,14 +1021,15 @@ def load_macro_quotes(conn) -> list[MacroQuote]:
                 WHEN prev_close IS NULL OR prev_close = 0 THEN NULL
                 ELSE (close_price - prev_close) / prev_close * 100.0
             END AS change_pct,
-            trade_date
+            trade_date,
+            collected_at
         FROM with_close
         WHERE close_price IS NOT NULL
         ORDER BY market_key, symbol
         """
     ).fetchall()
 
-    return [
+    result = [
         MacroQuote(
             market_key=r[0],
             symbol=r[1],
@@ -986,9 +1038,37 @@ def load_macro_quotes(conn) -> list[MacroQuote]:
             close_price=_to_float(r[4]),
             change_pct=_to_float(r[5]),
             trade_date=r[6],
+            collected_at=r[7],
         )
         for r in rows
     ]
+    existing = {(item.market_key, item.display_symbol) for item in result}
+
+    macro_rows = conn.execute(
+        """
+        SELECT DISTINCT ON (indicator_code)
+            indicator_code, trade_date, value, change_pct, collected_at
+        FROM daily_macro
+        WHERE indicator_code = ANY(%s)
+        ORDER BY indicator_code, trade_date DESC, collected_at DESC
+        """,
+        (list(MACRO_SERIES_FALLBACKS),),
+    ).fetchall()
+    for code, trade_date, value, change_pct, collected_at in macro_rows:
+        market_key, display_symbol, name_local = MACRO_SERIES_FALLBACKS[code]
+        if (market_key, display_symbol) in existing:
+            continue
+        result.append(MacroQuote(
+            market_key=market_key,
+            symbol=code,
+            display_symbol=display_symbol,
+            name_local=name_local,
+            close_price=_to_float(value),
+            change_pct=_to_float(change_pct),
+            trade_date=trade_date,
+            collected_at=collected_at,
+        ))
+    return result
 
 
 def load_watchlist_stocks(

@@ -45,6 +45,14 @@ _FRED_SERIES: list[tuple[str, str]] = [
 ]
 
 # ─── yfinance 심볼 목록 ───────────────────────────────────────────────────────
+# 주요 주가지수: 메인 페이지 상단 핵심 지표용
+_YF_INDICES: list[tuple[str, str]] = [
+    ("^GSPC", "SP500"),
+    ("^NDX", "NASDAQ100"),
+    ("^KS11", "KOSPI"),
+    ("^KQ11", "KOSDAQ"),
+]
+
 # 환율: DXY는 FRED에 없으므로 yfinance 전용
 _YF_FX: list[tuple[str, str]] = [
     ("USDKRW=X", "USDKRW"),
@@ -312,7 +320,20 @@ def run_fetch(
                 except Exception as e:
                     print(f"  FRED  {code} 실패: {e}")
 
-        # ── 2. yfinance: 환율 ──────────────────────────────────────────────
+        # ── 2. yfinance: 주요 주가지수 ────────────────────────────────────
+        for symbol, code in _YF_INDICES:
+            start = _start(code, "yfinance")
+            if start > end_date:
+                continue
+            try:
+                rows = _fetch_yf_close(symbol, start, end_date)
+                n = _store(conn, code, "yfinance", rows)
+                print(f"  yf    {code:<22} {n:>4}건")
+                total += n
+            except Exception as e:
+                print(f"  yf    {code} 실패: {e}")
+
+        # ── 3. yfinance: 환율 ──────────────────────────────────────────────
         for symbol, code in _YF_FX:
             start = _start(code, "yfinance")
             if start > end_date:
@@ -325,7 +346,7 @@ def run_fetch(
             except Exception as e:
                 print(f"  yf    {code} 실패: {e}")
 
-        # ── 3. yfinance: 원자재 선물 ───────────────────────────────────────
+        # ── 4. yfinance: 원자재 선물 ───────────────────────────────────────
         for symbol, code in _YF_COMMODITIES:
             start = _start(code, "yfinance")
             if start > end_date:
@@ -338,7 +359,7 @@ def run_fetch(
             except Exception as e:
                 print(f"  yf    {code} 실패: {e}")
 
-        # ── 4. yfinance: 심리 지표 (VIX, VVIX) ───────────────────────────
+        # ── 5. yfinance: 심리 지표 (VIX, VVIX) ───────────────────────────
         for symbol, code in _YF_SENTIMENT:
             start = _start(code, "yfinance")
             if start > end_date:
@@ -351,7 +372,7 @@ def run_fetch(
             except Exception as e:
                 print(f"  yf    {code} 실패: {e}")
 
-        # ── 5. CoinGecko: BTC·ETH 가격 ────────────────────────────────────
+        # ── 6. CoinGecko: BTC·ETH 가격 ────────────────────────────────────
         for coin_id, code in _CG_COINS:
             start = _start(code, "coingecko")
             if start > end_date:
@@ -366,7 +387,7 @@ def run_fetch(
             except Exception as e:
                 print(f"  cg    {code} 실패: {e}")
 
-        # ── 6. CoinGecko: 전체 암호화폐 시가총액 ─────────────────────────
+        # ── 7. CoinGecko: 전체 암호화폐 시가총액 ─────────────────────────
         # /global은 현재 스냅샷만 제공하므로 오늘 날짜로 저장
         code = "CRYPTO_TOTAL_MCAP"
         start = _start(code, "coingecko")
@@ -380,7 +401,7 @@ def run_fetch(
             except Exception as e:
                 print(f"  cg    {code} 실패: {e}")
 
-        # ── 7. alternative.me: 크립토 공포·탐욕 지수 ─────────────────────
+        # ── 8. alternative.me: 크립토 공포·탐욕 지수 ─────────────────────
         code = "CRYPTO_FNG"
         start = _start(code, "alternative.me")
         if start <= end_date:

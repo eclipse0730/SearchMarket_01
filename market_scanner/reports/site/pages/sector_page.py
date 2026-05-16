@@ -27,7 +27,7 @@ def _summary_header(data: SectorDetailData) -> str:
     <a href="../../index.html">← {escape(data.market_label)}</a>
   </div>
   <h2>{escape(data.sector)}</h2>
-  <div class="card" style="max-width:480px;">
+  <div class="card summary-card">
     <div class="row"><span class="k">기준일</span><span class="v">{escape(date_str)}</span></div>
     <div class="row"><span class="k">종목수</span><span class="v">{layout.fmt_int(data.instrument_count)}</span></div>
     <div class="row"><span class="k">평균 등락률</span><span class="v {chg_class}">{layout.fmt_pct(data.avg_change_pct)}</span></div>
@@ -96,7 +96,7 @@ def _strategy_preview_section(strategy_top: dict[str, list[TopStock]]) -> str:
                 f"</tr>"
             )
         groups_html.append(
-            f'<div class="sector-group" style="min-width:260px;">'
+            f'<div class="sector-group">'
             f'<div class="gname">{escape(label)}</div>'
             f'<table class="t"><thead><tr>'
             f'<th>#</th><th class="l">심볼</th><th class="l">종목명</th><th>점수</th><th>등락률</th>'

@@ -23,7 +23,7 @@ body{
   color:var(--text);
   font-family:"Segoe UI","Noto Sans KR",sans-serif;
 }
-.report-shell{max-width:1880px;margin:0 auto;padding:18px 18px 36px}
+.report-shell{width:min(80%,calc(100% - 32px));margin:0 auto;padding:18px 0 36px}
 .report-header{
   display:flex;
   align-items:flex-end;
@@ -485,7 +485,7 @@ tbody tr:hover{background:rgba(98,199,255,.07)}
   .signal-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:760px){
-  .report-shell{padding:12px}
+  .report-shell{width:calc(100% - 24px);padding:14px 0 28px}
   .report-header,.toolbar{align-items:flex-start;flex-direction:column}
   .filters{justify-content:flex-start}
   input[type=text],select{width:100%}

@@ -87,7 +87,7 @@ uv run python Search.py macro --days-back 365
 | 소스 | 지표 |
 |---|---|
 | FRED | SOFR, US_FFR, US_2Y, US_10Y, US_30Y, US_SPREAD_2S10S, US_SPREAD_3M10Y, HY_OAS, IG_OAS, FED_RRP, FED_BS |
-| yfinance | USDKRW, EURUSD, USDJPY, USDCNY, DXY, WTI, GOLD, SILVER, NATGAS, COPPER, VIX, VVIX, BTC_USD, ETH_USD |
+| yfinance | SP500, NASDAQ100, KOSPI, KOSDAQ, USDKRW, EURUSD, USDJPY, USDCNY, DXY, WTI, GOLD, SILVER, NATGAS, COPPER, VIX, VVIX, BTC_USD, ETH_USD |
 | CoinGecko | CRYPTO_TOTAL_MCAP (현재 스냅샷, `/global` 엔드포인트) |
 | alternative.me | CRYPTO_FNG (공포·탐욕 지수) |
 
@@ -200,7 +200,7 @@ uv run python Search.py site --no-open
 
 `site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 자동 열기를 원하면 `--no-open`을 빼고 실행합니다.
 
-대시보드는 DB의 `daily_macro`, `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 매크로 지표, 글로벌 지수·원자재, US/KR 종합 시황, 섹터 히트맵, 리더십, 당일 Top 종목, 워치리스트를 표시합니다.
+대시보드는 DB의 `daily_macro`, `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 메인 핵심 지표(S&P500, Nasdaq100, KOSPI, KOSDAQ, VIX, 미국10년물, DXY, USDKRW, WTI, Gold, BTC), 매크로 지표, 글로벌 지수·원자재, US/KR 종합 시황, 섹터 히트맵, 리더십, 당일 Top 종목, 워치리스트를 표시합니다.
 
 상단 `관리` 탭(`site/admin/index.html`)은 빌드 시점의 PostgreSQL 테이블 목록·행 수·컬럼·최근 데이터 샘플을 보여주는 정적 읽기 전용 페이지입니다. 데이터 수정/삭제는 DB 또는 CLI에서 처리합니다.
 

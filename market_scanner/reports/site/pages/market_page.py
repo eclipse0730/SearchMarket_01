@@ -57,7 +57,7 @@ def _summary_header(card: MarketCard | None, ma_near: dict[str, int]) -> str:
 <section class="block">
   <h2>{escape(card.label)}</h2>
   <div class="sub">{escape(card.trade_date.strftime('%Y-%m-%d'))} · {escape(card.universe_key)} · {layout.fmt_int(card.total_count)}종목</div>
-  <div class="card" style="max-width:520px;">
+  <div class="card summary-card">
     <div class="row"><span class="k">평균 등락률</span><span class="v {chg_class}">{layout.fmt_pct(card.avg_change_pct)}</span></div>
     <div class="row"><span class="k">상승 / 하락 / 보합</span><span class="v">
       <span class="up">{layout.fmt_int(card.advance_count)}</span> / <span class="down">{layout.fmt_int(card.decline_count)}</span> / <span class="flat">{layout.fmt_int(card.unchanged_count)}</span>
@@ -164,7 +164,7 @@ def _strategy_preview_section(strategy_top: dict[str, list[TopStock]]) -> str:
                 f"</tr>"
             )
         groups_html.append(
-            f'<div class="sector-group" style="min-width:260px;">'
+            f'<div class="sector-group">'
             f'<div class="gname">{escape(label)}</div>'
             f'<table class="t"><thead><tr>'
             f'<th>#</th><th class="l">심볼</th><th class="l">종목명</th><th>점수</th><th>등락률</th>'

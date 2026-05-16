@@ -9,6 +9,7 @@ import json
 from collections import defaultdict
 from datetime import datetime
 from html import escape
+from typing import Any
 
 from market_scanner.reports.site import layout
 from market_scanner.reports.site.data import DailyMacroItem, MacroPriceSeries, MacroQuote, MainPageData
@@ -101,6 +102,10 @@ _SERIES_COLORS: dict[str, str] = {
 # indicator_code → (표시명, 소수점 자리수, 단위 suffix)
 _MACRO_META: dict[str, tuple[str, int, str]] = {
     # 금리
+    "SP500":              ("S&P500",        2, ""),
+    "NASDAQ100":          ("Nasdaq100",     2, ""),
+    "KOSPI":              ("KOSPI",         2, ""),
+    "KOSDAQ":             ("KOSDAQ",        2, ""),
     "SOFR":               ("SOFR",          2, "%"),
     "US_FFR":             ("Fed Fund Rate",  2, "%"),
     "US_2Y":              ("미국 2년금리",   2, "%"),
@@ -141,6 +146,20 @@ _GROUPS: list[tuple[str, list[str]]] = [
     ("크립토", ["BTC_USD", "ETH_USD", "CRYPTO_TOTAL_MCAP", "CRYPTO_FNG"]),
 ]
 
+_TOP_INDICATORS: list[dict[str, Any]] = [
+    {"kind": "quote", "codes": ("GSPC", "^GSPC"), "macro_code": "SP500", "label": "S&P500", "group": "US 주식", "decimals": 2},
+    {"kind": "quote", "codes": ("NDX", "^NDX"), "macro_code": "NASDAQ100", "label": "Nasdaq100", "group": "US 주식", "decimals": 2},
+    {"kind": "quote", "codes": ("KS11", "^KS11"), "macro_code": "KOSPI", "label": "KOSPI", "group": "KR 주식", "decimals": 2},
+    {"kind": "quote", "codes": ("KQ11", "^KQ11"), "macro_code": "KOSDAQ", "label": "KOSDAQ", "group": "KR 주식", "decimals": 2},
+    {"kind": "quote", "codes": ("VIX", "^VIX"), "macro_code": "VIX", "label": "VIX", "group": "리스크", "decimals": 2},
+    {"kind": "macro", "code": "US_10Y", "label": "미국10년물", "group": "금리", "decimals": 2, "suffix": "%"},
+    {"kind": "macro", "code": "DXY", "label": "DXY", "group": "달러", "decimals": 2},
+    {"kind": "macro", "code": "USDKRW", "label": "USDKRW", "group": "환율", "decimals": 2},
+    {"kind": "macro", "code": "WTI", "label": "WTI", "group": "원자재", "decimals": 2, "prefix": "$"},
+    {"kind": "macro", "code": "GOLD", "label": "Gold", "group": "원자재", "decimals": 2, "prefix": "$"},
+    {"kind": "macro", "code": "BTC_USD", "label": "BTC", "group": "크립토", "decimals": 0, "prefix": "$"},
+]
+
 
 def _fmt_macro_value(item: DailyMacroItem) -> str:
     meta = _MACRO_META.get(item.indicator_code)
@@ -149,6 +168,108 @@ def _fmt_macro_value(item: DailyMacroItem) -> str:
     _, decimals, suffix = meta
     val_str = f"{item.value:,.{decimals}f}"
     return f"{val_str} {suffix}".strip() if suffix else val_str
+
+
+def _fmt_top_value(value: float | None, decimals: int, prefix: str = "", suffix: str = "") -> str:
+    if value is None:
+        return "—"
+    return f"{prefix}{value:,.{decimals}f}{suffix}"
+
+
+def _asof_text(trade_date, collected_at=None) -> str:
+    date_text = trade_date.strftime("%Y-%m-%d") if trade_date else "—"
+    if collected_at:
+        return f"{date_text} · 갱신 {collected_at.strftime('%m-%d %H:%M')}"
+    return date_text
+
+
+def _top_indicator_rows(
+    quotes: list[MacroQuote],
+    daily_items: list[DailyMacroItem],
+) -> list[dict[str, str]]:
+    quote_by_code: dict[str, MacroQuote] = {}
+    for quote in quotes:
+        quote_by_code[quote.symbol] = quote
+        quote_by_code[quote.display_symbol] = quote
+    macro_by_code = {item.indicator_code: item for item in daily_items}
+
+    rows: list[dict[str, str]] = []
+    for spec in _TOP_INDICATORS:
+        value: float | None = None
+        change_pct: float | None = None
+        trade_date = None
+        collected_at = None
+
+        if spec["kind"] == "quote":
+            quote = next((quote_by_code.get(code) for code in spec["codes"] if quote_by_code.get(code)), None)
+            if quote:
+                value = quote.close_price
+                change_pct = quote.change_pct
+                trade_date = quote.trade_date
+                collected_at = quote.collected_at
+            elif spec.get("macro_code"):
+                item = macro_by_code.get(spec["macro_code"])
+                if item:
+                    value = item.value
+                    change_pct = item.change_pct
+                    trade_date = item.trade_date
+                    collected_at = item.collected_at
+        else:
+            item = macro_by_code.get(spec["code"])
+            if item:
+                value = item.value
+                change_pct = item.change_pct
+                trade_date = item.trade_date
+                collected_at = item.collected_at
+
+        rows.append({
+            "label": spec["label"],
+            "group": spec["group"],
+            "value": _fmt_top_value(
+                value,
+                int(spec.get("decimals", 2)),
+                str(spec.get("prefix", "")),
+                str(spec.get("suffix", "")),
+            ),
+            "change": layout.fmt_pct(change_pct) if change_pct is not None else "—",
+            "change_class": layout.change_class(change_pct),
+            "asof": _asof_text(trade_date, collected_at),
+        })
+    return rows
+
+
+def _top_indicators_section(
+    quotes: list[MacroQuote],
+    daily_items: list[DailyMacroItem],
+) -> str:
+    rows = _top_indicator_rows(quotes, daily_items)
+    if not rows or all(row["value"] == "—" for row in rows):
+        return ""
+    cards = "\n".join(
+        f"""<div class="top-indicator-card">
+  <div class="tic-head">
+    <span class="tic-label">{escape(row["label"])}</span>
+    <span class="tic-group">{escape(row["group"])}</span>
+  </div>
+  <div class="tic-main">
+    <span class="tic-value">{escape(row["value"])}</span>
+    <span class="tic-change {escape(row["change_class"])}">{escape(row["change"])}</span>
+  </div>
+  <div class="tic-asof">{escape(row["asof"])}</div>
+</div>"""
+        for row in rows
+    )
+    return f"""
+<section class="market-pulse">
+  <div class="pulse-head">
+    <div>
+      <div class="eyebrow">MAIN INDICATORS</div>
+      <h1>시장 핵심 지표</h1>
+    </div>
+    <div class="pulse-note">미국10년물은 수익률(%) 기준입니다. 자산별 거래 시간이 달라 각 카드에 기준일과 수집 시각을 함께 표시합니다.</div>
+  </div>
+  <div class="top-indicator-grid">{cards}</div>
+</section>"""
 
 
 def _daily_macro_section(items: list[DailyMacroItem]) -> str:
@@ -171,8 +292,10 @@ def _daily_macro_section(items: list[DailyMacroItem]) -> str:
             cells.append(f"""<div class="macro-cell">
   <div class="sym">{escape(code)}</div>
   <div class="name" title="{escape(display_name)}">{escape(display_name)}</div>
-  <div class="px">{escape(val_str)}</div>
-  <div class="chg {chg_class}">{escape(chg_str)}</div>
+  <div class="macro-value-row">
+    <span class="px">{escape(val_str)}</span>
+    <span class="chg {chg_class}">{escape(chg_str)}</span>
+  </div>
 </div>""")
         if not cells:
             continue
@@ -193,7 +316,7 @@ def _daily_macro_section(items: list[DailyMacroItem]) -> str:
 </section>"""
 
 
-def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
+def _macro_chart_html(series_list: list[MacroPriceSeries], side_html: str = "") -> str:
     """글로벌 지수 · 원자재 · 섹터 ETF 시계열 Chart.js 라인 차트."""
     if not series_list:
         return ""
@@ -203,7 +326,7 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
         "commodities": "원자재",
         "sector-etfs": "섹터 ETF",
     }
-    _TAB_ORDER = ["global-indices", "sector-etfs", "commodities"]
+    _TAB_ORDER = ["global-indices", "commodities", "sector-etfs"]
 
     by_market: dict[str, list[MacroPriceSeries]] = defaultdict(list)
     for s in series_list:
@@ -219,6 +342,7 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
             name = _SERIES_NAMES.get(s.display_symbol, s.display_symbol)
             datasets.append({
                 "label": name,
+                "displaySymbol": s.display_symbol,
                 "rawData": [date_to_val.get(d) for d in all_dates],  # raw close — JS가 정규화
                 "borderColor": color,
                 "backgroundColor": color + "1a",
@@ -241,6 +365,7 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
     )
     groups_json = json.dumps(groups_data, ensure_ascii=False)
     first_tab_js = json.dumps(first_tab)
+    chart_side = f'<aside class="chart-side" id="macro-chart-side">{side_html}</aside>' if side_html else ""
 
     return f"""<div class="macro-chart-wrap">
   <div class="chart-controls">
@@ -253,10 +378,15 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
       <input type="date" id="chart-to" class="ct-date-input">
     </div>
   </div>
-  <div class="chart-canvas-wrap">
-    <canvas id="macro-line-chart"></canvas>
+  <div class="chart-body">
+    <div class="chart-main">
+      <div class="chart-canvas-wrap">
+        <canvas id="macro-line-chart"></canvas>
+      </div>
+      <div class="chart-legend" id="macro-chart-legend"></div>
+    </div>
+    {chart_side}
   </div>
-  <div class="chart-legend" id="macro-chart-legend"></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
@@ -351,21 +481,61 @@ def _macro_chart_html(series_list: list[MacroPriceSeries]) -> str:
     hiddenIdx.forEach(function(i){{chart.getDatasetMeta(i).hidden=true;}});
     chart.update();
 
-    // 범례
+    // 범례와 ETF 카드 토글
     const leg=document.getElementById('macro-chart-legend');
+    const side=document.getElementById('macro-chart-side');
+    const sideCards=side?Array.from(side.querySelectorAll('.macro-toggle-card')):[];
+    const symbolToIdx={{}};
+    filtDS.forEach(function(ds,i){{symbolToIdx[ds.displaySymbol]=i;}});
+
+    function setHidden(i, hidden){{
+      const m=chart.getDatasetMeta(i);
+      m.hidden=hidden;
+      if(hidden) hiddenIdx.add(i); else hiddenIdx.delete(i);
+      chart.update();
+      document.querySelectorAll('[data-chart-idx="'+i+'"]').forEach(function(el){{
+        el.classList.toggle('cl-hidden', hidden);
+        el.classList.toggle('macro-toggle-off', hidden);
+      }});
+    }}
+
     leg.innerHTML=filtDS.map(function(ds,i){{
       return '<span class="cl-item'+(hiddenIdx.has(i)?' cl-hidden':'')+'" data-idx="'+i+'" style="border-color:'+ds.borderColor+'">'+ds.label+'</span>';
     }}).join('');
+    leg.classList.toggle('chart-legend-hidden', !!side && cur==='sector-etfs');
     leg.querySelectorAll('.cl-item').forEach(function(el){{
+      el.dataset.chartIdx=el.dataset.idx;
       el.addEventListener('click',function(){{
         const i=+el.dataset.idx;
         const m=chart.getDatasetMeta(i);
-        m.hidden=!m.hidden;
-        el.classList.toggle('cl-hidden',m.hidden);
-        if(m.hidden) hiddenIdx.add(i); else hiddenIdx.delete(i);
-        chart.update();
+        setHidden(i,!m.hidden);
       }});
     }});
+    if(side){{
+      side.classList.toggle('chart-side-disabled', cur!=='sector-etfs');
+      sideCards.forEach(function(card){{
+        const i=symbolToIdx[card.dataset.symbol];
+        card.classList.toggle('macro-toggle-unmatched', i==null || cur!=='sector-etfs');
+        if(i==null || cur!=='sector-etfs'){{
+          delete card.dataset.chartIdx;
+          card.classList.remove('macro-toggle-off');
+          return;
+        }}
+        card.dataset.chartIdx=i;
+        card.classList.toggle('macro-toggle-off', hiddenIdx.has(i));
+        card.style.setProperty('--series-color', filtDS[i].borderColor);
+        if(!card.dataset.bound){{
+          card.dataset.bound='1';
+          card.addEventListener('click',function(){{
+            const idx=card.dataset.chartIdx;
+            if(idx==null) return;
+            const n=+idx;
+            const m=chart.getDatasetMeta(n);
+            setHidden(n,!m.hidden);
+          }});
+        }}
+      }});
+    }}
   }}
 
   document.querySelectorAll('.ct-tab').forEach(function(btn){{
@@ -395,36 +565,59 @@ def _macro_panel_section(quotes: list[MacroQuote], series_list: list[MacroPriceS
         "commodities": "원자재",
     }
 
-    groups_html: list[str] = []
+    groups_by_market: dict[str, str] = {}
     for market_key, items in by_market.items():
-        cells = "\n".join(
-            f"""<div class="macro-cell">
+        if market_key == "sector-etfs":
+            cells = "\n".join(
+                f"""<button class="macro-cell macro-toggle-card" type="button" data-symbol="{escape(q.display_symbol)}" style="--series-color:{escape(_SERIES_COLORS.get(q.display_symbol, "#62c7ff"))};">
   <div class="sym">{escape(q.display_symbol)}</div>
   <div class="name" title="{escape(q.name_local or q.symbol)}">{escape(q.name_local or q.symbol)}</div>
-  <div class="px">{layout.fmt_price(q.close_price)}</div>
-  <div class="chg {layout.change_class(q.change_pct)}">{layout.fmt_pct(q.change_pct)}</div>
+  <div class="macro-value-row">
+    <span class="px">{layout.fmt_price(q.close_price)}</span>
+    <span class="chg {layout.change_class(q.change_pct)}">{layout.fmt_pct(q.change_pct)}</span>
+  </div>
+</button>"""
+                for q in items
+            )
+        else:
+            cells = "\n".join(
+                f"""<div class="macro-cell">
+  <div class="sym">{escape(q.display_symbol)}</div>
+  <div class="name" title="{escape(q.name_local or q.symbol)}">{escape(q.name_local or q.symbol)}</div>
+  <div class="macro-value-row">
+    <span class="px">{layout.fmt_price(q.close_price)}</span>
+    <span class="chg {layout.change_class(q.change_pct)}">{layout.fmt_pct(q.change_pct)}</span>
+  </div>
 </div>"""
-            for q in items
-        )
+                for q in items
+            )
         label = market_labels.get(market_key, market_key)
-        groups_html.append(
+        groups_by_market[market_key] = (
             f'<div class="sector-group"><div class="gname">{escape(label)}</div>'
             f'<div class="macro-grid">{cells}</div></div>'
         )
 
-    chart_html = _macro_chart_html(series_list)
+    sector_html = groups_by_market.pop("sector-etfs", "")
+    chart_html = _macro_chart_html(series_list, side_html=sector_html)
+    chart_row = (
+        chart_html
+        if chart_html and sector_html
+        else chart_html + sector_html
+    )
+    groups_html = "".join(groups_by_market.values())
     return f"""
 <section class="block">
-  <h2>글로벌 지수 · 원자재</h2>
+  <h2>글로벌 지수 · 원자재 · 섹터 ETF</h2>
   <div class="sub">시계열 차트: 기간 내 첫 거래일 종가 기준 상대 수익률. 범례 클릭으로 개별 라인 토글.</div>
-  {chart_html}
-  {''.join(groups_html)}
+  {chart_row}
+  {groups_html}
 </section>"""
 
 
 def render(data: MainPageData) -> str:
     body = "".join(
         section for section in (
+            _top_indicators_section(data.macro_quotes, data.daily_macro_items),
             _daily_macro_section(data.daily_macro_items),
             _macro_panel_section(data.macro_quotes, data.macro_price_series),
         ) if section
@@ -441,4 +634,5 @@ def render(data: MainPageData) -> str:
         body_html=body,
         nav_active="home",
         generated_at=datetime.combine(data.generated_at, datetime.min.time()),
+        main_class="main-wide",
     )

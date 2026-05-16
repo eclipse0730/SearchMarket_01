@@ -244,7 +244,7 @@ def _tables_section(data: AdminPageData) -> str:
 def render(data: AdminPageData) -> str:
     styles = """
 <style>
-main { max-width: 1760px; }
+main { width: min(80%, calc(100% - 32px)); max-width: none; }
 .admin-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .admin-stat { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
 .admin-stat span { display: block; color: var(--muted); font-size: 11px; margin-bottom: 6px; }
