@@ -295,6 +295,8 @@ def main() -> None:
                         primary_path = site_build.build_us_all(conn)
                     elif args.market == "kr-all":
                         primary_path = site_build.build_kr_all(conn)
+                    elif args.market in site_data.UNIVERSE_DETAIL_PAGES:
+                        primary_path = site_build.build_universe_market(conn, args.market)
                     else:
                         primary_path = site_build.build_market(conn, args.market)
                 elif args.target == "sector":
@@ -306,6 +308,8 @@ def main() -> None:
                     site_build.build_admin(conn)
                     site_build.build_us_all(conn)
                     site_build.build_kr_all(conn)
+                    for universe_key in site_data.UNIVERSE_DETAIL_PAGES:
+                        site_build.build_universe_market(conn, universe_key)
                     for market_key in site_data.list_buildable_markets(conn):
                         site_build.build_market(conn, market_key)
 
