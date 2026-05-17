@@ -880,7 +880,11 @@ def load_macro_history(conn) -> dict[str, list[float]]:
     return dict(grouped)
 
 
-def load_market_cards(conn, market_keys: list[str] | None = None) -> list[MarketCard]:
+def load_market_cards(
+    conn,
+    market_keys: list[str] | None = None,
+    universe_keys: list[str] | None = None,
+) -> list[MarketCard]:
     """활성 시장의 최신 market_snapshots 카드.
 
     같은 market에서 universe가 여러 개면 market_key == universe_key 인 행을 우선,
@@ -888,7 +892,13 @@ def load_market_cards(conn, market_keys: list[str] | None = None) -> list[Market
     market_keys 가 주어지면 해당 시장만 반환한다.
     """
     mk_filter = "AND ms.market_key = ANY(%s)" if market_keys is not None else ""
-    mk_params = (market_keys,) if market_keys is not None else ()
+    uk_filter = "AND ms.universe_key = ANY(%s)" if universe_keys is not None else ""
+    partition_key = "ms.universe_key" if universe_keys is not None else "ms.market_key"
+    params: list = []
+    if market_keys is not None:
+        params.append(market_keys)
+    if universe_keys is not None:
+        params.append(universe_keys)
     rows = conn.execute(
         f"""
         WITH latest AS (
@@ -896,7 +906,7 @@ def load_market_cards(conn, market_keys: list[str] | None = None) -> list[Market
                 ms.*,
                 m.label AS market_label,
                 ROW_NUMBER() OVER (
-                    PARTITION BY ms.market_key
+                    PARTITION BY {partition_key}
                     ORDER BY
                         ms.trade_date DESC,
                         CASE WHEN ms.universe_key = ms.market_key THEN 0 ELSE 1 END,
@@ -904,7 +914,7 @@ def load_market_cards(conn, market_keys: list[str] | None = None) -> list[Market
                 ) AS rn
             FROM market_snapshots ms
             JOIN markets m ON m.market_key = ms.market_key
-            WHERE m.is_active = TRUE {mk_filter}
+            WHERE m.is_active = TRUE {mk_filter} {uk_filter}
         )
         SELECT
             market_key, market_label, trade_date, universe_key,
@@ -915,13 +925,20 @@ def load_market_cards(conn, market_keys: list[str] | None = None) -> list[Market
         WHERE rn = 1
         ORDER BY market_key
         """,
-        mk_params,
+        tuple(params),
     ).fetchall()
+
+    universe_labels = {
+        "kospi": "KOSPI",
+        "kosdaq": "KOSDAQ",
+        "kospi200": "KOSPI200",
+        "kosdaq150": "KOSDAQ150",
+    }
 
     return [
         MarketCard(
             market_key=r[0],
-            label=r[1],
+            label=universe_labels.get(r[3], r[1]),
             trade_date=r[2],
             universe_key=r[3],
             total_count=r[4] or 0,
@@ -1023,6 +1040,7 @@ def load_sector_cells(
     """
     mk_filter = "AND ss.market_key = ANY(%s)" if market_keys is not None else ""
     uk_filter = "AND ss.universe_key = ANY(%s)" if universe_keys is not None else "AND ss.universe_key = ss.market_key"
+    group_key = "ss.universe_key" if universe_keys is not None else "ss.market_key"
     args: list = []
     if market_keys is not None:
         args.append(market_keys)
@@ -1033,13 +1051,13 @@ def load_sector_cells(
         f"""
         WITH ranked AS (
             SELECT
-                ss.market_key,
+                {group_key} AS group_key,
                 ss.sector,
                 ss.instrument_count,
                 ss.avg_change_pct,
                 ss.avg_composite_score,
                 ROW_NUMBER() OVER (
-                    PARTITION BY ss.market_key
+                    PARTITION BY {group_key}
                     ORDER BY ss.instrument_count DESC
                 ) AS rn
             FROM sector_snapshots ss
@@ -1054,10 +1072,10 @@ def load_sector_cells(
               AND ss.sector IS NOT NULL
               AND ss.sector <> ''
         )
-        SELECT market_key, sector, instrument_count, avg_change_pct, avg_composite_score
+        SELECT group_key, sector, instrument_count, avg_change_pct, avg_composite_score
         FROM ranked
         WHERE rn <= %s
-        ORDER BY market_key, rn
+        ORDER BY group_key, rn
         """,
         tuple(args),
     ).fetchall()
@@ -1338,10 +1356,21 @@ def load_us_all_data(conn) -> OverviewPageData:
 
 def load_kr_all_data(conn) -> OverviewPageData:
     """KR종합 페이지 데이터 (kr 시장, kospi + kosdaq 유니버스)."""
-    return load_overview_data(
+    page = load_overview_data(
         conn, ["kr"], "KR종합", "kr-all",
+        sector_per_market=1000,
         sector_universe_keys=["kospi", "kosdaq"],
     )
+    page.market_cards = load_market_cards(
+        conn,
+        market_keys=["kr"],
+        universe_keys=["kospi", "kosdaq"],
+    )
+    page.daily_macro_items = load_daily_macro_items(conn)
+    page.macro_history = load_macro_history(conn)
+    if page.market_cards:
+        page.generated_at = max(page.generated_at, max(card.trade_date for card in page.market_cards))
+    return page
 
 
 def load_market_summary(

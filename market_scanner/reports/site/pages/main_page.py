@@ -252,6 +252,10 @@ _MACRO_META: dict[str, tuple[str, int, str]] = {
     "US_30Y":             ("미국 30년금리",  2, "%"),
     "US_SPREAD_2S10S":    ("2s10s 스프레드", 2, "%"),
     "US_SPREAD_3M10Y":    ("3M10Y 스프레드", 2, "%"),
+    "KR_10Y":             ("한국 장기국채",  2, "%"),
+    "KR_INTERBANK_3M":    ("은행간 3개월",   2, "%"),
+    "KR_CALL_RATE":       ("콜금리",         2, "%"),
+    "KR_DISCOUNT_RATE":   ("한국 할인율",    2, "%"),
     # 신용 스프레드
     "HY_OAS":             ("HY OAS",        2, "%"),
     "IG_OAS":             ("IG OAS",        2, "%"),

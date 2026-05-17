@@ -42,6 +42,11 @@ _FRED_SERIES: list[tuple[str, str]] = [
     ("WALCL",         "FED_BS"),           # 연준 총자산 (주간·목요일 기준)
     # 환율 보조 소스 (1영업일 lag이 있어 yfinance를 우선 사용)
     ("DEXKOUS",       "USDKRW_FRED"),
+    # Korea rates (FRED OECD/IMF monthly proxy series)
+    ("IRLTLT01KRM156N", "KR_10Y"),
+    ("IR3TIB01KRM156N", "KR_INTERBANK_3M"),
+    ("IRSTCI01KRM156N", "KR_CALL_RATE"),
+    ("INTDSRKRM193N", "KR_DISCOUNT_RATE"),
 ]
 
 # ─── yfinance 심볼 목록 ───────────────────────────────────────────────────────
