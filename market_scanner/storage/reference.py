@@ -57,6 +57,38 @@ def cleanup_deprecated_reference_data(conn: psycopg.Connection) -> None:
     )
 
 
+def _migrate_kr_market_key(conn: psycopg.Connection) -> None:
+    """One-time migration: rename kospi/kosdaq market_key → kr across all tables."""
+    old_keys = ["kospi", "kosdaq"]
+    # 1. markets에 kr 행 먼저 삽입 (FK 제약 충족)
+    conn.execute(
+        """
+        INSERT INTO markets (market_key, label, country_code, currency_code, timezone, is_active)
+        VALUES ('kr', 'Korean Stocks', 'KR', 'KRW', 'Asia/Seoul', TRUE)
+        ON CONFLICT (market_key) DO NOTHING
+        """,
+    )
+    # 2. 참조 테이블들을 kr로 업데이트
+    for table in [
+        "universe_definitions",
+        "instruments",
+        "scan_results",
+        "sector_snapshots",
+        "market_snapshots",
+        "collection_runs",
+        "generated_reports",
+    ]:
+        conn.execute(
+            f"UPDATE {table} SET market_key = 'kr' WHERE market_key = ANY(%s)",
+            (old_keys,),
+        )
+    # 3. 구 market_key 행 삭제
+    conn.execute(
+        "DELETE FROM markets WHERE market_key = ANY(%s)",
+        (old_keys,),
+    )
+
+
 def seed_reference_data(conn: psycopg.Connection) -> None:
     home_keys = {home_market_key(key) for key in MARKETS}
     active_market_keys = sorted((set(MARKETS) | home_keys) - set(UNIVERSE_MARKET_ALIASES))
@@ -67,11 +99,12 @@ def seed_reference_data(conn: psycopg.Connection) -> None:
         "nasdaq100": ("us", "NASDAQ 100", "NASDAQ 100 component universe."),
         "sp500": ("us", "S&P 500", "S&P 500 component universe."),
         "dow30": ("us", "Dow Jones 30", "Dow Jones Industrial Average component universe."),
-        "kospi100": ("kospi", "KOSPI 100", "KOSPI 100 component universe."),
-        "kospi200": ("kospi", "KOSPI 200", "KOSPI 200 component universe."),
-        "kosdaq150": ("kosdaq", "KOSDAQ 150", "KOSDAQ 150 component universe."),
+        "kospi100": ("kr", "KOSPI 100", "KOSPI 100 component universe."),
+        "kospi200": ("kr", "KOSPI 200", "KOSPI 200 component universe."),
+        "kosdaq150": ("kr", "KOSDAQ 150", "KOSDAQ 150 component universe."),
     }
     active_universe_keys = sorted(set(MARKETS) | set(extra_universes))
+    _migrate_kr_market_key(conn)
     cleanup_deprecated_reference_data(conn)
 
     conn.execute(

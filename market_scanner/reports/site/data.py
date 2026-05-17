@@ -144,6 +144,8 @@ class OverviewPageData:
     watchlist_stocks: list[WatchlistStock] = field(default_factory=list)
     sector_etf_quotes: list[MacroQuote] = field(default_factory=list)
     sector_etf_price_series: list[MacroPriceSeries] = field(default_factory=list)
+    daily_macro_items: list[DailyMacroItem] = field(default_factory=list)
+    macro_history: dict[str, list[float]] = field(default_factory=dict)
 
 
 @dataclass
@@ -229,8 +231,10 @@ UNIVERSE_DETAIL_PAGES: dict[str, tuple[str, str]] = {
     "nasdaq100": ("us", "NASDAQ100"),
     "sp500": ("us", "S&P500"),
     "dow30": ("us", "다우존스30"),
-    "kospi200": ("kospi", "KOSPI200"),
-    "kosdaq150": ("kosdaq", "KOSDAQ150"),
+    "kospi": ("kr", "KOSPI"),
+    "kosdaq": ("kr", "KOSDAQ"),
+    "kospi200": ("kr", "KOSPI200"),
+    "kosdaq150": ("kr", "KOSDAQ150"),
 }
 
 HIDDEN_ADMIN_COLUMNS: dict[str, set[str]] = {
@@ -274,7 +278,7 @@ MACRO_SERIES_FALLBACKS: dict[str, tuple[str, str, str | None]] = {
 }
 
 FX_STRENGTH_SOURCES: tuple[tuple[str, str, str, bool], ...] = (
-    ("DXY", "USD", "달러", False),
+    ("DXY", "DXY", "달러인덱스", False),
     ("USDKRW", "KRW", "원화", True),
     ("EURUSD", "EUR", "유로", False),
     ("USDJPY", "JPY", "엔", True),
@@ -855,6 +859,27 @@ def load_daily_macro_items(conn) -> list[DailyMacroItem]:
     ]
 
 
+def load_macro_history(conn) -> dict[str, list[float]]:
+    """최근 1년 daily_macro 값. 매크로 해석의 위치 판단용."""
+    from collections import defaultdict
+
+    rows = conn.execute(
+        """
+        SELECT indicator_code, value
+        FROM daily_macro
+        WHERE trade_date >= CURRENT_DATE - INTERVAL '370 days'
+        ORDER BY indicator_code, trade_date
+        """
+    ).fetchall()
+
+    grouped: dict[str, list[float]] = defaultdict(list)
+    for code, value in rows:
+        value_float = _to_float(value)
+        if value_float is not None:
+            grouped[code].append(value_float)
+    return dict(grouped)
+
+
 def load_market_cards(conn, market_keys: list[str] | None = None) -> list[MarketCard]:
     """활성 시장의 최신 market_snapshots 카드.
 
@@ -986,14 +1011,24 @@ def load_top_stocks(
 
 
 def load_sector_cells(
-    conn, per_market_top: int = 10, market_keys: list[str] | None = None
+    conn,
+    per_market_top: int = 10,
+    market_keys: list[str] | None = None,
+    universe_keys: list[str] | None = None,
 ) -> list[SectorCell]:
     """시장별 sector_snapshots 상위 N (instrument_count 기준).
 
     market_keys 가 주어지면 해당 시장만 반환한다.
+    universe_keys 가 주어지면 해당 유니버스 스냅샷만 포함한다 (미제공 시 universe_key = market_key 필터).
     """
     mk_filter = "AND ss.market_key = ANY(%s)" if market_keys is not None else ""
-    params = (*((market_keys,) if market_keys is not None else ()), per_market_top)
+    uk_filter = "AND ss.universe_key = ANY(%s)" if universe_keys is not None else "AND ss.universe_key = ss.market_key"
+    args: list = []
+    if market_keys is not None:
+        args.append(market_keys)
+    if universe_keys is not None:
+        args.append(universe_keys)
+    args.append(per_market_top)
     rows = conn.execute(
         f"""
         WITH ranked AS (
@@ -1015,7 +1050,7 @@ def load_sector_cells(
                   FROM sector_snapshots
                   GROUP BY market_key
               )
-              AND ss.universe_key = ss.market_key
+              {uk_filter}
               AND ss.sector IS NOT NULL
               AND ss.sector <> ''
         )
@@ -1024,7 +1059,7 @@ def load_sector_cells(
         WHERE rn <= %s
         ORDER BY market_key, rn
         """,
-        params,
+        tuple(args),
     ).fetchall()
 
     return [
@@ -1267,6 +1302,7 @@ def load_overview_data(
     *,
     top_n: int = 30,
     sector_per_market: int = 10,
+    sector_universe_keys: list[str] | None = None,
 ) -> OverviewPageData:
     """US종합·KR종합 등 시장 묶음 개요 페이지 데이터."""
     cards = load_market_cards(conn, market_keys=market_keys)
@@ -1277,7 +1313,7 @@ def load_overview_data(
         generated_at=generated_at,
         market_cards=cards,
         top_stocks=load_top_stocks(conn, top_n, market_keys=market_keys),
-        sector_cells=load_sector_cells(conn, sector_per_market, market_keys=market_keys),
+        sector_cells=load_sector_cells(conn, sector_per_market, market_keys=market_keys, universe_keys=sector_universe_keys),
         watchlist_stocks=load_watchlist_stocks(conn, market_keys=market_keys),
     )
 
@@ -1285,6 +1321,8 @@ def load_overview_data(
 def load_us_all_data(conn) -> OverviewPageData:
     """US종합 페이지 데이터 (us 시장)."""
     page = load_overview_data(conn, ["us"], "US종합", "us-all")
+    page.daily_macro_items = load_daily_macro_items(conn)
+    page.macro_history = load_macro_history(conn)
     page.sector_etf_quotes = [
         q for q in load_macro_quotes(conn)
         if q.market_key == "sector-etfs"
@@ -1299,8 +1337,11 @@ def load_us_all_data(conn) -> OverviewPageData:
 
 
 def load_kr_all_data(conn) -> OverviewPageData:
-    """KR종합 페이지 데이터 (kospi + kosdaq)."""
-    return load_overview_data(conn, ["kospi", "kosdaq"], "KR종합", "kr-all")
+    """KR종합 페이지 데이터 (kr 시장, kospi + kosdaq 유니버스)."""
+    return load_overview_data(
+        conn, ["kr"], "KR종합", "kr-all",
+        sector_universe_keys=["kospi", "kosdaq"],
+    )
 
 
 def load_market_summary(
@@ -1585,146 +1626,6 @@ def load_market_detail_data(
     )
 
 
-@dataclass
-class SectorDetailData:
-    """섹터 서브페이지에 필요한 데이터."""
-
-    market_key: str
-    market_label: str
-    sector: str
-    trade_date: date | None
-    instrument_count: int
-    avg_change_pct: float | None
-    avg_composite_score: float | None
-    top_stocks: list[TopStock] = field(default_factory=list)
-    strategy_top: dict[str, list[TopStock]] = field(default_factory=dict)
-
-
-def sector_slug(sector: str) -> str:
-    """섹터 이름을 파일시스템/URL-safe 디렉터리 이름으로 변환."""
-    slug = sector.strip()
-    for ch in r'\/:*?"<>|':
-        slug = slug.replace(ch, "-")
-    return slug or "unknown"
-
-
-def load_sector_top_stocks(conn, market_key: str, sector: str, limit: int = 30) -> list[TopStock]:
-    """섹터 내 composite_score 상위 종목."""
-    rows = conn.execute(
-        """
-        WITH latest AS (
-            SELECT MAX(trade_date) AS trade_date FROM scan_results WHERE market_key = %s
-        ),
-        dedup AS (
-            SELECT DISTINCT ON (sr.instrument_id)
-                sr.instrument_id, sr.rank_no, sr.composite_score, sr.change_pct,
-                sr.close_price, sr.rsi14, sr.setup_label
-            FROM scan_results sr
-            CROSS JOIN latest l
-            WHERE sr.market_key = %s AND sr.trade_date = l.trade_date
-            ORDER BY sr.instrument_id, sr.trade_date, sr.created_at DESC
-        )
-        SELECT
-            %s::TEXT, m.label, d.rank_no, i.symbol,
-            COALESCE(i.display_symbol, i.symbol),
-            i.name_local, i.sector,
-            d.composite_score, d.change_pct, d.close_price, d.rsi14, d.setup_label
-        FROM dedup d
-        JOIN instruments i ON i.instrument_id = d.instrument_id
-        JOIN markets m ON m.market_key = %s
-        WHERE i.sector = %s AND d.composite_score IS NOT NULL
-        ORDER BY d.composite_score DESC
-        LIMIT %s
-        """,
-        (market_key, market_key, market_key, market_key, sector, limit),
-    ).fetchall()
-    return [
-        TopStock(
-            market_key=r[0], market_label=r[1], rank_no=r[2], symbol=r[3],
-            display_symbol=r[4], name_local=r[5], sector=r[6],
-            composite_score=_to_float(r[7]), change_pct=_to_float(r[8]),
-            close_price=_to_float(r[9]), rsi14=_to_float(r[10]), setup_label=r[11],
-        )
-        for r in rows
-    ]
-
-
-def load_sector_strategy_top(
-    conn, market_key: str, sector: str, score_column: str, limit: int = 5
-) -> list[TopStock]:
-    """섹터 내 전략 점수 컬럼 상위 N."""
-    valid = {key for key, _ in STRATEGY_KEYS}
-    if score_column not in valid:
-        raise ValueError(f"Unknown strategy score column: {score_column}")
-    sql = f"""
-        WITH latest AS (
-            SELECT MAX(trade_date) AS trade_date FROM scan_results WHERE market_key = %s
-        ),
-        dedup AS (
-            SELECT DISTINCT ON (sr.instrument_id)
-                sr.instrument_id, sr.rank_no, sr.composite_score, sr.change_pct,
-                sr.close_price, sr.rsi14, sr.setup_label, sr.{score_column} AS score
-            FROM scan_results sr
-            CROSS JOIN latest l
-            WHERE sr.market_key = %s AND sr.trade_date = l.trade_date
-            ORDER BY sr.instrument_id, sr.trade_date, sr.created_at DESC
-        )
-        SELECT
-            %s::TEXT, m.label, d.rank_no, i.symbol,
-            COALESCE(i.display_symbol, i.symbol),
-            i.name_local, i.sector,
-            d.score, d.change_pct, d.close_price, d.rsi14, d.setup_label
-        FROM dedup d
-        JOIN instruments i ON i.instrument_id = d.instrument_id
-        JOIN markets m ON m.market_key = %s
-        WHERE i.sector = %s AND d.score IS NOT NULL
-        ORDER BY d.score DESC
-        LIMIT %s
-    """
-    rows = conn.execute(
-        sql, (market_key, market_key, market_key, market_key, sector, limit)
-    ).fetchall()
-    return [
-        TopStock(
-            market_key=r[0], market_label=r[1], rank_no=r[2], symbol=r[3],
-            display_symbol=r[4], name_local=r[5], sector=r[6],
-            composite_score=_to_float(r[7]), change_pct=_to_float(r[8]),
-            close_price=_to_float(r[9]), rsi14=_to_float(r[10]), setup_label=r[11],
-        )
-        for r in rows
-    ]
-
-
-def load_sector_detail_data(
-    conn, market_key: str, sector: str, *, top_n: int = 30, strategy_n: int = 5
-) -> SectorDetailData:
-    """섹터 서브페이지에 필요한 데이터 한 번에 로드."""
-    snap = conn.execute(
-        """
-        SELECT ss.instrument_count, ss.avg_change_pct, ss.avg_composite_score,
-               ss.trade_date, m.label
-        FROM sector_snapshots ss
-        JOIN markets m ON m.market_key = ss.market_key
-        WHERE ss.market_key = %s AND ss.sector = %s AND ss.universe_key = ss.market_key
-        ORDER BY ss.trade_date DESC
-        LIMIT 1
-        """,
-        (market_key, sector),
-    ).fetchone()
-    return SectorDetailData(
-        market_key=market_key,
-        market_label=snap[4] if snap else market_key,
-        sector=sector,
-        trade_date=snap[3] if snap else None,
-        instrument_count=snap[0] or 0 if snap else 0,
-        avg_change_pct=_to_float(snap[1]) if snap else None,
-        avg_composite_score=_to_float(snap[2]) if snap else None,
-        top_stocks=load_sector_top_stocks(conn, market_key, sector, top_n),
-        strategy_top={
-            col: load_sector_strategy_top(conn, market_key, sector, col, strategy_n)
-            for col, _ in STRATEGY_KEYS
-        },
-    )
 
 
 def list_buildable_markets(conn) -> list[str]:

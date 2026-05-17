@@ -577,22 +577,13 @@ def fetch_naver_item_meta(code: str) -> tuple[str | None, str | None]:
 
 
 @lru_cache(maxsize=None)
-def _kospi_metadata() -> dict[str, StaticTickerMeta]:
-    db_meta = _db_instrument_meta("kospi")
+def _kr_metadata() -> dict[str, StaticTickerMeta]:
+    db_meta = _db_instrument_meta("kr")
     if db_meta:
         return db_meta
     return _merge_metadata(
         _naver_market_meta("0", ".KS", "KOSPI"),
         _fdr_market_meta("KOSPI", ".KS", "KOSPI"),
-    )
-
-
-@lru_cache(maxsize=None)
-def _kosdaq_metadata() -> dict[str, StaticTickerMeta]:
-    db_meta = _db_instrument_meta("kosdaq")
-    if db_meta:
-        return db_meta
-    return _merge_metadata(
         _naver_market_meta("1", ".KQ", "KOSDAQ"),
         _fdr_market_meta("KOSDAQ", ".KQ", "KOSDAQ"),
     )
@@ -633,6 +624,16 @@ def _fetch_krx_kospi_all() -> list[str]:
 
 def _fetch_krx_kosdaq_all() -> list[str]:
     return _fetch_fdr_market("KOSDAQ", ".KQ", None, "KOSDAQ all") or _naver_market_symbols("1", ".KQ", "KOSDAQ all")
+
+
+def _kr_all_universe() -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for sym in _fetch_krx_kospi_all() + _fetch_krx_kosdaq_all():
+        if sym not in seen:
+            seen.add(sym)
+            result.append(sym)
+    return result
 
 
 def _nasdaq100_universe() -> list[str]:
@@ -708,6 +709,7 @@ def _kospi_universe() -> list[str]:
 
 def _kosdaq_universe() -> list[str]:
     return _fetch_krx_kosdaq_all()
+
 
 
 def _static_symbols(meta: dict[str, StaticTickerMeta]) -> list[str]:
@@ -905,6 +907,8 @@ REPRESENTATIVE_UNIVERSE_LOADERS: dict[str, UniverseLoader] = {
     "nasdaq100": _nasdaq100_universe,
     "sp500": _sp500_universe,
     "dow30": _dow30_universe,
+    "kospi": _kospi_universe,
+    "kosdaq": _kosdaq_universe,
     "kospi100": _kospi100_universe,
     "kospi200": _kospi200_universe,
     "kosdaq150": _kosdaq150_universe,
@@ -924,31 +928,18 @@ MARKETS: dict[str, MarketDefinition] = {
         sector_aliases=_SECTOR_KO,
         notes="Full US listed-stock universe from FDR (NASDAQ+NYSE) with NASDAQ Trader fallback.",
     ),
-    "kospi": MarketDefinition(
-        key="kospi",
-        label="KOSPI Stocks",
-        output_prefix="kospi",
+    "kr": MarketDefinition(
+        key="kr",
+        label="Korean Stocks",
+        output_prefix="kr",
         currency_symbol="KRW ",
         price_decimals=0,
-        universe_loader=_kospi_universe,
-        metadata_loader=_kospi_metadata,
+        universe_loader=_kr_all_universe,
+        metadata_loader=_kr_metadata,
         quote_url_builder=_quote_url_investing_detail,
         display_symbol_builder=display_strip_kr,
         sector_aliases=_SECTOR_KO,
-        notes="Full KOSPI universe from FDR/KRX when available, with static metadata fallback.",
-    ),
-    "kosdaq": MarketDefinition(
-        key="kosdaq",
-        label="KOSDAQ Stocks",
-        output_prefix="kosdaq",
-        currency_symbol="KRW ",
-        price_decimals=0,
-        universe_loader=_kosdaq_universe,
-        metadata_loader=_kosdaq_metadata,
-        quote_url_builder=_quote_url_investing_detail,
-        display_symbol_builder=display_strip_kr,
-        sector_aliases=_SECTOR_KO,
-        notes="Full KOSDAQ universe from FDR/KRX when available, with static metadata fallback.",
+        notes="Korean market (KOSPI + KOSDAQ) from FDR/KRX with Naver fallback.",
     ),
     "global-indices": MarketDefinition(
         key="global-indices",

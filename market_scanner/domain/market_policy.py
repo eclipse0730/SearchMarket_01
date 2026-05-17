@@ -8,9 +8,11 @@ UNIVERSE_MARKET_ALIASES = {
     "nasdaq100": "us",
     "sp500": "us",
     "dow30": "us",
-    "kospi100": "kospi",
-    "kospi200": "kospi",
-    "kosdaq150": "kosdaq",
+    "kospi": "kr",
+    "kosdaq": "kr",
+    "kospi100": "kr",
+    "kospi200": "kr",
+    "kosdaq150": "kr",
 }
 
 
@@ -32,7 +34,7 @@ def default_asset_filter(market_key: str) -> list[str]:
 
 def country_currency_for_market(market_key: str) -> tuple[str | None, str | None, str]:
     home_key = home_market_key(market_key)
-    if home_key in {"kospi", "kosdaq"}:
+    if home_key in {"kr"}:
         return "KR", "KRW", "Asia/Seoul"
     if home_key in {"us", "nasdaq100", "sp500", "dow30", "sector-etfs"}:
         return "US", "USD", "America/New_York"
@@ -40,6 +42,6 @@ def country_currency_for_market(market_key: str) -> tuple[str | None, str | None
 
 
 def price_source_for_market(market_key: str) -> str:
-    if home_market_key(market_key) in {"kospi", "kosdaq"}:
+    if home_market_key(market_key) in {"kr"}:
         return "fdr"
     return "yfinance"

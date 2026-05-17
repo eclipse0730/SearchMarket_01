@@ -26,10 +26,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Fetch prices
-        run: python Search.py price kosdaq --workers 1
+        run: python Search.py price kr --workers 1
 
       - name: Compute indicators
-        run: python Search.py indicators kosdaq
+        run: python Search.py indicators kr
 
       - name: Run screener
-        run: python Search.py screen kosdaq
+        run: python Search.py screen kr --universe kosdaq

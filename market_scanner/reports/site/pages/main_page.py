@@ -1,6 +1,6 @@
 """메인 페이지 렌더링.
 
-매크로 지표(금리·환율·변동성·크립토)와 글로벌 지수·원자재 틱커를 표시한다.
+매크로 지표 해석과 글로벌 지수·원자재 틱커를 표시한다.
 시장/종목 섹션은 overview_page 로 분리됐다.
 """
 from __future__ import annotations
@@ -49,7 +49,7 @@ _SERIES_NAMES: dict[str, str] = {
     "IBEX": "스페인", "FTSEMIB.MI": "이탈리아", "AEX": "네덜란드",
     "SSMI": "스위스", "BFX": "벨기에", "ATX": "오스트리아",
     "OMXSPI": "스웨덴", "NZ50": "뉴질랜드",
-    "USD": "달러", "KRW": "원화", "EUR": "유로", "JPY": "엔", "CNH": "위안",
+    "DXY": "달러인덱스", "KRW": "원화", "EUR": "유로", "JPY": "엔", "CNH": "위안",
     "GBP": "파운드", "AUD": "호주달러", "NZD": "뉴질랜드달러",
     "CAD": "캐나다달러", "CHF": "스위스프랑", "SGD": "싱가포르달러",
     "SEK": "스웨덴크로나", "NOK": "노르웨이크로네", "MXN": "멕시코페소",
@@ -121,7 +121,7 @@ _SERIES_COLORS: dict[str, str] = {
     "ATX":      "#ff7043",
     "OMXSPI":   "#5c6bc0",
     "NZ50":     "#26a69a",
-    "USD":      "#d7b56d",
+    "DXY":      "#d7b56d",
     "KRW":      "#ff0000",
     "EUR":      "#32cd32",
     "JPY":      "#ff8f00",
@@ -136,18 +136,18 @@ _SERIES_COLORS: dict[str, str] = {
     "NOK":      "#00bcd4",
     "MXN":      "#26a69a",
     # 섹터 ETF — 사용자 요청 색상 참고
-    "XLRE":     "#ef5350",  # 리츠 — 빨강
-    "VNQ":      "#e53935",  # 리츠 보조 — 진빨강
-    "XLB":      "#ff8f00",  # 소재 — 주황
-    "XLE":      "#c62828",  # 에너지 — 진빨강
-    "XLF":      "#ffd740",  # 금융 — 금색
-    "XLK":      "#4f9dde",  # 기술 — 파랑
+    "XLK":      "#1986df",  # 기술 — 파랑
+    "XLC":      "#2adaf1",  # 통신 — 청록
+    "XLE":      "#b6b6b6",  # 에너지 — 진빨강
     "XLV":      "#32cd32",  # 헬스케어 — 초록
+    "XLF":      "#ffd740",  # 금융 — 금색
+    "XLB":      "#ff8f00",  # 소재 — 주황
     "XLY":      "#ff6d00",  # 경기소비재 — 주황
     "XLP":      "#66bb6a",  # 필수소비재 — 연초록
     "XLI":      "#87ceeb",  # 산업재 — 하늘색
     "XLU":      "#9370db",  # 유틸리티 — 보라
-    "XLC":      "#26c6da",  # 통신 — 청록
+    "XLRE":     "#ef5350",  # 리츠 — 빨강
+    "VNQ":      "#e53935",  # 리츠 보조 — 진빨강
 }
 
 
@@ -172,7 +172,7 @@ _SERIES_PRIORITY: dict[str, list[str]] = {
         "XLP", "XLU", "XLC", "XLB", "XLRE", "VNQ",
     ],
     "fx-strength": [
-        "USD", "KRW", "EUR", "JPY", "CNH", "GBP", "AUD",
+        "DXY", "KRW", "EUR", "JPY", "CNH", "GBP", "AUD",
         "CAD", "CHF", "NZD", "SGD", "SEK", "NOK", "MXN",
     ],
 }
@@ -253,8 +253,8 @@ _MACRO_META: dict[str, tuple[str, int, str]] = {
     "US_SPREAD_2S10S":    ("2s10s 스프레드", 2, "%"),
     "US_SPREAD_3M10Y":    ("3M10Y 스프레드", 2, "%"),
     # 신용 스프레드
-    "HY_OAS":             ("HY OAS",        2, "bp"),
-    "IG_OAS":             ("IG OAS",        2, "bp"),
+    "HY_OAS":             ("HY OAS",        2, "%"),
+    "IG_OAS":             ("IG OAS",        2, "%"),
     # 유동성
     "FED_RRP":            ("Fed RRP",       0, "B$"),
     "FED_BS":             ("Fed B/S",       0, "M$"),
@@ -287,11 +287,9 @@ _MACRO_META: dict[str, tuple[str, int, str]] = {
 # 표시 그룹 순서
 _GROUPS: list[tuple[str, list[str]]] = [
     ("금리", ["SOFR", "US_FFR", "US_2Y", "US_10Y", "US_30Y"]),
-    ("스프레드", ["US_SPREAD_2S10S", "US_SPREAD_3M10Y", "HY_OAS", "IG_OAS"]),
+    ("경기·신용 신호", ["US_SPREAD_2S10S", "US_SPREAD_3M10Y", "HY_OAS", "IG_OAS"]),
     ("유동성", ["FED_RRP", "FED_BS"]),
-    ("환율", ["USDKRW", "EURUSD", "USDJPY", "USDCNY", "GBPUSD", "AUDUSD", "USDCAD", "USDCHF", "DXY"]),
-    ("변동성·심리", ["VIX", "VVIX"]),
-    ("크립토", ["BTC_USD", "ETH_USD", "CRYPTO_TOTAL_MCAP", "CRYPTO_FNG"]),
+    ("변동성·심리", ["VIX", "VVIX", "CRYPTO_FNG"]),
 ]
 
 _TOP_INDICATORS: list[dict[str, Any]] = [
@@ -317,6 +315,132 @@ def _fmt_macro_value(item: DailyMacroItem) -> str:
     _, decimals, suffix = meta
     val_str = f"{item.value:,.{decimals}f}"
     return f"{val_str} {suffix}".strip() if suffix else val_str
+
+
+def _macro_percentile(item: DailyMacroItem, history: dict[str, list[float]]) -> int | None:
+    values = history.get(item.indicator_code, [])
+    if len(values) < 20:
+        return None
+    below_or_equal = sum(1 for value in values if value <= item.value)
+    return round((below_or_equal / len(values)) * 100)
+
+
+def _pctile_text(percentile: int | None) -> str:
+    return f"1년 위치 {percentile}%" if percentile is not None else "1년 위치 —"
+
+
+def _macro_signal(code: str, item: DailyMacroItem, percentile: int | None) -> tuple[str, str]:
+    value = item.value
+    change_pct = item.change_pct
+
+    if code in {"SOFR", "US_FFR"}:
+        if value >= 5:
+            return "위험", "단기금리가 높은 구간입니다."
+        if value >= 4:
+            return "주의", "높은 단기금리가 위험자산에 부담입니다."
+        return "안정", "단기금리 부담이 완화된 구간입니다."
+
+    if code in {"US_2Y", "US_10Y", "US_30Y"}:
+        if value >= 4.5:
+            return "위험", "국채금리 부담이 큰 구간입니다."
+        if value >= 4:
+            return "주의", "금리 상승 부담을 확인해야 합니다."
+        return "안정", "금리 부담은 비교적 제한적입니다."
+
+    if code in {"US_SPREAD_2S10S", "US_SPREAD_3M10Y"}:
+        if value < 0:
+            return "위험", "역전 상태로 경기 둔화 신호입니다."
+        if value < 0.5:
+            return "주의", "장단기 스프레드가 낮은 편입니다."
+        return "안정", "수익률곡선은 정상 구간입니다."
+
+    if code == "HY_OAS":
+        if value >= 5:
+            return "위험", "하이일드 신용위험이 확대된 구간입니다."
+        if value >= 4:
+            return "주의", "신용 스프레드 확대를 주의해야 합니다."
+        return "안정", "하이일드 신용위험은 안정권입니다."
+
+    if code == "IG_OAS":
+        if value >= 2:
+            return "위험", "투자등급 신용위험이 높아졌습니다."
+        if value >= 1.5:
+            return "주의", "투자등급 스프레드 확대를 확인해야 합니다."
+        return "안정", "투자등급 신용위험은 안정권입니다."
+
+    if code == "FED_RRP":
+        if change_pct is not None and change_pct < -5:
+            return "주의", "역레포 잔액 감소 속도가 빠릅니다."
+        return "중립", "단기 유동성 완충 정도를 보는 지표입니다."
+
+    if code == "FED_BS":
+        if change_pct is not None and change_pct < 0:
+            return "주의", "연준 자산 축소 흐름입니다."
+        if change_pct is not None and change_pct > 0:
+            return "중립", "연준 자산이 증가했습니다."
+        return "중립", "연준 자산 규모 변화는 제한적입니다."
+
+    if code == "VIX":
+        if value >= 30:
+            return "위험", "주식시장 변동성 스트레스 구간입니다."
+        if value >= 20:
+            return "주의", "변동성 확대를 주의해야 합니다."
+        return "안정", "주식시장 변동성은 안정권입니다."
+
+    if code == "VVIX":
+        if value >= 110:
+            return "위험", "VIX 자체의 변동성도 높습니다."
+        if value >= 85:
+            return "주의", "변동성 급등 위험을 점검해야 합니다."
+        return "안정", "변동성 급등 위험은 제한적입니다."
+
+    if code == "CRYPTO_FNG":
+        if value <= 25:
+            return "주의", "크립토 심리가 공포 구간입니다."
+        if value >= 75:
+            return "주의", "크립토 심리가 과열 구간입니다."
+        return "중립", "크립토 심리는 중립권입니다."
+
+    if percentile is not None:
+        if percentile >= 80:
+            return "주의", "최근 1년 기준 높은 구간입니다."
+        if percentile <= 20:
+            return "주의", "최근 1년 기준 낮은 구간입니다."
+    return "중립", "추세 확인이 필요한 보조 지표입니다."
+
+
+def _status_class(status: str) -> str:
+    return {
+        "안정": "ok",
+        "중립": "neutral",
+        "주의": "warn",
+        "위험": "risk",
+    }.get(status, "neutral")
+
+
+def _macro_overview_chips(by_code: dict[str, DailyMacroItem], history: dict[str, list[float]]) -> str:
+    specs = [
+        ("금리 압력", "US_10Y"),
+        ("장단기 경기신호", "US_SPREAD_2S10S"),
+        ("신용위험", "HY_OAS"),
+        ("유동성", "FED_RRP"),
+        ("변동성", "VIX"),
+    ]
+    chips: list[str] = []
+    for label, code in specs:
+        item = by_code.get(code)
+        if item is None:
+            continue
+        percentile = _macro_percentile(item, history)
+        status, note = _macro_signal(code, item, percentile)
+        chips.append(f"""<div class="macro-chip status-{_status_class(status)}">
+  <div class="chip-label">{escape(label)}</div>
+  <div class="chip-main">{escape(status)}</div>
+  <div class="chip-note">{escape(note)}</div>
+</div>""")
+    if not chips:
+        return ""
+    return f'<div class="macro-summary">{"".join(chips)}</div>'
 
 
 def _fmt_top_value(value: float | None, decimals: int, prefix: str = "", suffix: str = "") -> str:
@@ -425,10 +549,15 @@ def _top_indicators_section(
 </section>"""
 
 
-def _daily_macro_section(items: list[DailyMacroItem]) -> str:
+def _macro_interpretation_section(
+    items: list[DailyMacroItem],
+    history: dict[str, list[float]],
+    title: str = "매크로 해석",
+) -> str:
     if not items:
         return ""
     by_code = {it.indicator_code: it for it in items}
+    summary_html = _macro_overview_chips(by_code, history)
 
     groups_html: list[str] = []
     for group_label, codes in _GROUPS:
@@ -442,13 +571,20 @@ def _daily_macro_section(items: list[DailyMacroItem]) -> str:
             chg_class = layout.change_class(item.change_pct)
             val_str = _fmt_macro_value(item)
             chg_str = layout.fmt_pct(item.change_pct) if item.change_pct is not None else "—"
+            percentile = _macro_percentile(item, history)
+            status, note = _macro_signal(code, item, percentile)
             cells.append(f"""<div class="macro-cell">
-  <div class="sym">{escape(code)}</div>
+  <div class="macro-card-head">
+    <div class="sym">{escape(code)}</div>
+    <span class="macro-status status-{_status_class(status)}">{escape(status)}</span>
+  </div>
   <div class="name" title="{escape(display_name)}">{escape(display_name)}</div>
   <div class="macro-value-row">
-    <span class="px">{escape(val_str)}</span>
+    <span class="metric-value">{escape(val_str)}</span>
     <span class="chg {chg_class}">{escape(chg_str)}</span>
   </div>
+  <div class="macro-context">{escape(_pctile_text(percentile))}</div>
+  <div class="macro-note">{escape(note)}</div>
 </div>""")
         if not cells:
             continue
@@ -463,8 +599,9 @@ def _daily_macro_section(items: list[DailyMacroItem]) -> str:
         return ""
     return f"""
 <section class="block">
-  <h2>매크로 지표</h2>
-  <div class="sub">금리·환율·변동성·크립토 등 최신 거래일 값. 전일 대비 등락률.</div>
+  <h2>{escape(title)}</h2>
+  <div class="sub">금리·경기신호·신용위험·유동성·변동성을 최근 1년 위치와 함께 해석합니다.</div>
+  {summary_html}
   {''.join(groups_html)}
 </section>"""
 
@@ -563,12 +700,20 @@ def _macro_chart_html(
   const CARD_GROUPS={quote_groups_json};
   const root=document.getElementById({root_id_js});
   const DPR=window.devicePixelRatio||1;
-  const CHART_H=480;
   const REC_DAYS=90;
   let chart=null;
   let cur={first_tab_js};
   let hiddenIdx=new Set();
   let scrollFrame=null;
+
+  function remToPx(value){{
+    const base=parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
+    return value*base;
+  }}
+
+  function chartHeight(){{
+    return Math.round(Math.max(remToPx(20),Math.min(remToPx(32.5),window.innerHeight*0.5)));
+  }}
 
   // 날짜 입력 초기값 설정 (최초 1회)
   (function(){{
@@ -609,7 +754,8 @@ def _macro_chart_html(
       ctx.lineTo(xOffset+y.right+.5,y.bottom);
       ctx.stroke();
       ctx.fillStyle='#8fa3ba';
-      ctx.font='12px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", Roboto, sans-serif';
+      const fontSize=Math.round(Math.max(11,Math.min(13,remToPx(0.75))));
+      ctx.font=fontSize+'px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", Roboto, sans-serif';
       ctx.textAlign='right';
       ctx.textBaseline='middle';
       y.ticks.forEach(function(tick){{
@@ -653,12 +799,14 @@ def _macro_chart_html(
     // 캔버스 크기 (날짜 수에 따른 스크롤)
     const canvas=document.getElementById('{escape(canvas_id)}');
     if(chart){{chart.destroy();chart=null;}}
-    const pw=Math.max(10,Math.min(18,1000/filtDates.length));
-    const w=Math.max(900,filtDates.length*pw);
+    const wrapWidth=Math.max(0,canvas.parentElement.clientWidth||0);
+    const pw=Math.max(remToPx(0.55),Math.min(remToPx(1.125),(wrapWidth*1.15)/filtDates.length));
+    const w=Math.max(wrapWidth,filtDates.length*pw);
+    const h=chartHeight();
     canvas.style.width=w+'px';
-    canvas.style.height=CHART_H+'px';
+    canvas.style.height=h+'px';
     canvas.width=Math.round(w*DPR);
-    canvas.height=Math.round(CHART_H*DPR);
+    canvas.height=Math.round(h*DPR);
 
     chart=new Chart(canvas,{{
       type:'line',
@@ -826,7 +974,7 @@ def _macro_chart_html(
           '" style="--series-color:'+escapeHtml(card.color||'#62c7ff')+'">'+
           '<div class="macro-card-head"><div class="name" title="'+escapeHtml(card.label)+'">'+
           escapeHtml(card.label)+'</div><div class="sym">'+escapeHtml(card.symbol)+'</div></div>'+
-          '<div class="macro-value-row"><span class="px">'+escapeHtml(card.price)+'</span>'+
+          '<div class="macro-value-row"><span class="metric-value">'+escapeHtml(card.price)+'</span>'+
           '<span class="chg '+escapeHtml(card.changeClass)+'">'+escapeHtml(card.change)+'</span></div>'+
           '</button>';
       }}).join('');
@@ -986,7 +1134,6 @@ def render(data: MainPageData) -> str:
         section for section in (
             _top_indicators_section(data.macro_quotes, data.daily_macro_items),
             _macro_panel_section(data.macro_quotes, data.macro_price_series, data.fx_strength_series),
-            _daily_macro_section(data.daily_macro_items),
         ) if section
     )
     if not body:

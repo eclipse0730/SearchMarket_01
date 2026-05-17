@@ -18,13 +18,14 @@ from pathlib import Path
 from psycopg.types.json import Jsonb
 
 from market_scanner.config.markets import MARKETS
+from market_scanner.domain.market_policy import home_market_key
 from market_scanner.models import ScanSettings
 from market_scanner.reports._common import enrich_metadata_frame
 from market_scanner.reports.html_report import write_html
 from market_scanner.reports.markdown_report import write_markdown
 from market_scanner.reports.render import _load_render_frame
 from market_scanner.reports.site import data, layout
-from market_scanner.reports.site.pages import admin_page, main_page, market_page, overview_page, sector_page
+from market_scanner.reports.site.pages import admin_page, main_page, market_page, overview_page
 from market_scanner.storage.connection import connect
 
 _DEFAULT_SETTINGS = ScanSettings(output_dir=Path("."))
@@ -203,15 +204,6 @@ def build_kr_all(conn) -> Path:
     return path
 
 
-def build_sector(conn, market_key: str, sector: str) -> Path:
-    detail = data.load_sector_detail_data(conn, market_key, sector)
-    html = sector_page.render(detail)
-    slug = data.sector_slug(sector)
-    path = SITE_DIR / "markets" / market_key / "sectors" / slug / "index.html"
-    _write_html(path, html)
-    print(f"  sector[{market_key}/{slug}]: {path}")
-    return path
-
 
 def build_market(conn, market_key: str, universe_key: str | None = None, label: str | None = None) -> Path:
     path_key = universe_key or market_key
@@ -224,18 +216,25 @@ def build_market(conn, market_key: str, universe_key: str | None = None, label: 
         nav_key=path_key,
     )
     trade_date = (
-        _latest_scan_date(conn, market_key, source_universe_key)
+        # universe_key 전용 스캔을 먼저 찾고, 없으면 market_key 기준으로 fallback
+        (_latest_scan_date(conn, market_key, universe_key) or _latest_scan_date(conn, market_key, market_key))
         if universe_key
-        else detail.summary.trade_date if detail.summary else _latest_scan_date(conn, market_key, source_universe_key)
+        else detail.summary.trade_date if detail.summary else _latest_scan_date(conn, market_key, path_key)
     )
     path = SITE_DIR / "markets" / path_key / "index.html"
 
     # Use v1-style rich page when market definition exists and data is available
-    if trade_date and market_key in MARKETS:
-        market_def = replace(MARKETS[market_key], label=label or MARKETS[market_key].label)
+    market_def_key = market_key if market_key in MARKETS else (universe_key if universe_key and universe_key in MARKETS else None)
+    if trade_date and market_def_key:
+        market_def = replace(MARKETS[market_def_key], label=label or MARKETS[market_def_key].label)
         print(f"  loading {path_key} frame...")
-        frame = _load_render_frame(conn, market_key, trade_date, None)
-        if universe_key:
+        # universe_key 전용 스캔이 있으면 바로 사용, 없으면 전체 스캔 + 멤버십 필터
+        render_universe = None
+        if universe_key and universe_key != market_key:
+            if _latest_scan_date(conn, market_key, universe_key):
+                render_universe = universe_key
+        frame = _load_render_frame(conn, market_key, trade_date, render_universe)
+        if universe_key and render_universe is None:
             frame = _filter_frame_by_universe_membership(conn, frame, universe_key)
         if not frame.empty:
             print(f"  enriching {len(frame)} rows...")
@@ -333,12 +332,9 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("main", help="Build main (overview) page only.")
     sub.add_parser("admin", help="Build database table admin page only.")
-    p_market = sub.add_parser("market", help="Build a single market page (+ its sectors).")
+    p_market = sub.add_parser("market", help="Build a single market page.")
     p_market.add_argument("market_key", help="Market key or universe key (e.g. kospi, sp500).")
-    p_sector = sub.add_parser("sector", help="Build a single sector page.")
-    p_sector.add_argument("market_key")
-    p_sector.add_argument("sector", help="Sector name (e.g. 전기전자).")
-    sub.add_parser("all", help="Build main + every buildable market page + sectors.")
+    sub.add_parser("all", help="Build main + every buildable market page.")
 
     args = parser.parse_args()
     with connect(args.database_url) as conn:
@@ -352,8 +348,6 @@ def main() -> None:
                 primary_path = build_universe_market(conn, args.market_key)
             else:
                 primary_path = build_market(conn, args.market_key)
-        elif args.command == "sector":
-            primary_path = build_sector(conn, args.market_key, args.sector)
         elif args.command == "all":
             primary_path = build_main(conn)
             build_admin(conn)

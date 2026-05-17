@@ -18,7 +18,6 @@ from market_scanner.reports.site.data import (
     MarketDetailData,
     SectorCell,
     TopStock,
-    sector_slug,
 )
 
 
@@ -81,20 +80,18 @@ def _sectors_section(sectors: list[SectorCell]) -> str:
     tiles = []
     for c in sectors_sorted:
         chg_class = layout.change_class(c.avg_change_pct)
-        slug = sector_slug(c.sector)
-        href = f"sectors/{escape(slug)}/index.html"
         tiles.append(
-            f'<a class="sector-tile sector-tile-link" href="{href}">'
+            f'<div class="sector-tile">'
             f'<div class="s" title="{escape(c.sector)}">{escape(c.sector)}</div>'
             f'<div class="m">'
             f'<span>{layout.fmt_int(c.instrument_count)}종목</span>'
             f'<span class="{chg_class}">{layout.fmt_pct(c.avg_change_pct)}</span>'
-            f'</div></a>'
+            f'</div></div>'
         )
     return f"""
 <section class="block">
   <h2>섹터 히트맵</h2>
-  <div class="sub">최신 거래일 기준, 섹터 평균 등락률 내림차순. 클릭하면 섹터 상세.</div>
+  <div class="sub">최신 거래일 기준, 섹터 평균 등락률 내림차순.</div>
   <div class="sector-heatmap">{''.join(tiles)}</div>
 </section>"""
 

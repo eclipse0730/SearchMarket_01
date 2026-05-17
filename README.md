@@ -26,15 +26,17 @@ uv run python Search.py init
 ```bash
 uv run python Search.py refresh us --universe sp500
 uv run python Search.py refresh us --universe dow30
-uv run python Search.py refresh kospi --universe kospi200
-uv run python Search.py refresh kosdaq --universe kosdaq150
+uv run python Search.py refresh kr --universe kospi
+uv run python Search.py refresh kr --universe kosdaq
+uv run python Search.py refresh kr --universe kospi200
+uv run python Search.py refresh kr --universe kosdaq150
 uv run python Search.py refresh global-indices
 uv run python Search.py refresh sector-etfs
 uv run python Search.py refresh commodities
 ```
 
 데이터 소스:
-- `us`, `kospi`, `kosdaq`: 종목 목록은 FinanceDataReader를 우선 사용합니다. 가격 수집은 US는 yfinance, KOSPI/KOSDAQ은 FinanceDataReader를 사용합니다.
+- `us`, `kr`: 종목 목록은 FinanceDataReader를 우선 사용합니다. 가격 수집은 US는 yfinance, KR(KOSPI/KOSDAQ)은 FinanceDataReader를 사용합니다. `kr` 내 유니버스(kospi, kosdaq, kospi200 등)는 `--universe`로 지정합니다.
 - `global-indices`, `commodities`: JSON 메타 파일을 원본으로 사용합니다.
 - `sector-etfs`: 11개 GICS 섹터 ETF와 리츠 보조 프록시를 JSON 메타 파일에서 수집합니다. GICS 부동산 섹터 기준은 `XLRE`, 리츠 보조 프록시는 `VNQ`입니다.
 - 한국 종목명/업종 보강: `uv run python Search.py names kospi`
@@ -46,21 +48,19 @@ uv run python Search.py refresh commodities
 기본 수집은 US는 전일, KOSPI/KOSDAQ은 오늘을 대상으로 필요한 종목만 조회합니다.
 ```bash
 uv run python Search.py price us
-uv run python Search.py price kospi
-uv run python Search.py price kosdaq
+uv run python Search.py price us --from 20250101 --to 20260505 --force --workers 1
+uv run python Search.py price kr
+uv run python Search.py price kr --from 20250101 --to 20260505 --force --workers 1
 uv run python Search.py price sector-etfs
-uv run python Search.py price kospi --date 20260513 --force --workers 1
-uv run python Search.py price us --from 20250101 --to 20260505 --workers 1
-uv run python Search.py price us --from 20250101 --to 20260505 --force
 uv run python Search.py retry-price us
 ```
 
 펀더멘탈 수집:
 ```bash
 uv run python Search.py fundamentals us
-uv run python Search.py fundamentals kospi
-uv run python Search.py fundamentals kosdaq --workers 8 --limit 100
-uv run python Search.py fundamentals kospi --source naver --limit 10
+uv run python Search.py fundamentals kr
+uv run python Search.py fundamentals kr --workers 8 --limit 100
+uv run python Search.py fundamentals kr --source naver --limit 10
 ```
 
 ## 매크로 지표 수집
@@ -97,10 +97,9 @@ uv run python Search.py macro --days-back 365
 `daily_prices`를 읽어 `daily_indicators`를 계산합니다.
 ```bash
 uv run python Search.py indicators us
-uv run python Search.py indicators kospi
-uv run python Search.py indicators kosdaq
+uv run python Search.py indicators kr
 uv run python Search.py indicators us --date 20260505
-uv run python Search.py indicators kospi --from 20260501 --to 20260507
+uv run python Search.py indicators kr --from 20260501 --to 20260507
 ```
 
 ## 4단계: 스코어링
@@ -109,10 +108,10 @@ uv run python Search.py indicators kospi --from 20260501 --to 20260507
 `--date`를 생략하면 해당 시장/유니버스의 최신 `daily_indicators.trade_date`를 자동으로 사용합니다.
 ```bash
 uv run python Search.py screen us
-uv run python Search.py screen kospi
-uv run python Search.py screen kosdaq
 uv run python Search.py screen us --universe sp500
-uv run python Search.py screen kospi --universe kospi200
+uv run python Search.py screen kr
+uv run python Search.py screen kr --universe kospi
+uv run python Search.py screen kr --universe kospi200
 ```
 
 ## 5단계: 사이트 빌드
@@ -121,18 +120,9 @@ DB의 스캔 결과를 읽어 `site/` 아래에 GitHub Pages 정적 사이트를
 ```bash
 # 전체 빌드 (기본값: all)
 uv run python Search.py site --no-open
-
-# 메인 페이지만
 uv run python Search.py site main --no-open
-
-# 특정 마켓 페이지
 uv run python Search.py site market kospi --no-open
 uv run python Search.py site market us-all --no-open
-
-# 특정 섹터 페이지
-uv run python Search.py site sector kospi 전기전자 --no-open
-
-# 관리 페이지만
 uv run python Search.py site admin --no-open
 ```
 
@@ -166,7 +156,8 @@ uv run python Search.py screen us --universe sp500
 파이프라인 묶음 실행:
 ```bash
 uv run python Search.py scan us --universe sp500
-uv run python Search.py all kospi --universe kospi200
+uv run python Search.py all kr --universe kospi
+uv run python Search.py all kr --universe kospi200
 uv run python Search.py analyze us --universe sp500
 ```
 
@@ -207,7 +198,7 @@ uv run python Search.py site --no-open
 ## 데이터 정책
 
 - `instruments`: 종목마스터의 우선 원천입니다.
-- `universe_memberships`: `nasdaq`, `nyse`, `amex`(거래소 전체), `nasdaq100`, `sp500`, `dow30`(지수), `kospi100`, `kospi200`, `kosdaq150` 같은 분석/필터 단위 멤버십입니다. US는 `--market us` 한 번으로 6개 universe가 동시 갱신됩니다.
+- `universe_memberships`: `nasdaq`, `nyse`, `amex`(거래소 전체), `nasdaq100`, `sp500`, `dow30`(지수), `kospi`, `kosdaq`, `kospi100`, `kospi200`, `kosdaq150` 같은 분석/필터 단위 멤버십입니다. US는 `refresh us` 한 번으로 6개, KR은 `refresh kr` 한 번으로 5개 universe가 동시 갱신됩니다.
 - `market_scanner/assets/instruments.json`: DB가 비어 있거나 연결되지 않을 때 쓰는 seed/fallback입니다. 스캔 실행은 이 JSON을 자동 갱신하지 않습니다.
 - `market_scanner/assets/global_indices_meta.json`, `commodities_meta.json`: 글로벌 지수·원자재는 FDR 자동 발견이 불가능하므로 JSON이 심볼 정의 원본입니다. 새 심볼 추가 시 JSON 편집 후 `Search.py refresh global-indices` 또는 `Search.py refresh commodities`로 DB에 반영합니다. 현재 글로벌 지수는 35개, 원자재는 27개입니다.
 - `market_scanner/assets/sector_etfs_meta.json`: 섹터 ETF 유니버스의 원본입니다. `XLK`, `XLV`, `XLF`, `XLY`, `XLP`, `XLI`, `XLE`, `XLU`, `XLB`, `XLC`, `XLRE`를 기본 GICS 섹터 프록시로 사용하고, `VNQ`는 리츠 보조 프록시로 함께 수집합니다.
@@ -238,8 +229,8 @@ market_scanner/
 |---|---|---|
 | `daily-scan.yml` | KST 08:05 | US Market |
 | `daily-scan-overview.yml` | KST 08:20 | 글로벌 지수·섹터 ETF·테마 ETF·원자재 |
-| `daily-scan-kospi.yml` | KST 16:05 | KOSPI |
-| `daily-scan-kosdaq.yml` | KST 16:35 | KOSDAQ |
+| `daily-scan-kospi.yml` | KST 16:05 | kr --universe kospi |
+| `daily-scan-kosdaq.yml` | KST 16:35 | kr --universe kosdaq |
 | `deploy-pages.yml` | 스캔 성공 후 자동, 또는 수동 실행 | GitHub Pages 사이트 빌드·배포 |
 
 

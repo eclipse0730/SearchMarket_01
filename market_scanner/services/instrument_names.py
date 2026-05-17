@@ -17,6 +17,8 @@ def run_fetch_name(
     from market_scanner.config.markets import clear_db_instrument_meta_cache, fetch_naver_item_meta
 
     base_key = home_market_key(market_key)
+    symbol_suffix = ".KS" if market_key == "kospi" else ".KQ"
+    market_label = "KOSPI" if market_key == "kospi" else "KOSDAQ"
 
     with connect(database_url) as conn:
         if stale_only:
@@ -25,6 +27,7 @@ def run_fetch_name(
                 SELECT instrument_id, symbol, name_local, name_en, sector
                 FROM instruments
                 WHERE market_key = %s
+                  AND symbol LIKE %s
                   AND is_active = TRUE
                   AND (
                       name_local IS NULL
@@ -35,17 +38,17 @@ def run_fetch_name(
                   )
                 ORDER BY symbol
                 """,
-                (base_key,),
+                (base_key, f"%{symbol_suffix}"),
             ).fetchall()
         else:
             rows = conn.execute(
                 """
                 SELECT instrument_id, symbol, name_local, name_en, sector
                 FROM instruments
-                WHERE market_key = %s AND is_active = TRUE
+                WHERE market_key = %s AND symbol LIKE %s AND is_active = TRUE
                 ORDER BY symbol
                 """,
-                (base_key,),
+                (base_key, f"%{symbol_suffix}"),
             ).fetchall()
 
         if limit:
@@ -60,8 +63,7 @@ def run_fetch_name(
 
         success, failed, skipped = 0, 0, 0
         for instrument_id, symbol, curr_name, curr_name_en, curr_sector in rows:
-            suffix = ".KS" if base_key == "kospi" else ".KQ"
-            code = str(symbol).replace(suffix, "").strip().zfill(6)
+            code = str(symbol).replace(symbol_suffix, "").strip().zfill(6)
 
             name, sector = fetch_naver_item_meta(code)
 
@@ -77,7 +79,7 @@ def run_fetch_name(
             if name and (not curr_name_en or curr_name_en == symbol or curr_name_en == code):
                 new_name_en = name
             new_sector = sector or curr_sector
-            label = "KOSPI" if base_key == "kospi" else "KOSDAQ"
+            label = market_label
             new_desc = f"{new_name_local} ({label})" if new_name_local else None
 
             conn.execute(

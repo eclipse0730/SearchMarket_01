@@ -26,6 +26,7 @@ from market_scanner.reports.site.data import (
 )
 from market_scanner.reports.site.pages.main_page import (
     _macro_chart_html,
+    _macro_interpretation_section,
     _quote_groups_for_chart,
     _series_sort_key,
 )
@@ -313,6 +314,7 @@ def render(data: OverviewPageData) -> str:
         section for section in (
             _score_hero_section(data.market_cards),
             _market_cards_section(data.market_cards),
+            _macro_interpretation_section(data.daily_macro_items, data.macro_history, "미국 매크로 해석"),
             _sector_etf_section(data.sector_etf_quotes, data.sector_etf_price_series),
             _sector_heatmap_section(data.sector_cells),
             _sector_leadership_section(data.sector_cells),

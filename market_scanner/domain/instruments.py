@@ -34,7 +34,7 @@ def classify_asset_type(row: Any, market_key: str) -> str:
         return "spac"
     if symbol.endswith(("5.KS", "7.KS", "9.KS")) and ("우" in name or "PREFERRED" in name):
         return "preferred_stock"
-    if "우" in name and home_key in {"kospi", "kosdaq"}:
+    if "우" in name and home_key in {"kr"}:
         return "preferred_stock"
     return "common_stock"
 
@@ -42,7 +42,7 @@ def classify_asset_type(row: Any, market_key: str) -> str:
 def display_symbol_for_row(row: Any, market: MarketDefinition) -> str | None:
     display_symbol = _clean_text(row.get("display_symbol"))
     symbol = _clean_text(row.get("symbol"))
-    if symbol and home_market_key(market.key) in {"kospi", "kosdaq"}:
+    if symbol and home_market_key(market.key) in {"kr"}:
         code = symbol.replace(".KS", "").replace(".KQ", "")
         return code.zfill(6) if code.isdigit() else (display_symbol or code)
     return display_symbol or symbol

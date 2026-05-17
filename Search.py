@@ -62,7 +62,7 @@ def _build_parser() -> argparse.ArgumentParser:
             "  uv run python Search.py refresh us --universe sp500\n"
             "  uv run python Search.py price us --workers 1\n"
             "  uv run python Search.py scan us --universe sp500\n"
-            "  uv run python Search.py all kospi --universe kospi200\n"
+            "  uv run python Search.py all kr --universe kospi200\n"
             "  uv run python Search.py site --no-open\n"
             "  uv run python Search.py site market kospi --no-open\n"
         ),
@@ -152,10 +152,9 @@ def _build_parser() -> argparse.ArgumentParser:
 
     site_p = sub.add_parser("site", help="Build the static site.")
     site_p.add_argument("target", nargs="?", default="all",
-                        choices=["main", "market", "sector", "admin", "all"],
+                        choices=["main", "market", "admin", "all"],
                         help="빌드 대상 (기본: all).")
     site_p.add_argument("market", nargs="?")
-    site_p.add_argument("sector", nargs="?")
     site_p.add_argument("--no-open", action="store_true")
     _add_database_url(site_p)
 
@@ -299,10 +298,6 @@ def main() -> None:
                         primary_path = site_build.build_universe_market(conn, args.market)
                     else:
                         primary_path = site_build.build_market(conn, args.market)
-                elif args.target == "sector":
-                    if not args.market or not args.sector:
-                        raise ValueError("site sector requires a market key and sector name")
-                    primary_path = site_build.build_sector(conn, args.market, args.sector)
                 elif args.target == "all":
                     primary_path = site_build.build_main(conn)
                     site_build.build_admin(conn)
