@@ -59,6 +59,15 @@ _YF_FX: list[tuple[str, str]] = [
     ("EURUSD=X", "EURUSD"),
     ("USDJPY=X", "USDJPY"),
     ("USDCNH=X", "USDCNY"),
+    ("GBPUSD=X", "GBPUSD"),
+    ("AUDUSD=X", "AUDUSD"),
+    ("NZDUSD=X", "NZDUSD"),
+    ("USDCAD=X", "USDCAD"),
+    ("USDCHF=X", "USDCHF"),
+    ("USDSGD=X", "USDSGD"),
+    ("USDSEK=X", "USDSEK"),
+    ("USDNOK=X", "USDNOK"),
+    ("USDMXN=X", "USDMXN"),
     ("DX-Y.NYB", "DXY"),
 ]
 

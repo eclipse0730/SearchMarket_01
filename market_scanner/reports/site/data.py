@@ -128,6 +128,7 @@ class MainPageData:
     macro_quotes: list[MacroQuote] = field(default_factory=list)
     daily_macro_items: list[DailyMacroItem] = field(default_factory=list)
     macro_price_series: list[MacroPriceSeries] = field(default_factory=list)
+    fx_strength_series: list[MacroPriceSeries] = field(default_factory=list)
 
 
 @dataclass
@@ -141,6 +142,8 @@ class OverviewPageData:
     top_stocks: list[TopStock] = field(default_factory=list)
     sector_cells: list[SectorCell] = field(default_factory=list)
     watchlist_stocks: list[WatchlistStock] = field(default_factory=list)
+    sector_etf_quotes: list[MacroQuote] = field(default_factory=list)
+    sector_etf_price_series: list[MacroPriceSeries] = field(default_factory=list)
 
 
 @dataclass
@@ -269,6 +272,23 @@ MACRO_SERIES_FALLBACKS: dict[str, tuple[str, str, str | None]] = {
     "NATGAS": ("commodities", "NG", "천연가스"),
     "COPPER": ("commodities", "HG", "구리"),
 }
+
+FX_STRENGTH_SOURCES: tuple[tuple[str, str, str, bool], ...] = (
+    ("DXY", "USD", "달러", False),
+    ("USDKRW", "KRW", "원화", True),
+    ("EURUSD", "EUR", "유로", False),
+    ("USDJPY", "JPY", "엔", True),
+    ("USDCNY", "CNH", "위안", True),
+    ("GBPUSD", "GBP", "파운드", False),
+    ("AUDUSD", "AUD", "호주달러", False),
+    ("NZDUSD", "NZD", "뉴질랜드달러", False),
+    ("USDCAD", "CAD", "캐나다달러", True),
+    ("USDCHF", "CHF", "스위스프랑", True),
+    ("USDSGD", "SGD", "싱가포르달러", True),
+    ("USDSEK", "SEK", "스웨덴크로나", True),
+    ("USDNOK", "NOK", "노르웨이크로네", True),
+    ("USDMXN", "MXN", "멕시코페소", True),
+)
 
 
 @dataclass
@@ -766,6 +786,52 @@ def load_macro_price_series(conn) -> list[MacroPriceSeries]:
     return result
 
 
+def load_fx_strength_series(conn) -> list[MacroPriceSeries]:
+    """daily_macro 환율을 통화 강약 시계열로 변환한다.
+
+    값은 원시 환율이 아니라 USD 대비 각 통화의 방향을 맞춘 값이다.
+    예: USDKRW, USDJPY처럼 USD가 앞에 있는 페어는 역수로 바꿔
+    차트에서 위로 갈수록 KRW/JPY 강세가 되도록 한다.
+    """
+    from collections import defaultdict
+
+    source_by_code = {code: (display_symbol, name, invert) for code, display_symbol, name, invert in FX_STRENGTH_SOURCES}
+    rows = conn.execute(
+        """
+        SELECT indicator_code, trade_date, value
+        FROM daily_macro
+        WHERE indicator_code = ANY(%s)
+        ORDER BY indicator_code, trade_date
+        """,
+        (list(source_by_code),),
+    ).fetchall()
+
+    grouped: dict[str, list[tuple[str, float | None]]] = defaultdict(list)
+    for code, trade_date, value in rows:
+        display_symbol, _, invert = source_by_code[code]
+        raw_value = _to_float(value)
+        strength_value = None
+        if raw_value is not None:
+            strength_value = (1 / raw_value) if invert and raw_value != 0 else raw_value
+        grouped[code].append((trade_date.isoformat(), strength_value))
+
+    result: list[MacroPriceSeries] = []
+    for code, points in grouped.items():
+        display_symbol, name, _ = source_by_code[code]
+        points.sort(key=lambda x: x[0])
+        if not any(v is not None for _, v in points):
+            continue
+        result.append(MacroPriceSeries(
+            market_key="fx-strength",
+            symbol=code,
+            display_symbol=display_symbol,
+            name_en=name,
+            dates=[d for d, _ in points],
+            values=[round(v, 8) if v is not None else None for _, v in points],
+        ))
+    return result
+
+
 def load_daily_macro_items(conn) -> list[DailyMacroItem]:
     """daily_macro 테이블에서 각 indicator_code 의 최신 행을 반환."""
     rows = conn.execute(
@@ -1179,6 +1245,7 @@ def load_main_page_data(conn) -> MainPageData:
     macro_quotes = load_macro_quotes(conn)
     daily_macro_items = load_daily_macro_items(conn)
     macro_price_series = load_macro_price_series(conn)
+    fx_strength_series = load_fx_strength_series(conn)
     generated_at = max(
         (q.trade_date for q in macro_quotes),
         default=date.today(),
@@ -1188,6 +1255,7 @@ def load_main_page_data(conn) -> MainPageData:
         macro_quotes=macro_quotes,
         daily_macro_items=daily_macro_items,
         macro_price_series=macro_price_series,
+        fx_strength_series=fx_strength_series,
     )
 
 
@@ -1216,7 +1284,18 @@ def load_overview_data(
 
 def load_us_all_data(conn) -> OverviewPageData:
     """US종합 페이지 데이터 (us 시장)."""
-    return load_overview_data(conn, ["us"], "US종합", "us-all")
+    page = load_overview_data(conn, ["us"], "US종합", "us-all")
+    page.sector_etf_quotes = [
+        q for q in load_macro_quotes(conn)
+        if q.market_key == "sector-etfs"
+    ]
+    page.sector_etf_price_series = [
+        s for s in load_macro_price_series(conn)
+        if s.market_key == "sector-etfs"
+    ]
+    if page.sector_etf_quotes:
+        page.generated_at = max(page.generated_at, max(q.trade_date for q in page.sector_etf_quotes))
+    return page
 
 
 def load_kr_all_data(conn) -> OverviewPageData:

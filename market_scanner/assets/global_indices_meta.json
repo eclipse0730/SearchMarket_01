@@ -130,5 +130,83 @@
     "name_local": "나스닥 100",
     "sector": "US Index",
     "description": "Top 100 non-financial NASDAQ-listed companies, tech-heavy benchmark."
+  },
+  "^GSPTSE": {
+    "name_en": "S&P/TSX Composite Index",
+    "name_local": "캐나다 TSX 종합",
+    "sector": "CA Index",
+    "description": "Canadian broad equity market benchmark."
+  },
+  "^MXX": {
+    "name_en": "IPC Mexico",
+    "name_local": "멕시코 IPC",
+    "sector": "MX Index",
+    "description": "Mexican stock market benchmark."
+  },
+  "^JKSE": {
+    "name_en": "IDX Composite",
+    "name_local": "인도네시아 IDX 종합",
+    "sector": "ID Index",
+    "description": "Indonesia Stock Exchange composite benchmark."
+  },
+  "^KLSE": {
+    "name_en": "FTSE Bursa Malaysia KLCI",
+    "name_local": "말레이시아 KLCI",
+    "sector": "MY Index",
+    "description": "Malaysian large-cap equity benchmark."
+  },
+  "^SET.BK": {
+    "name_en": "SET Index",
+    "name_local": "태국 SET",
+    "sector": "TH Index",
+    "description": "Stock Exchange of Thailand benchmark."
+  },
+  "^IBEX": {
+    "name_en": "IBEX 35",
+    "name_local": "스페인 IBEX 35",
+    "sector": "ES Index",
+    "description": "Spanish blue-chip equity benchmark."
+  },
+  "FTSEMIB.MI": {
+    "name_en": "FTSE MIB Index",
+    "name_local": "이탈리아 FTSE MIB",
+    "sector": "IT Index",
+    "description": "Italian large-cap equity benchmark."
+  },
+  "^AEX": {
+    "name_en": "AEX Index",
+    "name_local": "네덜란드 AEX",
+    "sector": "NL Index",
+    "description": "Dutch blue-chip equity benchmark."
+  },
+  "^SSMI": {
+    "name_en": "SMI PR",
+    "name_local": "스위스 SMI",
+    "sector": "CH Index",
+    "description": "Swiss large-cap equity benchmark."
+  },
+  "^BFX": {
+    "name_en": "BEL 20",
+    "name_local": "벨기에 BEL 20",
+    "sector": "BE Index",
+    "description": "Belgian blue-chip equity benchmark."
+  },
+  "^ATX": {
+    "name_en": "Austrian Traded Index",
+    "name_local": "오스트리아 ATX",
+    "sector": "AT Index",
+    "description": "Austrian blue-chip equity benchmark."
+  },
+  "^OMXSPI": {
+    "name_en": "OMX Stockholm_PI",
+    "name_local": "스웨덴 OMX Stockholm",
+    "sector": "SE Index",
+    "description": "Swedish broad equity market benchmark."
+  },
+  "^NZ50": {
+    "name_en": "S&P/NZX 50 Index",
+    "name_local": "뉴질랜드 NZX 50",
+    "sector": "NZ Index",
+    "description": "New Zealand large-cap equity benchmark."
   }
 }

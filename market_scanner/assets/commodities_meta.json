@@ -82,5 +82,83 @@
     "name_local": "알루미늄 선물",
     "sector": "산업금속",
     "description": "Industrial metals proxy. Key material for EVs and semiconductors."
+  },
+  "RB=F": {
+    "name_en": "RBOB Gasoline Futures",
+    "name_local": "가솔린 선물",
+    "sector": "에너지",
+    "description": "Refined gasoline energy benchmark."
+  },
+  "HO=F": {
+    "name_en": "Heating Oil Futures",
+    "name_local": "난방유 선물",
+    "sector": "에너지",
+    "description": "Refined distillate fuel energy benchmark."
+  },
+  "CC=F": {
+    "name_en": "Cocoa Futures",
+    "name_local": "코코아 선물",
+    "sector": "농산물",
+    "description": "Soft commodities proxy."
+  },
+  "CT=F": {
+    "name_en": "Cotton Futures",
+    "name_local": "면화 선물",
+    "sector": "농산물",
+    "description": "Soft commodities and textile input proxy."
+  },
+  "OJ=F": {
+    "name_en": "Orange Juice Futures",
+    "name_local": "오렌지주스 선물",
+    "sector": "농산물",
+    "description": "Soft commodities proxy."
+  },
+  "LE=F": {
+    "name_en": "Live Cattle Futures",
+    "name_local": "생우 선물",
+    "sector": "축산물",
+    "description": "Livestock commodity proxy."
+  },
+  "GF=F": {
+    "name_en": "Feeder Cattle Futures",
+    "name_local": "비육우 선물",
+    "sector": "축산물",
+    "description": "Livestock commodity proxy."
+  },
+  "HE=F": {
+    "name_en": "Lean Hogs Futures",
+    "name_local": "돈육 선물",
+    "sector": "축산물",
+    "description": "Livestock commodity proxy."
+  },
+  "LBS=F": {
+    "name_en": "Lumber Futures",
+    "name_local": "목재 선물",
+    "sector": "산업원자재",
+    "description": "Construction materials commodity proxy."
+  },
+  "ZO=F": {
+    "name_en": "Oat Futures",
+    "name_local": "귀리 선물",
+    "sector": "농산물",
+    "description": "Agriculture grain proxy."
+  },
+  "ZR=F": {
+    "name_en": "Rough Rice Futures",
+    "name_local": "쌀 선물",
+    "sector": "농산물",
+    "description": "Agriculture grain proxy."
+  },
+  "ZL=F": {
+    "name_en": "Soybean Oil Futures",
+    "name_local": "대두유 선물",
+    "sector": "농산물",
+    "description": "Soybean complex commodity proxy."
+  },
+  "ZM=F": {
+    "name_en": "Soybean Meal Futures",
+    "name_local": "대두박 선물",
+    "sector": "농산물",
+    "description": "Soybean complex commodity proxy."
   }
 }

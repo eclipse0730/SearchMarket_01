@@ -87,7 +87,7 @@ uv run python Search.py macro --days-back 365
 | 소스 | 지표 |
 |---|---|
 | FRED | SOFR, US_FFR, US_2Y, US_10Y, US_30Y, US_SPREAD_2S10S, US_SPREAD_3M10Y, HY_OAS, IG_OAS, FED_RRP, FED_BS |
-| yfinance | SP500, NASDAQ100, KOSPI, KOSDAQ, USDKRW, EURUSD, USDJPY, USDCNY, DXY, WTI, GOLD, SILVER, NATGAS, COPPER, VIX, VVIX, BTC_USD, ETH_USD |
+| yfinance | SP500, NASDAQ100, KOSPI, KOSDAQ, USDKRW, EURUSD, USDJPY, USDCNY, GBPUSD, AUDUSD, NZDUSD, USDCAD, USDCHF, USDSGD, USDSEK, USDNOK, USDMXN, DXY, WTI, GOLD, SILVER, NATGAS, COPPER, VIX, VVIX, BTC_USD, ETH_USD |
 | CoinGecko | CRYPTO_TOTAL_MCAP (현재 스냅샷, `/global` 엔드포인트) |
 | alternative.me | CRYPTO_FNG (공포·탐욕 지수) |
 
@@ -200,7 +200,7 @@ uv run python Search.py site --no-open
 
 `site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 자동 열기를 원하면 `--no-open`을 빼고 실행합니다.
 
-대시보드는 DB의 `daily_macro`, `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 메인 핵심 지표(S&P500, Nasdaq100, KOSPI, KOSDAQ, VIX, 미국10년물, DXY, USDKRW, WTI, Gold, BTC), 매크로 지표, 글로벌 지수·원자재, US/KR 종합 시황, 섹터 히트맵, 리더십, 당일 Top 종목, 워치리스트를 표시합니다.
+대시보드는 DB의 `daily_macro`, `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 메인 핵심 지표(S&P500, Nasdaq100, KOSPI, KOSDAQ, VIX, 미국10년물, DXY, USDKRW, WTI, Gold, BTC, ETH), 글로벌 지수·원자재·환율/통화 강약, 매크로 지표, US/KR 종합 시황, 미국 섹터 ETF, 섹터 히트맵, 리더십, 당일 Top 종목, 워치리스트를 표시합니다.
 
 상단 `관리` 탭(`site/admin/index.html`)은 빌드 시점의 PostgreSQL 테이블 목록·행 수·컬럼·최근 데이터 샘플을 보여주는 정적 읽기 전용 페이지입니다. 데이터 수정/삭제는 DB 또는 CLI에서 처리합니다.
 
@@ -209,7 +209,7 @@ uv run python Search.py site --no-open
 - `instruments`: 종목마스터의 우선 원천입니다.
 - `universe_memberships`: `nasdaq`, `nyse`, `amex`(거래소 전체), `nasdaq100`, `sp500`, `dow30`(지수), `kospi100`, `kospi200`, `kosdaq150` 같은 분석/필터 단위 멤버십입니다. US는 `--market us` 한 번으로 6개 universe가 동시 갱신됩니다.
 - `market_scanner/assets/instruments.json`: DB가 비어 있거나 연결되지 않을 때 쓰는 seed/fallback입니다. 스캔 실행은 이 JSON을 자동 갱신하지 않습니다.
-- `market_scanner/assets/global_indices_meta.json`, `commodities_meta.json`: 글로벌 지수·원자재는 FDR 자동 발견이 불가능하므로 JSON이 심볼 정의 원본입니다. 새 심볼 추가 시 JSON 편집 후 `Search.py refresh global-indices` 또는 `Search.py refresh commodities`로 DB에 반영합니다. 현재 글로벌 지수는 22개입니다.
+- `market_scanner/assets/global_indices_meta.json`, `commodities_meta.json`: 글로벌 지수·원자재는 FDR 자동 발견이 불가능하므로 JSON이 심볼 정의 원본입니다. 새 심볼 추가 시 JSON 편집 후 `Search.py refresh global-indices` 또는 `Search.py refresh commodities`로 DB에 반영합니다. 현재 글로벌 지수는 35개, 원자재는 27개입니다.
 - `market_scanner/assets/sector_etfs_meta.json`: 섹터 ETF 유니버스의 원본입니다. `XLK`, `XLV`, `XLF`, `XLY`, `XLP`, `XLI`, `XLE`, `XLU`, `XLB`, `XLC`, `XLRE`를 기본 GICS 섹터 프록시로 사용하고, `VNQ`는 리츠 보조 프록시로 함께 수집합니다.
 - 테마 ETF는 별도 스캔 없이 US 스캔 결과에서 파생됩니다. 대상 심볼은 `markets.py`의 `_THEME_PROXY_SYMBOLS` 상수로 관리합니다.
 - 한국 시장 유니버스는 FinanceDataReader를 우선 사용하고, 실패 시 Naver Finance로 fallback합니다. 정적 JSON fallback(`kospi_static_meta.json`, `kosdaq_static_meta.json`)은 제거되었습니다.

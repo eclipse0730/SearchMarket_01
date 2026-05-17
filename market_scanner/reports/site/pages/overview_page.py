@@ -17,10 +17,17 @@ from itertools import groupby
 from market_scanner.reports.site import layout
 from market_scanner.reports.site.data import (
     MarketCard,
+    MacroPriceSeries,
+    MacroQuote,
     OverviewPageData,
     SectorCell,
     TopStock,
     WatchlistStock,
+)
+from market_scanner.reports.site.pages.main_page import (
+    _macro_chart_html,
+    _quote_groups_for_chart,
+    _series_sort_key,
 )
 
 
@@ -109,6 +116,26 @@ def _market_cards_section(cards: list[MarketCard]) -> str:
   <h2>시장 현황</h2>
   <div class="sub">활성 시장의 최신 거래일 요약. 카드 하단 바는 상승 폭 비율.</div>
   <div class="cards">{body}</div>
+</section>"""
+
+
+def _sector_etf_section(
+    quotes: list[MacroQuote],
+    series_list: list[MacroPriceSeries],
+) -> str:
+    if not quotes and not series_list:
+        return ""
+    sorted_quotes = sorted(
+        quotes,
+        key=lambda q: _series_sort_key(q.market_key, q.display_symbol),
+    )
+    quote_groups = _quote_groups_for_chart({"sector-etfs": sorted_quotes}) if sorted_quotes else {}
+    chart_row = _macro_chart_html(series_list, quote_groups)
+    return f"""
+<section class="block">
+  <h2>미국 섹터 ETF</h2>
+  <div class="sub">미국 GICS 섹터 ETF의 기간별 상대 수익률과 최신 등락률.</div>
+  {chart_row}
 </section>"""
 
 
@@ -286,6 +313,7 @@ def render(data: OverviewPageData) -> str:
         section for section in (
             _score_hero_section(data.market_cards),
             _market_cards_section(data.market_cards),
+            _sector_etf_section(data.sector_etf_quotes, data.sector_etf_price_series),
             _sector_heatmap_section(data.sector_cells),
             _sector_leadership_section(data.sector_cells),
             _top_stocks_section(data.top_stocks),

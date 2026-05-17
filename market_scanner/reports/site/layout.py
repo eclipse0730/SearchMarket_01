@@ -202,12 +202,13 @@ table.t tr:hover td { background: var(--panel-2); }
 
 /* 매크로 패널 */
 .macro-grid { display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
   gap: 9px; }
 .macro-cell { background: var(--panel); border: 1px solid var(--border);
   border-radius: 8px; padding: 11px 12px; }
-.macro-cell .sym { color: var(--muted); font-size: 11px; }
-.macro-cell .name { font-size: 12px; margin-bottom: 4px;
+.macro-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; min-width: 0; }
+.macro-cell .sym { flex: 0 0 auto; color: var(--muted); font-size: 11px; }
+.macro-cell .name { min-width: 0; font-size: 12px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .macro-value-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
 .macro-cell .px { min-width: 0; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -263,20 +264,7 @@ a.sector-tile-link:hover { border-color: var(--accent); transform: translateY(-1
   border-radius: 8px; background: rgba(7, 16, 28, .58);
 }
 .chart-body { display: flex; align-items: flex-start; gap: 14px; }
-.chart-main { flex: 0 1 60%; max-width: 60%; min-width: 0; }
-.chart-side { flex: 1 1 0; min-width: 0; }
-.chart-side .sector-group { margin-bottom: 0; }
-.chart-side .gname { display: none; }
-.chart-side .macro-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-.macro-toggle-card {
-  position: relative; width: 100%; color: inherit; text-align: left; cursor: pointer;
-  border-left: 4px solid var(--series-color, var(--accent));
-  transition: opacity .15s, filter .15s, border-color .15s, transform .15s;
-}
-.macro-toggle-card:hover { transform: translateY(-1px); border-color: var(--series-color, var(--accent)); }
-.macro-toggle-card.macro-toggle-off { opacity: .42; filter: grayscale(.65) brightness(.72); }
-.macro-toggle-card.macro-toggle-unmatched { opacity: .36; cursor: default; }
-.chart-side-disabled .macro-toggle-card { opacity: .36; cursor: default; }
+.chart-main { flex: 1 1 auto; max-width: none; min-width: 0; }
 .chart-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .chart-tabs { display: flex; gap: 6px; }
 .ct-tab {
@@ -297,14 +285,29 @@ a.sector-tile-link:hover { border-color: var(--accent); transform: translateY(-1
   -webkit-overflow-scrolling: touch;
   margin-bottom: 8px; padding: 8px 0;
   scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.3) transparent; }
+.chart-toggle-panel { padding: 6px 0 12px; }
+.chart-group-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
+.cg-tab {
+  padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border);
+  background: var(--panel); color: var(--muted); font-size: 12px; cursor: pointer; }
+.cg-tab:hover { color: var(--text); border-color: var(--accent); }
+.cg-tab.cl-hidden { opacity: 0.42; }
+.cg-tab.cl-partial { opacity: 0.72; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 5px; padding: 6px 0 12px; }
-.chart-legend.chart-legend-hidden { display: none; }
+.chart-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 9px; padding: 0; }
 .cl-item {
   padding: 2px 9px 2px 6px; border-radius: 4px; border-left: 3px solid;
   background: var(--panel); font-size: 11px; color: var(--text); cursor: pointer;
   user-select: none; transition: opacity 0.15s; }
 .cl-item:hover { background: var(--panel-2); }
 .cl-item.cl-hidden { opacity: 0.3; }
+.cl-item.cl-all { border-left-color: var(--accent); font-weight: 600; }
+.cl-item.cl-partial { opacity: 0.62; }
+.chart-toggle-card {
+  width: 100%; min-width: 0; text-align: left; color: var(--text); font: inherit;
+  cursor: pointer; border-left: 3px solid var(--series-color, var(--accent)); }
+.chart-toggle-card:hover { background: var(--panel-2); border-color: var(--border); border-left-color: var(--series-color, var(--accent)); }
+.chart-toggle-card.cl-hidden { opacity: 0.36; }
 
 @media (max-width: 760px) {
   main, main.main-wide { width: calc(100% - 24px); padding: 16px 0; }
@@ -318,7 +321,6 @@ a.sector-tile-link:hover { border-color: var(--accent); transform: translateY(-1
   .tic-asof { white-space: normal; }
   .chart-body { display: block; }
   .chart-main { max-width: none; }
-  .chart-side { margin-top: 14px; }
   .chart-daterange { margin-left: 0; }
 }
 
