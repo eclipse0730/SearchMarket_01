@@ -7,6 +7,7 @@ from pathlib import Path
 from market_scanner.analysis.indicators import run_compute as compute_indicators
 from market_scanner.analysis.screener import run_screen
 from market_scanner.collectors.fundamentals import run_fetch as fetch_fundamentals
+from market_scanner.collectors.investor_flows_kr import run_fetch as fetch_investor_flows
 from market_scanner.collectors.prices import run_fetch as fetch_prices
 from market_scanner.collectors.prices import run_retry as retry_prices
 from market_scanner.config.markets import MARKETS
@@ -102,6 +103,14 @@ def _build_parser() -> argparse.ArgumentParser:
     fundamentals_p.add_argument("--workers", type=int, default=2)
     fundamentals_p.add_argument("--source", choices=["auto", "yahoo", "naver", "fdr"], default="auto")
     _add_database_url(fundamentals_p)
+
+    flows_p = sub.add_parser("flows", help="Collect Korean investor flows.")
+    flows_p.add_argument("market", choices=["kr", "kospi", "kosdaq"], help="Korean market key.")
+    _add_date_range(flows_p)
+    flows_p.add_argument("--limit", type=int, default=None)
+    flows_p.add_argument("--force", action="store_true")
+    flows_p.add_argument("--include-volume", action="store_true", help="Also collect investor trading volume.")
+    _add_database_url(flows_p)
 
     indicators_p = sub.add_parser("indicators", help="Compute daily indicators.")
     _add_market(indicators_p)
@@ -212,6 +221,19 @@ def main() -> None:
                 limit=args.limit,
                 workers=max(1, args.workers),
                 source=args.source,
+            )
+            return
+
+        if args.command == "flows":
+            fetch_investor_flows(
+                args.market,
+                date_str=args.date,
+                database_url=args.database_url,
+                limit=args.limit,
+                date_from=args.date_from,
+                date_to=args.date_to,
+                force=args.force,
+                include_volume=args.include_volume,
             )
             return
 

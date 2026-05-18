@@ -465,6 +465,9 @@ def _watchlist_panels_section(stocks: list[WatchlistStock]) -> str:
 _KR_MACRO_GROUPS: list[tuple[str, list[str]]] = [
     ("환율 압력", ["USDKRW", "DXY"]),
     ("국내 금리", ["KR_10Y", "KR_INTERBANK_3M", "KR_CALL_RATE", "KR_DISCOUNT_RATE"]),
+    ("증시자금", ["KR_CUSTOMER_DEPOSIT_VALUE", "KR_CREDIT_BALANCE_VALUE"]),
+    ("국내 수급", ["KR_KOSPI_FOREIGN_NET_BUY_VALUE", "KR_KOSPI_INSTITUTION_NET_BUY_VALUE", "KR_KOSDAQ_FOREIGN_NET_BUY_VALUE", "KR_KOSDAQ_INSTITUTION_NET_BUY_VALUE"]),
+    ("공매도", ["KR_KOSPI_SHORT_SELL_VALUE", "KR_KOSPI_SHORT_BALANCE_VALUE", "KR_KOSDAQ_SHORT_SELL_VALUE", "KR_KOSDAQ_SHORT_BALANCE_VALUE"]),
     ("글로벌 부담", ["US_10Y", "VIX"]),
     ("원자재", ["WTI", "GOLD"]),
 ]

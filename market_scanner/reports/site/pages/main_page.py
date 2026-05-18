@@ -256,6 +256,16 @@ _MACRO_META: dict[str, tuple[str, int, str]] = {
     "KR_INTERBANK_3M":    ("은행간 3개월",   2, "%"),
     "KR_CALL_RATE":       ("콜금리",         2, "%"),
     "KR_DISCOUNT_RATE":   ("한국 할인율",    2, "%"),
+    "KR_KOSPI_FOREIGN_NET_BUY_VALUE":      ("KOSPI 외국인", 0, "원"),
+    "KR_KOSPI_INSTITUTION_NET_BUY_VALUE":  ("KOSPI 기관",   0, "원"),
+    "KR_KOSDAQ_FOREIGN_NET_BUY_VALUE":     ("KOSDAQ 외국인",0, "원"),
+    "KR_KOSDAQ_INSTITUTION_NET_BUY_VALUE": ("KOSDAQ 기관",  0, "원"),
+    "KR_KOSPI_SHORT_SELL_VALUE":           ("KOSPI 공매도", 0, "원"),
+    "KR_KOSPI_SHORT_BALANCE_VALUE":        ("KOSPI 공매도잔고", 0, "원"),
+    "KR_KOSDAQ_SHORT_SELL_VALUE":          ("KOSDAQ 공매도",0, "원"),
+    "KR_KOSDAQ_SHORT_BALANCE_VALUE":       ("KOSDAQ 공매도잔고", 0, "원"),
+    "KR_CUSTOMER_DEPOSIT_VALUE":           ("고객예탁금", 0, "백만원"),
+    "KR_CREDIT_BALANCE_VALUE":             ("신용융자",   0, "백만원"),
     # 신용 스프레드
     "HY_OAS":             ("HY OAS",        2, "%"),
     "IG_OAS":             ("IG OAS",        2, "%"),
@@ -293,6 +303,9 @@ _GROUPS: list[tuple[str, list[str]]] = [
     ("금리", ["SOFR", "US_FFR", "US_2Y", "US_10Y", "US_30Y"]),
     ("경기·신용 신호", ["US_SPREAD_2S10S", "US_SPREAD_3M10Y", "HY_OAS", "IG_OAS"]),
     ("유동성", ["FED_RRP", "FED_BS"]),
+    ("한국 수급", ["KR_KOSPI_FOREIGN_NET_BUY_VALUE", "KR_KOSPI_INSTITUTION_NET_BUY_VALUE", "KR_KOSDAQ_FOREIGN_NET_BUY_VALUE", "KR_KOSDAQ_INSTITUTION_NET_BUY_VALUE"]),
+    ("한국 공매도", ["KR_KOSPI_SHORT_SELL_VALUE", "KR_KOSPI_SHORT_BALANCE_VALUE", "KR_KOSDAQ_SHORT_SELL_VALUE", "KR_KOSDAQ_SHORT_BALANCE_VALUE"]),
+    ("한국 증시자금", ["KR_CUSTOMER_DEPOSIT_VALUE", "KR_CREDIT_BALANCE_VALUE"]),
     ("변동성·심리", ["VIX", "VVIX", "CRYPTO_FNG"]),
 ]
 

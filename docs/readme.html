@@ -111,6 +111,21 @@ uv run python Search.py retry-price us</code></pre>
 uv run python Search.py fundamentals kr
 uv run python Search.py fundamentals kr --workers 8 --limit 100
 uv run python Search.py fundamentals kr --source naver --limit 10</code></pre>
+<p>한국 투자자별 수급 수집:</p>
+<pre><code class="language-bash"># 종목별 기관/외국인/개인 순매수 거래대금을 daily_investor_flows에 저장
+uv run python Search.py flows kospi
+uv run python Search.py flows kosdaq
+uv run python Search.py flows kr --date 20260507
+
+# 백필은 기간과 limit으로 나눠 실행
+uv run python Search.py flows kospi --from 20260501 --to 20260507 --limit 100 --force
+
+# 거래량 수급까지 함께 저장
+uv run python Search.py flows kospi --date 20260507 --include-volume</code></pre>
+<p>수급 수집은 pykrx/KRX 기준이며, 기본값은 거래대금 수급입니다. <code>--include-volume</code>을 지정하면 거래량 수급도 함께 저장합니다. 현재 <code>flow_score</code>는 기존 가격/거래량 기반 점수를 유지하며, 실제 기관/외국인/개인 수급 점수 반영은 수집 안정화 뒤 별도 단계에서 적용합니다.</p>
+<p>pykrx 1.2 계열은 KRX 로그인 정책 변경으로 <code>KRX_ID</code>, <code>KRX_PW</code> 환경변수가 필요할 수 있습니다. <code>.env</code>에 아래 값을 넣으면 <code>Search.py</code> 실행 시 자동 로드됩니다.</p>
+<pre><code class="language-bash">KRX_ID=your_krx_id
+KRX_PW=your_krx_password</code></pre>
 <h2 id="section-3">매크로 지표 수집</h2>
 <p>금리·환율·원자재·신용 스프레드·유동성·크립토 등 시장 공통 매크로 지표를 <code>daily_macro</code>에 저장합니다. FRED API key가 <code>.env</code>에 있어야 FRED 지표를 수집합니다.</p>
 <pre><code class="language-bash"># 증분 수집 (각 지표의 마지막 수집일 다음 날부터 오늘까지)
@@ -140,6 +155,14 @@ uv run python Search.py macro --days-back 365</code></pre>
 <td>SP500, NASDAQ100, KOSPI, KOSDAQ, USDKRW, EURUSD, USDJPY, USDCNY, GBPUSD, AUDUSD, NZDUSD, USDCAD, USDCHF, USDSGD, USDSEK, USDNOK, USDMXN, DXY, WTI, GOLD, SILVER, NATGAS, COPPER, VIX, VVIX, BTC_USD, ETH_USD</td>
 </tr>
 <tr>
+<td>pykrx/KRX</td>
+<td>KR_KOSPI_FOREIGN_NET_BUY_VALUE, KR_KOSPI_INSTITUTION_NET_BUY_VALUE, KR_KOSDAQ_FOREIGN_NET_BUY_VALUE, KR_KOSDAQ_INSTITUTION_NET_BUY_VALUE, KR_KOSPI_SHORT_SELL_VALUE, KR_KOSPI_SHORT_BALANCE_VALUE, KR_KOSDAQ_SHORT_SELL_VALUE, KR_KOSDAQ_SHORT_BALANCE_VALUE</td>
+</tr>
+<tr>
+<td>KOFIA FreeSIS</td>
+<td>KR_CUSTOMER_DEPOSIT_VALUE, KR_CREDIT_BALANCE_VALUE</td>
+</tr>
+<tr>
 <td>CoinGecko</td>
 <td>CRYPTO_TOTAL_MCAP (현재 스냅샷, <code>/global</code> 엔드포인트)</td>
 </tr>
@@ -149,6 +172,7 @@ uv run python Search.py macro --days-back 365</code></pre>
 </tr>
 </tbody>
 </table></div>
+<p>한국 고객예탁금과 신용잔고는 금융투자협회 FreeSIS 메인 최신 스냅샷을 저장합니다. 값 단위는 백만원이며, 히스토리 백필용 API가 아니라 매일 실행하면서 최신 공표치를 누적하는 방식입니다.</p>
 <h2 id="3">3단계: 지표 계산</h2>
 <p><code>daily_prices</code>를 읽어 <code>daily_indicators</code>를 계산합니다.</p>
 <pre><code class="language-bash">uv run python Search.py indicators us
@@ -156,7 +180,7 @@ uv run python Search.py indicators kr
 uv run python Search.py indicators us --date 20260505
 uv run python Search.py indicators kr --from 20260501 --to 20260507</code></pre>
 <h2 id="4">4단계: 스코어링</h2>
-<p><code>daily_indicators</code>와 <code>daily_prices</code>를 읽어 눌림목, 돌파, 박스권, 반전, 추세 품질, 테마, 재무, 수급/거래대금 점수를 계산하고 순위와 시장/섹터 스냅샷을 저장합니다. <code>--date</code>를 생략하면 해당 시장/유니버스의 최신 <code>daily_indicators.trade_date</code>를 자동으로 사용합니다.</p>
+<p><code>daily_indicators</code>와 <code>daily_prices</code>를 읽어 눌림목, 돌파, 박스권, 반전, 추세 품질, 테마, 재무, 수급/거래대금 점수를 계산하고 순위와 시장/섹터 스냅샷을 저장합니다. 한국 시장은 <code>daily_investor_flows</code>가 있으면 최근 1/5/20거래일 외국인·기관 순매수, 5거래일 외국인+기관 수급 강도(<code>smart_money_score</code>), 섹터 내 순위(<code>sector_rank</code>), 데이터 품질 태그(<code>data_quality_flags</code>)도 <code>scan_results</code>에 저장합니다. <code>--date</code>를 생략하면 해당 시장/유니버스의 최신 <code>daily_indicators.trade_date</code>를 자동으로 사용합니다.</p>
 <pre><code class="language-bash">uv run python Search.py screen us
 uv run python Search.py screen us --universe sp500
 uv run python Search.py screen kr
@@ -202,6 +226,25 @@ Database: searchmarket
 Username: searchmarket
 Password: searchmarket</code></pre>
 <p><code>.postgres-data/</code>는 로컬 DB 데이터 디렉터리이며 Git 추적 대상이 아닙니다.</p>
+<h3 id="db-neon-docker">DB 전환: Neon ↔ 로컬 Docker</h3>
+<p>연결 우선순위: <code>--database-url 인수</code> &gt; <code>환경변수 DATABASE_URL (.env)</code> &gt; 로컬 Docker 기본값</p>
+<p><strong>Neon DB 사용</strong> (<code>.env</code>에 Neon URL 설정 후 그냥 실행)</p>
+<pre><code class="language-bash"># .env
+DATABASE_URL=postgresql://&lt;user&gt;:&lt;password&gt;@&lt;host&gt;/neondb?sslmode=require&amp;channel_binding=require</code></pre>
+<p><code>.env</code>는 <code>.gitignore</code>에 포함되어 있어 커밋되지 않습니다. Neon URL은 <a href="https://console.neon.tech">Neon Console</a> → Connection Details에서 확인합니다.</p>
+<p><strong>로컬 Docker 사용</strong></p>
+<pre><code class="language-bash"># Docker 실행
+docker compose up -d postgres
+
+# 방법 A: --database-url 인수로 일회성 오버라이드
+uv run python Search.py counts --database-url &quot;postgresql://searchmarket:searchmarket@localhost:5433/searchmarket&quot;
+
+# 방법 B: 환경변수 일시 오버라이드
+DATABASE_URL=&quot;postgresql://searchmarket:searchmarket@localhost:5433/searchmarket&quot; uv run python Search.py counts
+
+# 방법 B: .env 없이 실행하면 로컬 Docker 기본값 자동 사용</code></pre>
+<p>현재 연결된 DB 확인:</p>
+<pre><code class="language-bash">python -c &quot;from market_scanner.storage.connection import connect; conn = connect(); print(&#x27;host:&#x27;, conn.info.host)&quot;</code></pre>
 <h2 id="section-6">사이트 대시보드</h2>
 <pre><code class="language-bash">uv run python Search.py site --no-open</code></pre>
 <p><code>site/</code>에는 GitHub Pages용 정적 대시보드가 생성됩니다. 자동 열기를 원하면 <code>--no-open</code>을 빼고 실행합니다.</p>

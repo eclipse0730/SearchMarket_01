@@ -16,6 +16,7 @@ from market_scanner.storage.connection import connect
 from market_scanner.storage.runs import create_collection_run, finish_run
 from market_scanner.storage.screener import latest_indicator_date, load_screen_frame
 from market_scanner.storage.screener_results import (
+    ensure_scan_result_schema,
     upsert_market_snapshot,
     upsert_scan_result,
     upsert_sector_snapshots,
@@ -516,8 +517,30 @@ def score_overbought(row: pd.Series) -> float:
     ])
 
 
+def score_smart_money(row: pd.Series) -> float | None:
+    """외국인+기관 5거래일 순매수 강도. 한국 수급 데이터가 없으면 중립."""
+    ratio = _num(row, "smart_money_ratio_5d")
+    if ratio is None:
+        return None
+    if ratio >= 3.0:
+        return 96
+    if ratio >= 1.5:
+        return 88
+    if ratio >= 0.75:
+        return 78
+    if ratio >= 0.25:
+        return 66
+    if ratio >= -0.25:
+        return 50
+    if ratio >= -0.75:
+        return 38
+    if ratio >= -1.5:
+        return 28
+    return 18
+
+
 def score_flow(row: pd.Series, settings: AdvancedScoreSettings = _DEFAULT_SETTINGS) -> float:
-    """수급 대체 점수: 현재 테이블 기준 실제 외인/기관이 없으므로 거래대금/거래량 기반 흐름 점수."""
+    """수급/거래대금 점수. 한국 수급 데이터가 있으면 외국인+기관 흐름을 함께 반영."""
     value_traded = _num(row, "value_traded")
     value_ratio = _num(row, "value_ratio_20d")
     volume_ratio = _num(row, "volume_ratio")
@@ -546,11 +569,49 @@ def score_flow(row: pd.Series, settings: AdvancedScoreSettings = _DEFAULT_SETTIN
     if close_pos is not None:
         quality_score += 18 if close_pos >= 0.75 else -8 if close_pos <= 0.35 else 5
 
-    return _weighted_average([
+    liquidity_flow = _weighted_average([
         (liquidity_score, 0.25),
         (activity_score, 0.45),
         (_clamp(quality_score), 0.30),
     ])
+    smart_money = _num(row, "smart_money_score")
+    if smart_money is None:
+        return liquidity_flow
+    return _weighted_average([
+        (liquidity_flow, 0.40),
+        (smart_money, 0.60),
+    ])
+
+
+def compute_smart_money_ratio_5d(row: pd.Series) -> float | None:
+    smart_money_5d = (_num(row, "foreign_net_buy_5d", 0) or 0) + (_num(row, "institution_net_buy_5d", 0) or 0)
+    if _num(row, "foreign_net_buy_5d") is None and _num(row, "institution_net_buy_5d") is None:
+        return None
+    value_traded = _num(row, "value_traded")
+    value_ratio = _num(row, "value_ratio_20d")
+    avg_value_20d = value_traded / value_ratio if value_traded is not None and value_ratio not in (None, 0) else None
+    if avg_value_20d is None or avg_value_20d <= 0:
+        return None
+    return round(smart_money_5d / avg_value_20d, 6)
+
+
+def data_quality_flags(row: pd.Series, settings: AdvancedScoreSettings = _DEFAULT_SETTINGS) -> list[str]:
+    flags: list[str] = []
+    symbol = _str(row, "symbol")
+    is_kr_symbol = symbol.endswith(".KS") or symbol.endswith(".KQ")
+    if is_kr_symbol:
+        if row.get("flow_latest_date") is None or pd.isna(row.get("flow_latest_date")):
+            flags.append("missing_investor_flow")
+        elif row.get("flow_latest_date") != row.get("trade_date"):
+            flags.append("stale_investor_flow")
+    if not _str(row, "sector"):
+        flags.append("missing_sector")
+    if all(_num(row, col) is None for col in ["trailing_pe", "price_to_book", "return_on_equity", "revenue_growth"]):
+        flags.append("missing_fundamentals")
+    value_traded = _num(row, "value_traded")
+    if settings.min_value_traded > 0 and value_traded is not None and value_traded < settings.min_value_traded:
+        flags.append("low_liquidity")
+    return flags
 
 
 # ============================================================
@@ -837,6 +898,10 @@ def add_advanced_scores(frame: pd.DataFrame, settings: AdvancedScoreSettings = _
         return frame
 
     scored = frame.copy()
+    scored["trade_date"] = scored.get("trade_date", pd.NaT)
+    scored["smart_money_ratio_5d"] = scored.apply(compute_smart_money_ratio_5d, axis=1)
+    scored["smart_money_score"] = scored.apply(score_smart_money, axis=1)
+    scored["data_quality_flags"] = scored.apply(data_quality_flags, axis=1, settings=settings)
 
     # 개별 전략 점수
     scored["trend_quality_score"] = scored.apply(score_trend_quality, axis=1)
@@ -922,11 +987,17 @@ def rank_advanced(frame: pd.DataFrame, settings: AdvancedScoreSettings = _DEFAUL
     scored = add_scores(frame, settings=settings)
     if scored.empty:
         return scored
-    return scored.sort_values(
+    ranked = scored.sort_values(
         ["composite_score", "action_score", "quality_score"],
         ascending=[False, False, False],
         na_position="last",
     ).reset_index(drop=True)
+    ranked["sector_rank"] = (
+        ranked.groupby("sector", dropna=False)["composite_score"]
+        .rank(method="first", ascending=False)
+        .astype("Int64")
+    )
+    return ranked
 
 
 def run_screen(
@@ -959,8 +1030,10 @@ def run_screen(
                 "Run 'prices fetch' and 'indicators compute' first."
             )
             return pd.DataFrame()
+        frame["trade_date"] = trade_date
 
         ranked = rank_advanced(frame)
+        ensure_scan_result_schema(conn)
 
         run_id = create_collection_run(
             conn, "scan", market_key, trade_date, source_provider, len(ranked),

@@ -1,4 +1,4 @@
-"""FRED, yfinance, CoinGecko, alternative.me에서 매크로 지표를 수집해 daily_macro에 저장."""
+"""FRED, yfinance, CoinGecko, alternative.me, pykrx에서 매크로 지표를 수집해 daily_macro에 저장."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from market_scanner.storage.connection import connect
 from market_scanner.storage.macro import last_macro_date, upsert_daily_macro
 
 _FRED_BASE = "https://api.stlouisfed.org/fred/series/observations"
+_KOFIA_MAIN = "https://freesis.kofia.or.kr/stat/main.do"
 _CG_MARKET_CHART = "https://api.coingecko.com/api/v3/coins/{id}/market_chart"
 _CG_GLOBAL = "https://api.coingecko.com/api/v3/global"
 _FNG_URL = "https://api.alternative.me/fng/"
@@ -94,6 +95,11 @@ _YF_SENTIMENT: list[tuple[str, str]] = [
     ("ETH-USD", "ETH_USD"),
 ]
 
+_KRX_MARKETS: list[tuple[str, str]] = [
+    ("KOSPI", "KR_KOSPI"),
+    ("KOSDAQ", "KR_KOSDAQ"),
+]
+
 # ─── CoinGecko (무료 엔드포인트만 사용) ──────────────────────────────────────
 # /coins/{id}/market_chart 는 유료 전환됨 → BTC/ETH는 yfinance 사용
 _CG_COINS: list[tuple[str, str]] = [
@@ -121,7 +127,10 @@ def _load_dotenv() -> None:
 
 def _fred_api_key() -> str | None:
     _load_dotenv()
-    return os.getenv("FRED_API_KEY") or None
+    key = os.getenv("FRED_API_KEY")
+    if not key or key.startswith("your_"):
+        return None
+    return key
 
 
 def _start_date_for(
@@ -249,6 +258,155 @@ def _fetch_fear_greed(limit: int) -> list[tuple[date, float]]:
     return rows
 
 
+def _date_range(start_date: date, end_date: date) -> list[date]:
+    days = (end_date - start_date).days
+    return [start_date + timedelta(days=i) for i in range(days + 1)]
+
+
+def _to_date(value) -> date:
+    return value.date() if hasattr(value, "date") else value
+
+
+def _fetch_krx_market_investor_flows(
+    market: str,
+    prefix: str,
+    start_date: date,
+    end_date: date,
+) -> dict[str, list[tuple[date, float]]]:
+    """KOSPI/KOSDAQ 전체 투자자별 순매수 거래대금."""
+    from pykrx import stock
+
+    start = start_date.strftime("%Y%m%d")
+    end = end_date.strftime("%Y%m%d")
+    with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+        frame = stock.get_market_trading_value_by_date(start, end, market, on="순매수")
+    if frame.empty:
+        return {}
+
+    targets = {
+        "기관합계": f"{prefix}_INSTITUTION_NET_BUY_VALUE",
+        "외국인합계": f"{prefix}_FOREIGN_NET_BUY_VALUE",
+    }
+    results: dict[str, list[tuple[date, float]]] = {}
+    for column, code in targets.items():
+        if column not in frame.columns:
+            continue
+        rows: list[tuple[date, float]] = []
+        for idx, value in frame[column].items():
+            try:
+                rows.append((_to_date(idx), float(value)))
+            except (TypeError, ValueError):
+                continue
+        results[code] = rows
+    return results
+
+
+def _sum_column(frame, candidates: list[str]) -> float | None:
+    if frame.empty:
+        return None
+    for column in candidates:
+        if column in frame.columns:
+            total = 0.0
+            for value in frame[column]:
+                text = str(value).replace(",", "").strip()
+                if not text or text in {"-", "nan", "None"}:
+                    continue
+                try:
+                    total += float(text)
+                except ValueError:
+                    continue
+            return float(total)
+    return None
+
+
+def _fetch_krx_shorting_market(
+    market: str,
+    prefix: str,
+    start_date: date,
+    end_date: date,
+) -> dict[str, list[tuple[date, float]]]:
+    """KOSPI/KOSDAQ 전체 공매도 거래대금과 잔고금액."""
+    from pykrx import stock
+
+    short_value_rows: list[tuple[date, float]] = []
+    balance_value_rows: list[tuple[date, float]] = []
+
+    for d in _date_range(start_date, end_date):
+        if d.weekday() >= 5:
+            continue
+        day = d.strftime("%Y%m%d")
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            value_frame = stock.get_shorting_value_by_ticker(day, market=market)
+        short_value = _sum_column(value_frame, ["공매도", "공매도거래대금", "거래대금"])
+        if short_value is not None:
+            short_value_rows.append((d, short_value))
+
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            balance_frame = stock.get_shorting_balance_by_ticker(day, market=market)
+        balance_value = _sum_column(balance_frame, ["공매도금액", "잔고금액"])
+        if balance_value is not None:
+            balance_value_rows.append((d, balance_value))
+
+    return {
+        f"{prefix}_SHORT_SELL_VALUE": short_value_rows,
+        f"{prefix}_SHORT_BALANCE_VALUE": balance_value_rows,
+    }
+
+
+def _parse_kofia_snapshot_date(text: str, end_date: date) -> date | None:
+    try:
+        raw_date = text.split("|", 1)[1].strip() if "|" in text else text.strip()
+        month_text, day_text = raw_date.split("/", 1)
+        d = date(end_date.year, int(month_text), int(day_text))
+        if d > end_date:
+            d = date(end_date.year - 1, int(month_text), int(day_text))
+        return d
+    except (IndexError, TypeError, ValueError):
+        return None
+
+
+def _parse_first_number(text: str) -> float | None:
+    try:
+        return float(text.split()[0].replace(",", ""))
+    except (IndexError, TypeError, ValueError):
+        return None
+
+
+def _fetch_kofia_market_fund_snapshots(end_date: date) -> dict[str, list[tuple[date, float]]]:
+    """FreeSIS 메인 최신 스냅샷에서 투자자예탁금/신용융자를 가져온다.
+
+    FreeSIS는 메인 화면에 값을 백만원 단위로 노출한다. 히스토리 백필용 API가
+    아니라서, 매일 실행하면서 최신 공표치를 누적 저장하는 용도다.
+    """
+    from lxml import html
+
+    resp = requests.get(_KOFIA_MAIN, timeout=_TIMEOUT)
+    resp.raise_for_status()
+    doc = html.fromstring(resp.content)
+    texts = [t.strip() for t in doc.xpath("//text()") if t.strip()]
+
+    targets = {
+        "투자자예탁금": "KR_CUSTOMER_DEPOSIT_VALUE",
+        "신용융자": "KR_CREDIT_BALANCE_VALUE",
+    }
+    results: dict[str, list[tuple[date, float]]] = {}
+    for label, code in targets.items():
+        for idx, text in enumerate(texts):
+            if text != label or idx + 4 >= len(texts):
+                continue
+            if texts[idx + 2] == "|":
+                snapshot_date = _parse_kofia_snapshot_date(texts[idx + 3], end_date)
+                value = _parse_first_number(texts[idx + 4])
+            else:
+                snapshot_date = _parse_kofia_snapshot_date(texts[idx + 1], end_date)
+                value = _parse_first_number(texts[idx + 2])
+            if snapshot_date is None or value is None or snapshot_date > end_date:
+                break
+            results[code] = [(snapshot_date, value)]
+            break
+    return results
+
+
 # ─── 저장 ────────────────────────────────────────────────────────────────────
 
 def _store(
@@ -311,6 +469,9 @@ def run_fetch(
     api_key = _fred_api_key()
     if not api_key:
         print("  경고: FRED_API_KEY 없음 — FRED 지표를 건너뜁니다.")
+    _load_dotenv()
+    if not os.getenv("KRX_ID") or not os.getenv("KRX_PW"):
+        print("  경고: KRX_ID/KRX_PW 없음 — pykrx KRX 인증 지표가 실패할 수 있습니다.")
 
     total = 0
     conn = connect(database_url)
@@ -386,7 +547,53 @@ def run_fetch(
             except Exception as e:
                 print(f"  yf    {code} 실패: {e}")
 
-        # ── 6. CoinGecko: BTC·ETH 가격 ────────────────────────────────────
+        # ── 6. pykrx: 한국 시장 전체 투자자 수급 ─────────────────────────
+        for market, prefix in _KRX_MARKETS:
+            start = min(
+                _start(f"{prefix}_INSTITUTION_NET_BUY_VALUE", "pykrx"),
+                _start(f"{prefix}_FOREIGN_NET_BUY_VALUE", "pykrx"),
+            )
+            if start > end_date:
+                continue
+            try:
+                results = _fetch_krx_market_investor_flows(market, prefix, start, end_date)
+                for code, rows in results.items():
+                    n = _store(conn, code, "pykrx", rows)
+                    print(f"  pykrx {code:<28} {n:>4}건")
+                    total += n
+            except Exception as e:
+                print(f"  pykrx {prefix}_INVESTOR_FLOW 실패: {e}")
+
+        # ── 7. pykrx: 한국 시장 전체 공매도 거래대금·잔고금액 ─────────────
+        for market, prefix in _KRX_MARKETS:
+            start = min(
+                _start(f"{prefix}_SHORT_SELL_VALUE", "pykrx"),
+                _start(f"{prefix}_SHORT_BALANCE_VALUE", "pykrx"),
+            )
+            if start > end_date:
+                continue
+            try:
+                results = _fetch_krx_shorting_market(market, prefix, start, end_date)
+                for code, rows in results.items():
+                    n = _store(conn, code, "pykrx", rows)
+                    print(f"  pykrx {code:<28} {n:>4}건")
+                    total += n
+            except Exception as e:
+                print(f"  pykrx {prefix}_SHORTING 실패: {e}")
+
+        # ── 8. FreeSIS: 한국 증시 대기자금·신용융자 최신 스냅샷 ─────────
+        try:
+            results = _fetch_kofia_market_fund_snapshots(end_date)
+            for code, rows in results.items():
+                start = _start(code, "KOFIA")
+                rows = [(d, v) for d, v in rows if start <= d <= end_date]
+                n = _store(conn, code, "KOFIA", rows)
+                print(f"  kofia {code:<27} {n:>4}건")
+                total += n
+        except Exception as e:
+            print(f"  kofia KR_MARKET_FUNDS 실패: {e}")
+
+        # ── 9. CoinGecko: BTC·ETH 가격 ────────────────────────────────────
         for coin_id, code in _CG_COINS:
             start = _start(code, "coingecko")
             if start > end_date:
@@ -401,7 +608,7 @@ def run_fetch(
             except Exception as e:
                 print(f"  cg    {code} 실패: {e}")
 
-        # ── 7. CoinGecko: 전체 암호화폐 시가총액 ─────────────────────────
+        # ── 10. CoinGecko: 전체 암호화폐 시가총액 ────────────────────────
         # /global은 현재 스냅샷만 제공하므로 오늘 날짜로 저장
         code = "CRYPTO_TOTAL_MCAP"
         start = _start(code, "coingecko")
@@ -415,7 +622,7 @@ def run_fetch(
             except Exception as e:
                 print(f"  cg    {code} 실패: {e}")
 
-        # ── 8. alternative.me: 크립토 공포·탐욕 지수 ─────────────────────
+        # ── 11. alternative.me: 크립토 공포·탐욕 지수 ────────────────────
         code = "CRYPTO_FNG"
         start = _start(code, "alternative.me")
         if start <= end_date:

@@ -3,4 +3,5 @@ pandas
 lxml
 requests
 finance-datareader
+pykrx
 psycopg[binary]

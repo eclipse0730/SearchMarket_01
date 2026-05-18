@@ -46,7 +46,7 @@ def load_screen_frame(
     universe_key: str | None = None,
 ) -> pd.DataFrame:
     base_market = home_market_key(market_key)
-    params: list[Any] = [trade_date, trade_date, base_market]
+    params: list[Any] = [trade_date, trade_date, trade_date, base_market]
     universe_filter = ""
     if universe_key:
         universe_filter = """
@@ -55,7 +55,7 @@ def load_screen_frame(
             AND um.universe_key = %s
             AND um.effective_to IS NULL
         """
-        params = [universe_key, trade_date, trade_date, base_market]
+        params = [universe_key, trade_date, trade_date, trade_date, base_market]
 
     rows = conn.execute(
         f"""
@@ -152,7 +152,14 @@ def load_screen_frame(
             f.return_on_equity_pct  AS return_on_equity,
             f.revenue_growth_pct    AS revenue_growth,
             f.market_cap,
-            f.target_price
+            f.target_price,
+            flows.foreign_net_buy_1d,
+            flows.foreign_net_buy_5d,
+            flows.foreign_net_buy_20d,
+            flows.institution_net_buy_1d,
+            flows.institution_net_buy_5d,
+            flows.institution_net_buy_20d,
+            flows.flow_latest_date
         FROM instruments i
         {universe_filter}
         JOIN daily_indicators di
@@ -180,6 +187,28 @@ def load_screen_frame(
                 END
             LIMIT 1
         ) f ON TRUE
+        LEFT JOIN LATERAL (
+            SELECT
+                SUM(foreign_net_buy_value) FILTER (WHERE rn <= 1) AS foreign_net_buy_1d,
+                SUM(foreign_net_buy_value) FILTER (WHERE rn <= 5) AS foreign_net_buy_5d,
+                SUM(foreign_net_buy_value) FILTER (WHERE rn <= 20) AS foreign_net_buy_20d,
+                SUM(institution_net_buy_value) FILTER (WHERE rn <= 1) AS institution_net_buy_1d,
+                SUM(institution_net_buy_value) FILTER (WHERE rn <= 5) AS institution_net_buy_5d,
+                SUM(institution_net_buy_value) FILTER (WHERE rn <= 20) AS institution_net_buy_20d,
+                MAX(trade_date) AS flow_latest_date
+            FROM (
+                SELECT
+                    trade_date,
+                    foreign_net_buy_value,
+                    institution_net_buy_value,
+                    ROW_NUMBER() OVER (ORDER BY trade_date DESC) AS rn
+                FROM daily_investor_flows
+                WHERE instrument_id = i.instrument_id
+                  AND trade_date <= %s
+                ORDER BY trade_date DESC
+                LIMIT 20
+            ) recent_flows
+        ) flows ON TRUE
         WHERE i.market_key = %s AND i.is_active = TRUE
         ORDER BY i.symbol
         """,
@@ -213,12 +242,16 @@ def load_screen_frame(
         "close", "open", "high", "low", "volume",
         "trailing_pe", "price_to_book", "return_on_equity", "revenue_growth",
         "market_cap", "target_price",
+        "foreign_net_buy_1d", "foreign_net_buy_5d", "foreign_net_buy_20d",
+        "institution_net_buy_1d", "institution_net_buy_5d", "institution_net_buy_20d",
+        "flow_latest_date",
     ]
     frame = pd.DataFrame(rows, columns=columns)
 
     numeric_cols = [c for c in frame.columns if c not in (
         "instrument_id", "symbol", "display_symbol", "name_en", "name_local",
         "sector", "description", "macd_state", "macd_cross", "candle_type", "trend",
+        "flow_latest_date",
         "near_5", "near_20", "near_60", "near_120", "near_240",
         "breakout_20d", "breakout_60d", "breakout_high_20d", "breakout_high_60d",
         "is_ma_bullish_alignment",

@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS collection_runs (
     notes TEXT,
     git_sha TEXT,
     CONSTRAINT collection_runs_type_check CHECK (
-        run_type IN ('universe', 'prices', 'indicators', 'scan', 'news', 'render', 'backfill', 'fundamentals')
+        run_type IN ('universe', 'prices', 'indicators', 'scan', 'news', 'render', 'backfill', 'fundamentals', 'investor_flows')
     ),
     CONSTRAINT collection_runs_status_check CHECK (
         status IN ('running', 'success', 'partial', 'failed', 'cancelled')
@@ -282,6 +282,40 @@ CREATE INDEX IF NOT EXISTS idx_instrument_fundamentals_date
 CREATE INDEX IF NOT EXISTS idx_instrument_fundamentals_instrument_date
     ON instrument_fundamentals (instrument_id, as_of_date DESC);
 
+CREATE TABLE IF NOT EXISTS daily_investor_flows (
+    instrument_id BIGINT NOT NULL REFERENCES instruments(instrument_id),
+    trade_date DATE NOT NULL,
+    source_provider TEXT NOT NULL,
+    individual_buy_value NUMERIC(28, 2),
+    individual_sell_value NUMERIC(28, 2),
+    individual_net_buy_value NUMERIC(28, 2),
+    foreign_buy_value NUMERIC(28, 2),
+    foreign_sell_value NUMERIC(28, 2),
+    foreign_net_buy_value NUMERIC(28, 2),
+    institution_buy_value NUMERIC(28, 2),
+    institution_sell_value NUMERIC(28, 2),
+    institution_net_buy_value NUMERIC(28, 2),
+    individual_buy_volume BIGINT,
+    individual_sell_volume BIGINT,
+    individual_net_buy_volume BIGINT,
+    foreign_buy_volume BIGINT,
+    foreign_sell_volume BIGINT,
+    foreign_net_buy_volume BIGINT,
+    institution_buy_volume BIGINT,
+    institution_sell_volume BIGINT,
+    institution_net_buy_volume BIGINT,
+    raw_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+    collected_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    run_id UUID REFERENCES collection_runs(run_id),
+    PRIMARY KEY (instrument_id, trade_date, source_provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_investor_flows_date
+    ON daily_investor_flows (trade_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_daily_investor_flows_instrument_date
+    ON daily_investor_flows (instrument_id, trade_date DESC);
+
 CREATE TABLE IF NOT EXISTS scan_results (
     run_id UUID NOT NULL REFERENCES collection_runs(run_id),
     instrument_id BIGINT NOT NULL REFERENCES instruments(instrument_id),
@@ -310,9 +344,19 @@ CREATE TABLE IF NOT EXISTS scan_results (
     change_pct NUMERIC(10, 4),
     value_traded NUMERIC(20, 4),
     rsi14 NUMERIC(8, 4),
+    foreign_net_buy_1d NUMERIC(28, 2),
+    foreign_net_buy_5d NUMERIC(28, 2),
+    foreign_net_buy_20d NUMERIC(28, 2),
+    institution_net_buy_1d NUMERIC(28, 2),
+    institution_net_buy_5d NUMERIC(28, 2),
+    institution_net_buy_20d NUMERIC(28, 2),
+    smart_money_ratio_5d NUMERIC(14, 6),
+    smart_money_score NUMERIC(8, 4),
+    sector_rank INTEGER,
     rank_no INTEGER,
     setup_tags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     risk_flags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+    data_quality_flags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     summary_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (run_id, instrument_id)

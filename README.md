@@ -73,6 +73,28 @@ uv run python Search.py fundamentals kr --workers 8 --limit 100
 uv run python Search.py fundamentals kr --source naver --limit 10
 ```
 
+한국 투자자별 수급 수집:
+```bash
+# 종목별 기관/외국인/개인 순매수 거래대금을 daily_investor_flows에 저장
+uv run python Search.py flows kospi
+uv run python Search.py flows kosdaq
+uv run python Search.py flows kr --date 20260507
+
+# 백필은 기간과 limit으로 나눠 실행
+uv run python Search.py flows kospi --from 20260501 --to 20260507 --limit 100 --force
+
+# 거래량 수급까지 함께 저장
+uv run python Search.py flows kospi --date 20260507 --include-volume
+```
+
+수급 수집은 pykrx/KRX 기준이며, 기본값은 거래대금 수급입니다. `--include-volume`을 지정하면 거래량 수급도 함께 저장합니다. 현재 `flow_score`는 기존 가격/거래량 기반 점수를 유지하며, 실제 기관/외국인/개인 수급 점수 반영은 수집 안정화 뒤 별도 단계에서 적용합니다.
+
+pykrx 1.2 계열은 KRX 로그인 정책 변경으로 `KRX_ID`, `KRX_PW` 환경변수가 필요할 수 있습니다. `.env`에 아래 값을 넣으면 `Search.py` 실행 시 자동 로드됩니다.
+```bash
+KRX_ID=your_krx_id
+KRX_PW=your_krx_password
+```
+
 ## 매크로 지표 수집
 
 금리·환율·원자재·신용 스프레드·유동성·크립토 등 시장 공통 매크로 지표를 `daily_macro`에 저장합니다.
@@ -98,8 +120,12 @@ uv run python Search.py macro --days-back 365
 |---|---|
 | FRED | SOFR, US_FFR, US_2Y, US_10Y, US_30Y, US_SPREAD_2S10S, US_SPREAD_3M10Y, HY_OAS, IG_OAS, FED_RRP, FED_BS, KR_10Y, KR_INTERBANK_3M, KR_CALL_RATE, KR_DISCOUNT_RATE |
 | yfinance | SP500, NASDAQ100, KOSPI, KOSDAQ, USDKRW, EURUSD, USDJPY, USDCNY, GBPUSD, AUDUSD, NZDUSD, USDCAD, USDCHF, USDSGD, USDSEK, USDNOK, USDMXN, DXY, WTI, GOLD, SILVER, NATGAS, COPPER, VIX, VVIX, BTC_USD, ETH_USD |
+| pykrx/KRX | KR_KOSPI_FOREIGN_NET_BUY_VALUE, KR_KOSPI_INSTITUTION_NET_BUY_VALUE, KR_KOSDAQ_FOREIGN_NET_BUY_VALUE, KR_KOSDAQ_INSTITUTION_NET_BUY_VALUE, KR_KOSPI_SHORT_SELL_VALUE, KR_KOSPI_SHORT_BALANCE_VALUE, KR_KOSDAQ_SHORT_SELL_VALUE, KR_KOSDAQ_SHORT_BALANCE_VALUE |
+| KOFIA FreeSIS | KR_CUSTOMER_DEPOSIT_VALUE, KR_CREDIT_BALANCE_VALUE |
 | CoinGecko | CRYPTO_TOTAL_MCAP (현재 스냅샷, `/global` 엔드포인트) |
 | alternative.me | CRYPTO_FNG (공포·탐욕 지수) |
+
+한국 고객예탁금과 신용잔고는 금융투자협회 FreeSIS 메인 최신 스냅샷을 저장합니다. 값 단위는 백만원이며, 히스토리 백필용 API가 아니라 매일 실행하면서 최신 공표치를 누적하는 방식입니다.
 
 
 ## 3단계: 지표 계산
@@ -115,6 +141,7 @@ uv run python Search.py indicators kr --from 20260501 --to 20260507
 ## 4단계: 스코어링
 
 `daily_indicators`와 `daily_prices`를 읽어 눌림목, 돌파, 박스권, 반전, 추세 품질, 테마, 재무, 수급/거래대금 점수를 계산하고 순위와 시장/섹터 스냅샷을 저장합니다.
+한국 시장은 `daily_investor_flows`가 있으면 최근 1/5/20거래일 외국인·기관 순매수, 5거래일 외국인+기관 수급 강도(`smart_money_score`), 섹터 내 순위(`sector_rank`), 데이터 품질 태그(`data_quality_flags`)도 `scan_results`에 저장합니다.
 `--date`를 생략하면 해당 시장/유니버스의 최신 `daily_indicators.trade_date`를 자동으로 사용합니다.
 ```bash
 uv run python Search.py screen us
@@ -193,6 +220,36 @@ Password: searchmarket
 ```
 
 `.postgres-data/`는 로컬 DB 데이터 디렉터리이며 Git 추적 대상이 아닙니다.
+
+### DB 전환: Neon ↔ 로컬 Docker
+
+연결 우선순위: `--database-url 인수` > `환경변수 DATABASE_URL (.env)` > 로컬 Docker 기본값
+
+**Neon DB 사용** (`.env`에 Neon URL 설정 후 그냥 실행)
+```bash
+# .env
+DATABASE_URL=postgresql://<user>:<password>@<host>/neondb?sslmode=require&channel_binding=require
+```
+`.env`는 `.gitignore`에 포함되어 있어 커밋되지 않습니다. Neon URL은 [Neon Console](https://console.neon.tech) → Connection Details에서 확인합니다.
+
+**로컬 Docker 사용**
+```bash
+# Docker 실행
+docker compose up -d postgres
+
+# 방법 A: --database-url 인수로 일회성 오버라이드
+uv run python Search.py counts --database-url "postgresql://searchmarket:searchmarket@localhost:5433/searchmarket"
+
+# 방법 B: 환경변수 일시 오버라이드
+DATABASE_URL="postgresql://searchmarket:searchmarket@localhost:5433/searchmarket" uv run python Search.py counts
+
+# 방법 B: .env 없이 실행하면 로컬 Docker 기본값 자동 사용
+```
+
+현재 연결된 DB 확인:
+```bash
+python -c "from market_scanner.storage.connection import connect; conn = connect(); print('host:', conn.info.host)"
+```
 
 ## 사이트 대시보드
 

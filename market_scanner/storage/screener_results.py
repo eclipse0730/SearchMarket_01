@@ -32,6 +32,23 @@ def _risk_flags(row: pd.Series) -> list[str]:
     return list(dict.fromkeys(flags))
 
 
+def _quality_flags(row: pd.Series) -> list[str]:
+    return _tag_list(row.get("data_quality_flags"))
+
+
+def ensure_scan_result_schema(conn: psycopg.Connection) -> None:
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS foreign_net_buy_1d NUMERIC(28, 2)")
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS foreign_net_buy_5d NUMERIC(28, 2)")
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS foreign_net_buy_20d NUMERIC(28, 2)")
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS institution_net_buy_1d NUMERIC(28, 2)")
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS institution_net_buy_5d NUMERIC(28, 2)")
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS institution_net_buy_20d NUMERIC(28, 2)")
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS smart_money_ratio_5d NUMERIC(14, 6)")
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS smart_money_score NUMERIC(8, 4)")
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS sector_rank INTEGER")
+    conn.execute("ALTER TABLE scan_results ADD COLUMN IF NOT EXISTS data_quality_flags TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]")
+
+
 def upsert_scan_result(
     conn: psycopg.Connection,
     run_id: str,
@@ -52,7 +69,10 @@ def upsert_scan_result(
             reversal_score, overbought_score, risk_score, raw_composite_score,
             action_score, quality_score, setup_label, pullback_ma_period,
             close_price, change_pct, value_traded, rsi14,
-            rank_no, setup_tags, risk_flags, summary_payload
+            foreign_net_buy_1d, foreign_net_buy_5d, foreign_net_buy_20d,
+            institution_net_buy_1d, institution_net_buy_5d, institution_net_buy_20d,
+            smart_money_ratio_5d, smart_money_score, sector_rank,
+            rank_no, setup_tags, risk_flags, data_quality_flags, summary_payload
         )
         VALUES (
             %s, %s, %s, %s, %s,
@@ -62,7 +82,10 @@ def upsert_scan_result(
             %s, %s, %s, %s,
             %s, %s, %s, %s,
             %s, %s, %s, %s,
-            %s, %s, %s, %s
+            %s, %s, %s,
+            %s, %s, %s,
+            %s, %s, %s,
+            %s, %s, %s, %s, %s
         )
         ON CONFLICT (run_id, instrument_id) DO UPDATE SET
             chart_score = EXCLUDED.chart_score,
@@ -87,9 +110,19 @@ def upsert_scan_result(
             change_pct = EXCLUDED.change_pct,
             value_traded = EXCLUDED.value_traded,
             rsi14 = EXCLUDED.rsi14,
+            foreign_net_buy_1d = EXCLUDED.foreign_net_buy_1d,
+            foreign_net_buy_5d = EXCLUDED.foreign_net_buy_5d,
+            foreign_net_buy_20d = EXCLUDED.foreign_net_buy_20d,
+            institution_net_buy_1d = EXCLUDED.institution_net_buy_1d,
+            institution_net_buy_5d = EXCLUDED.institution_net_buy_5d,
+            institution_net_buy_20d = EXCLUDED.institution_net_buy_20d,
+            smart_money_ratio_5d = EXCLUDED.smart_money_ratio_5d,
+            smart_money_score = EXCLUDED.smart_money_score,
+            sector_rank = EXCLUDED.sector_rank,
             rank_no = EXCLUDED.rank_no,
             setup_tags = EXCLUDED.setup_tags,
             risk_flags = EXCLUDED.risk_flags,
+            data_quality_flags = EXCLUDED.data_quality_flags,
             summary_payload = EXCLUDED.summary_payload
         """,
         (
@@ -120,9 +153,19 @@ def upsert_scan_result(
             clean_number(row.get("change_pct")),
             clean_number(row.get("value_traded")),
             clean_number(row.get("rsi14")),
+            clean_number(row.get("foreign_net_buy_1d")),
+            clean_number(row.get("foreign_net_buy_5d")),
+            clean_number(row.get("foreign_net_buy_20d")),
+            clean_number(row.get("institution_net_buy_1d")),
+            clean_number(row.get("institution_net_buy_5d")),
+            clean_number(row.get("institution_net_buy_20d")),
+            clean_number(row.get("smart_money_ratio_5d")),
+            clean_number(row.get("smart_money_score")),
+            clean_int(row.get("sector_rank")),
             rank_no,
             _tag_list(row.get("signal_tags")),
             _risk_flags(row),
+            _quality_flags(row),
             Jsonb(
                 row_payload(
                     row,
@@ -133,6 +176,10 @@ def upsert_scan_result(
                         "trend_quality_score", "reversal_score", "overbought_score",
                         "risk_score", "action_score", "quality_score",
                         "pullback_ma_period",
+                        "foreign_net_buy_1d", "foreign_net_buy_5d", "foreign_net_buy_20d",
+                        "institution_net_buy_1d", "institution_net_buy_5d", "institution_net_buy_20d",
+                        "smart_money_ratio_5d", "smart_money_score", "sector_rank",
+                        "data_quality_flags",
                     ],
                 )
             ),
