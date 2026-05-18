@@ -1,69 +1,66 @@
-# Codex Project Instructions
+# Codex 프로젝트 지침
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+## 1. 코딩 전 생각하기
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+**추측하지 마세요. 모호한 부분을 숨기지 마세요. 장단점을 명확히 드러내세요.**
 
-## 1. Think Before Coding
+구현 전:
+- 가정을 명확하게 명시하세요. 불확실하면 질문하세요.
+- 여러 가지 해석이 가능한 경우, 모두 제시하세요. 묵묵히 선택하지 마세요.
+- 더 간단한 접근 방식이 있다면, 그렇게 말하세요. 필요하다면 반대 의견을 제시하세요.
+- 불분명한 부분이 있으면 멈추세요. 무엇이 모호한지 파악하고 질문하세요.
+* 기획단계에서 사용자가 놓치거나 모르는 단계가 있을수도 있으니 더 확장되고 좋은 방향과 관점들을 제시해주세요
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+## 2. 단순성 우선
 
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+**문제를 해결하는 최소한의 코드만 작성하세요. 추측성 코드는 포함하지 마세요.**
 
-## 2. Simplicity First
+- 요청된 기능 이상의 기능은 추가하지 마세요. (필요하다면 제시하세요.)
+- 일회용 코드를 위한 추상화는 사용하지 마세요.
+- 요청되지 않은 "유연성"이나 "구성 가능성"은 추가하지 마세요.
+- 불가능한 시나리오에 대한 오류 처리는 하지 마세요.
+- 200줄을 작성했는데 50줄로 줄일 수 있다면 다시 작성하세요.
 
-**Minimum code that solves the problem. Nothing speculative.**
+스스로에게 물어보세요. "선임 엔지니어가 이 코드가 너무 복잡하다고 말할까?" 만약 그렇다면, 간소화하세요.
 
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
+## 3. 외과적 수정
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+**꼭 필요한 부분만 수정하세요. 자신이 만든 코드만 정리하세요.**
 
-## 3. Surgical Changes
+기존 코드를 편집할 때:
+- 인접한 코드, 주석 또는 서식을 "개선"하지 마세요. (필요하다면 제시하세요.)
+- 문제가 없는 부분을 리팩토링하지 마세요.
+- 기존 스타일을 따르세요. 비록 다른 방식으로 작성하고 싶더라도.
 
-**Touch only what you must. Clean up only your own mess.**
+변경 사항으로 인해 사용되지 않는 요소가 생긴 경우:
+- 변경으로 인해 사용되지 않게 된 import 문/변수/함수를 제거하세요.
+- 업데이트 등으로 기존의 사용되지 않는 코드가 발생 할 경우 리스트업 하고, 컨펌 받은 후 코드 삭제를 진행하세요.
 
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+테스트: 변경된 모든 코드는 사용자의 요청과 직접적으로 연결되어야 합니다.
 
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
+## 4. 목표 중심 실행
 
-The test: Every changed line should trace directly to the user's request.
+**성공 기준을 정의하고 검증될 때까지 반복합니다.**
 
-## 4. Goal-Driven Execution
+작업을 검증 가능한 목표로 변환합니다.
+- "유효성 검사 추가" → "유효하지 않은 입력에 대한 테스트를 작성하고 통과하도록 합니다."
+- "버그 수정" → "버그를 재현하는 테스트를 작성하고 통과하도록 합니다."
+- "X 리팩토링" → "리팩토링 전후에 테스트가 통과하는지 확인합니다.”
+-“샘플테스트” → 테스트를 할때 타임아웃을 정의해서 무한로딩되지 않게 합니다.
 
-**Define success criteria. Loop until verified.**
-
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
+여러 단계로 이루어진 작업의 경우, 간략한 계획을 명시합니다.
 ```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
+1. [단계] → 검증: [확인]
+2. [단계] → 검증: [확인]
+3. [단계] → 검증: [확인]
 ```
+명확한 성공 기준은 독립적인 반복 작업을 가능하게 합니다. 약한 기준("작동하게 만들기")은 지속적인 명확화를 요구합니다.
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+## 5. 문서의 일관화** 중요문서들과 실제 작업 내용을 일관화 하세요.
+-수정을 진행하다가 코드와 문서가 다르게 작동되는 것을 발견할 경우 사용자에게 확인하고 기준을 잡아 수정하세요.
+-수정뒤에는 관련문서들을 업데이트하세요. (너무 세세할 필요는 없는지 명령어, 환경세팅등 중요정보는 필수)
 
----
-
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
-
+## 6. 사용자는 완벽하지 않습니다. 개발도중 다양한 의견과 잘못된 코드들이 있다면 언제든 피드백을 환영합니다.
 
 ## Important Files
 
@@ -94,12 +91,4 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | GitHub Pages 구조 변경 | `README.md`, `.github/workflows/deploy-pages.yml` |
 | GitHub Actions 스케줄/대상 변경 | `README.md`, 관련 workflow 파일 |
 | 의존성 추가/삭제 | `requirements.txt`, `README.md`, workflow 설치 단계 |
-| 로컬 실행/검증 방식 변경 | `README.md`, 이 `AGENTS.md` |
-
-## Maintenance Rule
-
-새 기능 개발이나 리팩터링이 끝나면 아래를 점검합니다.
-
-- 코드 변경이 CLI/출력/배포/문서 관계도 중 어디에 영향을 주는지 확인합니다.
-- 사용자용 실행법이 바뀌면 `README.md`를 갱신합니다.
-- Codex 작업 규칙이나 문서 관계도가 바뀌면 이 `AGENTS.md`를 갱신합니다.
+| 로컬 실행/검증 방식 변경 | `README.md`, 이 `AGENTS.md`, `CLAUDE.md` |

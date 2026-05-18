@@ -65,6 +65,7 @@ def _build_parser() -> argparse.ArgumentParser:
             "  uv run python Search.py all kr --universe kospi200\n"
             "  uv run python Search.py site --no-open\n"
             "  uv run python Search.py site market kospi --no-open\n"
+            "  uv run python Search.py readme-html\n"
         ),
     )
     sub = parser.add_subparsers(dest="command", required=True)
@@ -152,11 +153,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
     site_p = sub.add_parser("site", help="Build the static site.")
     site_p.add_argument("target", nargs="?", default="all",
-                        choices=["main", "market", "admin", "all"],
+                        choices=["main", "market", "admin", "db_admin", "all"],
                         help="빌드 대상 (기본: all).")
     site_p.add_argument("market", nargs="?")
     site_p.add_argument("--no-open", action="store_true")
     _add_database_url(site_p)
+
+    readme_html_p = sub.add_parser("readme-html", help="Build docs/readme.html from README.md.")
+    readme_html_p.add_argument("--output", default="docs/readme.html", help="Output HTML path.")
 
     all_p = sub.add_parser("all", help="Run scan and then render markdown report.")
     _add_market(all_p)
@@ -281,37 +285,49 @@ def main() -> None:
             from market_scanner.reports.site import data as site_data
             from market_scanner.storage.connection import connect
 
-            with connect(args.database_url) as conn:
-                primary_path = None
-                if args.target == "main":
-                    primary_path = site_build.build_main(conn)
-                elif args.target == "admin":
-                    primary_path = site_build.build_admin(conn)
-                elif args.target == "market":
-                    if not args.market:
-                        raise ValueError("site market requires a market key")
-                    if args.market == "us-all":
-                        primary_path = site_build.build_us_all(conn)
-                    elif args.market == "kr-all":
-                        primary_path = site_build.build_kr_all(conn)
-                    elif args.market in site_data.UNIVERSE_DETAIL_PAGES:
-                        primary_path = site_build.build_universe_market(conn, args.market)
-                    else:
-                        primary_path = site_build.build_market(conn, args.market)
-                elif args.target == "all":
-                    primary_path = site_build.build_main(conn)
-                    site_build.build_admin(conn)
-                    site_build.build_us_all(conn)
-                    site_build.build_kr_all(conn)
-                    for universe_key in site_data.UNIVERSE_DETAIL_PAGES:
-                        site_build.build_universe_market(conn, universe_key)
-                    for market_key in site_data.list_buildable_markets(conn):
-                        site_build.build_market(conn, market_key)
+            primary_path = None
+
+            if args.target == "db_admin":
+                primary_path = site_build.build_db_admin()
+            else:
+                with connect(args.database_url) as conn:
+                    if args.target == "main":
+                        primary_path = site_build.build_main(conn)
+                    elif args.target == "admin":
+                        primary_path = site_build.build_admin(conn)
+                    elif args.target == "market":
+                        if not args.market:
+                            raise ValueError("site market requires a market key")
+                        if args.market == "us-all":
+                            primary_path = site_build.build_us_all(conn)
+                        elif args.market == "kr-all":
+                            primary_path = site_build.build_kr_all(conn)
+                        elif args.market in site_data.UNIVERSE_DETAIL_PAGES:
+                            primary_path = site_build.build_universe_market(conn, args.market)
+                        else:
+                            primary_path = site_build.build_market(conn, args.market)
+                    elif args.target == "all":
+                        primary_path = site_build.build_main(conn)
+                        site_build.build_admin(conn)
+                        site_build.build_db_admin()
+                        site_build.build_us_all(conn)
+                        site_build.build_kr_all(conn)
+                        for universe_key in site_data.UNIVERSE_DETAIL_PAGES:
+                            site_build.build_universe_market(conn, universe_key)
+                        for market_key in site_data.list_buildable_markets(conn):
+                            site_build.build_market(conn, market_key)
 
             if primary_path is not None and not args.no_open:
                 import webbrowser
 
                 webbrowser.open(primary_path.resolve().as_uri())
+            return
+
+        if args.command == "readme-html":
+            from market_scanner.reports.readme_html import build_readme_html
+
+            path = build_readme_html(output_path=Path(args.output))
+            print(f"readme html: {path}")
             return
 
         parser.error(f"unsupported command: {args.command}")

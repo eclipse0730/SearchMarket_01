@@ -25,7 +25,7 @@ from market_scanner.reports.html_report import write_html
 from market_scanner.reports.markdown_report import write_markdown
 from market_scanner.reports.render import _load_render_frame
 from market_scanner.reports.site import data, layout
-from market_scanner.reports.site.pages import admin_page, main_page, market_page, overview_page
+from market_scanner.reports.site.pages import admin_page, db_admin_page, main_page, market_page, overview_page
 from market_scanner.storage.connection import connect
 
 _DEFAULT_SETTINGS = ScanSettings(output_dir=Path("."))
@@ -124,6 +124,14 @@ def build_main(conn) -> Path:
         },
     )
     conn.commit()
+    return path
+
+
+def build_db_admin() -> Path:
+    html = db_admin_page.render()
+    path = SITE_DIR / "db-admin" / "index.html"
+    _write_html(path, html)
+    print(f"  db_admin: {path}")
     return path
 
 
@@ -351,6 +359,7 @@ def main() -> None:
         elif args.command == "all":
             primary_path = build_main(conn)
             build_admin(conn)
+            build_db_admin()
             build_us_all(conn)
             build_kr_all(conn)
             for universe_key in data.UNIVERSE_DETAIL_PAGES:

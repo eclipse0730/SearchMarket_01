@@ -10,6 +10,13 @@ uv venv
 uv pip install -r requirements.txt
 ```
 
+## README HTML 버전 관리
+
+`README.md`를 원본으로 두고 HTML 문서는 아래 명령으로 재생성합니다. 생성 파일은 `docs/readme.html`입니다.
+```bash
+uv run python Search.py readme-html
+```
+
 ## 기본 실행 흐름
 
 Search60은 `Search.py`를 짧은 명령 컨트롤러로 사용합니다. 각 단계는 PostgreSQL에 결과를 저장하고, 다음 단계는 앞 단계가 저장한 테이블을 읽습니다.
@@ -19,6 +26,9 @@ uv run python Search.py init
 ```
 
 `init`은 `docs/database_schema_v1.sql`을 적용하고 시장/유니버스 기준 데이터를 준비합니다. 새 DB를 만들었거나 스키마가 바뀐 뒤에 실행합니다. 이미 초기화된 DB에서 매일 반복 실행할 필요는 없습니다.
+
+uv run python Search.py counts --database-url postgresql://searchmarket:searchmarket@localhost:5433/searchmarket
+
 
 ## 1단계: 종목 수집
 
@@ -124,6 +134,7 @@ uv run python Search.py site main --no-open
 uv run python Search.py site market kospi --no-open
 uv run python Search.py site market us-all --no-open
 uv run python Search.py site admin --no-open
+uv run python Search.py site db_admin
 ```
 
 ## 보조 명령
@@ -233,6 +244,7 @@ market_scanner/
 | `daily-scan-kosdaq.yml` | KST 16:35 | kr --universe kosdaq |
 | `deploy-pages.yml` | 스캔 성공 후 자동, 또는 수동 실행 | GitHub Pages 사이트 빌드·배포 |
 
-
+```bash
 python -c "from market_scanner.storage.connection import connect; conn = connect(); print('connected:', conn.info.host)"
 # localhost 출력되면 로컬 DB
+```

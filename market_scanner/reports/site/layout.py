@@ -41,6 +41,7 @@ _NAV_ITEMS: list[tuple[str, str, str, tuple[tuple[str, str, str], ...]]] = [
             ("kosdaq150", "KOSDAQ150", "markets/kosdaq150/index.html"),
         ),
     ),
+    ("db_admin", "DB 가이드", "db-admin/index.html", ()),
     ("admin", "관리", "admin/index.html", ()),
 ]
 
