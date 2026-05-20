@@ -6,8 +6,6 @@ own packages.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 
 from market_scanner.analysis.indicators import run_compute as compute_indicators
@@ -16,8 +14,6 @@ from market_scanner.collectors.fundamentals import run_fetch as fetch_fundamenta
 from market_scanner.collectors.news import run_fetch as fetch_news
 from market_scanner.collectors.prices import run_fetch as fetch_prices
 from market_scanner.models import MarketDefinition, ScanSettings
-from market_scanner.reports.render import report_output_paths
-from market_scanner.reports.markdown_report import write_markdown
 from market_scanner.storage.universe import scan_symbols_for_scope
 
 
@@ -28,7 +24,7 @@ def run_scan_stage_with_settings(
     *,
     symbols: list[str] | None = None,
     path_key: str | None = None,
-) -> tuple[MarketDefinition, pd.DataFrame, dict[str, Path]]:
+) -> tuple[MarketDefinition, pd.DataFrame]:
     from market_scanner.config.markets import MARKETS
 
     universe_key = path_key if path_key and path_key != market_key else None
@@ -42,8 +38,7 @@ def run_scan_stage_with_settings(
     compute_indicators(market_key, date_str=date_str, limit=limit)
     frame = run_screen(market_key, date_str=date_str, universe_key=universe_key)
     market = MARKETS[market_key]
-    paths = report_output_paths(path_key or market_key, date_str)
-    return market, frame, paths
+    return market, frame
 
 
 def run_fundamentals_stage(
@@ -53,29 +48,6 @@ def run_fundamentals_stage(
     limit: int | None = None,
 ) -> None:
     fetch_fundamentals(market_key, date_str=date_str, limit=limit)
-
-
-def run_analysis_stage(
-    market_key: str,
-    date_str: str,
-    frame: pd.DataFrame | None = None,
-    *,
-    path_key: str | None = None,
-) -> tuple[str, dict[str, Path]]:
-    if frame is None:
-        from market_scanner.config.markets import MARKETS
-
-        universe_key = path_key if path_key and path_key != market_key else None
-        frame = run_screen(market_key, date_str=date_str, universe_key=universe_key)
-        market = MARKETS[market_key]
-    else:
-        from market_scanner.config.markets import MARKETS
-        market = MARKETS[market_key]
-    paths = report_output_paths(path_key or market_key, date_str)
-    settings = ScanSettings(output_dir=Path("."))
-    paths["md"].parent.mkdir(parents=True, exist_ok=True)
-    markdown = write_markdown(frame, market, settings, date_str, paths["md"])
-    return markdown, paths
 
 
 def run_news_stage(
