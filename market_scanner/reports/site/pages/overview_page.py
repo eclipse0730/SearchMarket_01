@@ -26,6 +26,7 @@ from market_scanner.reports.site.data import (
 )
 from market_scanner.reports.site.pages.main_page import (
     _MACRO_META,
+    _SERIES_COLORS,
     _fmt_macro_value,
     _macro_chart_html,
     _macro_interpretation_section,
@@ -35,6 +36,8 @@ from market_scanner.reports.site.pages.main_page import (
     _series_sort_key,
     _status_class,
 )
+
+_US_TREASURY_YIELD_CODES = ("US_2Y", "US_10Y", "US_30Y")
 
 
 def _sym_link(symbol: str, display: str) -> str:
@@ -158,6 +161,47 @@ def _sector_etf_section(
 <section class="block">
   <h2>미국 섹터 ETF</h2>
   <div class="sub">미국 GICS 섹터 ETF의 기간별 상대 수익률과 최신 등락률.</div>
+  {chart_row}
+</section>"""
+
+
+def _treasury_yield_groups(daily_items: list[DailyMacroItem]) -> dict[str, list[dict[str, object]]]:
+    by_code = {item.indicator_code: item for item in daily_items}
+    cards: list[dict[str, str]] = []
+    for code in _US_TREASURY_YIELD_CODES:
+        item = by_code.get(code)
+        meta = _MACRO_META.get(code)
+        label = meta[0] if meta else code
+        cards.append({
+            "symbol": code,
+            "label": label,
+            "price": _fmt_macro_value(item) if item else "",
+            "change": layout.fmt_pct(item.change_pct) if item else "",
+            "changeClass": layout.change_class(item.change_pct) if item else "flat",
+            "color": _SERIES_COLORS.get(code, "#62c7ff"),
+        })
+    return {
+        "us-treasury-yields": [{
+            "key": "us-treasury-yields",
+            "label": "미국 국채",
+            "cards": cards,
+        }]
+    }
+
+
+def _treasury_yield_section(data: OverviewPageData) -> str:
+    if data.nav_key != "us-all" or not data.treasury_yield_series:
+        return ""
+    chart_row = _macro_chart_html(
+        data.treasury_yield_series,
+        _treasury_yield_groups(data.daily_macro_items),
+        chart_id="treasury-yields",
+        value_mode_by_market={"us-treasury-yields": "raw"},
+    )
+    return f"""
+<section class="block">
+  <h2>미국 국채금리</h2>
+  <div class="sub">2년·10년·30년물 금리 레벨을 그대로 표시합니다.</div>
   {chart_row}
 </section>"""
 
@@ -634,6 +678,7 @@ def render(data: OverviewPageData) -> str:
         section for section in (
             _score_hero_section(data.market_cards),
             _overview_macro_section(data),
+            _treasury_yield_section(data),
             _sector_etf_section(data.sector_etf_quotes, data.sector_etf_price_series),
             _sector_heatmap_section(data.sector_cells),
             sector_leadership,

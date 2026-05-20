@@ -88,7 +88,7 @@ def _parse_date_arg(value: str | None) -> date | None:
 
 
 def _default_target_date() -> date:
-    return date.today() - timedelta(days=1)
+    return date.today()
 
 
 def _resolve_date_range(date_from: str | None, date_to: str | None) -> tuple[date, date]:

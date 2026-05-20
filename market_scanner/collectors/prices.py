@@ -10,7 +10,7 @@ _DEFAULT_FETCH_WORKERS = 1
 
 
 def _collector_for_market(market_key: str):
-    if home_market_key(market_key) in {"kospi", "kosdaq"}:
+    if market_key in {"kr", "kospi", "kosdaq"} or home_market_key(market_key) in {"kospi", "kosdaq"}:
         from market_scanner.collectors import price_kr
 
         return price_kr

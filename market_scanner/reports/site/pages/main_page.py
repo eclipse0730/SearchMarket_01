@@ -53,6 +53,7 @@ _SERIES_NAMES: dict[str, str] = {
     "GBP": "파운드", "AUD": "호주달러", "NZD": "뉴질랜드달러",
     "CAD": "캐나다달러", "CHF": "스위스프랑", "SGD": "싱가포르달러",
     "SEK": "스웨덴크로나", "NOK": "노르웨이크로네", "MXN": "멕시코페소",
+    "US_2Y": "미국 2년물", "US_10Y": "미국 10년물", "US_30Y": "미국 30년물",
 }
 
 # display_symbol → CSS border-color (차트 라인 색상)
@@ -135,6 +136,9 @@ _SERIES_COLORS: dict[str, str] = {
     "SEK":      "#5c6bc0",
     "NOK":      "#00bcd4",
     "MXN":      "#26a69a",
+    "US_2Y":    "#62c7ff",
+    "US_10Y":   "#ffd740",
+    "US_30Y":   "#ef5350",
     # 섹터 ETF — 사용자 요청 색상 참고
     "XLK":      "#1986df",  # 기술 — 파랑
     "XLC":      "#2adaf1",  # 통신 — 청록
@@ -175,6 +179,7 @@ _SERIES_PRIORITY: dict[str, list[str]] = {
         "DXY", "KRW", "EUR", "JPY", "CNH", "GBP", "AUD",
         "CAD", "CHF", "NZD", "SGD", "SEK", "NOK", "MXN",
     ],
+    "us-treasury-yields": ["US_2Y", "US_10Y", "US_30Y"],
 }
 
 _SERIES_PRIORITY_INDEX: dict[str, dict[str, int]] = {
@@ -627,6 +632,7 @@ def _macro_chart_html(
     series_list: list[MacroPriceSeries],
     quote_groups_by_market: dict[str, list[dict[str, Any]]] | None = None,
     chart_id: str = "macro",
+    value_mode_by_market: dict[str, str] | None = None,
 ) -> str:
     """글로벌 지수 · 원자재 · 섹터 ETF 시계열 Chart.js 라인 차트."""
     if not series_list:
@@ -637,8 +643,9 @@ def _macro_chart_html(
         "commodities": "원자재",
         "sector-etfs": "섹터 ETF",
         "fx-strength": "통화 강약",
+        "us-treasury-yields": "미국 국채금리",
     }
-    _TAB_ORDER = ["global-indices", "commodities", "sector-etfs", "fx-strength"]
+    _TAB_ORDER = ["global-indices", "commodities", "sector-etfs", "fx-strength", "us-treasury-yields"]
 
     by_market: dict[str, list[MacroPriceSeries]] = defaultdict(list)
     for s in series_list:
@@ -664,7 +671,11 @@ def _macro_chart_html(
                 "tension": 0.2,
                 "spanGaps": True,
             })
-        groups_data[market_key] = {"dates": all_dates, "datasets": datasets}
+        groups_data[market_key] = {
+            "dates": all_dates,
+            "datasets": datasets,
+            "valueMode": (value_mode_by_market or {}).get(market_key, "relative"),
+        }
 
     tab_order = [k for k in _TAB_ORDER if k in groups_data]
     if not tab_order:
@@ -753,6 +764,11 @@ def _macro_chart_html(
     return vals.map(function(v){{return v!=null?Math.round((v/base-1)*10000)/100:null;}});
   }}
 
+  function formatChartValue(value,mode){{
+    if(mode==='raw') return value.toFixed(2)+'%';
+    return (value>=0?'+':'')+value.toFixed(1)+'%';
+  }}
+
   const stickyYAxisPlugin={{
     id:'stickyYAxis',
     afterDraw:function(chart){{
@@ -779,7 +795,8 @@ def _macro_chart_html(
         const py=y.getPixelForValue(tick.value);
         if(py<y.top-1||py>y.bottom+1) return;
         const value=Number(tick.value);
-        const label=(value>=0?'+':'')+value.toFixed(1)+'%';
+        const mode=(GROUPS[cur]&&GROUPS[cur].valueMode)||'relative';
+        const label=formatChartValue(value,mode);
         ctx.fillText(label,xOffset+y.right-8,py);
       }});
       ctx.restore();
@@ -794,6 +811,7 @@ def _macro_chart_html(
     }}
     const fromV=document.getElementById('{escape(from_id)}').value;
     const toV=document.getElementById('{escape(to_id)}').value;
+    const valueMode=g.valueMode||'relative';
 
     // from~to 범위 필터
     const filtDates=g.dates.filter(function(d){{
@@ -807,7 +825,7 @@ def _macro_chart_html(
       g.dates.forEach(function(d,i){{dtv[d]=ds.rawData[i];}});
       const raw=filtDates.map(function(d){{return dtv[d]!=null?dtv[d]:null;}});
       return Object.assign({{}},ds,{{
-        data:normFromBase(raw),
+        data:valueMode==='raw'?raw:normFromBase(raw),
         pointRadius:filtDates.length<2?3:0,
         pointHoverRadius:5
       }});
@@ -849,13 +867,13 @@ def _macro_chart_html(
             callbacks:{{label:function(c){{
               const v=c.parsed.y;
               if(v==null) return ' '+c.dataset.label+': —';
-              return ' '+c.dataset.label+': '+(v>=0?'+':'')+v.toFixed(1)+'%';
+              return ' '+c.dataset.label+': '+formatChartValue(v,valueMode);
             }}}}
           }}
         }},
         scales:{{
           x:{{ticks:{{color:'#8fa3ba',maxTicksLimit:14,maxRotation:0}},grid:{{color:'rgba(148,163,184,.08)'}}}},
-          y:{{ticks:{{color:'rgba(143,163,186,0)',callback:function(v){{return(v>=0?'+':'')+v.toFixed(1)+'%';}}}},grid:{{color:'rgba(148,163,184,.08)'}}}}
+          y:{{ticks:{{color:'rgba(143,163,186,0)',callback:function(v){{return formatChartValue(Number(v),valueMode);}}}},grid:{{color:'rgba(148,163,184,.08)'}}}}
         }}
       }}
     }});

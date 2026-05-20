@@ -144,6 +144,7 @@ class OverviewPageData:
     watchlist_stocks: list[WatchlistStock] = field(default_factory=list)
     sector_etf_quotes: list[MacroQuote] = field(default_factory=list)
     sector_etf_price_series: list[MacroPriceSeries] = field(default_factory=list)
+    treasury_yield_series: list[MacroPriceSeries] = field(default_factory=list)
     daily_macro_items: list[DailyMacroItem] = field(default_factory=list)
     macro_history: dict[str, list[float]] = field(default_factory=dict)
 
@@ -293,6 +294,12 @@ FX_STRENGTH_SOURCES: tuple[tuple[str, str, str, bool], ...] = (
     ("USDNOK", "NOK", "노르웨이크로네", True),
     ("USDMXN", "MXN", "멕시코페소", True),
 )
+
+US_TREASURY_YIELD_SERIES: dict[str, str] = {
+    "US_2Y": "미국 2년물",
+    "US_10Y": "미국 10년물",
+    "US_30Y": "미국 30년물",
+}
 
 
 @dataclass
@@ -836,6 +843,40 @@ def load_fx_strength_series(conn) -> list[MacroPriceSeries]:
     return result
 
 
+def load_us_treasury_yield_series(conn) -> list[MacroPriceSeries]:
+    """US종합 페이지용 미국 국채금리 시계열."""
+    from collections import defaultdict
+
+    rows = conn.execute(
+        """
+        SELECT indicator_code, trade_date, value
+        FROM daily_macro
+        WHERE indicator_code = ANY(%s)
+        ORDER BY indicator_code, trade_date
+        """,
+        (list(US_TREASURY_YIELD_SERIES),),
+    ).fetchall()
+
+    grouped: dict[str, list[tuple[str, float | None]]] = defaultdict(list)
+    for code, trade_date, value in rows:
+        grouped[code].append((trade_date.isoformat(), _to_float(value)))
+
+    result: list[MacroPriceSeries] = []
+    for code, label in US_TREASURY_YIELD_SERIES.items():
+        points = grouped.get(code, [])
+        if not any(v is not None for _, v in points):
+            continue
+        result.append(MacroPriceSeries(
+            market_key="us-treasury-yields",
+            symbol=code,
+            display_symbol=code,
+            name_en=label,
+            dates=[d for d, _ in points],
+            values=[round(v, 4) if v is not None else None for _, v in points],
+        ))
+    return result
+
+
 def load_daily_macro_items(conn) -> list[DailyMacroItem]:
     """daily_macro 테이블에서 각 indicator_code 의 최신 행을 반환."""
     rows = conn.execute(
@@ -1341,6 +1382,7 @@ def load_us_all_data(conn) -> OverviewPageData:
     page = load_overview_data(conn, ["us"], "US종합", "us-all")
     page.daily_macro_items = load_daily_macro_items(conn)
     page.macro_history = load_macro_history(conn)
+    page.treasury_yield_series = load_us_treasury_yield_series(conn)
     page.sector_etf_quotes = [
         q for q in load_macro_quotes(conn)
         if q.market_key == "sector-etfs"
@@ -1351,6 +1393,11 @@ def load_us_all_data(conn) -> OverviewPageData:
     ]
     if page.sector_etf_quotes:
         page.generated_at = max(page.generated_at, max(q.trade_date for q in page.sector_etf_quotes))
+    if page.treasury_yield_series:
+        page.generated_at = max(
+            page.generated_at,
+            max(date.fromisoformat(d) for s in page.treasury_yield_series for d in s.dates),
+        )
     return page
 
 

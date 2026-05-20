@@ -65,6 +65,8 @@ uv run python Search.py price sector-etfs
 uv run python Search.py retry-price us
 ```
 
+`--workers`는 가격 조회 병렬 수입니다. KR 가격 수집은 FinanceDataReader를 병렬 호출하되 DB 저장은 순차 처리하며, 최대 8개 worker로 제한합니다.
+
 펀더멘탈 수집:
 ```bash
 uv run python Search.py fundamentals us
@@ -259,7 +261,7 @@ uv run python Search.py site --no-open
 
 `site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 자동 열기를 원하면 `--no-open`을 빼고 실행합니다.
 
-대시보드는 DB의 `daily_macro`, `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 메인 핵심 지표(S&P500, Nasdaq100, KOSPI, KOSDAQ, VIX, 미국10년물, DXY, USDKRW, WTI, Gold, BTC, ETH), 글로벌 지수·원자재·환율/통화 강약, 매크로 지표, US/KR 종합 시황, 미국 섹터 ETF, 섹터 히트맵, 리더십, 당일 Top 종목, 워치리스트를 표시합니다.
+대시보드는 DB의 `daily_macro`, `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 메인 핵심 지표(S&P500, Nasdaq100, KOSPI, KOSDAQ, VIX, 미국10년물, DXY, USDKRW, WTI, Gold, BTC, ETH), 글로벌 지수·원자재·환율/통화 강약, 매크로 지표, US/KR 종합 시황, US 종합 국채금리 차트, 미국 섹터 ETF, 섹터 히트맵, 리더십, 당일 Top 종목, 워치리스트를 표시합니다.
 
 상단 `관리` 탭(`site/admin/index.html`)은 빌드 시점의 PostgreSQL 테이블 목록·행 수·컬럼·최근 데이터 샘플을 보여주는 정적 읽기 전용 페이지입니다. 데이터 수정/삭제는 DB 또는 CLI에서 처리합니다.
 

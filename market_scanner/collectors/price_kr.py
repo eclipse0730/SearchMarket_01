@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from datetime import date, datetime, timedelta
 from typing import Any
 
@@ -26,6 +27,7 @@ from market_scanner.storage.runs import (
 
 _SOURCE_PROVIDER = "fdr"
 _MAX_ERROR_SAMPLES = 30
+_MAX_FETCH_WORKERS = 8
 
 
 def _normalize_ohlcv(frame: pd.DataFrame) -> pd.DataFrame:
@@ -148,7 +150,6 @@ def run_fetch(
     force: bool = False,
     symbols: list[str] | None = None,
 ) -> None:
-    del workers
     start_date, end_date = _resolve_date_range(date_str, date_from, date_to)
     _, currency_code, _ = country_currency_for_market(market_key)
 
@@ -168,37 +169,63 @@ def run_fetch(
             print(f"  prices fetch [{market_key}]: all active instruments already have prices through {end_date.isoformat()}")
             return
 
+        tasks: list[dict[str, Any]] = []
+        for instr in instruments:
+            last = instr.get("last_price_date")
+            task_from = start_date if force or not last else max(_next_day(last), start_date)
+            if task_from > end_date:
+                skipped += 1
+                continue
+            tasks.append({
+                "instrument": instr,
+                "from": task_from,
+                "to": end_date,
+            })
+
+        if not tasks:
+            print(f"  prices fetch [{market_key}]: no target instruments")
+            return
+
         run_id = create_collection_run(
             conn,
             "prices",
             market_key,
             end_date,
             _SOURCE_PROVIDER,
-            len(instruments),
+            len(tasks),
             params={
                 "mode": "fetch",
                 "from": start_date.isoformat(),
                 "to": end_date.isoformat(),
                 "force": force,
                 "source": _SOURCE_PROVIDER,
+                "workers": min(max(1, workers), _MAX_FETCH_WORKERS),
             },
         )
+        worker_count = max(1, min(workers, _MAX_FETCH_WORKERS, len(tasks)))
         print(
-            f"  prices fetch [{market_key}] {len(instruments)} symbols  "
-            f"{start_date.isoformat()} ~ {end_date.isoformat()}  source={_SOURCE_PROVIDER}  run_id={run_id}"
+            f"  prices fetch [{market_key}] {len(tasks)} symbols  "
+            f"{start_date.isoformat()} ~ {end_date.isoformat()}  "
+            f"source={_SOURCE_PROVIDER}  workers={worker_count}  run_id={run_id}"
         )
 
         success = 0
         failed = 0
-        processed = 0
+        submitted = 0
         stored_rows = 0
         error_samples: list[dict[str, Any]] = []
+        progress_interval = max(1, len(tasks) // 100)
 
-        def print_progress() -> None:
+        def print_progress(force_print: bool = False) -> None:
+            processed = success + failed
+            if not force_print and processed % progress_interval != 0:
+                return
             print(
                 progress_line(
                     processed,
-                    len(instruments),
+                    len(tasks),
+                    queued=submitted,
+                    active=submitted - processed,
                     success=success,
                     failed=failed,
                     skipped=skipped,
@@ -208,38 +235,82 @@ def run_fetch(
                 flush=True,
             )
 
-        print_progress()
-        for instr in instruments:
-            last = instr.get("last_price_date")
-            task_from = start_date if force or not last else max(_next_day(last), start_date)
-            if task_from > end_date:
-                skipped += 1
-                processed += 1
-                print_progress()
-                continue
+        def fetch_task(task: dict[str, Any]) -> dict[str, Any]:
+            instr = task["instrument"]
+            frame, source = fetch_ohlcv(instr["symbol"], task["from"].isoformat(), task["to"].isoformat())
+            return {**task, "frame": frame, "source": source}
 
-            symbol = instr["symbol"]
-            frame, source = fetch_ohlcv(symbol, task_from.isoformat(), end_date.isoformat())
-            if frame.empty:
+        def handle_result(result: dict[str, Any]) -> None:
+            nonlocal success, failed, stored_rows
+            instr = result["instrument"]
+            if result["frame"].empty:
                 failed += 1
                 if len(error_samples) < _MAX_ERROR_SAMPLES:
                     error_samples.append({
-                        "symbol": symbol,
+                        "symbol": instr["symbol"],
                         "reason": "fetch_failed",
-                        "from": task_from.isoformat(),
-                        "to": end_date.isoformat(),
+                        "from": result["from"].isoformat(),
+                        "to": result["to"].isoformat(),
                     })
-                processed += 1
-                print_progress()
-                continue
+                print_progress(True)
+                return
 
             instr_currency = instr["currency_code"] or currency_code
-            stored = _upsert_ohlcv_frame(conn, instr["instrument_id"], frame, source, run_id, instr_currency)
+            stored = _upsert_ohlcv_frame(
+                conn,
+                instr["instrument_id"],
+                result["frame"],
+                result["source"],
+                run_id,
+                instr_currency,
+            )
             stored_rows += stored
             success += 1
-            processed += 1
             print_progress()
 
+        print_progress(True)
+        task_iter = iter(tasks)
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            pending: dict[Any, dict[str, Any]] = {}
+
+            def submit_next() -> bool:
+                nonlocal submitted
+                try:
+                    task = next(task_iter)
+                except StopIteration:
+                    return False
+                pending[executor.submit(fetch_task, task)] = task
+                submitted += 1
+                return True
+
+            for _ in range(worker_count):
+                if not submit_next():
+                    break
+            print_progress(True)
+
+            while pending:
+                done, _ = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
+                if not done:
+                    print_progress(True)
+                    continue
+                for future in done:
+                    task = pending.pop(future)
+                    try:
+                        handle_result(future.result())
+                    except Exception as exc:
+                        failed += 1
+                        if len(error_samples) < _MAX_ERROR_SAMPLES:
+                            error_samples.append({
+                                "symbol": task["instrument"]["symbol"],
+                                "reason": type(exc).__name__,
+                                "from": task["from"].isoformat(),
+                                "to": task["to"].isoformat(),
+                            })
+                        print_progress(True)
+                    submit_next()
+                    print_progress(True)
+
+        print_progress(True)
         print()
 
         status = "success" if not failed else ("partial" if success else "failed")
