@@ -14,7 +14,6 @@ from market_scanner.config.markets import MARKETS
 from market_scanner.domain.market_policy import home_market_key
 from market_scanner.models import ScanSettings
 from market_scanner.pipeline import (
-    run_analysis_stage,
     run_news_stage,
     run_scan_stage_with_settings,
 )
@@ -64,9 +63,6 @@ def _build_parser() -> argparse.ArgumentParser:
             "  uv run python Search.py price us --workers 1\n"
             "  uv run python Search.py scan us --universe sp500\n"
             "  uv run python Search.py all kr --universe kospi200\n"
-            "  uv run python Search.py site --no-open\n"
-            "  uv run python Search.py site market kospi --no-open\n"
-            "  uv run python Search.py readme-html\n"
         ),
     )
     sub = parser.add_subparsers(dest="command", required=True)
@@ -131,11 +127,6 @@ def _build_parser() -> argparse.ArgumentParser:
     scan_p.add_argument("--limit", type=int, default=None)
     scan_p.add_argument("--workers", type=int, default=1)
 
-    analyze_p = sub.add_parser("analyze", aliases=["render"], help="Render markdown report from scan results.")
-    _add_market(analyze_p)
-    _add_universe(analyze_p)
-    analyze_p.add_argument("--date", default=_today(), help="Report date YYYYMMDD.")
-
     news_p = sub.add_parser("news", help="Collect news cache.")
     _add_market(news_p)
     _add_universe(news_p)
@@ -159,17 +150,6 @@ def _build_parser() -> argparse.ArgumentParser:
     names_p.add_argument("--limit", type=int, default=None)
     names_p.add_argument("--delay", type=float, default=0.3)
     _add_database_url(names_p)
-
-    site_p = sub.add_parser("site", help="Build the static site.")
-    site_p.add_argument("target", nargs="?", default="all",
-                        choices=["main", "market", "admin", "db_admin", "all"],
-                        help="빌드 대상 (기본: all).")
-    site_p.add_argument("market", nargs="?")
-    site_p.add_argument("--no-open", action="store_true")
-    _add_database_url(site_p)
-
-    readme_html_p = sub.add_parser("readme-html", help="Build docs/readme.html from README.md.")
-    readme_html_p.add_argument("--output", default="docs/readme.html", help="Output HTML path.")
 
     all_p = sub.add_parser("all", help="Run scan and then render markdown report.")
     _add_market(all_p)
@@ -247,19 +227,12 @@ def main() -> None:
 
         if args.command in {"scan", "all"}:
             market_key, _, path_key = _scope(args.market, args.universe)
-            _, frame, _ = run_scan_stage_with_settings(
+            run_scan_stage_with_settings(
                 market_key,
                 args.date,
                 ScanSettings(output_dir=Path("."), max_workers=max(1, args.workers), symbol_limit=args.limit),
                 path_key=path_key,
             )
-            if args.command == "all":
-                run_analysis_stage(market_key, args.date, frame, path_key=path_key)
-            return
-
-        if args.command in {"analyze", "render"}:
-            market_key, _, path_key = _scope(args.market, args.universe)
-            run_analysis_stage(market_key, args.date, path_key=path_key)
             return
 
         if args.command == "news":
@@ -300,56 +273,6 @@ def main() -> None:
                 database_url=args.database_url,
                 delay=args.delay,
             )
-            return
-
-        if args.command == "site":
-            from market_scanner.reports.site import build as site_build
-            from market_scanner.reports.site import data as site_data
-            from market_scanner.storage.connection import connect
-
-            primary_path = None
-
-            if args.target == "db_admin":
-                primary_path = site_build.build_db_admin()
-            else:
-                with connect(args.database_url) as conn:
-                    if args.target == "main":
-                        primary_path = site_build.build_main(conn)
-                    elif args.target == "admin":
-                        primary_path = site_build.build_admin(conn)
-                    elif args.target == "market":
-                        if not args.market:
-                            raise ValueError("site market requires a market key")
-                        if args.market == "us-all":
-                            primary_path = site_build.build_us_all(conn)
-                        elif args.market == "kr-all":
-                            primary_path = site_build.build_kr_all(conn)
-                        elif args.market in site_data.UNIVERSE_DETAIL_PAGES:
-                            primary_path = site_build.build_universe_market(conn, args.market)
-                        else:
-                            primary_path = site_build.build_market(conn, args.market)
-                    elif args.target == "all":
-                        primary_path = site_build.build_main(conn)
-                        site_build.build_admin(conn)
-                        site_build.build_db_admin()
-                        site_build.build_us_all(conn)
-                        site_build.build_kr_all(conn)
-                        for universe_key in site_data.UNIVERSE_DETAIL_PAGES:
-                            site_build.build_universe_market(conn, universe_key)
-                        for market_key in site_data.list_buildable_markets(conn):
-                            site_build.build_market(conn, market_key)
-
-            if primary_path is not None and not args.no_open:
-                import webbrowser
-
-                webbrowser.open(primary_path.resolve().as_uri())
-            return
-
-        if args.command == "readme-html":
-            from market_scanner.reports.readme_html import build_readme_html
-
-            path = build_readme_html(output_path=Path(args.output))
-            print(f"readme html: {path}")
             return
 
         parser.error(f"unsupported command: {args.command}")
