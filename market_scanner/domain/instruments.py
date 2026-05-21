@@ -6,6 +6,9 @@ from market_scanner.domain.market_policy import home_market_key
 from market_scanner.models import MarketDefinition
 
 
+_KR_ETF_PREFIXES = ("KODEX", "TIGER", "ACE", "RISE", "SOL", "KOSEF", "KBSTAR", "HANARO", "ARIRANG")
+
+
 def _clean_text(value: Any) -> str | None:
     if value is None:
         return None
@@ -26,7 +29,7 @@ def classify_asset_type(row: Any, market_key: str) -> str:
     symbol = (_clean_text(row.get("symbol")) or "").upper()
     if "ETN" in name:
         return "etn"
-    if "ETF" in name or name.startswith(("KODEX", "TIGER", "ACE", "RISE", "SOL", "KOSEF", "KBSTAR")):
+    if "ETF" in name or name.startswith(_KR_ETF_PREFIXES):
         return "etf"
     if "리츠" in name or "REIT" in name:
         return "reit"
@@ -34,7 +37,12 @@ def classify_asset_type(row: Any, market_key: str) -> str:
         return "spac"
     if symbol.endswith(("5.KS", "7.KS", "9.KS")) and ("우" in name or "PREFERRED" in name):
         return "preferred_stock"
-    if "우" in name and home_key in {"kr"}:
+    if home_key in {"kr"} and (
+        name.endswith("우")
+        or name.endswith("우B")
+        or name.endswith("우C")
+        or name.endswith("우선주")
+    ):
         return "preferred_stock"
     return "common_stock"
 

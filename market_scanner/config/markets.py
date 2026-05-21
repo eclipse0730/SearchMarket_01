@@ -589,11 +589,66 @@ def _kr_metadata() -> dict[str, StaticTickerMeta]:
     )
 
 
-def _fetch_fdr_market(market: str, suffix: str, top_n: int | None, label: str) -> list[str]:
+def _is_kr_preferred_listing(code: object, name: object) -> bool:
+    code_text = str(code or "").strip()
+    name_text = str(name or "").strip().upper()
+    return (
+        "PREFERRED" in name_text
+        or "우선주" in name_text
+        or bool(re.search(r"(\d+우B?|우B?|우)$", name_text))
+        or (code_text[-1:] in {"5", "7", "9"} and "우" in name_text)
+    )
+
+
+def _is_kr_non_common_listing(code: object, name: object) -> bool:
+    name_text = str(name or "").strip().upper()
+    return (
+        _is_kr_preferred_listing(code, name)
+        or "ETN" in name_text
+        or "ETF" in name_text
+        or "스팩" in name_text
+        or "SPAC" in name_text
+        or "리츠" in name_text
+        or "REIT" in name_text
+        or name_text.startswith(
+            (
+                "KODEX",
+                "TIGER",
+                "ACE",
+                "RISE",
+                "SOL",
+                "KOSEF",
+                "KBSTAR",
+                "HANARO",
+                "ARIRANG",
+                "PLUS",
+                "TIMEFOLIO",
+                "히어로즈",
+                "마이티",
+            )
+        )
+    )
+
+
+def _fetch_fdr_market(
+    market: str,
+    suffix: str,
+    top_n: int | None,
+    label: str,
+    *,
+    common_only: bool = False,
+) -> list[str]:
     try:
         import pandas as pd
         df = _fetch_fdr_listing(market)
         df["Marcap"] = pd.to_numeric(df["Marcap"], errors="coerce")
+        if common_only:
+            df = df[
+                ~df.apply(
+                    lambda row: _is_kr_non_common_listing(row.get("Code"), row.get("Name")),
+                    axis=1,
+                )
+            ]
         top = df.sort_values("Marcap", ascending=False) if top_n is None else df.nlargest(top_n, "Marcap")
         tickers = [
             f"{str(code).strip().zfill(6) if str(code).strip().isdigit() else str(code).strip()}{suffix}"
@@ -606,16 +661,97 @@ def _fetch_fdr_market(market: str, suffix: str, top_n: int | None, label: str) -
         return []
 
 
+_KR_REPRESENTATIVE_INDEXES: dict[str, tuple[str, str, str, str, str, int]] = {
+    "kospi100": ("KOSPI100", "KOSPI", "코스피 100", "1034", ".KS", 100),
+    "kospi200": ("KOSPI200", "KOSPI", "코스피 200", "1028", ".KS", 200),
+    "kosdaq150": ("KOSDAQ150", "KOSDAQ", "코스닥 150", "2203", ".KQ", 150),
+}
+
+
+def _normalize_kr_symbol(code: object, suffix: str) -> str:
+    text = str(code or "").strip()
+    if not text or text.lower() == "nan":
+        return ""
+    if text.endswith(".KS") or text.endswith(".KQ"):
+        return text
+    return f"{text.zfill(6) if text.isdigit() else text}{suffix}"
+
+
+def _pykrx_index_ticker(market: str, index_name: str, fallback_ticker: str) -> str:
+    try:
+        from pykrx import stock
+
+        for ticker in stock.get_index_ticker_list(market=market):
+            if stock.get_index_ticker_name(ticker) == index_name:
+                return ticker
+    except Exception as exc:
+        print(f"  {index_name} pykrx index lookup failed ({type(exc).__name__}) - using ticker {fallback_ticker}")
+    return fallback_ticker
+
+
+def _fetch_pykrx_index_members(
+    label: str,
+    market: str,
+    index_name: str,
+    fallback_ticker: str,
+    suffix: str,
+) -> list[str]:
+    try:
+        from pykrx import stock
+
+        index_ticker = _pykrx_index_ticker(market, index_name, fallback_ticker)
+        symbols = [
+            symbol
+            for code in stock.get_index_portfolio_deposit_file(index_ticker, alternative=True)
+            if (symbol := _normalize_kr_symbol(code, suffix))
+        ]
+        if symbols:
+            print(f"  {label} (pykrx/KRX constituents): loaded {len(symbols)} tickers")
+            return symbols
+        print(f"  {label} pykrx/KRX constituents returned 0 symbols")
+    except Exception as exc:
+        print(f"  {label} pykrx/KRX constituents failed ({type(exc).__name__})")
+    return []
+
+
+def _fetch_naver_market_common_symbols(sosok: str, suffix: str, label: str, top_n: int) -> list[str]:
+    symbols: list[str] = []
+    for code, name in _fetch_naver_market_sum_rows(sosok):
+        if _is_kr_non_common_listing(code, name):
+            continue
+        symbols.append(f"{code}{suffix}")
+        if len(symbols) >= top_n:
+            break
+    if symbols:
+        print(f"  {label} (Naver market-cap fallback): using {len(symbols)} common-stock tickers")
+    return symbols
+
+
+def _fetch_kr_representative_index(universe_key: str) -> list[str]:
+    label, market, index_name, index_ticker, suffix, top_n = _KR_REPRESENTATIVE_INDEXES[universe_key]
+    members = _fetch_pykrx_index_members(label, market, index_name, index_ticker, suffix)
+    if members:
+        return members
+
+    fallback = _fetch_fdr_market(market, suffix, top_n, f"{label} market-cap fallback", common_only=True)
+    if not fallback:
+        sosok = "0" if market == "KOSPI" else "1"
+        fallback = _fetch_naver_market_common_symbols(sosok, suffix, f"{label} market-cap fallback", top_n)
+    if fallback:
+        print(f"  {label}: using market-cap top {len(fallback)} fallback, not official index constituents")
+    return fallback
+
+
 def _fetch_krx_kospi200() -> list[str]:
-    return _fetch_fdr_market("KOSPI", ".KS", 200, "KOSPI200")
+    return _fetch_kr_representative_index("kospi200")
 
 
 def _fetch_krx_kospi100() -> list[str]:
-    return _fetch_fdr_market("KOSPI", ".KS", 100, "KOSPI100")
+    return _fetch_kr_representative_index("kospi100")
 
 
 def _fetch_krx_kosdaq150() -> list[str]:
-    return _fetch_fdr_market("KOSDAQ", ".KQ", 150, "KOSDAQ150")
+    return _fetch_kr_representative_index("kosdaq150")
 
 
 def _fetch_krx_kospi_all() -> list[str]:
