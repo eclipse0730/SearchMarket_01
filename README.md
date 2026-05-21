@@ -1,6 +1,6 @@
 # Stock MA Scanner
 
-미국 주식, KOSPI, KOSDAQ, 글로벌 지수, 섹터 ETF, 테마 ETF, 원자재를 대상으로 5/20/60/120/240일 이동평균선, 기간 수익률, ATR/변동성, 기술/재무/테마/모멘텀 점수를 계산하고 PostgreSQL 기반 Markdown/HTML 리포트와 GitHub Pages 대시보드를 생성합니다.
+미국 주식, KOSPI, KOSDAQ, 글로벌 지수, 섹터 ETF, 테마 ETF, 원자재를 대상으로 5/20/60/120/240일 이동평균선, 기간 수익률, ATR/변동성, 기술/재무/테마/모멘텀 점수를 계산하고 PostgreSQL에 저장합니다.
 
 ## 설치
 
@@ -8,13 +8,6 @@
 ```bash
 uv venv
 uv pip install -r requirements.txt
-```
-
-## README HTML 버전 관리
-
-`README.md`를 원본으로 두고 HTML 문서는 아래 명령으로 재생성합니다. 생성 파일은 `docs/readme.html`입니다.
-```bash
-uv run python Search.py readme-html
 ```
 
 ## 기본 실행 흐름
@@ -46,7 +39,7 @@ uv run python Search.py refresh commodities
 ```
 
 데이터 소스:
-- `us`, `kr`: 종목 목록은 FinanceDataReader를 우선 사용합니다. 가격 수집은 US는 yfinance, KR(KOSPI/KOSDAQ)은 FinanceDataReader를 사용합니다. `kr` 내 유니버스(kospi, kosdaq, kospi200 등)는 `--universe`로 지정합니다. `kospi100`, `kospi200`, `kosdaq150`은 pykrx/KRX 지수 구성종목을 우선 사용하고, KRX 인증/응답 실패 시 ETF/ETN/우선주 등을 제외한 FDR 또는 Naver 보통주 시총순 top-N으로 fallback합니다.
+- `us`, `kr`: 종목 목록은 FinanceDataReader를 우선 사용합니다. 가격 수집은 US는 yfinance batch download, KR(KOSPI/KOSDAQ)은 FinanceDataReader를 사용합니다. `kr` 내 유니버스(kospi, kosdaq, kospi200 등)는 `--universe`로 지정합니다. `kospi100`, `kospi200`, `kosdaq150`은 pykrx/KRX 지수 구성종목을 우선 사용하고, KRX 인증/응답 실패 시 ETF/ETN/우선주 등을 제외한 FDR 또는 Naver 보통주 시총순 top-N으로 fallback합니다.
 - `global-indices`, `commodities`: JSON 메타 파일을 원본으로 사용합니다.
 - `sector-etfs`: 11개 GICS 섹터 ETF와 리츠 보조 프록시를 JSON 메타 파일에서 수집합니다. GICS 부동산 섹터 기준은 `XLRE`, 리츠 보조 프록시는 `VNQ`입니다.
 - 한국 종목명/업종 보강: `uv run python Search.py names kospi`
@@ -56,6 +49,7 @@ uv run python Search.py refresh commodities
 ## 2단계: 가격 수집
 
 기본 수집은 US는 전일, KOSPI/KOSDAQ은 오늘을 대상으로 필요한 종목만 조회합니다.
+US 가격 수집은 yfinance batch download로 종목을 묶어서 가져오며, 긴 기간 재수집도 같은 batch 경로를 사용합니다. `--workers`는 yfinance 내부 download thread 수 상한으로만 사용합니다.
 ```bash
 uv run python Search.py price us
 uv run python Search.py price us --from 20250101 --to 20260505 --force --workers 1
@@ -66,6 +60,13 @@ uv run python Search.py retry-price us
 ```
 
 `--workers`는 가격 조회 병렬 수입니다. KR 가격 수집은 FinanceDataReader를 병렬 호출하되 DB 저장은 순차 처리하며, 최대 8개 worker로 제한합니다.
+
+로컬 수집 관리 페이지:
+```bash
+uv run python Search.py admin
+```
+
+브라우저에서 `http://127.0.0.1:8765`를 열면 최근 7일 price/indicator/scan_result/flows 적재 건수, refresh 변경 이력, `collection_runs` 실패 샘플을 확인할 수 있습니다. 실패 샘플은 가능한 경우 symbol과 종목명을 함께 보여줍니다. 화면의 수집 버튼은 로컬 서버에서 `Search.py` 명령을 실행하며, price/flows 버튼은 기존 데이터가 있어도 다시 수집하도록 `--force`를 붙입니다. 실행 중 작업은 `/api/jobs` JSON으로 경과 시간과 최근 로그를 동적 갱신합니다. GitHub Actions workflow YML은 현재 조회만 지원하며, 웹 수정/실행은 커밋과 권한 정책을 정한 뒤 별도 추가하는 것을 권장합니다.
 
 펀더멘탈 수집:
 ```bash
@@ -153,19 +154,6 @@ uv run python Search.py screen kr --universe kospi
 uv run python Search.py screen kr --universe kospi200
 ```
 
-## 5단계: 사이트 빌드
-
-DB의 스캔 결과를 읽어 `site/` 아래에 GitHub Pages 정적 사이트를 생성합니다.
-```bash
-# 전체 빌드 (기본값: all)
-uv run python Search.py site --no-open
-uv run python Search.py site main --no-open
-uv run python Search.py site market kospi --no-open
-uv run python Search.py site market us-all --no-open
-uv run python Search.py site admin --no-open
-uv run python Search.py site db_admin
-```
-
 ## 보조 명령
 
 핵심 테이블 적재 건수 확인:
@@ -198,12 +186,7 @@ uv run python Search.py screen us --universe sp500
 uv run python Search.py scan us --universe sp500
 uv run python Search.py all kr --universe kospi
 uv run python Search.py all kr --universe kospi200
-uv run python Search.py analyze us --universe sp500
 ```
-
-## 출력
-
-스캔 결과의 원천은 PostgreSQL입니다. GitHub Pages 사이트는 `market_scanner/reports/site/build.py`가 DB에서 직접 읽어 `site/` 아래에 생성합니다.
 
 ## PostgreSQL
 
@@ -253,18 +236,6 @@ DATABASE_URL="postgresql://searchmarket:searchmarket@localhost:5433/searchmarket
 python -c "from market_scanner.storage.connection import connect; conn = connect(); print('host:', conn.info.host)"
 ```
 
-## 사이트 대시보드
-
-```bash
-uv run python Search.py site --no-open
-```
-
-`site/`에는 GitHub Pages용 정적 대시보드가 생성됩니다. 자동 열기를 원하면 `--no-open`을 빼고 실행합니다.
-
-대시보드는 DB의 `daily_macro`, `scan_results`, `market_snapshots`, `sector_snapshots` 최신 데이터를 기반으로 메인 핵심 지표(S&P500, Nasdaq100, KOSPI, KOSDAQ, VIX, 미국10년물, DXY, USDKRW, WTI, Gold, BTC, ETH), 글로벌 지수·원자재·환율/통화 강약, 매크로 지표, US/KR 종합 시황, US 종합 국채금리 차트, 미국 섹터 ETF, 섹터 히트맵, 리더십, 당일 Top 종목, 워치리스트를 표시합니다.
-
-상단 `관리` 탭(`site/admin/index.html`)은 빌드 시점의 PostgreSQL 테이블 목록·행 수·컬럼·최근 데이터 샘플을 보여주는 정적 읽기 전용 페이지입니다. 데이터 수정/삭제는 DB 또는 CLI에서 처리합니다.
-
 ## 데이터 정책
 
 - `instruments`: 종목마스터의 우선 원천입니다.
@@ -274,7 +245,7 @@ uv run python Search.py site --no-open
 - `market_scanner/assets/sector_etfs_meta.json`: 섹터 ETF 유니버스의 원본입니다. `XLK`, `XLV`, `XLF`, `XLY`, `XLP`, `XLI`, `XLE`, `XLU`, `XLB`, `XLC`, `XLRE`를 기본 GICS 섹터 프록시로 사용하고, `VNQ`는 리츠 보조 프록시로 함께 수집합니다.
 - 테마 ETF는 별도 스캔 없이 US 스캔 결과에서 파생됩니다. 대상 심볼은 `markets.py`의 `_THEME_PROXY_SYMBOLS` 상수로 관리합니다.
 - 한국 시장 전체 유니버스(`kospi`, `kosdaq`)는 FinanceDataReader를 우선 사용하고, 실패 시 Naver Finance로 fallback합니다. 대표지수 유니버스(`kospi100`, `kospi200`, `kosdaq150`)는 pykrx/KRX 지수 구성종목을 우선 사용하고, 실패 시 ETF/ETN/우선주 등을 제외한 FDR 또는 Naver 보통주 시총순 top-N으로 fallback합니다. KRX 구성종목 경로는 pykrx 1.2 계열에서 `KRX_ID`, `KRX_PW`가 필요할 수 있습니다. 정적 JSON fallback(`kospi_static_meta.json`, `kosdaq_static_meta.json`)은 제거되었습니다.
-- KOSPI/KOSDAQ 가격 히스토리는 FinanceDataReader를 사용합니다. US 가격 히스토리는 yfinance만 사용합니다.
+- KOSPI/KOSDAQ 가격 히스토리는 FinanceDataReader를 사용합니다. US 가격 히스토리는 yfinance batch download만 사용합니다.
 - `news` 단계는 DB의 최신 `scan_results`가 있어야 실행되며, `all`에는 포함하지 않습니다.
 
 ## 패키지 구조
@@ -286,11 +257,8 @@ market_scanner/
   analysis/             # 지표 계산·스크리닝
   collectors/           # 가격·펀더멘탈·뉴스·번역 수집
   config/markets.py     # 시장 설정·유니버스/메타데이터 로더
-  reports/              # Markdown/HTML/Page 렌더링
-    site/               # 정적 사이트 빌더 (site/ 생성)
   storage/              # PostgreSQL 유틸리티
   assets/               # seed/cache 파일
-  templates/            # HTML 리포트 템플릿/CSS
 ```
 
 ## GitHub Actions
@@ -301,7 +269,6 @@ market_scanner/
 | `daily-scan-overview.yml` | KST 08:20 | 글로벌 지수·섹터 ETF·테마 ETF·원자재 |
 | `daily-scan-kospi.yml` | KST 16:05 | kr --universe kospi |
 | `daily-scan-kosdaq.yml` | KST 16:35 | kr --universe kosdaq |
-| `deploy-pages.yml` | 스캔 성공 후 자동, 또는 수동 실행 | GitHub Pages 사이트 빌드·배포 |
 
 ```bash
 python -c "from market_scanner.storage.connection import connect; conn = connect(); print('connected:', conn.info.host)"

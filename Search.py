@@ -17,6 +17,7 @@ from market_scanner.pipeline import (
     run_news_stage,
     run_scan_stage_with_settings,
 )
+from market_scanner.services.admin_server import run_admin_server
 from market_scanner.services.instrument_names import run_fetch_name
 from market_scanner.services.universe_refresh import refresh_master
 from market_scanner.storage.diagnostics import table_counts
@@ -87,7 +88,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     retry_price_p = sub.add_parser("retry-price", help="Retry failed price collection.")
     _add_market(retry_price_p)
-    retry_price_p.add_argument("--run-id", type=int, default=None)
+    retry_price_p.add_argument("--run-id", default=None)
     _add_database_url(retry_price_p)
 
     fundamentals_p = sub.add_parser("fundamentals", help="Collect fundamentals.")
@@ -144,6 +145,11 @@ def _build_parser() -> argparse.ArgumentParser:
     counts_p = sub.add_parser("counts", help="Print core table row counts.")
     _add_database_url(counts_p)
 
+    admin_p = sub.add_parser("admin", help="Run local data collection admin page.")
+    admin_p.add_argument("--host", default="127.0.0.1")
+    admin_p.add_argument("--port", type=int, default=8765)
+    _add_database_url(admin_p)
+
     names_p = sub.add_parser("names", help="Fetch Korean instrument names and sectors.")
     names_p.add_argument("market", choices=["kospi", "kosdaq"])
     names_p.add_argument("--all", action="store_true", dest="fetch_all")
@@ -151,7 +157,7 @@ def _build_parser() -> argparse.ArgumentParser:
     names_p.add_argument("--delay", type=float, default=0.3)
     _add_database_url(names_p)
 
-    all_p = sub.add_parser("all", help="Run scan and then render markdown report.")
+    all_p = sub.add_parser("all", help="Run price -> indicators -> screen.")
     _add_market(all_p)
     _add_universe(all_p)
     all_p.add_argument("--date", default=_today(), help="Trade date YYYYMMDD.")
@@ -263,6 +269,10 @@ def main() -> None:
         if args.command == "counts":
             for table, count in table_counts(args.database_url).items():
                 print(f"{table}: {count}")
+            return
+
+        if args.command == "admin":
+            run_admin_server(host=args.host, port=args.port, database_url=args.database_url)
             return
 
         if args.command == "names":

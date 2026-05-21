@@ -49,6 +49,44 @@ _NUMERIC_COLUMNS: tuple[str, ...] = (
     "change_pct", "gap_pct",
     "candle_body_pct", "candle_range_pct", "upper_shadow_pct", "lower_shadow_pct",
 )
+_NUMERIC_MAX_ABS: dict[str, float] = {
+    "rsi14": 10_000,
+    "rsi14_prev": 10_000,
+    "rsi14_change": 1_000_000,
+    "rsi14_ma5": 10_000,
+    "rsi2": 10_000,
+    "rsi5": 10_000,
+    "rsi30": 10_000,
+    "diff_5_pct": 1_000_000,
+    "diff_20_pct": 1_000_000,
+    "diff_60_pct": 1_000_000,
+    "diff_120_pct": 1_000_000,
+    "diff_240_pct": 1_000_000,
+    "bollinger_width_pct": 1_000_000,
+    "bollinger_percent_b": 1_000_000,
+    "from_high_pct": 1_000_000,
+    "from_low_pct": 1_000_000,
+    "volume_ratio": 100_000_000,
+    "value_ratio_20d": 100_000_000,
+    "ma20_slope_pct": 1_000_000,
+    "ma60_slope_pct": 1_000_000,
+    "return_5d": 1_000_000,
+    "return_20d": 1_000_000,
+    "return_60d": 1_000_000,
+    "return_120d": 1_000_000,
+    "return_240d": 1_000_000,
+    "atr14_pct": 1_000_000,
+    "volatility_20d": 1_000_000,
+    "volatility_60d": 1_000_000,
+    "change_pct": 1_000_000,
+    "gap_pct": 1_000_000,
+    "candle_body_pct": 1_000_000,
+    "candle_range_pct": 1_000_000,
+    "upper_shadow_pct": 1_000_000,
+    "lower_shadow_pct": 1_000_000,
+    "close_position_in_range_20d": 1_000_000,
+    "close_position_in_range_60d": 1_000_000,
+}
 _BOOL_COLUMNS: tuple[str, ...] = (
     "near_5", "near_20", "near_60", "near_120", "near_240",
     "breakout_20d", "breakout_60d", "breakout_high_20d", "breakout_high_60d",
@@ -61,6 +99,16 @@ _TEXT_COLUMNS_WITH_DEFAULT: dict[str, str] = {
     "candle_type": "Unknown",
 }
 _TEXT_COLUMNS: tuple[str, ...] = ("trend",)
+
+
+def _clean_indicator_number(column: str, value: Any) -> float | None:
+    number = clean_number(value)
+    limit = _NUMERIC_MAX_ABS.get(column)
+    if number is None or limit is None:
+        return number
+    if abs(number) >= limit:
+        return None
+    return number
 
 
 def upsert_daily_indicator(
@@ -77,7 +125,7 @@ def upsert_daily_indicator(
         "price_source_provider": source_provider,
     }
     for col in _NUMERIC_COLUMNS:
-        values[col] = clean_number(row.get(col))
+        values[col] = _clean_indicator_number(col, row.get(col))
     for col in _BOOL_COLUMNS:
         values[col] = clean_bool(row.get(col))
     for col in _INT_COLUMNS:

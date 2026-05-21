@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import date, datetime, timedelta
 from typing import Any
@@ -28,7 +27,8 @@ from market_scanner.storage.runs import (
 
 _DEFAULT_FETCH_WORKERS = 1
 _MAX_FETCH_WORKERS = 8
-_REQUEST_TIMEOUT = 2
+_BATCH_SIZE = 100
+_REQUEST_TIMEOUT = 20
 _PRIMARY_SOURCE = "yfinance"
 
 
@@ -53,30 +53,60 @@ def fetch_ohlcv(
     start: str,
     end: str,
 ) -> tuple[pd.DataFrame, str]:
-    hist = _fetch_yfinance(symbol, start, end)
+    hist = _fetch_yfinance_batch([symbol], start, end, threads=False).get(symbol, pd.DataFrame())
     if not hist.empty:
         return hist, _PRIMARY_SOURCE
     return pd.DataFrame(), "none"
 
 
-def _fetch_yfinance(symbol: str, start: str, end: str) -> pd.DataFrame:
+def _extract_symbol_frame(frame: pd.DataFrame, symbol: str) -> pd.DataFrame:
+    if frame.empty:
+        return pd.DataFrame()
+    if not isinstance(frame.columns, pd.MultiIndex):
+        return _normalize_ohlcv(frame)
+
+    for level in range(frame.columns.nlevels):
+        values = {str(value).upper(): value for value in frame.columns.get_level_values(level)}
+        key = values.get(symbol.upper())
+        if key is None:
+            continue
+        try:
+            symbol_frame = frame.xs(key, axis=1, level=level, drop_level=True)
+        except (KeyError, ValueError):
+            continue
+        normalized = _normalize_ohlcv(symbol_frame)
+        if not normalized.empty:
+            return normalized
+    return pd.DataFrame()
+
+
+def _fetch_yfinance_batch(
+    symbols: list[str],
+    start: str,
+    end: str,
+    *,
+    threads: bool | int,
+) -> dict[str, pd.DataFrame]:
     try:
         import yfinance as yf
     except ImportError:
-        return pd.DataFrame()
+        return {}
 
     try:
         with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-            hist = yf.Ticker(symbol).history(
+            hist = yf.download(
+                tickers=symbols,
                 start=start,
                 end=end,
                 auto_adjust=True,
+                group_by="ticker",
+                progress=False,
+                threads=threads,
                 timeout=_REQUEST_TIMEOUT,
             )
     except Exception:
-        return pd.DataFrame()
-    normalized = _normalize_ohlcv(hist)
-    return normalized if not normalized.empty else pd.DataFrame()
+        return {symbol: pd.DataFrame() for symbol in symbols}
+    return {symbol: _extract_symbol_frame(hist, symbol) for symbol in symbols}
 
 
 def _next_day(d: date) -> date:
@@ -124,6 +154,10 @@ def _upsert_ohlcv_frame(
         upsert_daily_price(conn, instrument_id, trade_date, source_provider, price_row, run_id, currency_code)
         stored += 1
     return stored
+
+
+def _chunks(items: list[dict[str, Any]], size: int) -> list[list[dict[str, Any]]]:
+    return [items[index:index + size] for index in range(0, len(items), size)]
 
 
 def run_fetch(
@@ -196,6 +230,7 @@ def run_fetch(
                 "to": end_date.isoformat(),
                 "fetch_end": fetch_end,
                 "force": force,
+                "batch_size": _BATCH_SIZE,
                 "workers": min(max(1, workers), _MAX_FETCH_WORKERS),
             },
         )
@@ -203,10 +238,10 @@ def run_fetch(
         print(
             f"  prices fetch [{market_key}] {len(tasks)} symbols  "
             f"{start_date.isoformat()} ~ {end_date.isoformat()}  "
-            f"workers={worker_count}  run_id={run_id}"
+            f"batch_size={_BATCH_SIZE}  workers={worker_count}  run_id={run_id}"
         )
 
-        success, failed, submitted = 0, 0, 0
+        success, failed, submitted, active = 0, 0, 0, 0
         stored_rows = 0
         error_samples: list[Any] = []
         progress_interval = max(1, len(tasks) // 100)
@@ -220,7 +255,7 @@ def run_fetch(
                     processed,
                     len(tasks),
                     queued=submitted,
-                    active=submitted - processed,
+                    active=active,
                     success=success,
                     failed=failed,
                     skipped=skipped,
@@ -230,69 +265,48 @@ def run_fetch(
                 flush=True,
             )
 
-        def fetch_task(task: dict[str, Any]) -> dict[str, Any]:
-            frame, source = fetch_ohlcv(task["instrument"]["symbol"], task["start"], task["end"])
-            return {**task, "frame": frame, "source": source}
-
-        def handle_result(result: dict[str, Any]) -> None:
+        def handle_result(task: dict[str, Any], frame: pd.DataFrame) -> None:
             nonlocal success, failed, stored_rows
-            instr = result["instrument"]
-            if result["frame"].empty:
+            instr = task["instrument"]
+            if frame.empty:
                 failed += 1
                 error_samples.append({
                     "symbol": instr["symbol"],
                     "reason": "fetch_failed",
-                    "from": result["from"].isoformat(),
-                    "to": result["to"].isoformat(),
+                    "from": task["from"].isoformat(),
+                    "to": task["to"].isoformat(),
                 })
-                print_progress(True)
+                print_progress()
                 return
 
             instr_currency = instr["currency_code"] or currency_code
-            stored_rows += _upsert_ohlcv_frame(conn, instr["instrument_id"], result["frame"], result["source"], run_id, instr_currency)
+            stored_rows += _upsert_ohlcv_frame(conn, instr["instrument_id"], frame, _PRIMARY_SOURCE, run_id, instr_currency)
             success += 1
             print_progress()
 
         print_progress(True)
-        task_iter = iter(tasks)
-        with ThreadPoolExecutor(max_workers=worker_count) as executor:
-            pending: dict[Any, dict[str, Any]] = {}
+        grouped_tasks: dict[tuple[str, str], list[dict[str, Any]]] = {}
+        for task in tasks:
+            grouped_tasks.setdefault((task["start"], task["end"]), []).append(task)
 
-            def submit_next() -> bool:
-                nonlocal submitted
-                try:
-                    task = next(task_iter)
-                except StopIteration:
-                    return False
-                pending[executor.submit(fetch_task, task)] = task
-                submitted += 1
-                return True
-
-            for _ in range(worker_count):
-                if not submit_next():
-                    break
-            print_progress(True)
-
-            while pending:
-                done, _ = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
-                if not done:
-                    print_progress(True)
-                    continue
-                for future in done:
-                    task = pending.pop(future)
-                    try:
-                        handle_result(future.result(timeout=_REQUEST_TIMEOUT * 2))
-                    except Exception as exc:
-                        failed += 1
-                        error_samples.append({
-                            "symbol": task["instrument"]["symbol"],
-                            "reason": type(exc).__name__,
-                            "from": task["from"].isoformat(),
-                            "to": task["to"].isoformat(),
-                        })
-                        print_progress(True)
-                    submit_next()
-                    print_progress(True)
+        yfinance_threads: bool | int = worker_count if worker_count > 1 else False
+        for (batch_start, batch_end), group in grouped_tasks.items():
+            for batch in _chunks(group, _BATCH_SIZE):
+                symbols_in_batch = [task["instrument"]["symbol"] for task in batch]
+                submitted += len(batch)
+                active = len(batch)
+                print_progress(True)
+                frames = _fetch_yfinance_batch(
+                    symbols_in_batch,
+                    batch_start,
+                    batch_end,
+                    threads=yfinance_threads,
+                )
+                active = 0
+                for task in batch:
+                    symbol = task["instrument"]["symbol"]
+                    handle_result(task, frames.get(symbol, pd.DataFrame()))
+                print_progress(True)
 
         print_progress(True)
         print()
